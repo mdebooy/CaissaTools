@@ -1,8 +1,8 @@
-<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0                       http://maven.apache.org/xsd/maven-4.0.0.xsd">
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>eu.debooy.caissa</groupId>
   <artifactId>caissatools</artifactId>
-  <version>0.1.0</version>
+  <version>0.1.1-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Caissa Tools</name>
   <description>Verschillende tools voor schakers.</description>
@@ -19,8 +19,8 @@
     </license>
   </licenses>
   <scm>
-    <connection>scm:svn:http://intra.debooy.eu/svn/CaissaTools/tags/caissatools-0.1.0</connection>
-    <developerConnection>scm:svn:http://intra.debooy.eu/svn/CaissaTools/tags/caissatools-0.1.0</developerConnection>
+    <connection>scm:svn:http://intra.debooy.eu/svn/CaissaTools/trunk</connection>
+    <developerConnection>scm:svn:http://intra.debooy.eu/svn/CaissaTools/trunk</developerConnection>
   </scm>
 
   <developers>
