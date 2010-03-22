@@ -16,11 +16,13 @@
  */
 package eu.debooy.caissatools;
 
+import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
+import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.latex.Utilities;
@@ -32,8 +34,10 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.Vector;
@@ -44,10 +48,13 @@ import java.util.Vector;
  */
 public class PgnToLatex {
   public static void execute(String[] args) {
-    BufferedReader  input     = null;
-    BufferedWriter  output    = null;
-    Collection<PGN> partijen  = new Vector<PGN>();
-    HashSet<String> spelers   = new HashSet<String>();
+    BufferedReader  input       = null;
+    BufferedWriter  output      = null;
+    Collection<PGN> partijen    = new Vector<PGN>();
+    HashSet<String> spelers     = new HashSet<String>();
+    String          eindDatum   = "0000.00.00";
+    String          hulpDatum   = "";
+    String          startDatum  = "9999.99.99";
 
     Banner.printBanner("PGN to LaTeX");
 
@@ -65,6 +72,13 @@ public class PgnToLatex {
     if (bestand.endsWith(".pgn"))
       bestand   = bestand.substring(0, bestand.length() - 4);
     String    datum     = arguments.getArgument("datum");
+    if (DoosUtils.isBlankOrNull(datum)) {
+      try {
+        datum = Datum.fromDate(new Date(), "dd/MM/yyyy HH:mm:ss");
+      } catch (ParseException e) {
+        System.out.println(e.getLocalizedMessage());
+      }
+    }
     int       enkel     = 1;
     if (DoosConstants.ONWAAR.equalsIgnoreCase(arguments.getArgument("enkel"))) {
       enkel   = 2;
@@ -110,8 +124,9 @@ public class PgnToLatex {
         String zetten = "";
         while (line != null && !line.endsWith(uitslag)) {
           zetten += line.trim();
-          if (!zetten.endsWith("."))
+          if (!zetten.endsWith(".")) {
             zetten += " ";
+          }
           line = input.readLine();
         }
         zetten += line.substring(0, line.indexOf(uitslag));
@@ -126,12 +141,29 @@ public class PgnToLatex {
         spelers.add(wit);
         spelers.add(zwart);
 
-        if (DoosUtils.isBlankOrNull(auteur))
+        // Verwerk de 'datums'
+        hulpDatum = partij.getTag("EventDate");
+        if (DoosUtils.isNotBlankOrNull(hulpDatum)) {
+          if (hulpDatum.compareTo(startDatum) < 0 ) {
+            startDatum  = hulpDatum;
+          }
+          if (hulpDatum.compareTo(eindDatum) > 0 ) {
+            eindDatum   = hulpDatum;
+          }
+        }
+        hulpDatum = partij.getTag("Date");
+        if (hulpDatum.compareTo(startDatum) < 0 ) {
+          startDatum  = hulpDatum;
+        }
+        if (hulpDatum.compareTo(eindDatum) > 0 ) {
+          eindDatum   = hulpDatum;
+        }
+        if (DoosUtils.isBlankOrNull(auteur)) {
           auteur  = partij.getTag("Site");
-        if (DoosUtils.isBlankOrNull(datum))
-          datum   = partij.getTag("EventDate");
-        if (DoosUtils.isBlankOrNull(titel))
+        }
+        if (DoosUtils.isBlankOrNull(titel)) {
           titel   = partij.getTag("Event");
+        }
 
         // Zoek naar de eerste TAG
         while (line != null && !line.startsWith("[")) {
@@ -353,11 +385,16 @@ public class PgnToLatex {
       output.write("    \\large " + auteur + " \\\\");
       output.newLine();
       if (DoosUtils.isNotBlankOrNull(logo)) {
-        output.write("    \\vspace{3in}");
+        output.write("    \\vspace{2in}");
         output.newLine();
         output.write("    \\includegraphics[width=6cm]{"+ logo + "}");
         output.newLine();
       }
+      output.write("    \\vspace{1in}");
+      output.newLine();
+      output.write("    \\large \\\\" + datumInTitel(startDatum, eindDatum)
+                   + " \\\\");
+      output.newLine();
       output.write("  \\end{center}");
       output.newLine();
       output.write("\\end{titlepage}");
@@ -483,6 +520,33 @@ public class PgnToLatex {
   }
 
   /**
+   * Maakt de datum informatie voor de titel pagina.
+   */
+  protected static String datumInTitel(String startDatum, String eindDatum) {
+    StringBuffer  titelDatum  = new StringBuffer();
+    Date          datum       = null;
+    try {
+      datum = Datum.toDate(startDatum, CaissaConstants.PGN_DATUM_FORMAAT);
+      titelDatum.append(Datum.fromDate(datum));
+    } catch (ParseException e) {
+      System.out.println("StartDatum: " + e.getLocalizedMessage()
+                         + " [" + startDatum + "]");
+    }
+
+    if (!startDatum.equals(eindDatum)) {
+      try {
+        datum = Datum.toDate(eindDatum, CaissaConstants.PGN_DATUM_FORMAAT);
+        titelDatum.append(" - " + Datum.fromDate(datum));
+      } catch (ParseException e) {
+        System.out.println("EindDatum: " + e.getLocalizedMessage()
+                           + " [" + eindDatum + "]");
+      }
+    }
+
+    return titelDatum.toString();
+  }
+
+  /**
    * Geeft de 'help' pagina.
    */
   protected static void help() {
@@ -494,7 +558,7 @@ public class PgnToLatex {
     System.out.println("  --datum   De datum waarop de partijen zijn gespeeld.");
     System.out.println("  --enkel   Enkelrondig <J|n>");
     System.out.println("  --halve   Lijst met spelers (gescheiden door een ;) die enkel eerste helft meespelen.");
-    System.out.println("            Enkel nodig bij enkel=J.");
+    System.out.println("            Enkel nodig bij enkel=N.");
     System.out.println("  --logo    Logo op de titel pagina.");
     System.out.println("  --matrix  Uitslagen matrix <J|n>.");
     System.out.println("  --titel   De titel van het document.");

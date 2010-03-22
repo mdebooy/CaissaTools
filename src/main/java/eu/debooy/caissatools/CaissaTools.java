@@ -16,6 +16,8 @@
  */
 package eu.debooy.caissatools;
 
+import eu.debooy.doosutils.Banner;
+
 
 /**
  * @author Marco de Booij
@@ -23,6 +25,7 @@ package eu.debooy.caissatools;
 public class CaissaTools {
   public static void main(String[] args) {
     if (args.length == 0) {
+      Banner.printBanner("Caissa Tools");
       help();
       return;
     }
@@ -43,32 +46,15 @@ public class CaissaTools {
       StartPgn.execute(commandoArgs);
       return;
     }
-    help();
-  }
 
-  /**
-   * Print de Banner.
-   */
-  private static void banner() {
-    System.out.println("+----------+----------+----------+----------+----------+----------+");
-    System.out.println("|          |          |");
-    System.out.println("|   |\\__   *   __/|   | Caissa Tools");
-    System.out.println("|   /  .\\ *** /.   \\  |");
-    System.out.println("|  | ( _ \\ * / _ ) |  |");
-    System.out.println("+--|    \\_) (_/    |--+----------+----------+----------+----------+");
-    System.out.println("|  |    |     |    |  |");
-    System.out.println("|  /_____\\   /_____\\  |");
-    System.out.println("| [_______]_[_______] | E-Mail : marco.development@debooy.eu");
-    System.out.println("|       [_____]       | Website: http://www.debooy.eu");
-    System.out.println("+----------+----------+----------+----------+----------+----------+");
-    System.out.println("");
+    Banner.printBanner("Caissa Tools");
+    help();
   }
 
   /**
    * Geeft de 'help' pagina.
    */
   private static void help() {
-    banner();
     System.out.println("  PgnToHtml  Zet een bestand met PGN partijen uit een toernooi om in");
     System.out.println("             2 HTML Bestanden.");
     System.out.println("  PgnToLatex Zet een bestand met PGN partijen uit een toernooi om in");

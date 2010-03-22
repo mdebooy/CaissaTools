@@ -531,7 +531,7 @@ public class PgnToHtml {
     System.out.println("  --bestand    Het bestand met de partijen in PGN formaat.");
     System.out.println("  --enkel      Enkelrondig <J|n>");
     System.out.println("  --halve      Lijst met spelers (gescheiden door een ;) die enkel eerste helft meespelen.");
-    System.out.println("               Enkel nodig bij enkel=J.");
+    System.out.println("               Enkel nodig bij enkel=N.");
     System.out.println("  --seizoen    Seizoen.");
     System.out.println("  --uitvoerdir Directory waar de uitvoer bestanden moeten staan.");
     System.out.println();
