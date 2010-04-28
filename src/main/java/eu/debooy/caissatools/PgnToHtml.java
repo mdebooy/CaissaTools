@@ -32,21 +32,23 @@ import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.List;
 
 
 /**
  * @author Marco de Booij
  */
 public class PgnToHtml {
+  private PgnToHtml() {}
+
   public static void execute(String[] args) {
     BufferedReader  input       = null;
     BufferedWriter  output      = null;
-    Collection<PGN> partijen    = new Vector<PGN>();
+    List<PGN>       partijen    = new ArrayList<PGN>();
     HashSet<String> spelers     = new HashSet<String>();
 
     Banner.printBanner("PGN to HTML");
@@ -61,7 +63,7 @@ public class PgnToHtml {
     }
 
     String  bestand = arguments.getArgument("bestand");
-    int             enkel       = 1;
+    int     enkel   = 1;
     if (DoosConstants.ONWAAR.equalsIgnoreCase(arguments.getArgument("enkel"))) {
       enkel = 2;
     }
@@ -75,8 +77,9 @@ public class PgnToHtml {
 
     Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
 
-    if (bestand.endsWith(".pgn"))
+    if (bestand.endsWith(".pgn")) {
       bestand = bestand.substring(0, bestand.length() - 4);
+    }
     File    indexFile   = new File(uitvoerdir + "/index.html");
     File    matrixFile  = new File(uitvoerdir + "/matrix.html");
     File    pgnFile     = new File(bestand + ".pgn");
@@ -107,8 +110,9 @@ public class PgnToHtml {
         String zetten = "";
         while (line != null && !line.endsWith(uitslag)) {
           zetten += line.trim();
-          if (!zetten.endsWith("."))
+          if (!zetten.endsWith(".")) {
             zetten += " ";
+          }
           line = input.readLine();
         }
         zetten += line.substring(0, line.indexOf(uitslag));
@@ -140,8 +144,9 @@ public class PgnToHtml {
                   speler    = spelers.iterator();
       for (int i = 0; i < noSpelers; i++) {
         namen[i]  = speler.next();
-        for (int j = 0; j < kolommen; j++)
+        for (int j = 0; j < kolommen; j++) {
           matrix[i][j] = -1.0;
+        }
       }
       Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
       for (int i = 0; i < noSpelers; i++) {
@@ -149,9 +154,7 @@ public class PgnToHtml {
         punten[i].setNaam(namen[i]);
       }
 
-      Iterator<PGN> iter = partijen.iterator();
-      while (iter.hasNext()) {
-        PGN     partij  = iter.next();
+      for (PGN partij: partijen) {
         int     ronde   = 1;
         try {
           ronde = Integer.valueOf(partij.getTag("Round")).intValue();
@@ -165,8 +168,9 @@ public class PgnToHtml {
             && (Arrays.binarySearch(halve, wit,
                                     String.CASE_INSENSITIVE_ORDER) > -1
                 || Arrays.binarySearch(halve, zwart,
-                                       String.CASE_INSENSITIVE_ORDER) > -1))
+                                       String.CASE_INSENSITIVE_ORDER) > -1)) {
           continue;
+        }
         int   iWit    = Arrays.binarySearch(namen, wit,
                                             String.CASE_INSENSITIVE_ORDER);
         int   iZwart  = Arrays.binarySearch(namen, zwart,
@@ -196,8 +200,9 @@ public class PgnToHtml {
       for (int i = 0; i < noSpelers; i++) {
         Double weerstandspunten = 0.0;
         for (int j = 0; j < kolommen; j++) {
-          if (matrix[i][j] > 0.0)
+          if (matrix[i][j] > 0.0) {
             weerstandspunten += punten[j / enkel].getPunten() * matrix[i][j];
+          }
         }
         punten[i].setWeerstandspunten(weerstandspunten);
       }
@@ -264,8 +269,9 @@ public class PgnToHtml {
       output.newLine();
       for (int i = 0; i < noSpelers; i++) {
         output.write("    <col width=\"17\" />");
-        if (enkel == 2)
+        if (enkel == 2) {
           output.write("<col width=\"17\" />");
+        }
         output.newLine();
       }
       output.write("    <col width=\"34\" /><col width=\"10\" />");
@@ -284,8 +290,9 @@ public class PgnToHtml {
       output.newLine();
       for (int i = 0; i < noSpelers; i++) {
         output.write("      <th");
-        if (enkel == 2)
+        if (enkel == 2) {
           output.write(" colspan=\"2\"");
+        }
         output.write(" align=\"center\">" + (i + 1) + "</th>");
         output.newLine();
       }
@@ -324,30 +331,35 @@ public class PgnToHtml {
                      + swapNaam(punten[i].getNaam()) + "</th>");
         output.newLine();
         for (int j = 0; j < kolommen; j++) {
-          if ((j / enkel) * enkel == j )
+          if ((j / enkel) * enkel == j ) {
             output.write("      ");
+          }
           if (i == j / enkel) {
             output.write("<td class=\"zelf\"></td>");
           } else {
             output.write("<td align=\"center\"");
-            if ((j / enkel) * enkel != j )
+            if ((j / enkel) * enkel != j ) {
               output.write(" class=\"zwart\"");
+            }
             output.write(">");
-            if (matrix[i][j] == 0.0)
+            if (matrix[i][j] == 0.0) {
               output.write("0");
-            else if (matrix[i][j] == 0.5)
+            } else if (matrix[i][j] == 0.5) {
               output.write(Utilities.kwart(matrix[i][j]));
-            else if (matrix[i][j] == 1.0)
+            } else if (matrix[i][j] == 1.0) {
               output.write("1");
+            }
             output.write("</td>");
           }
-          if ((j / enkel) * enkel != j )
+          if ((j / enkel) * enkel != j ) {
             output.newLine();
+          }
         }
         output.write("      <td align=\"right\">");
         if (punten[i].getPunten() == 0.0
-            || punten[i].getPunten() >= 1.0)
+            || punten[i].getPunten() >= 1.0) {
           output.write("" + punten[i].getPunten().intValue());
+        }
         output.write("</td><td>" + Utilities.kwart(punten[i].getPunten())
                      + "</td>");
         output.newLine();
@@ -356,8 +368,9 @@ public class PgnToHtml {
         output.newLine();
         output.write("      <td align=\"right\">");
         if (punten[i].getWeerstandspunten() == 0.0
-            || punten[i].getWeerstandspunten() >= 1.0)
+            || punten[i].getWeerstandspunten() >= 1.0) {
           output.write("" + punten[i].getWeerstandspunten().intValue());
+        }
         output.write("</td><td>"
                      + Utilities.kwart(punten[i].getWeerstandspunten())
                      + "</td>");
@@ -454,7 +467,7 @@ public class PgnToHtml {
       output.newLine();
       output.write("      <th align=\"left\">Naam</th>");
       output.newLine();
-      output.write("      <th align=\"right\" colspan=\"2\">Punten</th");
+      output.write("      <th align=\"right\" colspan=\"2\">Punten</th>");
       output.newLine();
       output.write("      <th align=\"right\">Partijen</th>");
       output.newLine();
@@ -472,8 +485,9 @@ public class PgnToHtml {
         output.newLine();
         output.write("      <td align=\"right\">");
         if (punten[i].getPunten() == 0.0
-            || punten[i].getPunten() >= 1.0)
+            || punten[i].getPunten() >= 1.0) {
           output.write("" + punten[i].getPunten().intValue());
+        }
         output.write("</td><td>" + Utilities.kwart(punten[i].getPunten())
                      + "</td>");
         output.newLine();
@@ -482,8 +496,9 @@ public class PgnToHtml {
         output.newLine();
         output.write("      <td align=\"right\">");
         if (punten[i].getWeerstandspunten() == 0.0
-            || punten[i].getWeerstandspunten() >= 1.0)
+            || punten[i].getWeerstandspunten() >= 1.0) {
           output.write("" + punten[i].getWeerstandspunten().intValue());
+        }
         output.write("</td><td>"
                      + Utilities.kwart(punten[i].getWeerstandspunten())
                      + "</td>");
@@ -503,16 +518,16 @@ public class PgnToHtml {
       output.newLine();
       output.close();
     } catch (FileNotFoundException ex) {
-      ex.printStackTrace();
+      System.out.println(ex.getLocalizedMessage());
     } catch (IOException ex) {
-      ex.printStackTrace();
+      System.out.println(ex.getLocalizedMessage());
     } finally {
       try {
         if (input != null) {
           input.close();
         }
       } catch (IOException ex) {
-        ex.printStackTrace();
+        System.out.println(ex.getLocalizedMessage());
       }
     }
     System.out.println("Bestand : " + bestand);
@@ -541,8 +556,9 @@ public class PgnToHtml {
 
   private static String swapNaam(String naam) {
     String[]  deel  = naam.split(",");
-    if (deel.length == 1)
+    if (deel.length == 1) {
       return naam;
+    }
     
     return deel[1].trim() + " " + deel[0].trim();
   }

@@ -31,6 +31,8 @@ import java.util.Arrays;
  * @author Marco de Booy
  */
 public class StartPgn {
+  private StartPgn() {}
+
   public static void execute(String[] args) {
     BufferedWriter  output      = null;
 
@@ -59,10 +61,12 @@ public class StartPgn {
     Arrays.sort(speler, String.CASE_INSENSITIVE_ORDER);
     int noSpelers = speler.length;
 
-    if (bestand.endsWith(".pgn"))
+    if (bestand.endsWith(".pgn")) {
       bestand = bestand.substring(0, bestand.length() - 4);
-    if (uitvoerdir.endsWith("\\"))
+    }
+    if (uitvoerdir.endsWith("\\")) {
       uitvoerdir  = uitvoerdir.substring(0, uitvoerdir.length() - 1);
+    }
     File    pgnFile     = new File(uitvoerdir + "\\" + bestand + ".pgn");
     try {
       output  = new BufferedWriter(new FileWriter(pgnFile));
@@ -108,9 +112,9 @@ public class StartPgn {
       }
       output.close();
     } catch (FileNotFoundException ex) {
-      ex.printStackTrace();
+      System.out.println(ex.getLocalizedMessage());
     } catch (IOException ex) {
-      ex.printStackTrace();
+      System.out.println(ex.getLocalizedMessage());
     }
 
     System.out.println("Bestand : " + bestand);

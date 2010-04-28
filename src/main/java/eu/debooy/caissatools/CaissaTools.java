@@ -23,6 +23,8 @@ import eu.debooy.doosutils.Banner;
  * @author Marco de Booij
  */
 public class CaissaTools {
+  private CaissaTools() {}
+
   public static void main(String[] args) {
     if (args.length == 0) {
       Banner.printBanner("Caissa Tools");

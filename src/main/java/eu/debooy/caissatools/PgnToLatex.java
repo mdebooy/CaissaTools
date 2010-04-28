@@ -35,22 +35,24 @@ import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collection;
 import java.util.Date;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.Vector;
+import java.util.List;
 
 
 /**
  * @author Marco de Booij
  */
 public class PgnToLatex {
+  private PgnToLatex() {}
+
   public static void execute(String[] args) {
     BufferedReader  input       = null;
     BufferedWriter  output      = null;
-    Collection<PGN> partijen    = new Vector<PGN>();
+    List<PGN>       partijen    = new ArrayList<PGN>();
     HashSet<String> spelers     = new HashSet<String>();
     String          eindDatum   = "0000.00.00";
     String          hulpDatum   = "";
@@ -58,7 +60,7 @@ public class PgnToLatex {
 
     Banner.printBanner("PGN to LaTeX");
 
-    Arguments       arguments   = new Arguments(args);
+    Arguments arguments = new Arguments(args);
     arguments.setParameters(new String[] {"auteur", "bestand", "datum", "enkel",
                                           "halve", "logo", "matrix", "titel"});
     arguments.setVerplicht(new String[] {"bestand"});
@@ -67,10 +69,11 @@ public class PgnToLatex {
       return;
     }
 
-    String    auteur    = arguments.getArgument("auteur");
-    String    bestand   = arguments.getArgument("bestand");
-    if (bestand.endsWith(".pgn"))
+    String  auteur  = arguments.getArgument("auteur");
+    String  bestand = arguments.getArgument("bestand");
+    if (bestand.endsWith(".pgn")) {
       bestand   = bestand.substring(0, bestand.length() - 4);
+    }
     String    datum     = arguments.getArgument("datum");
     if (DoosUtils.isBlankOrNull(datum)) {
       try {
@@ -180,8 +183,9 @@ public class PgnToLatex {
                   speler    = spelers.iterator();
       for (int i = 0; i < noSpelers; i++) {
         namen[i]  = speler.next();
-        for (int j = 0; j < kolommen; j++)
+        for (int j = 0; j < kolommen; j++) {
           matrix[i][j] = -1.0;
+        }
       }
       Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
       for (int i = 0; i < noSpelers; i++) {
@@ -189,9 +193,7 @@ public class PgnToLatex {
         punten[i].setNaam(namen[i]);
       }
 
-      Iterator<PGN> iter = partijen.iterator();
-      while (iter.hasNext()) {
-        PGN     partij  = iter.next();
+      for (PGN partij: partijen) {
         int     ronde   = 1;
         try {
           ronde = Integer.valueOf(partij.getTag("Round")).intValue();
@@ -205,8 +207,9 @@ public class PgnToLatex {
             && (Arrays.binarySearch(halve, wit,
                                     String.CASE_INSENSITIVE_ORDER) > -1
                 || Arrays.binarySearch(halve, zwart,
-                                       String.CASE_INSENSITIVE_ORDER) > -1))
+                                       String.CASE_INSENSITIVE_ORDER) > -1)) {
           continue;
+        }
         int   iWit    = Arrays.binarySearch(namen, wit,
                                             String.CASE_INSENSITIVE_ORDER);
         int   iZwart  = Arrays.binarySearch(namen, zwart,
@@ -236,20 +239,20 @@ public class PgnToLatex {
       for (int i = 0; i < noSpelers; i++) {
         Double weerstandspunten = 0.0;
         for (int j = 0; j < kolommen; j++) {
-          if (matrix[i][j] > 0.0)
+          if (matrix[i][j] > 0.0) {
             weerstandspunten += punten[j / enkel].getPunten() * matrix[i][j];
+          }
           matrix[i][j]  = -1.0;
         }
         punten[i].setWeerstandspunten(weerstandspunten);
       }
       Arrays.sort(punten);
       int[] stand = new int[noSpelers];
-      for (int i = 0; i < noSpelers; i++)
+      for (int i = 0; i < noSpelers; i++) {
         stand[Arrays.binarySearch(namen, punten[i].getNaam(),
                                   String.CASE_INSENSITIVE_ORDER)] = i;
-      iter = partijen.iterator();
-      while (iter.hasNext()) {
-        PGN     partij  = iter.next();
+      }
+      for (PGN partij: partijen) {
         int     ronde   = 1;
         try {
           ronde = Integer.valueOf(partij.getTag("Round")).intValue();
@@ -263,8 +266,9 @@ public class PgnToLatex {
             && (Arrays.binarySearch(halve, wit,
                                     String.CASE_INSENSITIVE_ORDER) > -1
                 || Arrays.binarySearch(halve, zwart,
-                                       String.CASE_INSENSITIVE_ORDER) > -1))
+                                       String.CASE_INSENSITIVE_ORDER) > -1)) {
           continue;
+        }
         int   iWit    =
           stand[Arrays.binarySearch(namen, wit,
                                     String.CASE_INSENSITIVE_ORDER)];
@@ -405,26 +409,30 @@ public class PgnToLatex {
         output.write("  \\begin{center}");
         output.newLine();
         output.write("    \\begin{tabular} { | c | l | ");
-        for (int i = 0; i < kolommen; i++)
+        for (int i = 0; i < kolommen; i++) {
           output.write(" c | ");
+        }
         output.write("r | r | r | }");
         output.newLine();
         output.write("    \\hline");
         output.newLine();
         output.write("    \\multicolumn{2}{|c|}{} ");
-        for (int i = 0; i < noSpelers; i++)
-          if (enkel == 1)
+        for (int i = 0; i < noSpelers; i++) {
+          if (enkel == 1) {
             output.write(" & " + (i + 1));
-          else
+          } else {
             output.write(" & \\multicolumn{2}{c|}{" + (i + 1) + "} ");
+          }
+        }
         output.write("& Punten & Partijen & SB \\\\");
         output.newLine();
         output.write("    \\cline{3-" + (2 + kolommen) + "}");
         output.newLine();
         if (enkel == 2) {
           output.write("    \\multicolumn{2}{|c|}{} & ");
-          for (int i = 0; i < noSpelers; i++)
+          for (int i = 0; i < noSpelers; i++) {
             output.write("W & Z & ");
+          }
           output.write("& & \\\\");
           output.newLine();
         }
@@ -433,21 +441,24 @@ public class PgnToLatex {
         for (int i = 0; i < noSpelers; i++) {
           output.write((i + 1) + " & " + punten[i].getNaam() + " & ");
           for (int j = 0; j < kolommen; j++) {
-            if (i == j / enkel)
+            if (i == j / enkel) {
               output.write("\\multicolumn{1}"
                            + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ");
-            else {
-              if ((j / enkel) * enkel != j )
+            } else {
+              if ((j / enkel) * enkel != j ) {
                 output.write("\\multicolumn{1}"
                              + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{");
-              if (matrix[i][j] == 0.0)
+              }
+              if (matrix[i][j] == 0.0) {
                 output.write("0");
-              else if (matrix[i][j] == 0.5)
+              } else if (matrix[i][j] == 0.5) {
                 output.write("\\textonehalf");
-              else if (matrix[i][j] == 1.0)
+              } else if (matrix[i][j] == 1.0) {
                 output.write("1");
-              if ((j / enkel) * enkel != j )
+              }
+              if ((j / enkel) * enkel != j ) {
                 output.write("}");
+              }
               output.write(" & ");
             }
           }
@@ -472,9 +483,7 @@ public class PgnToLatex {
       output.write("\\topmargin =-15.mm");
       output.newLine();
 
-      iter = partijen.iterator();
-      while (iter.hasNext()) {
-        PGN partij = iter.next();
+      for (PGN partij: partijen) {
         String zetten = partij.getZetten();
         if (DoosUtils.isNotBlankOrNull(zetten)) {
           output.write("\\begin{chessgame}{" + partij.getTag("White") + "}{"
@@ -483,8 +492,9 @@ public class PgnToLatex {
               + partij.getTag("Result").replaceAll("1/2", "\\\\textonehalf")
               + "}{");
           String  eco = partij.getTag("ECO");
-          if (DoosUtils.isNotBlankOrNull(eco))
+          if (DoosUtils.isNotBlankOrNull(eco)) {
             output.write(eco);
+          }
           output.write("}{"+ partij.getZetten().replaceAll("#", "\\\\#")
               + "}\\end{chessgame}");
         } else {
@@ -502,16 +512,15 @@ public class PgnToLatex {
       input.close();
       output.close();
     } catch (FileNotFoundException ex) {
-      ex.printStackTrace();
     } catch (IOException ex) {
-      ex.printStackTrace();
+      System.out.println(ex.getLocalizedMessage());
     } finally {
       try {
         if (input != null) {
           input.close();
         }
       } catch (IOException ex) {
-        ex.printStackTrace();
+        System.out.println(ex.getLocalizedMessage());
       }
     }
     System.out.println("Bestand : " + bestand);
