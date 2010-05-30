@@ -33,6 +33,7 @@ public class CaissaTools {
     }
 
     String    commando      = args[0];
+
     String[]  commandoArgs  = new String[args.length-1];
     System.arraycopy(args, 1, commandoArgs, 0, args.length-1);
 
@@ -48,6 +49,10 @@ public class CaissaTools {
       StartPgn.execute(commandoArgs);
       return;
     }
+    if ("spelerstatistiek".equalsIgnoreCase(commando)) {
+      SpelerStatistiek.execute(commandoArgs);
+      return;
+    }
 
     Banner.printBanner("Caissa Tools");
     help();
@@ -57,17 +62,21 @@ public class CaissaTools {
    * Geeft de 'help' pagina.
    */
   private static void help() {
-    System.out.println("  PgnToHtml  Zet een bestand met PGN partijen uit een toernooi om in");
-    System.out.println("             2 HTML Bestanden.");
-    System.out.println("  PgnToLatex Zet een bestand met PGN partijen uit een toernooi om in");
-    System.out.println("             een .tex bestand.");
-    System.out.println("  StartPgn   Maakt een PGN bestand aan met alle partijen die tussen");
-    System.out.println("             de opgegeven spelers gespeeld (moeten) worden.");
+    System.out.println("  PgnToHtml         Zet een bestand met PGN partijen uit een toernooi");
+    System.out.println("                    om in 2 HTML Bestanden.");
+    System.out.println("  PgnToLatex        Zet een bestand met PGN partijen uit een toernooi");
+    System.out.println("                    om in een .tex bestand.");
+    System.out.println("  StartPgn          Maakt een PGN bestand aan met alle partijen die");
+    System.out.println("                    tussen de opgegeven spelers gespeeld (moeten) worden.");
+    System.out.println("  SpelerStatistiek  Maakt een statistiek van alle partijen van de");
+    System.out.println("                    opgegeven speler.");
     System.out.println();
     PgnToHtml.help();
     System.out.println();
     PgnToLatex.help();
     System.out.println();
     StartPgn.help();
+    System.out.println();
+    SpelerStatistiek.help();
   }
 }

@@ -146,7 +146,8 @@ public class PgnToLatex {
 
         // Verwerk de 'datums'
         hulpDatum = partij.getTag("EventDate");
-        if (DoosUtils.isNotBlankOrNull(hulpDatum)) {
+        if (DoosUtils.isNotBlankOrNull(hulpDatum)
+            && hulpDatum.indexOf('?') < 0) {
           if (hulpDatum.compareTo(startDatum) < 0 ) {
             startDatum  = hulpDatum;
           }
@@ -155,11 +156,14 @@ public class PgnToLatex {
           }
         }
         hulpDatum = partij.getTag("Date");
-        if (hulpDatum.compareTo(startDatum) < 0 ) {
-          startDatum  = hulpDatum;
-        }
-        if (hulpDatum.compareTo(eindDatum) > 0 ) {
-          eindDatum   = hulpDatum;
+        if (DoosUtils.isNotBlankOrNull(hulpDatum)
+            && hulpDatum.indexOf('?') < 0) {
+          if (hulpDatum.compareTo(startDatum) < 0 ) {
+            startDatum  = hulpDatum;
+          }
+          if (hulpDatum.compareTo(eindDatum) > 0 ) {
+            eindDatum   = hulpDatum;
+          }
         }
         if (DoosUtils.isBlankOrNull(auteur)) {
           auteur  = partij.getTag("Site");
@@ -391,12 +395,12 @@ public class PgnToLatex {
       if (DoosUtils.isNotBlankOrNull(logo)) {
         output.write("    \\vspace{2in}");
         output.newLine();
-        output.write("    \\includegraphics[width=6cm]{"+ logo + "}");
+        output.write("    \\includegraphics[width=6cm]{"+ logo + "} \\\\");
         output.newLine();
       }
       output.write("    \\vspace{1in}");
       output.newLine();
-      output.write("    \\large \\\\" + datumInTitel(startDatum, eindDatum)
+      output.write("    \\large " + datumInTitel(startDatum, eindDatum)
                    + " \\\\");
       output.newLine();
       output.write("  \\end{center}");
