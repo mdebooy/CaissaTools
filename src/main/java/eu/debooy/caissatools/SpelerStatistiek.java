@@ -199,6 +199,8 @@ public class SpelerStatistiek {
       output.newLine();
       output.write("\\usepackage{colortbl}");
       output.newLine();
+      output.write("\\usepackage{longtable}");
+      output.newLine();
       output.write("\\usepackage[T1]{fontenc}");
       output.newLine();
       output.write("\\usepackage[pdftex]{graphicx}");
@@ -267,7 +269,7 @@ public class SpelerStatistiek {
       output.newLine();
       int[] totaal  = new int[] {0,0,0,0,0,0};
 
-      output.write("    \\begin{tabular} { | l | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | }");
+      output.write("    \\begin{longtable} { | l | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | }");
       output.newLine();
       output.write("      \\hline");
       output.newLine();
@@ -281,6 +283,8 @@ public class SpelerStatistiek {
       output.newLine();
       output.write("      \\hline");
       output.newLine();
+      output.write("      \\endhead");
+      output.newLine();
       for (String item: items.keySet()) {
         int[] statistiek  = items.get(item);
         for (int i = 0; i < 6; i++) {
@@ -289,7 +293,7 @@ public class SpelerStatistiek {
         printStatistiek(item, statistiek, output);
       }
       printStatistiek("Totaal", totaal, output);
-      output.write("    \\end{tabular}");
+      output.write("    \\end{longtable}");
       output.newLine();
       output.write("  \\end{center}");
       output.newLine();

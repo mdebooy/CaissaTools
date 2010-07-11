@@ -47,6 +47,11 @@
       <name>DOOS releases</name>
       <url>http://intra.debooy.eu/nexus/content/repositories/doos-snapshots</url>
     </snapshotRepository>
+    <site>
+      <id>Documentatie</id>
+      <name>DOOS Documentatie</name>
+      <url>scp://intra.debooy.eu/var/www/site/CaissaTools</url>
+    </site>
   </distributionManagement>
 
   <build>
@@ -122,6 +127,11 @@
             </goals>
           </execution>
         </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-site-plugin</artifactId>
+        <version>2.1.1</version>
       </plugin>
     </plugins>
   </build>

@@ -1,7 +1,7 @@
 /**
  * Copyright 2008 Marco de Booij
  *
- * Licensed under the EUPL, Version 1.0 or – as soon they will be approved by
+ * Licensed under the EUPL, Version 1.0 or ï¿½ as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
  * you may not use this work except in compliance with the Licence. You may
  * obtain a copy of the Licence at:
@@ -17,6 +17,7 @@
 package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
+import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.PgnException;
@@ -31,7 +32,6 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.text.ParseException;
@@ -49,7 +49,7 @@ import java.util.List;
 public class PgnToLatex {
   private PgnToLatex() {}
 
-  public static void execute(String[] args) {
+  public static void execute(String[] args) throws PgnException {
     BufferedReader  input       = null;
     BufferedWriter  output      = null;
     List<PGN>       partijen    = new ArrayList<PGN>();
@@ -98,85 +98,48 @@ public class PgnToLatex {
     Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
 
     File    latexFile = new File(bestand + ".tex");
-    File    pgnFile   = new File(bestand + ".pgn");
+
+    partijen  = CaissaUtils.laadPgnBestand(bestand);
+
+    for (PGN partij: partijen) {
+      // Verwerk de spelers
+      String  wit   = partij.getTag("White");
+      String  zwart = partij.getTag("Black");
+      spelers.add(wit);
+      spelers.add(zwart);
+  
+      // Verwerk de 'datums'
+      hulpDatum = partij.getTag("EventDate");
+      if (DoosUtils.isNotBlankOrNull(hulpDatum)
+          && hulpDatum.indexOf('?') < 0) {
+        if (hulpDatum.compareTo(startDatum) < 0 ) {
+          startDatum  = hulpDatum;
+        }
+        if (hulpDatum.compareTo(eindDatum) > 0 ) {
+          eindDatum   = hulpDatum;
+        }
+      }
+      hulpDatum = partij.getTag("Date");
+      if (DoosUtils.isNotBlankOrNull(hulpDatum)
+          && hulpDatum.indexOf('?') < 0) {
+        if (hulpDatum.compareTo(startDatum) < 0 ) {
+          startDatum  = hulpDatum;
+        }
+        if (hulpDatum.compareTo(eindDatum) > 0 ) {
+          eindDatum   = hulpDatum;
+        }
+      }
+      if (DoosUtils.isBlankOrNull(auteur)) {
+        auteur  = partij.getTag("Site");
+      }
+      if (DoosUtils.isBlankOrNull(titel)) {
+        titel   = partij.getTag("Event");
+      }
+    }
+
     try {
-      input   = new BufferedReader(new FileReader(pgnFile));
       output  = new BufferedWriter(new FileWriter(latexFile));
-      String line = input.readLine().trim();
-      // Zoek naar de eerste TAG
-      while (line != null && !line.startsWith("[")) {
-        line = input.readLine();
-      }
-      while (line != null) {
-        PGN partij = new PGN();
-        // Verwerk de TAGs
-        while (line != null && line.startsWith("[")) {
-          String tag = line.substring(1, line.indexOf(' '));
-          String value = line.substring(line.indexOf('"') + 1,
-              line.length() - 2);
-          try {
-            partij.addTag(tag, value);
-          } catch (PgnException e) {
-            System.out.println(e.getMessage());
-          }
-          line = input.readLine();
-        }
 
-        // Verwerk de zetten
-        String uitslag = partij.getTag("Result");
-        String zetten = "";
-        while (line != null && !line.endsWith(uitslag)) {
-          zetten += line.trim();
-          if (!zetten.endsWith(".")) {
-            zetten += " ";
-          }
-          line = input.readLine();
-        }
-        zetten += line.substring(0, line.indexOf(uitslag));
-        partij.setZetten(zetten.trim());
-
-        partijen.add(partij);
-
-        // Verwerk de spelers
-        uitslag = partij.getTag("Result");
-        String  wit   = partij.getTag("White");
-        String  zwart = partij.getTag("Black");
-        spelers.add(wit);
-        spelers.add(zwart);
-
-        // Verwerk de 'datums'
-        hulpDatum = partij.getTag("EventDate");
-        if (DoosUtils.isNotBlankOrNull(hulpDatum)
-            && hulpDatum.indexOf('?') < 0) {
-          if (hulpDatum.compareTo(startDatum) < 0 ) {
-            startDatum  = hulpDatum;
-          }
-          if (hulpDatum.compareTo(eindDatum) > 0 ) {
-            eindDatum   = hulpDatum;
-          }
-        }
-        hulpDatum = partij.getTag("Date");
-        if (DoosUtils.isNotBlankOrNull(hulpDatum)
-            && hulpDatum.indexOf('?') < 0) {
-          if (hulpDatum.compareTo(startDatum) < 0 ) {
-            startDatum  = hulpDatum;
-          }
-          if (hulpDatum.compareTo(eindDatum) > 0 ) {
-            eindDatum   = hulpDatum;
-          }
-        }
-        if (DoosUtils.isBlankOrNull(auteur)) {
-          auteur  = partij.getTag("Site");
-        }
-        if (DoosUtils.isBlankOrNull(titel)) {
-          titel   = partij.getTag("Event");
-        }
-
-        // Zoek naar de eerste TAG
-        while (line != null && !line.startsWith("[")) {
-          line = input.readLine();
-        }
-      }
       // Maak de Matrix
       int           noSpelers = spelers.size();
       int           kolommen  = noSpelers * enkel;
@@ -513,7 +476,6 @@ public class PgnToLatex {
 
       output.write("\\end{document}");
       output.newLine();
-      input.close();
       output.close();
     } catch (FileNotFoundException ex) {
     } catch (IOException ex) {
