@@ -1,5 +1,10 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
   <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>eu.debooy.maven</groupId>
+    <artifactId>pom</artifactId>
+    <version>1.0.1</version>
+  </parent>
   <groupId>eu.debooy.caissa</groupId>
   <artifactId>caissatools</artifactId>
   <version>0.3.0-SNAPSHOT</version>
@@ -7,17 +12,6 @@
   <name>Caissa Tools</name>
   <description>Verschillende tools voor schakers.</description>
   <inceptionYear>2008</inceptionYear>
-  <organization>
-    <name>Marco de Booij</name>
-    <url>http://www.debooy.eu</url>
-  </organization>
-  <licenses>
-    <license>
-      <name>European Union Public Licence (EUPL v.1.1)</name>
-      <url>http://ec.europa.eu/idabc/eupl</url>
-      <distribution>repo</distribution>
-    </license>
-  </licenses>
   <scm>
     <connection>scm:svn:http://intra.debooy.eu/svn/CaissaTools/trunk</connection>
     <developerConnection>scm:svn:http://intra.debooy.eu/svn/CaissaTools/trunk</developerConnection>
@@ -37,16 +31,6 @@
   </developers>
 
   <distributionManagement>
-    <repository>
-      <id>DOOS</id>
-      <name>DOOS releases</name>
-      <url>http://intra.debooy.eu/nexus/content/repositories/doos-releases</url>
-    </repository>
-    <snapshotRepository>
-      <id>DOOS</id>
-      <name>DOOS releases</name>
-      <url>http://intra.debooy.eu/nexus/content/repositories/doos-snapshots</url>
-    </snapshotRepository>
     <site>
       <id>Documentatie</id>
       <name>DOOS Documentatie</name>
@@ -57,152 +41,39 @@
   <build>
     <plugins>
       <plugin>
-        <artifactId>maven-compiler-plugin</artifactId>
-        <configuration>
-          <source>1.6</source>
-          <target>1.6</target>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>buildnumber-maven-plugin</artifactId>
-        <executions>
-          <execution>
-            <phase>validate</phase>
-            <goals>
-              <goal>create</goal>
-            </goals>
-          </execution>
-        </executions>
-        <configuration>
-          <format>{0,date,yyyy-MM-dd HH:mm:ss}</format>
-          <items>
-            <item>timestamp</item>
-          </items>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-resources-plugin</artifactId>
-        <configuration>
-          <encoding>UTF-8</encoding>
-        </configuration>
-      </plugin>
-      <plugin>     
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-release-plugin</artifactId>
-        <version>2.0-beta-9</version>
-      </plugin>
-      <plugin>
         <groupId>org.apache.maven.plugins</groupId>
         <artifactId>maven-assembly-plugin</artifactId>
         <configuration>
-          <displayName>${pom.name}</displayName>
-          <description>${pom.description}</description>
-          <descriptorRefs>
-            <descriptorRef>jar-with-dependencies</descriptorRef>
-          </descriptorRefs>
           <archive>
             <manifest>
               <mainClass>eu.debooy.caissatools.CaissaTools</mainClass>
             </manifest>
-            <manifestEntries>
-              <Specification-Title>${pom.name}</Specification-Title>
-              <Specification-Version>${pom.version}</Specification-Version>
-              <Specification-Vendor>${pom.organization.name}</Specification-Vendor>
-              <Implementation-Title>${pom.name}</Implementation-Title>
-              <Implementation-Version>${pom.version}</Implementation-Version>
-              <Implementation-Vendor-Id>${pom.groupId}</Implementation-Vendor-Id>
-              <Implementation-Vendor>${pom.organization.name}</Implementation-Vendor>
-              <Build-Time>${buildNumber}</Build-Time>
-            </manifestEntries>
           </archive>
         </configuration>
-        <executions>
-          <execution>
-            <id>make-assembly</id>
-            <phase>package</phase>
-            <goals>
-              <goal>single</goal>
-            </goals>
-          </execution>
-        </executions>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-site-plugin</artifactId>
-        <version>2.1.1</version>
       </plugin>
     </plugins>
   </build>
-
-  <reporting>
-    <plugins>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-surefire-report-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-project-info-reports-plugin</artifactId>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>findbugs-maven-plugin</artifactId>
-        <configuration>
-          <threshold>Normal</threshold>
-          <effort>Default</effort>
-          <excludeFilterFile>findbugs-exclude.xml</excludeFilterFile>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.codehaus.mojo</groupId>
-        <artifactId>taglist-maven-plugin</artifactId>
-        <configuration>
-          <tags>
-            <tag>TODO</tag>
-          </tags>
-        </configuration>
-      </plugin>
-      <plugin>
-        <groupId>org.apache.maven.plugins</groupId>
-        <artifactId>maven-pmd-plugin</artifactId>
-        <configuration>
-          <linkXref>false</linkXref>
-          <sourceEncoding>utf-8</sourceEncoding>
-          <minimumTokens>100</minimumTokens>
-          <targetJdk>1.5</targetJdk>
-        </configuration>
-      </plugin>
-    </plugins>
-  </reporting>
 
   <dependencies>
     <dependency>
       <groupId>eu.debooy.caissa</groupId>
       <artifactId>caissa-core</artifactId>
-      <version>[0.1.1,)</version>
+      <version>[0.1.2,)</version>
     </dependency>
     <dependency>
       <groupId>eu.debooy.doosutils</groupId>
       <artifactId>doosutils-core</artifactId>
-      <version>[1.0.1,)</version>
+      <version>[1.0.2]</version>
     </dependency>
     <dependency>
       <groupId>eu.debooy.doosutils</groupId>
       <artifactId>doosutils-latex</artifactId>
-      <version>[1.0.1,)</version>
+      <version>[1.0.2]</version>
     </dependency>
     <dependency>
       <groupId>eu.debooy.doosutils</groupId>
       <artifactId>doosutils-html</artifactId>
-      <version>[1.0.1,)</version>
-    </dependency>
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.6</version>
-      <scope>test</scope>
+      <version>[1.0.2]</version>
     </dependency>
   </dependencies>
 </project>

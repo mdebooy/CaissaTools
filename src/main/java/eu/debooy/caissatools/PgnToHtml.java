@@ -175,7 +175,7 @@ public class PgnToHtml {
       output.newLine();
       output.write("  <title>Schaakvereniging \"De Brug\"</title>");
       output.newLine();
-      output.write("  <meta http-equiv=\"Content-Type\"  content=\"text/html; charset=iso-8859-1\" />");
+      output.write("  <meta http-equiv=\"Content-Type\"  content=\"text/html; charset=utf-8\" />");
       output.newLine();
       output.write("  <meta name=\"AbsoluteURL\"         content=\"\" />");
       output.newLine();
@@ -359,7 +359,7 @@ public class PgnToHtml {
       output.newLine();
       output.write("  <title>Schaakvereniging \"De Brug\"</title>");
       output.newLine();
-      output.write("  <meta http-equiv=\"Content-Type\"  content=\"text/html; charset=iso-8859-1\" />");
+      output.write("  <meta http-equiv=\"Content-Type\"  content=\"text/html; charset=utf-8\" />");
       output.newLine();
       output.write("  <meta name=\"AbsoluteURL\"         content=\"\" />");
       output.newLine();
