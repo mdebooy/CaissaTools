@@ -26,12 +26,13 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.html.Utilities;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
@@ -46,16 +47,18 @@ public class PgnToHtml {
   private PgnToHtml() {}
 
   public static void execute(String[] args) throws PgnException {
-    BufferedReader  input       = null;
     BufferedWriter  output      = null;
     List<PGN>       partijen    = new ArrayList<PGN>();
     HashSet<String> spelers     = new HashSet<String>();
+    String          charsetIn   = Charset.defaultCharset().name();
+    String          charsetUit  = Charset.defaultCharset().name();
 
     Banner.printBanner("PGN to HTML");
 
     Arguments       arguments   = new Arguments(args);
-    arguments.setParameters(new String[] {"bestand", "enkel", "halve",
-                                          "seizoen", "uitvoerdir"});
+    arguments.setParameters(new String[] {"bestand", "charsetin", "charsetuit",
+                                          "enkel", "halve", "seizoen",
+                                          "uitvoerdir"});
     arguments.setVerplicht(new String[] {"bestand"});
     if (!arguments.isValid()) {
       help();
@@ -66,6 +69,12 @@ public class PgnToHtml {
     int     enkel   = 1;
     if (DoosConstants.ONWAAR.equalsIgnoreCase(arguments.getArgument("enkel"))) {
       enkel = 2;
+    }
+    if (arguments.hasArgument("charsetin")) {
+      charsetIn   = arguments.getArgument("charsetin");
+    }
+    if (arguments.hasArgument("charsetuit")) {
+      charsetUit  = arguments.getArgument("charsetuit");
     }
     String[]  halve       =
       DoosUtils.nullToEmpty(arguments.getArgument("halve")).split(";");
@@ -83,7 +92,7 @@ public class PgnToHtml {
     File    indexFile   = new File(uitvoerdir + "/index.html");
     File    matrixFile  = new File(uitvoerdir + "/matrix.html");
 
-    partijen  = CaissaUtils.laadPgnBestand(bestand);
+    partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
 
     try {
       for (PGN partij: partijen) {
@@ -168,7 +177,9 @@ public class PgnToHtml {
       }
 
       // Maak de matrix.html file
-      output  = new BufferedWriter(new FileWriter(matrixFile));
+      output  = new BufferedWriter(
+                  new OutputStreamWriter(
+                   new FileOutputStream(matrixFile), charsetUit));
       output.write("<include>declaration.html</include>");
       output.newLine();
       output.write("<head>");
@@ -184,9 +195,6 @@ public class PgnToHtml {
       output.write("  <meta name=\"Content\"             content=\"Schaakvereniging 'De Brug'\" />");
       output.newLine();
       output.write("  <meta name=\"Keywords\"            content=\"chess, zwevegem\" />");
-      output.newLine();
-      output.write("  <meta name=\"Rating\"              content=\""
-                   + seizoen + "\" />");
       output.newLine();
       output.write("  <meta name=\"Robots\"              content=\"index, follow\" />");
       output.newLine();
@@ -352,7 +360,9 @@ public class PgnToHtml {
 
       // Maak de index.html file
       Arrays.sort(punten);
-      output  = new BufferedWriter(new FileWriter(indexFile));
+      output  = new BufferedWriter(
+                  new OutputStreamWriter(
+                    new FileOutputStream(indexFile), charsetUit));
       output.write("<include>declaration.html</include>");
       output.newLine();
       output.write("<head>");
@@ -368,9 +378,6 @@ public class PgnToHtml {
       output.write("  <meta name=\"Content\"             content=\"Schaakvereniging 'De Brug'\" />");
       output.newLine();
       output.write("  <meta name=\"Keywords\"            content=\"chess, zwevegem\" />");
-      output.newLine();
-      output.write("  <meta name=\"Rating\"              content=\""
-                   + seizoen + "\" />");
       output.newLine();
       output.write("  <meta name=\"Robots\"              content=\"index, follow\" />");
       output.newLine();
@@ -483,8 +490,8 @@ public class PgnToHtml {
       System.out.println(ex.getLocalizedMessage());
     } finally {
       try {
-        if (input != null) {
-          input.close();
+        if (output != null) {
+          output.close();
         }
       } catch (IOException ex) {
         System.out.println(ex.getLocalizedMessage());
@@ -504,6 +511,8 @@ public class PgnToHtml {
     System.out.println("  --bestand=<PGN bestand>");
     System.out.println();
     System.out.println("  --bestand    Het bestand met de partijen in PGN formaat.");
+    System.out.println("  --charsetin  De characterset van <bestand> als deze niet "+ Charset.defaultCharset().name() + " is.");
+    System.out.println("  --charsetout De characterset van de uitvoer als deze niet "+ Charset.defaultCharset().name() + " moet zijn.");
     System.out.println("  --enkel      Enkelrondig <J|n>");
     System.out.println("  --halve      Lijst met spelers (gescheiden door een ;) die enkel eerste helft meespelen.");
     System.out.println("               Enkel nodig bij enkel=N.");

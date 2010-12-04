@@ -28,10 +28,14 @@ import eu.debooy.doosutils.latex.Utilities;
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.io.LineNumberReader;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.Date;
@@ -45,22 +49,25 @@ public class SpelerStatistiek {
   private SpelerStatistiek() {}
 
   public static void execute(String[] args) {
-    BufferedReader  input         = null;
-    BufferedWriter  output        = null;
-    int             partijen      = 0;
-    String[]        datumDeel     = null;
-    String          eindDatum     = "0000.00.00";
-    String          hulpDatum     = "";
-    String          sleutel       = "";
-    String          startDatum    = "9999.99.99";
-    String[]        uitslagen     = new String[] {"1-0", "1/2-1/2", "0-1"};
+    BufferedReader  input       = null;
+    BufferedWriter  output      = null;
+    int             partijen    = 0;
+    String          charsetIn   = Charset.defaultCharset().name();
+    String          charsetUit  = Charset.defaultCharset().name();
+    String[]        datumDeel   = null;
+    String          eindDatum   = "0000.00.00";
+    String          hulpDatum   = "";
+    String          sleutel     = "";
+    String          startDatum  = "9999.99.99";
+    String[]        uitslagen   = new String[] {"1-0", "1/2-1/2", "0-1"};
     TreeMap<String, int[]>
-                    items         = new TreeMap<String, int[]>( );
+                    items       = new TreeMap<String, int[]>( );
 
     Banner.printBanner("Speler Statistieken");
 
     Arguments arguments = new Arguments(args);
-    arguments.setParameters(new String[] {"bestand", "logo", "speler", "tag"});
+    arguments.setParameters(new String[] {"bestand",  "charsetin", "charsetuit",
+                                          "logo", "speler", "tag"});
     arguments.setVerplicht(new String[] {"bestand", "speler"});
     if (!arguments.isValid()) {
       help();
@@ -70,6 +77,12 @@ public class SpelerStatistiek {
     String  bestand = arguments.getArgument("bestand");
     if (bestand.endsWith(".pgn")) {
       bestand   = bestand.substring(0, bestand.length() - 4);
+    }
+    if (arguments.hasArgument("charsetin")) {
+      charsetIn   = arguments.getArgument("charsetin");
+    }
+    if (arguments.hasArgument("charsetuit")) {
+      charsetUit  = arguments.getArgument("charsetuit");
     }
     String    datum     = "";
     if (DoosUtils.isBlankOrNull(datum)) {
@@ -86,8 +99,12 @@ public class SpelerStatistiek {
     File    latexFile = new File(bestand + ".tex");
     File    pgnFile   = new File(bestand + ".pgn");
     try {
-      input   = new BufferedReader(new FileReader(pgnFile));
-      output  = new BufferedWriter(new FileWriter(latexFile));
+      input   = new LineNumberReader(
+                  new InputStreamReader(
+                    new FileInputStream (pgnFile), charsetIn));
+      output  = new BufferedWriter(
+                  new OutputStreamWriter(
+                    new FileOutputStream(latexFile), charsetUit));
       String line = input.readLine().trim();
       // Zoek naar de eerste TAG
       while (line != null && !line.startsWith("[")) {
@@ -365,12 +382,14 @@ public class SpelerStatistiek {
     System.out.println("java -jar CaissaTools.jar SpelerStatistiek [OPTIE...] \\");
     System.out.println("  --bestand=<PGN bestand> --speler=<Naam van de speler> \\");
     System.out.println();
-    System.out.println("  --bestand Het bestand met de partijen in PGN formaat.");
-    System.out.println("  --logo    Logo op de titel pagina.");
-    System.out.println("  --speler  De speler voor de statistieken.");
-    System.out.println("  --tag     De PGN tag waarop de statistieken gebaseerd");
-    System.out.println("            zijn. Zonder deze parameter zijn het de");
-    System.out.println("            tegenstanders. Bij date wordt het het jaar.");
+    System.out.println("  --bestand    Het bestand met de partijen in PGN formaat.");
+    System.out.println("  --charsetin  De characterset van <bestand> als deze niet "+ Charset.defaultCharset().name() + " is.");
+    System.out.println("  --charsetout De characterset van de uitvoer als deze niet "+ Charset.defaultCharset().name() + " moet zijn.");
+    System.out.println("  --logo       Logo op de titel pagina.");
+    System.out.println("  --speler     De speler voor de statistieken.");
+    System.out.println("  --tag        De PGN tag waarop de statistieken gebaseerd");
+    System.out.println("               zijn. Zonder deze parameter zijn het de");
+    System.out.println("               tegenstanders. Bij date wordt het het jaar.");
     System.out.println();
     System.out.println("Bestand en speler verplicht.");
     System.out.println();

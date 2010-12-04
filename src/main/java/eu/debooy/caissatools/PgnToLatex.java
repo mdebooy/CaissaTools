@@ -28,12 +28,13 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.latex.Utilities;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileNotFoundException;
-import java.io.FileWriter;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -50,10 +51,11 @@ public class PgnToLatex {
   private PgnToLatex() {}
 
   public static void execute(String[] args) throws PgnException {
-    BufferedReader  input       = null;
     BufferedWriter  output      = null;
     List<PGN>       partijen    = new ArrayList<PGN>();
     HashSet<String> spelers     = new HashSet<String>();
+    String          charsetIn   = Charset.defaultCharset().name();
+    String          charsetUit  = Charset.defaultCharset().name();
     String          eindDatum   = "0000.00.00";
     String          hulpDatum   = "";
     String          startDatum  = "9999.99.99";
@@ -61,7 +63,8 @@ public class PgnToLatex {
     Banner.printBanner("PGN to LaTeX");
 
     Arguments arguments = new Arguments(args);
-    arguments.setParameters(new String[] {"auteur", "bestand", "datum", "enkel",
+    arguments.setParameters(new String[] {"auteur", "bestand", "charsetin",
+                                          "charsetuit", "datum", "enkel",
                                           "halve", "logo", "matrix", "titel"});
     arguments.setVerplicht(new String[] {"bestand"});
     if (!arguments.isValid()) {
@@ -73,6 +76,12 @@ public class PgnToLatex {
     String  bestand = arguments.getArgument("bestand");
     if (bestand.endsWith(".pgn")) {
       bestand   = bestand.substring(0, bestand.length() - 4);
+    }
+    if (arguments.hasArgument("charsetin")) {
+      charsetIn   = arguments.getArgument("charsetin");
+    }
+    if (arguments.hasArgument("charsetuit")) {
+      charsetUit  = arguments.getArgument("charsetuit");
     }
     String    datum     = arguments.getArgument("datum");
     if (DoosUtils.isBlankOrNull(datum)) {
@@ -99,7 +108,7 @@ public class PgnToLatex {
 
     File    latexFile = new File(bestand + ".tex");
 
-    partijen  = CaissaUtils.laadPgnBestand(bestand);
+    partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
 
     for (PGN partij: partijen) {
       // Verwerk de spelers
@@ -138,7 +147,9 @@ public class PgnToLatex {
     }
 
     try {
-      output  = new BufferedWriter(new FileWriter(latexFile));
+      output  = new BufferedWriter(
+                  new OutputStreamWriter(
+                    new FileOutputStream(latexFile), charsetUit));
 
       // Maak de Matrix
       int           noSpelers = spelers.size();
@@ -482,8 +493,8 @@ public class PgnToLatex {
       System.out.println(ex.getLocalizedMessage());
     } finally {
       try {
-        if (input != null) {
-          input.close();
+        if (output != null) {
+          output.close();
         }
       } catch (IOException ex) {
         System.out.println(ex.getLocalizedMessage());
@@ -528,15 +539,17 @@ public class PgnToLatex {
     System.out.println("java -jar CaissaTools.jar PgnToLatex [OPTIE...] \\");
     System.out.println("  --bestand=<PGN bestand>");
     System.out.println();
-    System.out.println("  --auteur  De auteur of club die de partijen publiceert.");
-    System.out.println("  --bestand Het bestand met de partijen in PGN formaat.");
-    System.out.println("  --datum   De datum waarop de partijen zijn gespeeld.");
-    System.out.println("  --enkel   Enkelrondig <J|n>");
-    System.out.println("  --halve   Lijst met spelers (gescheiden door een ;) die enkel eerste helft meespelen.");
-    System.out.println("            Enkel nodig bij enkel=N.");
-    System.out.println("  --logo    Logo op de titel pagina.");
-    System.out.println("  --matrix  Uitslagen matrix <J|n>.");
-    System.out.println("  --titel   De titel van het document.");
+    System.out.println("  --auteur     De auteur of club die de partijen publiceert.");
+    System.out.println("  --bestand    Het bestand met de partijen in PGN formaat.");
+    System.out.println("  --charsetin  De characterset van <bestand> als deze niet "+ Charset.defaultCharset().name() + " is.");
+    System.out.println("  --charsetout De characterset van de uitvoer als deze niet "+ Charset.defaultCharset().name() + " moet zijn.");
+    System.out.println("  --datum      De datum waarop de partijen zijn gespeeld.");
+    System.out.println("  --enkel      Enkelrondig <J|n>");
+    System.out.println("  --halve      Lijst met spelers (gescheiden door een ;) die enkel eerste helft meespelen.");
+    System.out.println("               Enkel nodig bij enkel=N.");
+    System.out.println("  --logo       Logo op de titel pagina.");
+    System.out.println("  --matrix     Uitslagen matrix <J|n>.");
+    System.out.println("  --titel      De titel van het document.");
     System.out.println();
     System.out.println("Enkel bestand is verplicht.");
     System.out.println();

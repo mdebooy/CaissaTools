@@ -58,22 +58,22 @@
     <dependency>
       <groupId>eu.debooy.caissa</groupId>
       <artifactId>caissa-core</artifactId>
-      <version>[0.1.2,)</version>
+      <version>[0.1.3,)</version>
     </dependency>
     <dependency>
       <groupId>eu.debooy.doosutils</groupId>
       <artifactId>doosutils-core</artifactId>
-      <version>[1.0.2]</version>
+      <version>1.0.2</version>
     </dependency>
     <dependency>
       <groupId>eu.debooy.doosutils</groupId>
       <artifactId>doosutils-latex</artifactId>
-      <version>[1.0.2]</version>
+      <version>1.0.2</version>
     </dependency>
     <dependency>
       <groupId>eu.debooy.doosutils</groupId>
       <artifactId>doosutils-html</artifactId>
-      <version>[1.0.2]</version>
+      <version>1.0.2</version>
     </dependency>
   </dependencies>
 </project>
