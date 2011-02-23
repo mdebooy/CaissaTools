@@ -544,7 +544,7 @@ public class PgnToLatex {
     System.out.println("  --charsetin  De characterset van <bestand> als deze niet "+ Charset.defaultCharset().name() + " is.");
     System.out.println("  --charsetout De characterset van de uitvoer als deze niet "+ Charset.defaultCharset().name() + " moet zijn.");
     System.out.println("  --datum      De datum waarop de partijen zijn gespeeld.");
-    System.out.println("  --enkel      Enkelrondig <J|n>");
+    System.out.println("  --enkel      Enkelrondig <J|n>.");
     System.out.println("  --halve      Lijst met spelers (gescheiden door een ;) die enkel eerste helft meespelen.");
     System.out.println("               Enkel nodig bij enkel=N.");
     System.out.println("  --logo       Logo op de titel pagina.");
