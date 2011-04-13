@@ -384,7 +384,7 @@ public class SpelerStatistiek {
     System.out.println();
     System.out.println("  --bestand    Het bestand met de partijen in PGN formaat.");
     System.out.println("  --charsetin  De characterset van <bestand> als deze niet "+ Charset.defaultCharset().name() + " is.");
-    System.out.println("  --charsetout De characterset van de uitvoer als deze niet "+ Charset.defaultCharset().name() + " moet zijn.");
+    System.out.println("  --charsetuit De characterset van de uitvoer als deze niet "+ Charset.defaultCharset().name() + " moet zijn.");
     System.out.println("  --logo       Logo op de titel pagina.");
     System.out.println("  --speler     De speler voor de statistieken.");
     System.out.println("  --tag        De PGN tag waarop de statistieken gebaseerd");

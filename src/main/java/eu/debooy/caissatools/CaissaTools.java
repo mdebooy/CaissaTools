@@ -38,6 +38,14 @@ public class CaissaTools {
     String[]  commandoArgs  = new String[args.length-1];
     System.arraycopy(args, 1, commandoArgs, 0, args.length-1);
 
+    if ("chesstheatre".equalsIgnoreCase(commando)) {
+      try {
+        ChessTheatre.execute(commandoArgs);
+      } catch (PgnException e) {
+        System.out.println(e.getMessage());
+      }
+      return;
+    }
     if ("pgntohtml".equalsIgnoreCase(commando)) {
       try {
         PgnToHtml.execute(commandoArgs);
@@ -71,6 +79,8 @@ public class CaissaTools {
    * Geeft de 'help' pagina.
    */
   private static void help() {
+    System.out.println("  ChessTheatre      Zet een bestand met PGN partijen om naar invoer voor");
+    System.out.println("                    ChessTheatre.");
     System.out.println("  PgnToHtml         Zet een bestand met PGN partijen uit een toernooi");
     System.out.println("                    om in 2 HTML Bestanden.");
     System.out.println("  PgnToLatex        Zet een bestand met PGN partijen uit een toernooi");
@@ -79,6 +89,8 @@ public class CaissaTools {
     System.out.println("                    tussen de opgegeven spelers gespeeld (moeten) worden.");
     System.out.println("  SpelerStatistiek  Maakt een statistiek van alle partijen van de");
     System.out.println("                    opgegeven speler.");
+    System.out.println();
+    ChessTheatre.help();
     System.out.println();
     PgnToHtml.help();
     System.out.println();
