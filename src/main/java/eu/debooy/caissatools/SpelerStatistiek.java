@@ -105,9 +105,9 @@ public class SpelerStatistiek {
       output  = new BufferedWriter(
                   new OutputStreamWriter(
                     new FileOutputStream(latexFile), charsetUit));
-      String line = input.readLine().trim();
+      String line = input.readLine();
       // Zoek naar de eerste TAG
-      while (line != null && !line.startsWith("[")) {
+      while (null != line && !line.startsWith("[")) {
         line = input.readLine();
       }
       while (line != null) {
@@ -127,7 +127,7 @@ public class SpelerStatistiek {
         }
 
         String uitslag = partij.getTag("Result");
-        while (line != null && !line.endsWith(uitslag)) {
+        while (null != line && !line.endsWith(uitslag)) {
           line = input.readLine();
         }
 
@@ -201,7 +201,7 @@ public class SpelerStatistiek {
         
 
         // Zoek naar de eerste TAG
-        while (line != null && !line.startsWith("[")) {
+        while (null != line && !line.startsWith("[")) {
           line = input.readLine();
         }
       }
@@ -417,7 +417,7 @@ public class SpelerStatistiek {
                                           BufferedWriter output)
       throws IOException {
     DecimalFormat format    = new DecimalFormat("0.00");
-    Double        punten    = new Double(winst) + new Double(remise) / 2;
+    Double        punten    = Double.valueOf(winst) + Double.valueOf(remise) / 2;
     int           partijen  = winst + remise + verlies;
 
     if (partijen == 0) {
