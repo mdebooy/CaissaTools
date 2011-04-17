@@ -7,7 +7,7 @@
   </parent>
   <groupId>eu.debooy.caissa</groupId>
   <artifactId>caissatools</artifactId>
-  <version>0.4.1-SNAPSHOT</version>
+  <version>0.4.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Caissa Tools</name>
   <description>Verschillende tools voor schakers.</description>
@@ -58,7 +58,7 @@
     <dependency>
       <groupId>eu.debooy.caissa</groupId>
       <artifactId>caissa-core</artifactId>
-      <version>0.1.6</version>
+      <version>0.1.7</version>
     </dependency>
     <dependency>
       <groupId>eu.debooy.doosutils</groupId>
