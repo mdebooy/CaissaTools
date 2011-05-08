@@ -49,19 +49,22 @@ public class ChessTheatre {
   private ChessTheatre(){}
 
   public static void execute(String[] args) throws PgnException {
-    BufferedWriter  gamedata    = null;
-    BufferedWriter  headers     = null;
-    BufferedWriter  updates     = null;
-    List<PGN>       partijen    = new ArrayList<PGN>();
-    String          charsetIn   = Charset.defaultCharset().name();
-    String          charsetUit  = Charset.defaultCharset().name();
-    String          versie      = manifestInfo.getBuildVersion();
-    String          zip         = "";
+    BufferedWriter  gamedata      = null;
+    BufferedWriter  headers       = null;
+    BufferedWriter  updates       = null;
+    int             maxBestanden  = 50;
+    int             minPartijen   = 1;
+    List<PGN>       partijen      = new ArrayList<PGN>();
+    String          charsetIn     = Charset.defaultCharset().name();
+    String          charsetUit    = Charset.defaultCharset().name();
+    String          versie        = manifestInfo.getBuildVersion();
+    String          zip           = "";
 
     Banner.printBanner("ChessTheatre");
 
     Arguments       arguments   = new Arguments(args);
     arguments.setParameters(new String[] {"bestand", "charsetin", "charsetuit",
+                                          "maxBestanden", "minPartijen",
                                           "uitvoerdir", "zip"});
     arguments.setVerplicht(new String[] {"bestand"});
     if (!arguments.isValid()) {
@@ -79,6 +82,18 @@ public class ChessTheatre {
     if (arguments.hasArgument("charsetuit")) {
       charsetUit  = arguments.getArgument("charsetuit");
     }
+    if (arguments.hasArgument("maxBestanden")) {
+      int hulp  = Integer.valueOf(arguments.getArgument("maxBestanden"));
+      if (hulp > 0) {
+        maxBestanden  = hulp;
+      }
+    }
+    if (arguments.hasArgument("minPartijen")) {
+      int hulp  = Integer.valueOf(arguments.getArgument("minPartijen"));
+      if (hulp > 0) {
+        minPartijen   = hulp;
+      }
+    }
     String    uitvoerdir  = arguments.getArgument("uitvoerdir");
     if (null == uitvoerdir) {
       uitvoerdir  = ".";
@@ -95,7 +110,10 @@ public class ChessTheatre {
     partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn,
                                            new PGNSortByEvent());
     Collections.sort(partijen);
-    int aantalPartijen  = partijen.size()/50 + 1;
+    int aantalPartijen  = partijen.size() / maxBestanden + 1;
+    if (aantalPartijen < minPartijen) {
+      aantalPartijen  = minPartijen;
+    }
     int gameFile        = 0;
 
     File    gamedataFile  = null;
@@ -196,9 +214,9 @@ public class ChessTheatre {
         gamedata.write("    </comment>");
         gamedata.newLine();
         gamedata.write("    <plies type=\"ffenu\">");
-        if (!partij.getZetten().isEmpty()) {
+        if (!partij.getZuivereZetten().isEmpty()) {
           try {
-            gamedata.write(parseZetten(fen, partij.getZetten()));
+            gamedata.write(parseZetten(fen, partij.getZuivereZetten()));
           } catch (FenException e) {
             System.out.println("Error in " + partij.getTagsAsString());
             System.out.println(e.getMessage());
@@ -258,6 +276,10 @@ public class ChessTheatre {
         System.out.println(ex.getLocalizedMessage());
       }
     }
+    System.out.println("Partijen : " + partijen.size());
+    System.out.println("Bestanden: " + gameFile);
+    System.out.println("Uitvoer  : " + uitvoerdir);
+    System.out.println("Klaar.");
   }
 
   /**
@@ -267,15 +289,20 @@ public class ChessTheatre {
     System.out.println("java -jar CaissaTools.jar ChessTheatre [OPTIE...] \\");
     System.out.println("  --bestand=<PGN bestand>");
     System.out.println();
-    System.out.println("  --bestand    Het bestand met de partijen in PGN formaat.");
-    System.out.println("  --charsetin  De characterset van <bestand> als deze niet "
+    System.out.println("  --bestand      Het bestand met de partijen in PGN formaat.");
+    System.out.println("  --charsetin    De characterset van <bestand> als deze niet "
                        + Charset.defaultCharset().name() + " is.");
-    System.out.println("  --charsetuit De characterset van de uitvoer als deze niet "
+    System.out.println("  --charsetuit   De characterset van de uitvoer als deze niet "
                        + Charset.defaultCharset().name() + " moet zijn.");
-    System.out.println("  --uitvoerdir Directory waar de uitvoer bestanden moeten staan.");
-    System.out.println("  --zip        Naam (met eventuele directory) van de zip file.");
-    System.out.println("               Deze zip file wordt niet door dit programma");
-    System.out.println("               gemaakt.");
+    System.out.println("  --maxBestanden Maximum aantal bestanden voor de partijen.");
+    System.out.println("                 Default waarde is 50.");
+    System.out.println("  --minPartijen  Minimum aantal partijen per bestand.");
+    System.out.println("                 Default waarde is totaal aantal partijen");
+    System.out.println("                 gedeeld door maxBestanden.");
+    System.out.println("  --uitvoerdir   Directory waar de uitvoer bestanden moeten staan.");
+    System.out.println("  --zip          Naam (met eventuele directory) van de zip file.");
+    System.out.println("                 Deze zip file wordt niet door dit programma");
+    System.out.println("                 gemaakt.");
     System.out.println();
     System.out.println("Enkel bestand is verplicht.");
     System.out.println();

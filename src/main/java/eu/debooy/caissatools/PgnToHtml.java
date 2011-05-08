@@ -57,8 +57,7 @@ public class PgnToHtml {
 
     Arguments       arguments   = new Arguments(args);
     arguments.setParameters(new String[] {"bestand", "charsetin", "charsetuit",
-                                          "enkel", "halve", "seizoen",
-                                          "uitvoerdir"});
+                                          "enkel", "halve", "uitvoerdir"});
     arguments.setVerplicht(new String[] {"bestand"});
     if (!arguments.isValid()) {
       help();
@@ -78,7 +77,6 @@ public class PgnToHtml {
     }
     String[]  halve       =
       DoosUtils.nullToEmpty(arguments.getArgument("halve")).split(";");
-    String    seizoen     = arguments.getArgument("seizoen");
     String    uitvoerdir  = arguments.getArgument("uitvoerdir");
     if (null == uitvoerdir) {
       uitvoerdir  = ".";
@@ -180,53 +178,6 @@ public class PgnToHtml {
       output  = new BufferedWriter(
                   new OutputStreamWriter(
                    new FileOutputStream(matrixFile), charsetUit));
-      output.write("<include>declaration.html</include>");
-      output.newLine();
-      output.write("<head>");
-      output.newLine();
-      output.write("  <title>Schaakvereniging \"De Brug\"</title>");
-      output.newLine();
-      output.write("  <meta http-equiv=\"Content-Type\"  content=\"text/html; charset=utf-8\" />");
-      output.newLine();
-      output.write("  <meta name=\"AbsoluteURL\"         content=\"\" />");
-      output.newLine();
-      output.write("  <meta name=\"Author\"              content=\"M.N. de Booij\" />");
-      output.newLine();
-      output.write("  <meta name=\"Content\"             content=\"Schaakvereniging 'De Brug'\" />");
-      output.newLine();
-      output.write("  <meta name=\"Keywords\"            content=\"chess, zwevegem\" />");
-      output.newLine();
-      output.write("  <meta name=\"Robots\"              content=\"index, follow\" />");
-      output.newLine();
-      output.write("  <meta name=\"Title\"               content=\"Schaakvereniging 'De Brug'\" />");
-      output.newLine();
-      output.write("  <link rel=\"stylesheet\" type=\"text/css\" media=\"screen\" href=\"../common/css/DeBrug.css\" />");
-      output.newLine();
-      output.write("  <link rel=\"stylesheet\" type=\"text/css\" media=\"print\"  href=\"../common/css/DeBrug_print.css\" />");
-      output.newLine();
-      output.write("  <link rel=\"shortcut icon\" href=\"../common/favicon.ico\" />");
-      output.newLine();
-      output.write("</head>");
-      output.newLine();
-      output.write("<body class=\"matrix\">");
-      output.newLine();
-      output.write("<div id=\"header\">");
-      output.newLine();
-      output.write("<h1>Schaakvereniging \"De Brug\"</h1>");
-      output.newLine();
-      output.write("<h2>Seizoen " + seizoen + "</h2>");
-      output.newLine();
-      output.write("</div>");
-      output.newLine();
-      output.newLine();
-      output.write("<include>DeBrugCompetitieAktief.html</include>");
-      output.newLine();
-      output.newLine();
-      output.write("<include>DeBrugMenu.html</include>");
-      output.newLine();
-      output.newLine();
-      output.write("<div id=\"content\">");
-      output.newLine();
       output.write("<table>");
       output.newLine();
       output.write("  <colgroup>");
@@ -350,12 +301,6 @@ public class PgnToHtml {
       output.newLine();
       output.write("</table>");
       output.newLine();
-      output.write("</div>");
-      output.newLine();
-      output.write("</body>");
-      output.newLine();
-      output.write("</html>");
-      output.newLine();
       output.close();
 
       // Maak de index.html file
@@ -363,53 +308,6 @@ public class PgnToHtml {
       output  = new BufferedWriter(
                   new OutputStreamWriter(
                     new FileOutputStream(indexFile), charsetUit));
-      output.write("<include>declaration.html</include>");
-      output.newLine();
-      output.write("<head>");
-      output.newLine();
-      output.write("  <title>Schaakvereniging \"De Brug\"</title>");
-      output.newLine();
-      output.write("  <meta http-equiv=\"Content-Type\"  content=\"text/html; charset=utf-8\" />");
-      output.newLine();
-      output.write("  <meta name=\"AbsoluteURL\"         content=\"\" />");
-      output.newLine();
-      output.write("  <meta name=\"Author\"              content=\"M.N. de Booij\" />");
-      output.newLine();
-      output.write("  <meta name=\"Content\"             content=\"Schaakvereniging 'De Brug'\" />");
-      output.newLine();
-      output.write("  <meta name=\"Keywords\"            content=\"chess, zwevegem\" />");
-      output.newLine();
-      output.write("  <meta name=\"Robots\"              content=\"index, follow\" />");
-      output.newLine();
-      output.write("  <meta name=\"Title\"               content=\"Schaakvereniging 'De Brug'\" />");
-      output.newLine();
-      output.write("  <link rel=\"stylesheet\" type=\"text/css\" media=\"screen\" href=\"../common/css/DeBrug.css\" />");
-      output.newLine();
-      output.write("  <link rel=\"stylesheet\" type=\"text/css\" media=\"print\"  href=\"../common/css/DeBrug_print.css\" />");
-      output.newLine();
-      output.write("  <link rel=\"shortcut icon\" href=\"../common/favicon.ico\" />");
-      output.newLine();
-      output.write("</head>");
-      output.newLine();
-      output.write("<body class=\"stand\">");
-      output.newLine();
-      output.write("<div id=\"header\">");
-      output.newLine();
-      output.write("<h1>Schaakvereniging \"De Brug\"</h1>");
-      output.newLine();
-      output.write("<h2>Seizoen " + seizoen + "</h2>");
-      output.newLine();
-      output.write("</div>");
-      output.newLine();
-      output.newLine();
-      output.write("<include>DeBrugCompetitieAktief.html</include>");
-      output.newLine();
-      output.newLine();
-      output.write("<include>DeBrugMenu.html</include>");
-      output.newLine();
-      output.newLine();
-      output.write("<div id=\"content\">");
-      output.newLine();
       output.write("<table>");
       output.newLine();
       output.write("  <colgroup>");
@@ -477,12 +375,6 @@ public class PgnToHtml {
       output.newLine();
       output.write("</table>");
       output.newLine();
-      output.write("</div>");
-      output.newLine();
-      output.write("</body>");
-      output.newLine();
-      output.write("</html>");
-      output.newLine();
       output.close();
     } catch (FileNotFoundException ex) {
       System.out.println(ex.getLocalizedMessage());
@@ -511,12 +403,13 @@ public class PgnToHtml {
     System.out.println("  --bestand=<PGN bestand>");
     System.out.println();
     System.out.println("  --bestand    Het bestand met de partijen in PGN formaat.");
-    System.out.println("  --charsetin  De characterset van <bestand> als deze niet "+ Charset.defaultCharset().name() + " is.");
-    System.out.println("  --charsetuit De characterset van de uitvoer als deze niet "+ Charset.defaultCharset().name() + " moet zijn.");
+    System.out.println("  --charsetin  De characterset van <bestand> als deze niet "
+                       + Charset.defaultCharset().name() + " is.");
+    System.out.println("  --charsetuit De characterset van de uitvoer als deze niet "
+                       + Charset.defaultCharset().name() + " moet zijn.");
     System.out.println("  --enkel      Enkelrondig <J|n>.");
     System.out.println("  --halve      Lijst met spelers (gescheiden door een ;) die enkel eerste helft meespelen.");
     System.out.println("               Enkel nodig bij enkel=N.");
-    System.out.println("  --seizoen    Seizoen.");
     System.out.println("  --uitvoerdir Directory waar de uitvoer bestanden moeten staan.");
     System.out.println();
     System.out.println("Enkel bestand is verplicht.");
