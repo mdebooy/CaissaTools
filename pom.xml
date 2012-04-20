@@ -1,0 +1,89 @@
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+  <modelVersion>4.0.0</modelVersion>
+  <parent>
+    <groupId>eu.debooy.maven</groupId>
+    <artifactId>pom</artifactId>
+    <version>1.0.3</version>
+  </parent>
+  <groupId>eu.debooy.caissa</groupId>
+  <artifactId>caissatools</artifactId>
+  <version>0.5.0</version>
+  <packaging>jar</packaging>
+  <name>Caissa Tools</name>
+  <description>Verschillende tools voor schakers.</description>
+  <inceptionYear>2008</inceptionYear>
+  <scm>
+    <connection>scm:svn:http://svn.debooy.eu/svn/CaissaTools/tags/caissatools-0.5.0</connection>
+    <developerConnection>scm:svn:http://svn.debooy.eu/svn/CaissaTools/tags/caissatools-0.5.0</developerConnection>
+  </scm>
+
+  <developers>
+    <developer>
+      <name>Marco de Booij</name>
+      <id>booymar</id>
+      <email>marco.developer@debooy.eu</email>
+      <organization>DOOS</organization>
+      <roles>
+        <role>Project Manager</role>
+        <role>Java Developer</role>
+      </roles>
+    </developer>
+  </developers>
+
+  <distributionManagement>
+    <site>
+      <id>Documentatie</id>
+      <name>DOOS Documentatie</name>
+      <url>scp://intra.debooy.eu/var/www/site/CaissaTools</url>
+    </site>
+  </distributionManagement>
+
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId>
+        <artifactId>maven-assembly-plugin</artifactId>
+        <configuration>
+          <archive>
+            <manifest>
+              <mainClass>eu.debooy.caissatools.CaissaTools</mainClass>
+            </manifest>
+          </archive>
+        </configuration>
+      </plugin>
+    </plugins>
+  </build>
+
+  <dependencies>
+    <dependency>
+      <groupId>eu.debooy.caissa</groupId>
+      <artifactId>caissa-core</artifactId>
+      <version>${caissa.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>eu.debooy.doosutils</groupId>
+      <artifactId>doosutils-core</artifactId>
+      <version>${doosutils.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>eu.debooy.doosutils</groupId>
+      <artifactId>doosutils-file</artifactId>
+      <version>${doosutils.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>eu.debooy.doosutils</groupId>
+      <artifactId>doosutils-latex</artifactId>
+      <version>${doosutils.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>eu.debooy.doosutils</groupId>
+      <artifactId>doosutils-html</artifactId>
+      <version>${doosutils.version}</version>
+    </dependency>
+  </dependencies>
+
+  <properties>
+    <caissa.version>0.1.9</caissa.version>
+    <doosutils.version>1.1.0</doosutils.version>
+  </properties>
+</project>
