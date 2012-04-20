@@ -3,7 +3,7 @@
   <parent>
     <groupId>eu.debooy.maven</groupId>
     <artifactId>pom</artifactId>
-    <version>1.0.2</version>
+    <version>1.0.3</version>
   </parent>
   <groupId>eu.debooy.caissa</groupId>
   <artifactId>caissatools</artifactId>
@@ -13,8 +13,8 @@
   <description>Verschillende tools voor schakers.</description>
   <inceptionYear>2008</inceptionYear>
   <scm>
-    <connection>scm:svn:http://intra.debooy.eu/svn/CaissaTools/trunk</connection>
-    <developerConnection>scm:svn:http://intra.debooy.eu/svn/CaissaTools/trunk</developerConnection>
+    <connection>scm:svn:http://svn.debooy.eu/svn/CaissaTools/trunk</connection>
+    <developerConnection>scm:svn:http://svn.debooy.eu/svn/CaissaTools/trunk</developerConnection>
   </scm>
 
   <developers>
@@ -58,22 +58,31 @@
     <dependency>
       <groupId>eu.debooy.caissa</groupId>
       <artifactId>caissa-core</artifactId>
-      <version>0.1.8</version>
+      <version>0.1.9-SNAPSHOT</version>
     </dependency>
     <dependency>
       <groupId>eu.debooy.doosutils</groupId>
       <artifactId>doosutils-core</artifactId>
-      <version>1.0.3</version>
+      <version>${doosutils.version}</version>
+    </dependency>
+    <dependency>
+      <groupId>eu.debooy.doosutils</groupId>
+      <artifactId>doosutils-file</artifactId>
+      <version>${doosutils.version}</version>
     </dependency>
     <dependency>
       <groupId>eu.debooy.doosutils</groupId>
       <artifactId>doosutils-latex</artifactId>
-      <version>1.0.3</version>
+      <version>${doosutils.version}</version>
     </dependency>
     <dependency>
       <groupId>eu.debooy.doosutils</groupId>
       <artifactId>doosutils-html</artifactId>
-      <version>1.0.3</version>
+      <version>${doosutils.version}</version>
     </dependency>
   </dependencies>
+
+  <properties>
+  	<doosutils.version>1.0.4-SNAPSHOT</doosutils.version>
+  </properties>
 </project>

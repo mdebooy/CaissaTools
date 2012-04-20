@@ -26,14 +26,12 @@ import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.access.Bestand;
+import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
 
 import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -65,7 +63,8 @@ public class PgnToLatex {
     Arguments arguments = new Arguments(args);
     arguments.setParameters(new String[] {"auteur", "bestand", "charsetin",
                                           "charsetuit", "datum", "enkel",
-                                          "halve", "logo", "matrix", "titel"});
+                                          "halve", "keywords", "logo", "matrix",
+                                          "titel"});
     arguments.setVerplicht(new String[] {"bestand"});
     if (!arguments.isValid()) {
       help();
@@ -97,16 +96,15 @@ public class PgnToLatex {
     }
     String[]  halve     =
       DoosUtils.nullToEmpty(arguments.getArgument("halve")).split(";");
+    String    keywords  = arguments.getArgument("keywords");
     String    logo      = arguments.getArgument("logo");
     String    metMatrix = arguments.getArgument("matrix");
     if (DoosUtils.isBlankOrNull(metMatrix)) {
       metMatrix = DoosConstants.WAAR;
     }
-    String    titel     = arguments.getArgument("titel");
+    String  titel     = arguments.getArgument("titel");
 
     Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
-
-    File    latexFile = new File(bestand + ".tex");
 
     partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
 
@@ -147,9 +145,7 @@ public class PgnToLatex {
     }
 
     try {
-      output  = new BufferedWriter(
-                  new OutputStreamWriter(
-                    new FileOutputStream(latexFile), charsetUit));
+      output  = Bestand.openUitvoerBestand(bestand + ".tex", charsetUit);
 
       // Maak de Matrix
       int           noSpelers = spelers.size();
@@ -266,7 +262,7 @@ public class PgnToLatex {
       }
 
       // Maak de .tex file
-      output.write("\\documentclass[dutch,twocolumn,a4,10pt]{report}");
+      output.write("\\documentclass[dutch,twocolumn,a4paper,10pt]{report}");
       output.newLine();
       output.newLine();
       output.write("\\usepackage{skak}");
@@ -348,6 +344,23 @@ public class PgnToLatex {
       output.write("\\author{" + auteur + "}");
       output.newLine();
       output.write("\\date{" + datum + "}");
+      output.newLine();
+      output.newLine();
+      output.write("\\ifpdf");
+      output.newLine();
+      output.write("\\pdfinfo{");
+      output.newLine();
+      output.write("   /Author (" + auteur + ")");
+      output.newLine();
+      output.write("   /Title  (" + titel + ")");
+      output.newLine();
+      if (DoosUtils.isNotBlankOrNull(keywords)) {
+        output.write("   /Keywords (" + keywords + ")");
+        output.newLine();
+      }
+      output.write("}");
+      output.newLine();
+      output.write("\\fi");
       output.newLine();
       output.newLine();
       output.write("\\begin{document}");
@@ -488,9 +501,10 @@ public class PgnToLatex {
       output.write("\\end{document}");
       output.newLine();
       output.close();
-    } catch (FileNotFoundException ex) {
-    } catch (IOException ex) {
-      System.out.println(ex.getLocalizedMessage());
+    } catch (IOException e) {
+      System.out.println(e.getLocalizedMessage());
+    } catch (BestandException e) {
+      System.out.println(e.getLocalizedMessage());
     } finally {
       try {
         if (output != null) {
@@ -547,6 +561,7 @@ public class PgnToLatex {
     System.out.println("  --enkel      Enkelrondig <J|n>.");
     System.out.println("  --halve      Lijst met spelers (gescheiden door een ;) die enkel eerste helft meespelen.");
     System.out.println("               Enkel nodig bij enkel=N.");
+    System.out.println("  --keywords   Lijst van keywords (gescheiden door een ;).");
     System.out.println("  --logo       Logo op de titel pagina.");
     System.out.println("  --matrix     Uitslagen matrix <J|n>.");
     System.out.println("  --titel      De titel van het document.");

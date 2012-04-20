@@ -1,12 +1,12 @@
 /**
- * Copyright 2009 Marco de Booy
+ * Copyright 2009 Marco de Booij
  *
  * Licensed under the EUPL, Version 1.0 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
  * you may not use this work except in compliance with the Licence. You may
  * obtain a copy of the Licence at:
  *
- * http://ec.europa.eu/idabc/7330l5
+ * http://www.osor.eu/eupl
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the Licence is distributed on an "AS IS" BASIS, WITHOUT
@@ -18,23 +18,23 @@ package eu.debooy.caissatools;
 
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
+import eu.debooy.doosutils.access.Bestand;
+import eu.debooy.doosutils.exception.BestandException;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Arrays;
 
 
 /**
- * @author Marco de Booy
+ * @author Marco de Booij
  */
 public class StartPgn {
   private StartPgn() {}
 
   public static void execute(String[] args) {
-    BufferedWriter  output      = null;
+    BufferedWriter  output  = null;
 
     Banner.printBanner("Start PGN");
 
@@ -64,12 +64,15 @@ public class StartPgn {
     if (bestand.endsWith(".pgn")) {
       bestand = bestand.substring(0, bestand.length() - 4);
     }
-    if (uitvoerdir.endsWith("\\")) {
-      uitvoerdir  = uitvoerdir.substring(0, uitvoerdir.length() - 1);
+    if (uitvoerdir.endsWith(File.separator)) {
+      uitvoerdir  = uitvoerdir.substring(0,
+                                         uitvoerdir.length()
+                                         - File.separator.length());
     }
-    File    pgnFile     = new File(uitvoerdir + "\\" + bestand + ".pgn");
+    File  pgnFile = new File(uitvoerdir + File.separator + bestand
+                             + ".pgn");
     try {
-      output  = new BufferedWriter(new FileWriter(pgnFile));
+      output  = Bestand.openUitvoerBestand(pgnFile);
       for (int i = 0; i < (noSpelers -1); i++) {
         for (int j = i + 1; j < noSpelers; j++) {
           output.write("[Event \"" + event + "\"]");
@@ -111,10 +114,18 @@ public class StartPgn {
         }
       }
       output.close();
-    } catch (FileNotFoundException ex) {
-      System.out.println(ex.getLocalizedMessage());
-    } catch (IOException ex) {
-      System.out.println(ex.getLocalizedMessage());
+    } catch (IOException e) {
+      System.out.println(e.getLocalizedMessage());
+    } catch (BestandException e) {
+      System.out.println(e.getLocalizedMessage());
+    } finally {
+      try {
+        if (output != null) {
+          output.close();
+        }
+      } catch (IOException e) {
+        System.err.println(e.getLocalizedMessage());
+      }
     }
 
     System.out.println("Bestand : " + bestand);

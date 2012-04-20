@@ -23,22 +23,19 @@ import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.access.Bestand;
+import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.LineNumberReader;
-import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Map;
 import java.util.TreeMap;
 
 
@@ -60,7 +57,7 @@ public class SpelerStatistiek {
     String          sleutel     = "";
     String          startDatum  = "9999.99.99";
     String[]        uitslagen   = new String[] {"1-0", "1/2-1/2", "0-1"};
-    TreeMap<String, int[]>
+    Map<String, int[]>
                     items       = new TreeMap<String, int[]>( );
 
     Banner.printBanner("Speler Statistieken");
@@ -99,12 +96,8 @@ public class SpelerStatistiek {
     File    latexFile = new File(bestand + ".tex");
     File    pgnFile   = new File(bestand + ".pgn");
     try {
-      input   = new LineNumberReader(
-                  new InputStreamReader(
-                    new FileInputStream (pgnFile), charsetIn));
-      output  = new BufferedWriter(
-                  new OutputStreamWriter(
-                    new FileOutputStream(latexFile), charsetUit));
+      input   = Bestand.openInvoerBestand(pgnFile, charsetIn);
+      output  = Bestand.openUitvoerBestand(latexFile, charsetUit);
       String line = input.readLine();
       // Zoek naar de eerste TAG
       while (null != line && !line.startsWith("[")) {
@@ -322,10 +315,10 @@ public class SpelerStatistiek {
       output.newLine();
       input.close();
       output.close();
-    } catch (FileNotFoundException ex) {
-      System.out.println(ex.getLocalizedMessage());
-    } catch (IOException ex) {
-      System.out.println(ex.getLocalizedMessage());
+    } catch (IOException e) {
+      System.out.println(e.getLocalizedMessage());
+    } catch (BestandException e) {
+      System.out.println(e.getLocalizedMessage());
     } finally {
       try {
         if (input != null) {
@@ -368,7 +361,7 @@ public class SpelerStatistiek {
   }
 
   protected static int[] getStatistiek(String sleutel,
-                                       TreeMap<String, int[]> tabel) {
+                                       Map<String, int[]> tabel) {
     if (tabel.containsKey(sleutel))
       return tabel.get(sleutel);
 

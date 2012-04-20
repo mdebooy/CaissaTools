@@ -46,6 +46,14 @@ public class CaissaTools {
       }
       return;
     }
+    if ("eloberekenaar".equalsIgnoreCase(commando)) {
+      try {
+        ELOBerekenaar.execute(commandoArgs);
+      } catch (PgnException e) {
+        System.out.println(e.getMessage());
+      }
+      return;
+    }
     if ("pgntohtml".equalsIgnoreCase(commando)) {
       try {
         PgnToHtml.execute(commandoArgs);
@@ -81,6 +89,7 @@ public class CaissaTools {
   private static void help() {
     System.out.println("  ChessTheatre      Zet een bestand met PGN partijen om naar invoer voor");
     System.out.println("                    ChessTheatre.");
+    System.out.println("  ELOBerekenaar     Berekend de ELO rating van de spelers uit een toernooi.");
     System.out.println("  PgnToHtml         Zet een bestand met PGN partijen uit een toernooi");
     System.out.println("                    om in 2 HTML Bestanden.");
     System.out.println("  PgnToLatex        Zet een bestand met PGN partijen uit een toernooi");
@@ -91,6 +100,8 @@ public class CaissaTools {
     System.out.println("                    opgegeven speler.");
     System.out.println();
     ChessTheatre.help();
+    System.out.println();
+    ELOBerekenaar.help();
     System.out.println();
     PgnToHtml.help();
     System.out.println();

@@ -26,13 +26,12 @@ import eu.debooy.caissa.sorteer.PGNSortByEvent;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.ManifestInfo;
+import eu.debooy.doosutils.access.Bestand;
+import eu.debooy.doosutils.exception.BestandException;
 
 import java.io.BufferedWriter;
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.charset.Charset;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -98,6 +97,11 @@ public class ChessTheatre {
     if (null == uitvoerdir) {
       uitvoerdir  = ".";
     }
+    if (uitvoerdir.endsWith(File.separator)) {
+      uitvoerdir  = uitvoerdir.substring(0,
+                                         uitvoerdir.length()
+                                         - File.separator.length());
+    }
     if (arguments.hasArgument("zip")) {
       zip = arguments.getArgument("zip");
     } else {
@@ -114,26 +118,22 @@ public class ChessTheatre {
     if (aantalPartijen < minPartijen) {
       aantalPartijen  = minPartijen;
     }
-    int gameFile        = 0;
+    int   gameFile        = 0;
 
-    File    gamedataFile  = null;
-    File    headersFile   = new File(uitvoerdir + "/headers.xml");
-    File    updatesFile   = new File(uitvoerdir + "/updates.xml");
+    File  gamedataFile  = null;
+    File  headersFile   = new File(uitvoerdir + File.separator + "headers.xml");
+    File  updatesFile   = new File(uitvoerdir + File.separator + "updates.xml");
 
     try {
       // Maak de headers.xml file
-      headers   = new BufferedWriter(
-                  new OutputStreamWriter(
-                   new FileOutputStream(headersFile), charsetUit));
+      headers   = Bestand.openUitvoerBestand(headersFile, charsetUit);
       headers.write("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
       headers.newLine();
       headers.write("<chessgames gamesperfile=\"" + aantalPartijen
                     + "\"  pgnfile=\"" + zip + ".zip\">");
       headers.newLine();
       // Maak de updates.xml file
-      updates   = new BufferedWriter(
-                  new OutputStreamWriter(
-                   new FileOutputStream(updatesFile), charsetUit));
+      updates   = Bestand.openUitvoerBestand(updatesFile, charsetUit);
       updates.write("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
       updates.newLine();
 
@@ -158,11 +158,9 @@ public class ChessTheatre {
             gamedata.close();
           }
           // Maak de gamedataX.xml file
-          gamedataFile  = new File(uitvoerdir + "/gamedata" + gameFile
-                                   + ".xml");
-          gamedata      = new BufferedWriter(
-                          new OutputStreamWriter(
-                              new FileOutputStream(gamedataFile), charsetUit));
+          gamedataFile  = new File(uitvoerdir + File.separator + "gamedata"
+                                   + gameFile + ".xml");
+          gamedata      = Bestand.openUitvoerBestand(gamedataFile, charsetUit);
           gamedata.write("<?xml version=\"1.0\" encoding=\"UTF-8\" ?>");
           gamedata.newLine();
           gamedata.write("<gamedata>");
@@ -218,11 +216,11 @@ public class ChessTheatre {
           try {
             gamedata.write(parseZetten(fen, partij.getZuivereZetten()));
           } catch (FenException e) {
-            System.out.println("Error in " + partij.getTagsAsString());
-            System.out.println(e.getMessage());
+            System.err.println("Error in " + partij.getTagsAsString());
+            System.err.println(e.getMessage());
           } catch (ZetException e) {
-            System.out.println("Error in " + partij.getTagsAsString());
-            System.out.println(e.getMessage());
+            System.err.println("Error in " + partij.getTagsAsString());
+            System.err.println(e.getMessage());
           }
         }
         gamedata.write("</plies>");
@@ -256,11 +254,11 @@ public class ChessTheatre {
       updates.write("<updates count=\"0\" />");
       updates.close();
     } catch (FenException e) {
-      System.out.println(e.getLocalizedMessage());
-    } catch (FileNotFoundException e) {
-      System.out.println(e.getLocalizedMessage());
+      System.err.println(e.getLocalizedMessage());
     } catch (IOException e) {
-      System.out.println(e.getLocalizedMessage());
+      System.err.println(e.getLocalizedMessage());
+    } catch (BestandException e) {
+      System.err.println(e.getLocalizedMessage());
     } finally {
       try {
         if (gamedata != null) {
@@ -272,8 +270,8 @@ public class ChessTheatre {
         if (updates != null) {
           updates.close();
         }
-      } catch (IOException ex) {
-        System.out.println(ex.getLocalizedMessage());
+      } catch (IOException e) {
+        System.err.println(e.getLocalizedMessage());
       }
     }
     System.out.println("Partijen : " + partijen.size());
