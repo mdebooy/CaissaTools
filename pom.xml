@@ -58,7 +58,7 @@
     <dependency>
       <groupId>eu.debooy.caissa</groupId>
       <artifactId>caissa-core</artifactId>
-      <version>0.1.9-SNAPSHOT</version>
+      <version>${caissa.version}</version>
     </dependency>
     <dependency>
       <groupId>eu.debooy.doosutils</groupId>
@@ -83,6 +83,7 @@
   </dependencies>
 
   <properties>
-  	<doosutils.version>1.0.4-SNAPSHOT</doosutils.version>
+    <caissa.version>0.1.9</caissa.version>
+    <doosutils.version>1.1.0</doosutils.version>
   </properties>
 </project>
