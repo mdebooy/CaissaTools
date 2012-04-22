@@ -255,7 +255,7 @@ public class ELOBerekenaar {
     System.out.println("  --startDatum          De datum vanaf wanneer de partijen meetellen (yyyy.mm.dd)");
     System.out.println("  --startELO            De start ELO punten voor 'unrated' spelers. De default waarde is 1600.");
     System.out.println("  --toernooiBestand     Het bestand met de partijen in PGN formaat.");
-    System.out.println("  --uitvoerdir          De directory voor het geschiedenisBestqnd en spelerBestand.");
+    System.out.println("  --uitvoerdir          De directory voor het geschiedenisBestand en spelerBestand.");
     System.out.println();
     System.out.println("spelerBestand en toernooiBestand zijn verplicht.");
     System.out.println();
