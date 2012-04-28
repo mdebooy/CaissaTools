@@ -16,6 +16,7 @@
  */
 package eu.debooy.caissatools;
 
+import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.ELO;
 import eu.debooy.caissa.PGN;
@@ -23,6 +24,7 @@ import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
+import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.access.CvsBestand;
 import eu.debooy.doosutils.exception.BestandException;
@@ -31,8 +33,10 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
@@ -46,6 +50,8 @@ public class ELOBerekenaar {
 
   public static void execute(String[] args) throws PgnException {
     BufferedWriter    output      = null;
+    Date              eloDatum    = null;
+    int               aantal      = 0;
     int               startElo    = 1600;
     Map<String, Integer>
                       spelers     = new TreeMap<String, Integer>();
@@ -123,12 +129,25 @@ public class ELOBerekenaar {
         Spelerinfo  spelerinfo  = new Spelerinfo();
         spelerinfo.setElo(new Integer(veld[1]));
         spelerinfo.setNaam(veld[0]);
-        spelerinfo.setPartijen(new Integer(veld[2]));
+        spelerinfo.setPartijen(Integer.valueOf(veld[2]));
+        if (spelerinfo.getPartijen() > ELO.MIN_PARTIJEN) {
+          spelerinfo.setOfficieel(Datum.toDate(veld[3],
+                                  CaissaConstants.PGN_DATUM_FORMAAT));
+          spelerinfo.setMinElo(Integer.valueOf(veld[4]));
+          spelerinfo.setMinDatum(Datum.toDate(veld[5],
+                                 CaissaConstants.PGN_DATUM_FORMAAT));
+          spelerinfo.setMaxElo(Integer.valueOf(veld[6]));
+          spelerinfo.setMaxDatum(Datum.toDate(veld[7],
+                                 CaissaConstants.PGN_DATUM_FORMAAT));
+        }
         spelerinfo.setSpelerId(spelerId);
         spelerinfos.add(spelerId, spelerinfo);
       }
     } catch (BestandException e) {
       System.out.println("Nieuw bestand " + spelerBestand + " aanmaken.");
+    } catch (ParseException e) {
+      System.out.println("Foutieve datum in " + spelerBestand + " ["
+                         + e.getLocalizedMessage() + "].");
     } finally {
       try {
         if (cvs != null) {
@@ -199,6 +218,54 @@ public class ELOBerekenaar {
                                  + spelerinfos.get(zwartId).getPartijen());
               geschiedenis.newLine();
             }
+            // Min and Max ELO
+            try {
+              eloDatum  = Datum.toDate(datum, CaissaConstants.PGN_DATUM_FORMAAT);
+            } catch (ParseException e) {
+              System.out.println("Foutieve datum: " + datum + " ["
+                                 + e.getLocalizedMessage() + "].");
+              eloDatum  = null;
+            }
+            // Wit
+            aantal    = spelerinfos.get(witId).getPartijen();
+            witElo    = spelerinfos.get(witId).getElo();
+            if (aantal == ELO.MIN_PARTIJEN + 1) {
+              spelerinfos.get(witId).setMinElo(witElo);
+              spelerinfos.get(witId).setMaxElo(witElo);
+              spelerinfos.get(witId).setMinDatum(eloDatum);
+              spelerinfos.get(witId).setMaxDatum(eloDatum);
+              spelerinfos.get(witId).setOfficieel(eloDatum);
+            }
+            if (aantal > ELO.MIN_PARTIJEN + 1) {
+              if (spelerinfos.get(witId).getMinElo() > witElo) {
+                spelerinfos.get(witId).setMinElo(witElo);
+                spelerinfos.get(witId).setMinDatum(eloDatum);
+              }
+              if (spelerinfos.get(witId).getMaxElo() < witElo) {
+                spelerinfos.get(witId).setMaxElo(witElo);
+                spelerinfos.get(witId).setMaxDatum(eloDatum);
+              }
+            }
+            // Zwart
+            aantal    = spelerinfos.get(zwartId).getPartijen();
+            zwartElo  = spelerinfos.get(zwartId).getElo();
+            if (aantal == ELO.MIN_PARTIJEN + 1) {
+              spelerinfos.get(zwartId).setMinElo(zwartElo);
+              spelerinfos.get(zwartId).setMaxElo(zwartElo);
+              spelerinfos.get(zwartId).setMinDatum(eloDatum);
+              spelerinfos.get(zwartId).setMaxDatum(eloDatum);
+              spelerinfos.get(zwartId).setOfficieel(eloDatum);
+            }
+            if (aantal > ELO.MIN_PARTIJEN + 1) {
+              if (spelerinfos.get(zwartId).getMinElo() > zwartElo) {
+                spelerinfos.get(zwartId).setMinElo(zwartElo);
+                spelerinfos.get(zwartId).setMinDatum(eloDatum);
+              }
+              if (spelerinfos.get(zwartId).getMaxElo() < zwartElo) {
+                spelerinfos.get(zwartId).setMaxElo(zwartElo);
+                spelerinfos.get(zwartId).setMaxDatum(eloDatum);
+              }
+            }
 
           }
         }
@@ -210,14 +277,38 @@ public class ELOBerekenaar {
 
       output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
                                            + spelerBestand, charsetUit);
-      String  lijn  = "\"speler\",\"elo\",\"partijen\"";
-      output.write(lijn);
+      StringBuffer  lijn  = new StringBuffer();
+      lijn.append("\"speler\",\"elo\",\"partijen\",\"eersteEloDatum\",")
+          .append("\"minElo\",\"minEloDatum\",\"maxElo\",\"maxEloDatum\"");
+      output.write(lijn.toString());
       output.newLine();
       for (Integer spelerId  : spelers.values()) {
-        lijn  = "\"" + spelerinfos.get(spelerId).getNaam() + "\","
-                + spelerinfos.get(spelerId).getElo() + ","
-                + spelerinfos.get(spelerId).getPartijen();
-        output.write(lijn);
+        try {
+          aantal  = spelerinfos.get(spelerId).getPartijen();
+          lijn    = new StringBuffer();
+          lijn.append("\"")
+              .append(spelerinfos.get(spelerId).getNaam()).append("\",")
+              .append(spelerinfos.get(spelerId).getElo()).append(",")
+              .append(aantal).append(",");
+          if (spelerinfos.get(spelerId).getPartijen() <= ELO.MIN_PARTIJEN) {
+            lijn.append(",,,,");
+          } else {
+            lijn.append(Datum.fromDate(spelerinfos.get(spelerId).getOfficieel(),
+                                       CaissaConstants.PGN_DATUM_FORMAAT))
+                .append(",")
+                .append(spelerinfos.get(spelerId).getMinElo()).append(",")
+                .append(Datum.fromDate(spelerinfos.get(spelerId).getMinDatum(),
+                                       CaissaConstants.PGN_DATUM_FORMAAT))
+                .append(",")
+                .append(spelerinfos.get(spelerId).getMaxElo()).append(",")
+                .append(Datum.fromDate(spelerinfos.get(spelerId).getMaxDatum(),
+                                       CaissaConstants.PGN_DATUM_FORMAAT));
+          }
+        } catch (ParseException e) {
+          System.out.println("Foutieve datum [" + e.getLocalizedMessage()
+                             + "].");
+        }
+        output.write(lijn.toString());
         output.newLine();
       }
     } catch (IOException e) {
