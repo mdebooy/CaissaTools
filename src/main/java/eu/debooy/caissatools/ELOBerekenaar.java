@@ -173,7 +173,8 @@ public class ELOBerekenaar {
             }
             uitslag++;
           }
-          if (uitslag < 3) {
+          if (uitslag < 3
+              && !partij.getZetten().contains("unrated")) {
             if (!spelers.containsKey(wit)) {
               int spelerId  = spelers.size();
               spelers.put(wit, spelerId);
@@ -315,15 +316,13 @@ public class ELOBerekenaar {
       System.out.println(e.getLocalizedMessage());
     } catch (BestandException e) {
       System.out.println(e.getLocalizedMessage());
-    } finally {
-      try {
-        if (output != null) {
-          output.close();
-        }
-      } catch (IOException ex) {
-        System.out.println(ex.getLocalizedMessage());
-      }
     }
+    try {
+      output.close();
+    } catch (IOException ex) {
+      System.out.println(ex.getLocalizedMessage());
+    }
+
     System.out.println("Bestand : " + spelerBestand);
     System.out.println("Partijen: " + partijen.size());
     System.out.println("Klaar.");

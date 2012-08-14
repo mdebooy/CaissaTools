@@ -475,7 +475,7 @@ public class PgnToLatex {
       output.newLine();
 
       for (PGN partij: partijen) {
-        String zetten = partij.getZetten();
+        String zetten = partij.getZuivereZetten();
         if (DoosUtils.isNotBlankOrNull(zetten)) {
           output.write("\\begin{chessgame}{" + partij.getTag("White") + "}{"
               + partij.getTag("Black") + "}{" + partij.getTag("Date") + "}{"
@@ -486,7 +486,7 @@ public class PgnToLatex {
           if (DoosUtils.isNotBlankOrNull(eco)) {
             output.write(eco);
           }
-          output.write("}{"+ partij.getZetten().replaceAll("#", "\\\\#")
+          output.write("}{"+ partij.getZuivereZetten().replaceAll("#", "\\\\#")
               + "}\\end{chessgame}");
         } else {
           output.write("\\begin{chessempty}{" + partij.getTag("White") + "}{"
