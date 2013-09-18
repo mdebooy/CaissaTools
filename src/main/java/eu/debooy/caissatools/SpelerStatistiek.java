@@ -29,20 +29,25 @@ import eu.debooy.doosutils.latex.Utilities;
 
 import java.io.BufferedReader;
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
+import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.TreeMap;
 
 
 /**
  * @author Marco de Booij
  */
-public class SpelerStatistiek {
+public final class SpelerStatistiek {
+  private static  ResourceBundle  resourceBundle  =
+      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+
   private SpelerStatistiek() {}
 
   public static void execute(String[] args) {
@@ -60,7 +65,7 @@ public class SpelerStatistiek {
     Map<String, int[]>
                     items       = new TreeMap<String, int[]>( );
 
-    Banner.printBanner("Speler Statistieken");
+    Banner.printBanner(resourceBundle.getString("banner.spelerstatistiek"));
 
     Arguments arguments = new Arguments(args);
     arguments.setParameters(new String[] {"bestand",  "charsetin", "charsetuit",
@@ -86,25 +91,22 @@ public class SpelerStatistiek {
       try {
         datum = Datum.fromDate(new Date(), "dd/MM/yyyy HH:mm:ss");
       } catch (ParseException e) {
-        System.out.println(e.getLocalizedMessage());
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
     String  logo          = arguments.getArgument("logo");
     String  speler        = arguments.getArgument("speler");
     String  statistiekTag = arguments.getArgument("tag");
 
-    File    latexFile = new File(bestand + ".tex");
-    File    pgnFile   = new File(bestand + ".pgn");
     try {
-      input   = Bestand.openInvoerBestand(pgnFile, charsetIn);
-      output  = Bestand.openUitvoerBestand(latexFile, charsetUit);
+      input   = Bestand.openInvoerBestand(bestand + ".pgn", charsetIn);
+      output  = Bestand.openUitvoerBestand(bestand + ".tex", charsetUit);
       String line = input.readLine();
       // Zoek naar de eerste TAG
       while (null != line && !line.startsWith("[")) {
         line = input.readLine();
       }
       while (line != null) {
-        partijen++;
         PGN partij = new PGN();
         // Verwerk de TAGs
         while (line != null && line.startsWith("[")) {
@@ -114,7 +116,7 @@ public class SpelerStatistiek {
           try {
             partij.addTag(tag, value);
           } catch (PgnException e) {
-            System.out.println(e.getMessage());
+            DoosUtils.foutNaarScherm(e.getLocalizedMessage());
           }
           line = input.readLine();
         }
@@ -135,28 +137,6 @@ public class SpelerStatistiek {
           i++;
         }
 
-        // Verwerk de 'datums'
-        hulpDatum = partij.getTag("EventDate");
-        if (DoosUtils.isNotBlankOrNull(hulpDatum)
-            && hulpDatum.indexOf('?') < 0) {
-          if (hulpDatum.compareTo(startDatum) < 0 ) {
-            startDatum  = hulpDatum;
-          }
-          if (hulpDatum.compareTo(eindDatum) > 0 ) {
-            eindDatum   = hulpDatum;
-          }
-        }
-        hulpDatum = partij.getTag("Date");
-        if (DoosUtils.isNotBlankOrNull(hulpDatum)
-            && hulpDatum.indexOf('?') < 0) {
-          if (hulpDatum.compareTo(startDatum) < 0 ) {
-            startDatum  = hulpDatum;
-          }
-          if (hulpDatum.compareTo(eindDatum) > 0 ) {
-            eindDatum   = hulpDatum;
-          }
-        }
-
         if ("Date".equals(statistiekTag)) {
           datumDeel = hulpDatum.split("\\.");
           if (datumDeel.length == 0) {
@@ -165,6 +145,28 @@ public class SpelerStatistiek {
         }
 
         if (speler.equals(wit)) {
+          partijen++;
+          // Verwerk de 'datums'
+          hulpDatum = partij.getTag("EventDate");
+          if (DoosUtils.isNotBlankOrNull(hulpDatum)
+              && hulpDatum.indexOf('?') < 0) {
+            if (hulpDatum.compareTo(startDatum) < 0 ) {
+              startDatum  = hulpDatum;
+            }
+            if (hulpDatum.compareTo(eindDatum) > 0 ) {
+              eindDatum   = hulpDatum;
+            }
+          }
+          hulpDatum = partij.getTag("Date");
+          if (DoosUtils.isNotBlankOrNull(hulpDatum)
+              && hulpDatum.indexOf('?') < 0) {
+            if (hulpDatum.compareTo(startDatum) < 0 ) {
+              startDatum  = hulpDatum;
+            }
+            if (hulpDatum.compareTo(eindDatum) > 0 ) {
+              eindDatum   = hulpDatum;
+            }
+          }
           if (DoosUtils.isNotBlankOrNull(statistiekTag)) {
             if ("Date".equals(statistiekTag)) {
               sleutel = datumDeel[0];
@@ -178,6 +180,28 @@ public class SpelerStatistiek {
           statistiek[i]++;
           items.put(sleutel, statistiek);
         } else if (speler.equals(zwart)) {
+          partijen++;
+          // Verwerk de 'datums'
+          hulpDatum = partij.getTag("EventDate");
+          if (DoosUtils.isNotBlankOrNull(hulpDatum)
+              && hulpDatum.indexOf('?') < 0) {
+            if (hulpDatum.compareTo(startDatum) < 0 ) {
+              startDatum  = hulpDatum;
+            }
+            if (hulpDatum.compareTo(eindDatum) > 0 ) {
+              eindDatum   = hulpDatum;
+            }
+          }
+          hulpDatum = partij.getTag("Date");
+          if (DoosUtils.isNotBlankOrNull(hulpDatum)
+              && hulpDatum.indexOf('?') < 0) {
+            if (hulpDatum.compareTo(startDatum) < 0 ) {
+              startDatum  = hulpDatum;
+            }
+            if (hulpDatum.compareTo(eindDatum) > 0 ) {
+              eindDatum   = hulpDatum;
+            }
+          }
           if (DoosUtils.isNotBlankOrNull(statistiekTag)) {
             if ("Date".equals(statistiekTag)) {
               sleutel = datumDeel[0];
@@ -237,7 +261,9 @@ public class SpelerStatistiek {
       output.write("\\parindent =0.mm");
       output.newLine();
       output.newLine();
-      output.write("\\title{Statistieken}");
+      output.write("\\title{"
+                   + resourceBundle.getString("label.statistieken")
+                   + "}");
       output.newLine();
       output.write("\\author{" + speler + "}");
       output.newLine();
@@ -254,7 +280,9 @@ public class SpelerStatistiek {
       output.newLine();
       output.write("  \\begin{center}");
       output.newLine();
-      output.write("    \\huge Statistieken van \\\\");
+      output.write("    \\huge "
+                   + resourceBundle.getString("label.statistiekenvan")
+                   + " \\\\");
       output.newLine();
       output.write("    \\vspace{1in}");
       output.newLine();
@@ -285,13 +313,22 @@ public class SpelerStatistiek {
       output.newLine();
       output.write("      \\hline");
       output.newLine();
-      output.write(" & \\multicolumn{5}{c|}{ Wit } ");
-      output.write(" & \\multicolumn{5}{c|}{ Zwart } ");
-      output.write(" & \\multicolumn{5}{c|}{ Totaal } \\\\");
+      output.write(" & \\multicolumn{5}{c|}{ "
+                   + resourceBundle.getString("tekst.wit") + " } ");
+      output.write(" & \\multicolumn{5}{c|}{ "
+                   + resourceBundle.getString("tekst.zwart") + " } ");
+      output.write(" & \\multicolumn{5}{c|}{ "
+                   + resourceBundle.getString("tekst.totaal") + " } \\\\");
       output.newLine();
       output.write("      \\cline{2-16}");
       output.newLine();
-      output.write(" & W & R & V & T & pct. & W & R & V & T & pct. & W & R & V & T & pct. \\\\");
+      String  hoofding  = " & "
+                          + resourceBundle.getString("tag.winst") + " & "
+                          + resourceBundle.getString("tag.remise") + " & "
+                          + resourceBundle.getString("tag.verlies") + " & "
+                          + resourceBundle.getString("tag.totaal") + " & "
+                          + resourceBundle.getString("tag.procent");
+      output.write(hoofding + hoofding + hoofding + " \\\\");
       output.newLine();
       output.write("      \\hline");
       output.newLine();
@@ -316,21 +353,24 @@ public class SpelerStatistiek {
       input.close();
       output.close();
     } catch (IOException e) {
-      System.out.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {
-      System.out.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
         if (input != null) {
           input.close();
         }
       } catch (IOException ex) {
-        System.out.println(ex.getLocalizedMessage());
+        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
       }
     }
-    System.out.println("Bestand : " + bestand);
-    System.out.println("Partijen: " + partijen);
-    System.out.println("Klaar.");
+
+    DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
+                         + bestand);
+    DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
+                         + partijen);
+    DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
   }
 
   /**
@@ -343,17 +383,19 @@ public class SpelerStatistiek {
       datum = Datum.toDate(startDatum, CaissaConstants.PGN_DATUM_FORMAAT);
       titelDatum.append(Datum.fromDate(datum));
     } catch (ParseException e) {
-      System.out.println("StartDatum: " + e.getLocalizedMessage()
-                         + " [" + startDatum + "]");
+      DoosUtils.foutNaarScherm(resourceBundle.getString("label.startdatum")
+                               + " " + e.getLocalizedMessage() + " ["
+                               + startDatum + "]");
     }
 
     if (!startDatum.equals(eindDatum)) {
       try {
         datum = Datum.toDate(eindDatum, CaissaConstants.PGN_DATUM_FORMAAT);
-        titelDatum.append(" - " + Datum.fromDate(datum));
+        titelDatum.append(" - ").append(Datum.fromDate(datum));
       } catch (ParseException e) {
-        System.out.println("EindDatum: " + e.getLocalizedMessage()
-                           + " [" + eindDatum + "]");
+        DoosUtils.foutNaarScherm(resourceBundle.getString("label.einddatum")
+                                 + " " + e.getLocalizedMessage() + " ["
+                                 + eindDatum + "]");
       }
     }
 
@@ -362,8 +404,9 @@ public class SpelerStatistiek {
 
   protected static int[] getStatistiek(String sleutel,
                                        Map<String, int[]> tabel) {
-    if (tabel.containsKey(sleutel))
+    if (tabel.containsKey(sleutel)) {
       return tabel.get(sleutel);
+    }
 
     return new int[] {0,0,0,0,0,0};
   }
@@ -372,20 +415,34 @@ public class SpelerStatistiek {
    * Geeft de 'help' pagina.
    */
   protected static void help() {
-    System.out.println("java -jar CaissaTools.jar SpelerStatistiek [OPTIE...] \\");
-    System.out.println("  --bestand=<PGN bestand> --speler=<Naam van de speler> \\");
-    System.out.println();
-    System.out.println("  --bestand    Het bestand met de partijen in PGN formaat.");
-    System.out.println("  --charsetin  De characterset van <bestand> als deze niet "+ Charset.defaultCharset().name() + " is.");
-    System.out.println("  --charsetuit De characterset van de uitvoer als deze niet "+ Charset.defaultCharset().name() + " moet zijn.");
-    System.out.println("  --logo       Logo op de titel pagina.");
-    System.out.println("  --speler     De speler voor de statistieken.");
-    System.out.println("  --tag        De PGN tag waarop de statistieken gebaseerd");
-    System.out.println("               zijn. Zonder deze parameter zijn het de");
-    System.out.println("               tegenstanders. Bij date wordt het het jaar.");
-    System.out.println();
-    System.out.println("Bestand en speler verplicht.");
-    System.out.println();
+    DoosUtils.naarScherm("java -jar CaissaTools.jar SpelerStatistiek ["
+                         + resourceBundle.getString("label.optie")
+                         + "] \\");
+    DoosUtils.naarScherm("    --bestand=<"
+                         + resourceBundle.getString("label.pgnbestand")
+                         + "> --speler=<"
+                         + resourceBundle.getString("label.spelernaam")
+                         + ">");
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm("  --bestand    ",
+                         resourceBundle.getString("help.bestand"), 80);
+    DoosUtils.naarScherm("  --charsetin  ",
+        MessageFormat.format(resourceBundle.getString("help.charsetin"),
+                             Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --charsetuit ",
+        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
+                             Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --logo       ",
+                         resourceBundle.getString("help.logo"), 80);
+    DoosUtils.naarScherm("  --speler     ",
+                         resourceBundle.getString("help.statistiekspeler"), 80);
+    DoosUtils.naarScherm("  --tag        ",
+                         resourceBundle.getString("help.tag"), 80);
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("help.paramsverplicht"),
+                             "bestand", "speler"), 80);
+    DoosUtils.naarScherm();
   }
 
   private static void printStatistiek(String sleutel, int[] statistiek,
@@ -411,17 +468,17 @@ public class SpelerStatistiek {
       throws IOException {
     DecimalFormat format    = new DecimalFormat("0.00");
     Double        punten    = Double.valueOf(winst) + Double.valueOf(remise) / 2;
-    int           partijen  = winst + remise + verlies;
+    int           gespeeld  = winst + remise + verlies;
 
-    if (partijen == 0) {
+    if (gespeeld == 0) {
       output.write(" & & & & &");
     } else {
       output.write(" & " + winst + " & " + remise + " & " + verlies + " & " );
-      if (punten != .5) {
+      if (punten != 0.5) {
         output.write("" + punten.intValue());
       }
       output.write("" + Utilities.kwart(punten) + " & ");
-      output.write("" + format.format((punten / partijen) * 100) + "\\%");
+      output.write("" + format.format((punten / gespeeld) * 100) + "\\%");
     }
   }
 

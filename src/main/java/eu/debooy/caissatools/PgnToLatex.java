@@ -1,7 +1,7 @@
 /**
  * Copyright 2008 Marco de Booij
  *
- * Licensed under the EUPL, Version 1.0 or � as soon they will be approved by
+ * Licensed under the EUPL, Version 1.0 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
  * you may not use this work except in compliance with the Licence. You may
  * obtain a copy of the Licence at:
@@ -21,6 +21,7 @@ import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.PgnException;
+import eu.debooy.caissa.sorteer.PGNSortByEvent;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Datum;
@@ -33,19 +34,25 @@ import eu.debooy.doosutils.latex.Utilities;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
 import java.util.Date;
 import java.util.HashSet;
-import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 
 /**
  * @author Marco de Booij
  */
-public class PgnToLatex {
+public final class PgnToLatex {
+  private static  ResourceBundle  resourceBundle  =
+      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+
   private PgnToLatex() {}
 
   public static void execute(String[] args) throws PgnException {
@@ -58,7 +65,7 @@ public class PgnToLatex {
     String          hulpDatum   = "";
     String          startDatum  = "9999.99.99";
 
-    Banner.printBanner("PGN to LaTeX");
+    Banner.printBanner(resourceBundle.getString("banner.pgntolatex"));
 
     Arguments arguments = new Arguments(args);
     arguments.setParameters(new String[] {"auteur", "bestand", "charsetin",
@@ -87,7 +94,7 @@ public class PgnToLatex {
       try {
         datum = Datum.fromDate(new Date(), "dd/MM/yyyy HH:mm:ss");
       } catch (ParseException e) {
-        System.out.println(e.getLocalizedMessage());
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
     int       enkel     = 1;
@@ -102,21 +109,29 @@ public class PgnToLatex {
     if (DoosUtils.isBlankOrNull(metMatrix)) {
       metMatrix = DoosConstants.WAAR;
     }
-    String  titel     = arguments.getArgument("titel");
+    String  titel       = arguments.getArgument("titel");
 
     Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
 
-    partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
+    partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn,
+                                           new PGNSortByEvent());
+    Collections.sort(partijen);
 
     for (PGN partij: partijen) {
       // Verwerk de spelers
-      String  wit   = partij.getTag("White");
-      String  zwart = partij.getTag("Black");
-      spelers.add(wit);
-      spelers.add(zwart);
+      String  wit   = partij.getTag(CaissaConstants.PGNTAG_WHITE);
+      String  zwart = partij.getTag(CaissaConstants.PGNTAG_BLACK);
+      if (!"bye".equalsIgnoreCase(wit)
+          || DoosUtils.isNotBlankOrNull(wit)) {
+        spelers.add(wit);
+      }
+      if (!"bye".equalsIgnoreCase(zwart)
+          || DoosUtils.isNotBlankOrNull(zwart)) {
+        spelers.add(zwart);
+      }
   
       // Verwerk de 'datums'
-      hulpDatum = partij.getTag("EventDate");
+      hulpDatum = partij.getTag(CaissaConstants.PGNTAG_EVENTDATE);
       if (DoosUtils.isNotBlankOrNull(hulpDatum)
           && hulpDatum.indexOf('?') < 0) {
         if (hulpDatum.compareTo(startDatum) < 0 ) {
@@ -126,7 +141,7 @@ public class PgnToLatex {
           eindDatum   = hulpDatum;
         }
       }
-      hulpDatum = partij.getTag("Date");
+      hulpDatum = partij.getTag(CaissaConstants.PGNTAG_DATE);
       if (DoosUtils.isNotBlankOrNull(hulpDatum)
           && hulpDatum.indexOf('?') < 0) {
         if (hulpDatum.compareTo(startDatum) < 0 ) {
@@ -137,10 +152,10 @@ public class PgnToLatex {
         }
       }
       if (DoosUtils.isBlankOrNull(auteur)) {
-        auteur  = partij.getTag("Site");
+        auteur  = partij.getTag(CaissaConstants.PGNTAG_SITE);
       }
       if (DoosUtils.isBlankOrNull(titel)) {
-        titel   = partij.getTag("Event");
+        titel   = partij.getTag(CaissaConstants.PGNTAG_EVENT);
       }
     }
 
@@ -153,64 +168,76 @@ public class PgnToLatex {
       Spelerinfo[]  punten    = new Spelerinfo[noSpelers];
       String[]      namen     = new String[noSpelers];
       double[][]    matrix    = new double[noSpelers][noSpelers * enkel];
-      Iterator<String>
-                  speler    = spelers.iterator();
-      for (int i = 0; i < noSpelers; i++) {
-        namen[i]  = speler.next();
+      int           i         = 0;
+      for (String speler  : spelers) {
+        namen[i]  = speler;
         for (int j = 0; j < kolommen; j++) {
           matrix[i][j] = -1.0;
         }
+        i++;
       }
       Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
-      for (int i = 0; i < noSpelers; i++) {
+      for (i = 0; i < noSpelers; i++) {
         punten[i] = new Spelerinfo();
         punten[i].setNaam(namen[i]);
       }
 
+      // Bepaal de score en weerstandspunten.
       for (PGN partij: partijen) {
-        int     ronde   = 1;
-        try {
-          ronde = Integer.valueOf(partij.getTag("Round")).intValue();
-        } catch (NumberFormatException nfe) {
-          ronde = 1;
-        }
-        String  uitslag = partij.getTag("Result");
-        String  wit     = partij.getTag("White");
-        String  zwart   = partij.getTag("Black");
-        if (ronde > noSpelers
-            && (Arrays.binarySearch(halve, wit,
-                                    String.CASE_INSENSITIVE_ORDER) > -1
-                || Arrays.binarySearch(halve, zwart,
-                                       String.CASE_INSENSITIVE_ORDER) > -1)) {
-          continue;
-        }
-        int   iWit    = Arrays.binarySearch(namen, wit,
-                                            String.CASE_INSENSITIVE_ORDER);
-        int   iZwart  = Arrays.binarySearch(namen, zwart,
-                                            String.CASE_INSENSITIVE_ORDER);
-        if ("1-0".equals(uitslag)) {
-          punten[iWit].addPartij();
-          punten[iWit].addPunt(1.0);
-          matrix[iWit][iZwart * enkel] = 1.0;
-          punten[iZwart].addPartij();
-          matrix[iZwart][iWit * enkel + enkel - 1] = 0.0;
-        } else if ("1/2-1/2".equals(uitslag)) {
-          punten[iWit].addPartij();
-          punten[iWit].addPunt(0.5);
-          matrix[iWit][iZwart * enkel] = 0.5;
-          punten[iZwart].addPartij();
-          punten[iZwart].addPunt(0.5);
-          matrix[iZwart][iWit * enkel + enkel - 1] = 0.5;
-        } else if ("0-1".equals(uitslag)) {
-          punten[iWit].addPartij();
-          matrix[iWit][iZwart * enkel] = 0.0;
-          punten[iZwart].addPartij();
-          punten[iZwart].addPunt(1.0);
-          matrix[iZwart][iWit * enkel + enkel - 1] = 1.0;
+        String  wit     = partij.getTag(CaissaConstants.PGNTAG_WHITE);
+        String  zwart   = partij.getTag(CaissaConstants.PGNTAG_BLACK);
+        if (partij.isRanked()
+            && !"bye".equalsIgnoreCase(wit)
+            && !"bye".equalsIgnoreCase(zwart)) {
+          int     ronde   = 1;
+          try {
+            ronde = Integer.valueOf(partij.getTag(CaissaConstants.PGNTAG_ROUND))
+                           .intValue();
+          } catch (NumberFormatException nfe) {
+            ronde = 1;
+          }
+          String  uitslag = partij.getTag(CaissaConstants.PGNTAG_RESULT);
+          if (ronde > noSpelers
+              && (Arrays.binarySearch(halve, wit,
+                                      String.CASE_INSENSITIVE_ORDER) > -1
+                  || Arrays.binarySearch(halve, zwart,
+                                         String.CASE_INSENSITIVE_ORDER) > -1)) {
+            continue;
+          }
+          int   iWit    = Arrays.binarySearch(namen, wit,
+                                              String.CASE_INSENSITIVE_ORDER);
+          int   iZwart  = Arrays.binarySearch(namen, zwart,
+                                              String.CASE_INSENSITIVE_ORDER);
+          if ("1-0".equals(uitslag)) {
+            punten[iWit].addPartij();
+            punten[iWit].addPunt(1.0);
+            matrix[iWit][iZwart * enkel] =
+              Math.max(matrix[iWit][iZwart * enkel], 0.0) + 1.0;
+            punten[iZwart].addPartij();
+            matrix[iZwart][iWit * enkel + enkel - 1] =
+              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0);
+          } else if ("1/2-1/2".equals(uitslag)) {
+            punten[iWit].addPartij();
+            punten[iWit].addPunt(0.5);
+            matrix[iWit][iZwart * enkel] =
+              Math.max(matrix[iWit][iZwart * enkel], 0.0) + 0.5;
+            punten[iZwart].addPartij();
+            punten[iZwart].addPunt(0.5);
+            matrix[iZwart][iWit * enkel + enkel - 1] =
+              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 0.5;
+          } else if ("0-1".equals(uitslag)) {
+            punten[iWit].addPartij();
+            matrix[iWit][iZwart * enkel] = 0.0;
+              Math.max(matrix[iWit][iZwart * enkel], 0.0);
+            punten[iZwart].addPartij();
+            punten[iZwart].addPunt(1.0);
+            matrix[iZwart][iWit * enkel + enkel - 1] =
+              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 1.0;
+          }
         }
       }
       // Bereken Weerstandspunten
-      for (int i = 0; i < noSpelers; i++) {
+      for (i = 0; i < noSpelers; i++) {
         Double weerstandspunten = 0.0;
         for (int j = 0; j < kolommen; j++) {
           if (matrix[i][j] > 0.0) {
@@ -222,42 +249,54 @@ public class PgnToLatex {
       }
       Arrays.sort(punten);
       int[] stand = new int[noSpelers];
-      for (int i = 0; i < noSpelers; i++) {
+      for (i = 0; i < noSpelers; i++) {
         stand[Arrays.binarySearch(namen, punten[i].getNaam(),
                                   String.CASE_INSENSITIVE_ORDER)] = i;
       }
+
+      // Maak de Matrix
       for (PGN partij: partijen) {
-        int     ronde   = 1;
-        try {
-          ronde = Integer.valueOf(partij.getTag("Round")).intValue();
-        } catch (NumberFormatException nfe) {
-          ronde = 1;
-        }
-        String  uitslag = partij.getTag("Result");
-        String  wit     = partij.getTag("White");
-        String  zwart   = partij.getTag("Black");
-        if (ronde > noSpelers
-            && (Arrays.binarySearch(halve, wit,
-                                    String.CASE_INSENSITIVE_ORDER) > -1
-                || Arrays.binarySearch(halve, zwart,
-                                       String.CASE_INSENSITIVE_ORDER) > -1)) {
-          continue;
-        }
-        int   iWit    =
-          stand[Arrays.binarySearch(namen, wit,
-                                    String.CASE_INSENSITIVE_ORDER)];
-        int   iZwart  =
-          stand[Arrays.binarySearch(namen, zwart,
-                                    String.CASE_INSENSITIVE_ORDER)];
-        if ("1-0".equals(uitslag)) {
-          matrix[iWit][iZwart * enkel] = 1.0;
-          matrix[iZwart][iWit * enkel + enkel - 1] = 0.0;
-        } else if ("1/2-1/2".equals(uitslag)) {
-          matrix[iWit][iZwart * enkel] = 0.5;
-          matrix[iZwart][iWit * enkel + enkel - 1] = 0.5;
-        } else if ("0-1".equals(uitslag)) {
-          matrix[iWit][iZwart * enkel] = 0.0;
-          matrix[iZwart][iWit * enkel + enkel - 1] = 1.0;
+        String  wit     = partij.getTag(CaissaConstants.PGNTAG_WHITE);
+        String  zwart   = partij.getTag(CaissaConstants.PGNTAG_BLACK);
+        if (partij.isRanked()
+            && !partij.isBye()) {
+          int     ronde   = 1;
+          try {
+            ronde = Integer.valueOf(partij.getTag(CaissaConstants.PGNTAG_ROUND))
+                           .intValue();
+          } catch (NumberFormatException nfe) {
+            ronde = 1;
+          }
+          String  uitslag = partij.getTag(CaissaConstants.PGNTAG_RESULT);
+          if (ronde > noSpelers
+              && (Arrays.binarySearch(halve, wit,
+                                      String.CASE_INSENSITIVE_ORDER) > -1
+                  || Arrays.binarySearch(halve, zwart,
+                                         String.CASE_INSENSITIVE_ORDER) > -1)) {
+            continue;
+          }
+          int   iWit    =
+            stand[Arrays.binarySearch(namen, wit,
+                                      String.CASE_INSENSITIVE_ORDER)];
+          int   iZwart  =
+            stand[Arrays.binarySearch(namen, zwart,
+                                      String.CASE_INSENSITIVE_ORDER)];
+          if ("1-0".equals(uitslag)) {
+            matrix[iWit][iZwart * enkel] =
+              Math.max(matrix[iWit][iZwart * enkel], 0.0) + 1.0;
+            matrix[iZwart][iWit * enkel + enkel - 1] =
+              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0);
+          } else if ("1/2-1/2".equals(uitslag)) {
+            matrix[iWit][iZwart * enkel] =
+              Math.max(matrix[iWit][iZwart * enkel], 0.0) + 0.5;
+            matrix[iZwart][iWit * enkel + enkel - 1] =
+              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 0.5;
+          } else if ("0-1".equals(uitslag)) {
+            matrix[iWit][iZwart * enkel] =
+              Math.max(matrix[iWit][iZwart * enkel], 0.0);
+            matrix[iZwart][iWit * enkel + enkel - 1] =
+              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 1.0;
+          }
         }
       }
 
@@ -331,8 +370,7 @@ public class PgnToLatex {
       output.write("}");
       output.newLine();
       output.newLine();
-      output.write("% Be sure that a game is not split on two columns or "
-                   + "pages.");
+      output.write("%" + resourceBundle.getString("latex.splitsmelding"));
       output.newLine();
       output.write("\\raggedbottom \\topskip 1\\topskip plus1000pt % like "
                    + "\\raggedbottom; moreso \\def\\need#1{\\vskip #1"
@@ -400,7 +438,7 @@ public class PgnToLatex {
         output.write("  \\begin{center}");
         output.newLine();
         output.write("    \\begin{tabular} { | c | l | ");
-        for (int i = 0; i < kolommen; i++) {
+        for (i = 0; i < kolommen; i++) {
           output.write(" c | ");
         }
         output.write("r | r | r | }");
@@ -408,28 +446,32 @@ public class PgnToLatex {
         output.write("    \\hline");
         output.newLine();
         output.write("    \\multicolumn{2}{|c|}{} ");
-        for (int i = 0; i < noSpelers; i++) {
+        for (i = 0; i < noSpelers; i++) {
           if (enkel == 1) {
             output.write(" & " + (i + 1));
           } else {
             output.write(" & \\multicolumn{2}{c|}{" + (i + 1) + "} ");
           }
         }
-        output.write("& Punten & Partijen & SB \\\\");
+        output.write("& " + resourceBundle.getString("tag.punten")
+                     + " & " + resourceBundle.getString("tag.partijen")
+                     + " & " + resourceBundle.getString("tag.sb")
+                     + " \\\\");
         output.newLine();
         output.write("    \\cline{3-" + (2 + kolommen) + "}");
         output.newLine();
         if (enkel == 2) {
           output.write("    \\multicolumn{2}{|c|}{} & ");
-          for (int i = 0; i < noSpelers; i++) {
-            output.write("W & Z & ");
+          for (i = 0; i < noSpelers; i++) {
+            output.write(resourceBundle.getString("tag.wit") + " & " +
+                         resourceBundle.getString("tag.zwart") + " & ");
           }
           output.write("& & \\\\");
           output.newLine();
         }
         output.write("    \\hline");
         output.newLine();
-        for (int i = 0; i < noSpelers; i++) {
+        for (i = 0; i < noSpelers; i++) {
           output.write((i + 1) + " & " + punten[i].getNaam() + " & ");
           for (int j = 0; j < kolommen; j++) {
             if (i == j / enkel) {
@@ -444,8 +486,9 @@ public class PgnToLatex {
                 output.write("0");
               } else if (matrix[i][j] == 0.5) {
                 output.write("\\textonehalf");
-              } else if (matrix[i][j] == 1.0) {
-                output.write("1");
+              } else if (matrix[i][j] >= 1.0) {
+                output.write("" + ((Double)matrix[i][j]).intValue()
+                             + Utilities.kwart(matrix[i][j]));
               }
               if ((j / enkel) * enkel != j ) {
                 output.write("}");
@@ -475,48 +518,67 @@ public class PgnToLatex {
       output.newLine();
 
       for (PGN partij: partijen) {
-        String zetten = partij.getZuivereZetten();
-        if (DoosUtils.isNotBlankOrNull(zetten)) {
-          output.write("\\begin{chessgame}{" + partij.getTag("White") + "}{"
-              + partij.getTag("Black") + "}{" + partij.getTag("Date") + "}{"
-              + partij.getTag("Round") + "}{"
-              + partij.getTag("Result").replaceAll("1/2", "\\\\textonehalf")
-              + "}{");
-          String  eco = partij.getTag("ECO");
-          if (DoosUtils.isNotBlankOrNull(eco)) {
-            output.write(eco);
+        if (!partij.isBye()) {
+          String wit    = partij.getTag(CaissaConstants.PGNTAG_WHITE);
+          String zwart  = partij.getTag(CaissaConstants.PGNTAG_BLACK);
+          String zetten = partij.getZuivereZetten();
+          if (DoosUtils.isNotBlankOrNull(zetten)) {
+            output.write("\\begin{chessgame}{" + wit + "}{"
+                + zwart + "}{" + partij.getTag(CaissaConstants.PGNTAG_DATE)
+                + "}{" + partij.getTag(CaissaConstants.PGNTAG_ROUND) + "}{"
+                + partij.getTag("Result").replaceAll("1/2", "\\\\textonehalf")
+                + "}{");
+            String  eco = partij.getTag("ECO");
+            if (DoosUtils.isNotBlankOrNull(eco)) {
+              output.write(eco);
+            }
+            if (!partij.isRanked()) {
+              output.write(" " +
+                           resourceBundle.getString("tekst.buitencompetitie"));
+            }
+            output.write("}{"+ partij.getZuivereZetten()
+                                     .replaceAll("#", "\\\\#"));
+            output.write("}\\end{chessgame}");
+            output.newLine();
+          } else {
+            if (!partij.getTag(CaissaConstants.PGNTAG_RESULT).equals("*")) {
+              output.write("\\begin{chessempty}{" + wit + "}{"
+                  + zwart + "}{" + partij.getTag(CaissaConstants.PGNTAG_DATE)
+                  + "}{" + partij.getTag(CaissaConstants.PGNTAG_ROUND) + "}{"
+                  + partij.getTag(CaissaConstants.PGNTAG_RESULT)
+                          .replaceAll("1/2", "\\\\textonehalf") + "}{");
+              if (!partij.isRanked()) {
+                output.write(resourceBundle.getString("tekst.buitencompetitie"));
+              }
+              output.write("}\\end{chessempty}");
+              output.newLine();
+            }
           }
-          output.write("}{"+ partij.getZuivereZetten().replaceAll("#", "\\\\#")
-              + "}\\end{chessgame}");
-        } else {
-          output.write("\\begin{chessempty}{" + partij.getTag("White") + "}{"
-              + partij.getTag("Black") + "}{" + partij.getTag("Date") + "}{"
-              + partij.getTag("Round") + "}{"
-              + partij.getTag("Result").replaceAll("1/2", "\\\\textonehalf")
-              + "}{}\\end{chessempty}");
         }
-        output.newLine();
       }
 
       output.write("\\end{document}");
       output.newLine();
       output.close();
     } catch (IOException e) {
-      System.out.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {
-      System.out.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
         if (output != null) {
           output.close();
         }
       } catch (IOException ex) {
-        System.out.println(ex.getLocalizedMessage());
+        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
       }
     }
-    System.out.println("Bestand : " + bestand);
-    System.out.println("Partijen: " + partijen.size());
-    System.out.println("Klaar.");
+
+    DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
+                         + bestand);
+    DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
+                         + partijen.size());
+    DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
   }
 
   /**
@@ -529,17 +591,19 @@ public class PgnToLatex {
       datum = Datum.toDate(startDatum, CaissaConstants.PGN_DATUM_FORMAAT);
       titelDatum.append(Datum.fromDate(datum));
     } catch (ParseException e) {
-      System.out.println("StartDatum: " + e.getLocalizedMessage()
-                         + " [" + startDatum + "]");
+      DoosUtils.foutNaarScherm(resourceBundle.getString("label.startdatum")
+                               + " " + e.getLocalizedMessage() + " ["
+                               + startDatum + "]");
     }
 
     if (!startDatum.equals(eindDatum)) {
       try {
         datum = Datum.toDate(eindDatum, CaissaConstants.PGN_DATUM_FORMAAT);
-        titelDatum.append(" - " + Datum.fromDate(datum));
+        titelDatum.append(" - ").append(Datum.fromDate(datum));
       } catch (ParseException e) {
-        System.out.println("EindDatum: " + e.getLocalizedMessage()
-                           + " [" + eindDatum + "]");
+        DoosUtils.foutNaarScherm(resourceBundle.getString("label.einddatum")
+                                 + " " + e.getLocalizedMessage() + " ["
+                                 + eindDatum + "]");
       }
     }
 
@@ -550,23 +614,39 @@ public class PgnToLatex {
    * Geeft de 'help' pagina.
    */
   protected static void help() {
-    System.out.println("java -jar CaissaTools.jar PgnToLatex [OPTIE...] \\");
-    System.out.println("  --bestand=<PGN bestand>");
-    System.out.println();
-    System.out.println("  --auteur     De auteur of club die de partijen publiceert.");
-    System.out.println("  --bestand    Het bestand met de partijen in PGN formaat.");
-    System.out.println("  --charsetin  De characterset van <bestand> als deze niet "+ Charset.defaultCharset().name() + " is.");
-    System.out.println("  --charsetuit De characterset van de uitvoer als deze niet "+ Charset.defaultCharset().name() + " moet zijn.");
-    System.out.println("  --datum      De datum waarop de partijen zijn gespeeld.");
-    System.out.println("  --enkel      Enkelrondig <J|n>.");
-    System.out.println("  --halve      Lijst met spelers (gescheiden door een ;) die enkel eerste helft meespelen.");
-    System.out.println("               Enkel nodig bij enkel=N.");
-    System.out.println("  --keywords   Lijst van keywords (gescheiden door een ;).");
-    System.out.println("  --logo       Logo op de titel pagina.");
-    System.out.println("  --matrix     Uitslagen matrix <J|n>.");
-    System.out.println("  --titel      De titel van het document.");
-    System.out.println();
-    System.out.println("Enkel bestand is verplicht.");
-    System.out.println();
+    DoosUtils.naarScherm("java -jar CaissaTools.jar PgnToLatex ["
+                         + resourceBundle.getString("label.optie")
+                         + "] --bestand=<"
+                         + resourceBundle.getString("label.pgnbestand") + ">");
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm("  --auteur     ",
+                         resourceBundle.getString("help.auteur"), 80);
+    DoosUtils.naarScherm("  --bestand    ",
+                         resourceBundle.getString("help.bestand"), 80);
+    DoosUtils.naarScherm("  --charsetin  ",
+        MessageFormat.format(resourceBundle.getString("help.charsetin"),
+                             Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --charsetuit ",
+        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
+                             Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --datum      ",
+                         resourceBundle.getString("help.speeldatum"), 80);
+    DoosUtils.naarScherm("  --enkel      ",
+                         resourceBundle.getString("help.enkel"), 80);
+    DoosUtils.naarScherm("  --halve      ",
+                         resourceBundle.getString("help.halve"), 80);
+    DoosUtils.naarScherm("  --keywords   ",
+                         resourceBundle.getString("help.keywords"), 80);
+    DoosUtils.naarScherm("  --logo       ",
+                         resourceBundle.getString("help.logo"), 80);
+    DoosUtils.naarScherm("  --matrix     ",
+                         resourceBundle.getString("help.matrix"), 80);
+    DoosUtils.naarScherm("  --titel      ",
+                         resourceBundle.getString("help.documenttitel"), 80);
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("help.paramverplicht"),
+                             "bestand"), 80);
+    DoosUtils.naarScherm();
   }
 }

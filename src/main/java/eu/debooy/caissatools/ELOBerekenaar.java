@@ -25,6 +25,7 @@ import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Datum;
+import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.access.CvsBestand;
 import eu.debooy.doosutils.exception.BestandException;
@@ -33,26 +34,35 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 import java.util.TreeMap;
 
 
 /**
  * @author Marco de Booij
  */
-public class ELOBerekenaar {
+public final class ELOBerekenaar {
+  private static final  int START_ELO       = 1600;
+
+  private static  ResourceBundle  resourceBundle  =
+      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+
   private ELOBerekenaar() {}
 
   public static void execute(String[] args) throws PgnException {
     BufferedWriter    output      = null;
     Date              eloDatum    = null;
     int               aantal      = 0;
-    int               startElo    = 1600;
+    int               startElo    = START_ELO;
+    int               verwerkt    = 0;
     Map<String, Integer>
                       spelers     = new TreeMap<String, Integer>();
     List<PGN>         partijen    = new ArrayList<PGN>();
@@ -62,7 +72,7 @@ public class ELOBerekenaar {
     String            startDatum  = "0000.00.00";
     String[]          uitslagen   = new String[] {"0-1", "1/2-1/2", "1-0"};
 
-    Banner.printBanner("ELO Berekenaar");
+    Banner.printBanner(resourceBundle.getString("banner.eloberekenaar"));
 
     Arguments arguments = new Arguments(args);
     arguments.setParameters(new String[] {"charsetin", "charsetuit",
@@ -86,6 +96,10 @@ public class ELOBerekenaar {
     if (!spelerBestand.endsWith(".csv")) {
       spelerBestand = spelerBestand + ".csv";
     }
+    if (spelerBestand.contains(File.separator)) {
+      help();
+      return;
+    }
     if (arguments.hasArgument("startDatum")) {
       startDatum  = arguments.getArgument("startDatum");
     }
@@ -107,6 +121,10 @@ public class ELOBerekenaar {
     if (arguments.hasArgument("geschiedenisBestand")) {
       String  geschiedenisBestand =
           arguments.getArgument("geschiedenisBestand");
+      if (geschiedenisBestand.contains(File.separator)) {
+        help();
+        return;
+      }
       if (!geschiedenisBestand.endsWith(".csv")) {
         geschiedenisBestand = geschiedenisBestand + ".csv";
       }
@@ -115,19 +133,21 @@ public class ELOBerekenaar {
                                                    + geschiedenisBestand,
                                                    charsetUit, true);
       } catch (BestandException e) {
-        System.out.println(e.getLocalizedMessage());
+        DoosUtils.naarScherm(e.getLocalizedMessage());
       }
     }
 
     CvsBestand  cvs = null;
     try {
-      cvs = new CvsBestand(uitvoerdir + File.separator + spelerBestand);
+      // Is eigenlijk een uitvoer.
+      cvs = new CvsBestand(uitvoerdir + File.separator + spelerBestand,
+                           charsetUit);
       while (cvs.hasNext()) {
         String[]  veld  = cvs.next();
         int spelerId  = spelers.size();
         spelers.put(veld[0], spelerId);
         Spelerinfo  spelerinfo  = new Spelerinfo();
-        spelerinfo.setElo(new Integer(veld[1]));
+        spelerinfo.setElo(Integer.valueOf(veld[1]));
         spelerinfo.setNaam(veld[0]);
         spelerinfo.setPartijen(Integer.valueOf(veld[2]));
         if (spelerinfo.getPartijen() > ELO.MIN_PARTIJEN) {
@@ -144,130 +164,141 @@ public class ELOBerekenaar {
         spelerinfos.add(spelerId, spelerinfo);
       }
     } catch (BestandException e) {
-      System.out.println("Nieuw bestand " + spelerBestand + " aanmaken.");
+      DoosUtils.foutNaarScherm(
+          MessageFormat.format(
+              resourceBundle.getString("error.maaknieuwbestand"),
+              spelerBestand));
     } catch (ParseException e) {
-      System.out.println("Foutieve datum in " + spelerBestand + " ["
-                         + e.getLocalizedMessage() + "].");
+      DoosUtils.foutNaarScherm(
+          MessageFormat.format(
+              resourceBundle.getString("error.foutedatumin"),
+              spelerBestand) + " [" + e.getLocalizedMessage() + "].");
     } finally {
       try {
         if (cvs != null) {
           cvs.close();
         }
       } catch (BestandException e) {
-        System.out.println(e.getLocalizedMessage());
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
     try {
       partijen  = CaissaUtils.laadPgnBestand(toernooiBestand, charsetIn);
       Collections.sort(partijen);
       for (PGN  partij : partijen) {
-        String  datum     = partij.getTag("Date");
-        if (startDatum.compareTo(datum) <= 0) {
-          String  wit       = partij.getTag("White");
-          String  zwart     = partij.getTag("Black");
-          String  resultaat = partij.getTag("Result");
-          int uitslag = 0;
-          for (String s: uitslagen) {
-            if (s.equals(resultaat)) {
-              break;
+        if (!partij.isBye()
+            && partij.isRated()) {
+          String  datum     = partij.getTag("Date");
+          if (startDatum.compareTo(datum) <= 0) {
+            verwerkt++;
+            String  wit       = partij.getTag("White");
+            String  zwart     = partij.getTag("Black");
+            String  resultaat = partij.getTag("Result");
+            int uitslag = 0;
+            for (String s: uitslagen) {
+              if (s.equals(resultaat)) {
+                break;
+              }
+              uitslag++;
             }
-            uitslag++;
-          }
-          if (uitslag < 3
-              && !partij.getZetten().contains("unrated")) {
-            if (!spelers.containsKey(wit)) {
-              int spelerId  = spelers.size();
-              spelers.put(wit, spelerId);
-              Spelerinfo  spelerinfo  = new Spelerinfo();
-              spelerinfo.setElo(startElo);
-              spelerinfo.setNaam(wit);
-              spelerinfo.setPartijen(new Integer(0));
-              spelerinfo.setSpelerId(spelerId);
-              spelerinfos.add(spelerId, spelerinfo);
-            }
-            if (!spelers.containsKey(zwart)) {
-              int spelerId  = spelers.size();
-              spelers.put(zwart, spelerId);
-              Spelerinfo  spelerinfo  = new Spelerinfo();
-              spelerinfo.setElo(startElo);
-              spelerinfo.setNaam(zwart);
-              spelerinfo.setPartijen(new Integer(0));
-              spelerinfo.setSpelerId(spelerId);
-              spelerinfos.add(spelerId, spelerinfo);
-            }
-            int     witId     = spelers.get(wit);
-            int     zwartId   = spelers.get(zwart);
-            Integer witElo    = spelerinfos.get(witId).getElo();
-            Integer zwartElo  = spelerinfos.get(zwartId).getElo();
-            spelerinfos.get(witId)
-                       .setElo(ELO.berekenELO(witElo, uitslag, zwartElo,
-                                              spelerinfos.get(witId)
-                                                         .getPartijen()));
-            spelerinfos.get(witId).addPartij();
-            spelerinfos.get(zwartId)
-                       .setElo(ELO.berekenELO(zwartElo, 2 - uitslag, witElo,
-                                              spelerinfos.get(zwartId)
-                                                         .getPartijen()));
-            spelerinfos.get(zwartId).addPartij();
-            if (null != geschiedenis) {
-              geschiedenis.write("\"" + wit + "\"," + datum + ","
-                                 + spelerinfos.get(witId).getElo() + ","
-                                 + spelerinfos.get(witId).getPartijen());
-              geschiedenis.newLine();
-              geschiedenis.write("\"" + zwart + "\"," + datum + ","
-                                 + spelerinfos.get(zwartId).getElo() + ","
-                                 + spelerinfos.get(zwartId).getPartijen());
-              geschiedenis.newLine();
-            }
-            // Min and Max ELO
-            try {
-              eloDatum  = Datum.toDate(datum, CaissaConstants.PGN_DATUM_FORMAAT);
-            } catch (ParseException e) {
-              System.out.println("Foutieve datum: " + datum + " ["
-                                 + e.getLocalizedMessage() + "].");
-              eloDatum  = null;
-            }
-            // Wit
-            aantal    = spelerinfos.get(witId).getPartijen();
-            witElo    = spelerinfos.get(witId).getElo();
-            if (aantal == ELO.MIN_PARTIJEN + 1) {
-              spelerinfos.get(witId).setMinElo(witElo);
-              spelerinfos.get(witId).setMaxElo(witElo);
-              spelerinfos.get(witId).setMinDatum(eloDatum);
-              spelerinfos.get(witId).setMaxDatum(eloDatum);
-              spelerinfos.get(witId).setOfficieel(eloDatum);
-            }
-            if (aantal > ELO.MIN_PARTIJEN + 1) {
-              if (spelerinfos.get(witId).getMinElo() > witElo) {
+            if (uitslag < 3) {
+              if (!spelers.containsKey(wit)) {
+                int spelerId  = spelers.size();
+                spelers.put(wit, spelerId);
+                Spelerinfo  spelerinfo  = new Spelerinfo();
+                spelerinfo.setElo(startElo);
+                spelerinfo.setNaam(wit);
+                spelerinfo.setPartijen(Integer.valueOf(0));
+                spelerinfo.setSpelerId(spelerId);
+                spelerinfos.add(spelerId, spelerinfo);
+              }
+              if (!spelers.containsKey(zwart)) {
+                int spelerId  = spelers.size();
+                spelers.put(zwart, spelerId);
+                Spelerinfo  spelerinfo  = new Spelerinfo();
+                spelerinfo.setElo(startElo);
+                spelerinfo.setNaam(zwart);
+                spelerinfo.setPartijen(Integer.valueOf(0));
+                spelerinfo.setSpelerId(spelerId);
+                spelerinfos.add(spelerId, spelerinfo);
+              }
+              int     witId     = spelers.get(wit);
+              int     zwartId   = spelers.get(zwart);
+              Integer witElo    = spelerinfos.get(witId).getElo();
+              Integer zwartElo  = spelerinfos.get(zwartId).getElo();
+              spelerinfos.get(witId)
+                         .setElo(ELO.berekenELO(witElo, uitslag, zwartElo,
+                                                spelerinfos.get(witId)
+                                                           .getPartijen()));
+              spelerinfos.get(witId).addPartij();
+              spelerinfos.get(zwartId)
+                         .setElo(ELO.berekenELO(zwartElo, 2 - uitslag, witElo,
+                                                spelerinfos.get(zwartId)
+                                                           .getPartijen()));
+              spelerinfos.get(zwartId).addPartij();
+              if (null != geschiedenis) {
+                geschiedenis.write("\"" + wit + "\"," + datum + ","
+                                   + spelerinfos.get(witId).getElo() + ","
+                                   + spelerinfos.get(witId).getPartijen());
+                geschiedenis.newLine();
+                geschiedenis.write("\"" + zwart + "\"," + datum + ","
+                                   + spelerinfos.get(zwartId).getElo() + ","
+                                   + spelerinfos.get(zwartId).getPartijen());
+                geschiedenis.newLine();
+              }
+              // Min and Max ELO
+              try {
+                eloDatum  =
+                    Datum.toDate(datum, CaissaConstants.PGN_DATUM_FORMAAT);
+              } catch (ParseException e) {
+                DoosUtils.foutNaarScherm(
+                    MessageFormat.format(
+                        resourceBundle.getString("error.foutedatum"),
+                        datum) + " [" + e.getLocalizedMessage() + "].");
+                eloDatum  = null;
+              }
+              // Wit
+              aantal    = spelerinfos.get(witId).getPartijen();
+              witElo    = spelerinfos.get(witId).getElo();
+              if (aantal == ELO.MIN_PARTIJEN + 1) {
                 spelerinfos.get(witId).setMinElo(witElo);
-                spelerinfos.get(witId).setMinDatum(eloDatum);
-              }
-              if (spelerinfos.get(witId).getMaxElo() < witElo) {
                 spelerinfos.get(witId).setMaxElo(witElo);
+                spelerinfos.get(witId).setMinDatum(eloDatum);
                 spelerinfos.get(witId).setMaxDatum(eloDatum);
+                spelerinfos.get(witId).setOfficieel(eloDatum);
               }
-            }
-            // Zwart
-            aantal    = spelerinfos.get(zwartId).getPartijen();
-            zwartElo  = spelerinfos.get(zwartId).getElo();
-            if (aantal == ELO.MIN_PARTIJEN + 1) {
-              spelerinfos.get(zwartId).setMinElo(zwartElo);
-              spelerinfos.get(zwartId).setMaxElo(zwartElo);
-              spelerinfos.get(zwartId).setMinDatum(eloDatum);
-              spelerinfos.get(zwartId).setMaxDatum(eloDatum);
-              spelerinfos.get(zwartId).setOfficieel(eloDatum);
-            }
-            if (aantal > ELO.MIN_PARTIJEN + 1) {
-              if (spelerinfos.get(zwartId).getMinElo() > zwartElo) {
+              if (aantal > ELO.MIN_PARTIJEN + 1) {
+                if (spelerinfos.get(witId).getMinElo() > witElo) {
+                  spelerinfos.get(witId).setMinElo(witElo);
+                  spelerinfos.get(witId).setMinDatum(eloDatum);
+                }
+                if (spelerinfos.get(witId).getMaxElo() < witElo) {
+                  spelerinfos.get(witId).setMaxElo(witElo);
+                  spelerinfos.get(witId).setMaxDatum(eloDatum);
+                }
+              }
+              // Zwart
+              aantal    = spelerinfos.get(zwartId).getPartijen();
+              zwartElo  = spelerinfos.get(zwartId).getElo();
+              if (aantal == ELO.MIN_PARTIJEN + 1) {
                 spelerinfos.get(zwartId).setMinElo(zwartElo);
-                spelerinfos.get(zwartId).setMinDatum(eloDatum);
-              }
-              if (spelerinfos.get(zwartId).getMaxElo() < zwartElo) {
                 spelerinfos.get(zwartId).setMaxElo(zwartElo);
+                spelerinfos.get(zwartId).setMinDatum(eloDatum);
                 spelerinfos.get(zwartId).setMaxDatum(eloDatum);
+                spelerinfos.get(zwartId).setOfficieel(eloDatum);
               }
+              if (aantal > ELO.MIN_PARTIJEN + 1) {
+                if (spelerinfos.get(zwartId).getMinElo() > zwartElo) {
+                  spelerinfos.get(zwartId).setMinElo(zwartElo);
+                  spelerinfos.get(zwartId).setMinDatum(eloDatum);
+                }
+                if (spelerinfos.get(zwartId).getMaxElo() < zwartElo) {
+                  spelerinfos.get(zwartId).setMaxElo(zwartElo);
+                  spelerinfos.get(zwartId).setMaxDatum(eloDatum);
+                }
+              }
+  
             }
-
           }
         }
       }
@@ -306,26 +337,32 @@ public class ELOBerekenaar {
                                        CaissaConstants.PGN_DATUM_FORMAAT));
           }
         } catch (ParseException e) {
-          System.out.println("Foutieve datum [" + e.getLocalizedMessage()
-                             + "].");
+          DoosUtils.foutNaarScherm(resourceBundle.getString("error.foutedatum")
+                               + e.getLocalizedMessage() + "].");
         }
         output.write(lijn.toString());
         output.newLine();
       }
     } catch (IOException e) {
-      System.out.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {
-      System.out.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     }
     try {
-      output.close();
+      if (null != output) {
+        output.close();
+      }
     } catch (IOException ex) {
-      System.out.println(ex.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
     }
 
-    System.out.println("Bestand : " + spelerBestand);
-    System.out.println("Partijen: " + partijen.size());
-    System.out.println("Klaar.");
+    DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
+                         + spelerBestand);
+    DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
+                         + partijen.size());
+    DoosUtils.naarScherm(resourceBundle.getString("label.verwerkt") + " "
+                         + verwerkt);
+    DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
   }
 
 
@@ -333,21 +370,40 @@ public class ELOBerekenaar {
    * Geeft de 'help' pagina.
    */
   protected static void help() {
-    System.out.println("java -jar CaissaTools.jar ELOBerekenaar [OPTIE...] \\");
-    System.out.println("  --spelerBestand=<CSV bestand> \\");
-    System.out.println("  --toernooiBestand=<PGN bestand>");
-    System.out.println();
-    System.out.println("  --charsetin           De characterset van <bestand> als deze niet "+ Charset.defaultCharset().name() + " is.");
-    System.out.println("  --charsetuit          De characterset van de uitvoer als deze niet "+ Charset.defaultCharset().name() + " moet zijn.");
-    System.out.println("  --geschiedenisBestand Het bestand (met .csv extensie) met de evolutie van de ratings.");
-    System.out.println("  --spelerBestand       Een CSV bestand (met .csv extensie) met de huidige rating van de spelers.");
-    System.out.println("                        Dit bestand wordt bijgewerkt of aangemaakt.");
-    System.out.println("  --startDatum          De datum vanaf wanneer de partijen meetellen (yyyy.mm.dd)");
-    System.out.println("  --startELO            De start ELO punten voor 'unrated' spelers. De default waarde is 1600.");
-    System.out.println("  --toernooiBestand     Het bestand met de partijen in PGN formaat.");
-    System.out.println("  --uitvoerdir          De directory voor het geschiedenisBestand en spelerBestand.");
-    System.out.println();
-    System.out.println("spelerBestand en toernooiBestand zijn verplicht.");
-    System.out.println();
+    DoosUtils.naarScherm("java -jar CaissaTools.jar ELOBerekenaar ["
+                         + resourceBundle.getString("label.optie")
+                         + "] \\");
+    DoosUtils.naarScherm("    --spelerBestand=<"
+                         + resourceBundle.getString("label.csvbestand")
+                         + "> --toernooiBestand=<"
+                         + resourceBundle.getString("label.pgnbestand") + ">");
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm("  --charsetin           ",
+        MessageFormat.format(resourceBundle.getString("help.charsetin"),
+                             Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --charsetuit          ",
+        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
+                             Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --geschiedenisBestand ",
+                         resourceBundle.getString("help.geschiedenisbestand"),
+                         80);
+    DoosUtils.naarScherm("  --spelerBestand       ",
+                         resourceBundle.getString("help.spelerbestand"), 80);
+    DoosUtils.naarScherm("  --startDatum          ",
+                         resourceBundle.getString("help.startdatum"), 80);
+    DoosUtils.naarScherm("  --startELO            ",
+        MessageFormat.format(resourceBundle.getString("help.startelo"),
+                             START_ELO), 80);
+    DoosUtils.naarScherm("  --toernooiBestand     ",
+                         resourceBundle.getString("help.toernooibestand"), 80);
+    DoosUtils.naarScherm("  --uitvoerdir          ",
+                         resourceBundle.getString("help.uitvoerdir"), 80);
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("help.paramsverplicht"),
+                             "spelerBestand", "toernooiBestand"), 80);
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm(resourceBundle.getString("help.eloberekenaar.extra"));
+    DoosUtils.naarScherm();
   }
 }

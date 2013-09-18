@@ -25,6 +25,7 @@ import eu.debooy.caissa.exceptions.ZetException;
 import eu.debooy.caissa.sorteer.PGNSortByEvent;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
+import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.ManifestInfo;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
@@ -33,17 +34,22 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
+import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 
 /**
  * @author Marco de Booij
  */
-public class ChessTheatre {
-  private static  ManifestInfo  manifestInfo  = new ManifestInfo();
+public final class ChessTheatre {
+  private static  ManifestInfo    manifestInfo    = new ManifestInfo();
+  private static  ResourceBundle  resourceBundle  =
+      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
   private ChessTheatre(){}
 
@@ -59,7 +65,7 @@ public class ChessTheatre {
     String          versie        = manifestInfo.getBuildVersion();
     String          zip           = "";
 
-    Banner.printBanner("ChessTheatre");
+    Banner.printBanner(resourceBundle.getString("banner.chesstheatre"));
 
     Arguments       arguments   = new Arguments(args);
     arguments.setParameters(new String[] {"bestand", "charsetin", "charsetuit",
@@ -216,11 +222,11 @@ public class ChessTheatre {
           try {
             gamedata.write(parseZetten(fen, partij.getZuivereZetten()));
           } catch (FenException e) {
-            System.err.println("Error in " + partij.getTagsAsString());
-            System.err.println(e.getMessage());
+            DoosUtils.foutNaarScherm("Error in " + partij.getTagsAsString());
+            DoosUtils.foutNaarScherm(e.getMessage());
           } catch (ZetException e) {
-            System.err.println("Error in " + partij.getTagsAsString());
-            System.err.println(e.getMessage());
+            DoosUtils.foutNaarScherm("Error in " + partij.getTagsAsString());
+            DoosUtils.foutNaarScherm(e.getMessage());
           }
         }
         gamedata.write("</plies>");
@@ -254,11 +260,11 @@ public class ChessTheatre {
       updates.write("<updates count=\"0\" />");
       updates.close();
     } catch (FenException e) {
-      System.err.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (IOException e) {
-      System.err.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {
-      System.err.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
         if (gamedata != null) {
@@ -271,39 +277,48 @@ public class ChessTheatre {
           updates.close();
         }
       } catch (IOException e) {
-        System.err.println(e.getLocalizedMessage());
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
-    System.out.println("Partijen : " + partijen.size());
-    System.out.println("Bestanden: " + gameFile);
-    System.out.println("Uitvoer  : " + uitvoerdir);
-    System.out.println("Klaar.");
+    DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
+                         + partijen.size());
+    DoosUtils.naarScherm(resourceBundle.getString("label.bestanden") + " "
+                         + gameFile);
+    DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
+                         + uitvoerdir);
+    DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
   }
 
   /**
    * Geeft de 'help' pagina.
    */
   protected static void help() {
-    System.out.println("java -jar CaissaTools.jar ChessTheatre [OPTIE...] \\");
-    System.out.println("  --bestand=<PGN bestand>");
-    System.out.println();
-    System.out.println("  --bestand      Het bestand met de partijen in PGN formaat.");
-    System.out.println("  --charsetin    De characterset van <bestand> als deze niet "
-                       + Charset.defaultCharset().name() + " is.");
-    System.out.println("  --charsetuit   De characterset van de uitvoer als deze niet "
-                       + Charset.defaultCharset().name() + " moet zijn.");
-    System.out.println("  --maxBestanden Maximum aantal bestanden voor de partijen.");
-    System.out.println("                 Default waarde is 50.");
-    System.out.println("  --minPartijen  Minimum aantal partijen per bestand.");
-    System.out.println("                 Default waarde is totaal aantal partijen");
-    System.out.println("                 gedeeld door maxBestanden.");
-    System.out.println("  --uitvoerdir   Directory waar de uitvoer bestanden moeten staan.");
-    System.out.println("  --zip          Naam (met eventuele directory) van de zip file.");
-    System.out.println("                 Deze zip file wordt niet door dit programma");
-    System.out.println("                 gemaakt.");
-    System.out.println();
-    System.out.println("Enkel bestand is verplicht.");
-    System.out.println();
+    DoosUtils.naarScherm("java -jar CaissaTools.jar ChessTheatre ["
+                         + resourceBundle.getString("label.optie")
+                         + "] --bestand=<"
+                         + resourceBundle.getString("label.pgnbestand") + ">");
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm("  --bestand      ",
+                         resourceBundle.getString("help.bestand"), 80);
+    DoosUtils.naarScherm("  --charsetin    ",
+        MessageFormat.format(resourceBundle.getString("help.charsetin"),
+                             Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --charsetuit   ",
+        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
+                             Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --maxBestanden ",
+                         resourceBundle.getString("help.maxbestanden"), 80);
+    DoosUtils.naarScherm("  --minPartijen  ",
+                         resourceBundle.getString("help.minpartijen"), 80);
+    DoosUtils.naarScherm("  --uitvoerdir   ",
+                         resourceBundle.getString("help.uitvoerdir"), 80);
+    DoosUtils.naarScherm("  --zip          ",
+                         resourceBundle.getString("help.zip"), 80);
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("help.paramverplicht"),
+                             "bestand"), 80);
+    DoosUtils.naarScherm();
   }
 
   /**

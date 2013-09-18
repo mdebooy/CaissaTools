@@ -3,7 +3,7 @@
   <parent>
     <groupId>eu.debooy.maven</groupId>
     <artifactId>pom</artifactId>
-    <version>1.0.4</version>
+    <version>1.1.1-SNAPSHOT</version>
   </parent>
   <groupId>eu.debooy.caissa</groupId>
   <artifactId>caissatools</artifactId>
@@ -84,6 +84,6 @@
 
   <properties>
     <caissa.version>0.1.10-SNAPSHOT</caissa.version>
-    <doosutils.version>1.1.0</doosutils.version>
+    <doosutils.version>1.1.1-SNAPSHOT</doosutils.version>
   </properties>
 </project>

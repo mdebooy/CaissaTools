@@ -18,12 +18,19 @@ package eu.debooy.caissatools;
 
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Banner;
+import eu.debooy.doosutils.DoosUtils;
+
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 
 /**
  * @author Marco de Booij
  */
-public class CaissaTools {
+public final class CaissaTools {
+  private static  ResourceBundle  resourceBundle  =
+      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+
   private CaissaTools() {}
 
   public static void main(String[] args) {
@@ -42,7 +49,7 @@ public class CaissaTools {
       try {
         ChessTheatre.execute(commandoArgs);
       } catch (PgnException e) {
-        System.out.println(e.getMessage());
+        DoosUtils.foutNaarScherm(e.getMessage());
       }
       return;
     }
@@ -50,7 +57,7 @@ public class CaissaTools {
       try {
         ELOBerekenaar.execute(commandoArgs);
       } catch (PgnException e) {
-        System.out.println(e.getMessage());
+        DoosUtils.foutNaarScherm(e.getMessage());
       }
       return;
     }
@@ -58,7 +65,7 @@ public class CaissaTools {
       try {
         PgnToHtml.execute(commandoArgs);
       } catch (PgnException e) {
-        System.out.println(e.getMessage());
+        DoosUtils.foutNaarScherm(e.getMessage());
       }
       return;
     }
@@ -66,7 +73,7 @@ public class CaissaTools {
       try {
         PgnToLatex.execute(commandoArgs);
       } catch (PgnException e) {
-        System.out.println(e.getMessage());
+        DoosUtils.foutNaarScherm(e.getMessage());
       }
       return;
     }
@@ -87,28 +94,29 @@ public class CaissaTools {
    * Geeft de 'help' pagina.
    */
   private static void help() {
-    System.out.println("  ChessTheatre      Zet een bestand met PGN partijen om naar invoer voor");
-    System.out.println("                    ChessTheatre.");
-    System.out.println("  ELOBerekenaar     Berekend de ELO rating van de spelers uit een toernooi.");
-    System.out.println("  PgnToHtml         Zet een bestand met PGN partijen uit een toernooi");
-    System.out.println("                    om in 2 HTML Bestanden.");
-    System.out.println("  PgnToLatex        Zet een bestand met PGN partijen uit een toernooi");
-    System.out.println("                    om in een .tex bestand.");
-    System.out.println("  StartPgn          Maakt een PGN bestand aan met alle partijen die");
-    System.out.println("                    tussen de opgegeven spelers gespeeld (moeten) worden.");
-    System.out.println("  SpelerStatistiek  Maakt een statistiek van alle partijen van de");
-    System.out.println("                    opgegeven speler.");
-    System.out.println();
+    DoosUtils.naarScherm("  ChessTheatre      ",
+                         resourceBundle.getString("help.chesstheatre"), 80);
+    DoosUtils.naarScherm("  ELOBerekenaar     ",
+                         resourceBundle.getString("help.eloberekenaar"), 80);
+    DoosUtils.naarScherm("  PgnToHtml         ",
+                         resourceBundle.getString("help.pgntohtml"), 80);
+    DoosUtils.naarScherm("  PgnToLatex        ",
+                         resourceBundle.getString("help.pgntolatex"), 80);
+    DoosUtils.naarScherm("  StartPgn          ",
+                         resourceBundle.getString("help.startpgn"), 80);
+    DoosUtils.naarScherm("  SpelerStatistiek  ",
+                         resourceBundle.getString("help.spelerstatistiek"), 80);
+    DoosUtils.naarScherm("");
     ChessTheatre.help();
-    System.out.println();
+    DoosUtils.naarScherm("");
     ELOBerekenaar.help();
-    System.out.println();
+    DoosUtils.naarScherm("");
     PgnToHtml.help();
-    System.out.println();
+    DoosUtils.naarScherm("");
     PgnToLatex.help();
-    System.out.println();
+    DoosUtils.naarScherm("");
     StartPgn.help();
-    System.out.println();
+    DoosUtils.naarScherm("");
     SpelerStatistiek.help();
   }
 }

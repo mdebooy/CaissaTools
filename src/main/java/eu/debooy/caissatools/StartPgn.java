@@ -18,25 +18,33 @@ package eu.debooy.caissatools;
 
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
+import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.nio.charset.Charset;
+import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Locale;
+import java.util.ResourceBundle;
 
 
 /**
  * @author Marco de Booij
  */
-public class StartPgn {
+public final class StartPgn {
+  private static  ResourceBundle  resourceBundle  =
+      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+
   private StartPgn() {}
 
   public static void execute(String[] args) {
     BufferedWriter  output  = null;
 
-    Banner.printBanner("Start PGN");
+    Banner.printBanner(resourceBundle.getString("banner.startpgn"));
 
     Arguments       arguments   = new Arguments(args);
     arguments.setParameters(new String[] {"bestand", "date", "event", "site",
@@ -89,6 +97,8 @@ public class StartPgn {
           output.newLine();
           output.write("[Result \"*\"]");
           output.newLine();
+          output.write("[EventDate \"" + date + "\"]");
+          output.newLine();
           output.newLine();
           output.write("*");
           output.newLine();
@@ -107,6 +117,8 @@ public class StartPgn {
           output.newLine();
           output.write("[Result \"*\"]");
           output.newLine();
+          output.write("[EventDate \"" + date + "\"]");
+          output.newLine();
           output.newLine();
           output.write("*");
           output.newLine();
@@ -115,41 +127,70 @@ public class StartPgn {
       }
       output.close();
     } catch (IOException e) {
-      System.out.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {
-      System.out.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
         if (output != null) {
           output.close();
         }
       } catch (IOException e) {
-        System.err.println(e.getLocalizedMessage());
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
 
-    System.out.println("Bestand : " + bestand);
-    System.out.println("Uitvoer : " + uitvoerdir);
-    System.out.println("Klaar.");
+    DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
+                         + bestand);
+    DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
+                         + uitvoerdir);
+    DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
   }
 
   /**
    * Geeft de 'help' pagina.
    */
   protected static void help() {
-    System.out.println("java -jar CaissaTools.jar StartPgn --bestand=<PGN bestand> \\");
-    System.out.println("  --date=<datum> --event=<event> --site=<site> \\");
-    System.out.println("  --spelers=<speler1>[;<speler2>...] \\");
-    System.out.println("  [--uitvoerdir=<uitvoer-directory>]");
-    System.out.println();
-    System.out.println("  --bestand    Het bestand met de partijen in PGN formaat.");
-    System.out.println("  --date       Datum van het toernooi.");
-    System.out.println("  --event      Naam van het toernooi.");
-    System.out.println("  --site       Plaats waar het toernooi gespeeld wordt.");
-    System.out.println("  --spelers    Lijst met spelers (gescheiden door een ;).");
-    System.out.println("  --uitvoerdir Directory waar de uitvoer bestanden moeten staan.");
-    System.out.println();
-    System.out.println("Alle parameters, behalve uitvoerdir, zijn verplicht.");
-    System.out.println();
+    DoosUtils.naarScherm("java -jar CaissaTools.jar StartPgn --bestand=<"
+                         + resourceBundle.getString("label.pgnbestand") + ">");
+    DoosUtils.naarScherm("    --date=<"
+                         + resourceBundle.getString("label.date")
+                         + "> --event=<"
+                         + resourceBundle.getString("label.event")
+                         + "> --site=<"
+                         + resourceBundle.getString("label.site")
+                         + "> \\");
+    DoosUtils.naarScherm("    --spelers=<"
+                         + resourceBundle.getString("label.speler")
+                         + "1>[;<"
+                         + resourceBundle.getString("label.speler")
+                         + "2>...] \\");
+    DoosUtils.naarScherm("    [--uitvoerdir=<"
+                         + resourceBundle.getString("label.uitvoerdir") + ">]");
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm("  --bestand    ",
+                         resourceBundle.getString("help.bestand"), 80);
+    DoosUtils.naarScherm("  --charsetin  ",
+        MessageFormat.format(resourceBundle.getString("help.charsetin"),
+                             Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --charsetuit ",
+        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
+                             Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --date       ",
+                         resourceBundle.getString("help.date"), 80);
+    DoosUtils.naarScherm("  --event      ",
+                         resourceBundle.getString("help.event"), 80);
+    DoosUtils.naarScherm("  --site       ",
+                         resourceBundle.getString("help.site"), 80);
+    DoosUtils.naarScherm("  --spelers    ",
+                         resourceBundle.getString("help.spelers"), 80);
+    DoosUtils.naarScherm("  --uitvoerdir ",
+                         resourceBundle.getString("help.uitvoerdir"), 80);
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm(
+        MessageFormat.format(
+            resourceBundle.getString("help.paramverplichtbehalve"),
+            "uitvoerdir"), 80);
+    DoosUtils.naarScherm();
   }
 }
