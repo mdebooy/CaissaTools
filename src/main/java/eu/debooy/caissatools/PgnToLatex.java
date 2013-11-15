@@ -329,7 +329,7 @@ public final class PgnToLatex {
       output.newLine();
       output.write("\\headsep =0.mm");
       output.newLine();
-      output.write("\\textheight =250.mm");
+      output.write("\\textheight =265.mm");
       output.newLine();
       output.write("\\textwidth =165.mm");
       output.newLine();
@@ -575,7 +575,7 @@ public final class PgnToLatex {
     }
 
     DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + bestand);
+                         + bestand + ".tex");
     DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
                          + partijen.size());
     DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));

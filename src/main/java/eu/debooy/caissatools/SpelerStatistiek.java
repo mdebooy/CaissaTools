@@ -367,7 +367,7 @@ public final class SpelerStatistiek {
     }
 
     DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + bestand);
+                         + bestand + ".tex");
     DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
                          + partijen);
     DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));

@@ -357,7 +357,7 @@ public final class ELOBerekenaar {
     }
 
     DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + spelerBestand);
+                         + uitvoerdir + File.separator + spelerBestand);
     DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
                          + partijen.size());
     DoosUtils.naarScherm(resourceBundle.getString("label.verwerkt") + " "

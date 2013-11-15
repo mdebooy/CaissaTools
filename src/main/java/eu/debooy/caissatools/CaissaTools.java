@@ -1,12 +1,12 @@
 /**
  * Copyright 2009 Marco de Booij
  *
- * Licensed under the EUPL, Version 1.0 or � as soon they will be approved by
+ * Licensed under the EUPL, Version 1.1 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
  * you may not use this work except in compliance with the Licence. You may
  * obtain a copy of the Licence at:
  *
- * http://ec.europa.eu/idabc/7330l5
+ * http://www.osor.eu/eupl
  *
  * Unless required by applicable law or agreed to in writing, software
  * distributed under the Licence is distributed on an "AS IS" BASIS, WITHOUT
@@ -85,6 +85,14 @@ public final class CaissaTools {
       SpelerStatistiek.execute(commandoArgs);
       return;
     }
+    if ("vertaalpgn".equalsIgnoreCase(commando)) {
+      try {
+        VertaalPgn.execute(commandoArgs);
+      } catch (PgnException e) {
+        DoosUtils.foutNaarScherm(e.getMessage());
+      }
+      return;
+    }
 
     Banner.printBanner("Caissa Tools");
     help();
@@ -118,5 +126,7 @@ public final class CaissaTools {
     StartPgn.help();
     DoosUtils.naarScherm("");
     SpelerStatistiek.help();
+    DoosUtils.naarScherm("");
+    VertaalPgn.help();
   }
 }

@@ -141,7 +141,7 @@ public final class StartPgn {
     }
 
     DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + bestand);
+                         + uitvoerdir + File.separator + bestand + ".pgn");
     DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
                          + uitvoerdir);
     DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
