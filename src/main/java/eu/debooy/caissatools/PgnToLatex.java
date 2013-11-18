@@ -97,7 +97,11 @@ public final class PgnToLatex {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
-    int       enkel     = 1;
+    // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
+    int       enkel     = 0;
+    if (DoosConstants.WAAR.equalsIgnoreCase(arguments.getArgument("enkel"))) {
+      enkel   = 1;
+    }
     if (DoosConstants.ONWAAR.equalsIgnoreCase(arguments.getArgument("enkel"))) {
       enkel   = 2;
     }
@@ -164,10 +168,11 @@ public final class PgnToLatex {
 
       // Maak de Matrix
       int           noSpelers = spelers.size();
-      int           kolommen  = noSpelers * enkel;
+      int           kolommen  = (enkel == 0 ? partijen.size()
+                                            : noSpelers * enkel);
       Spelerinfo[]  punten    = new Spelerinfo[noSpelers];
       String[]      namen     = new String[noSpelers];
-      double[][]    matrix    = new double[noSpelers][noSpelers * enkel];
+      double[][]    matrix    = new double[noSpelers][kolommen];
       int           i         = 0;
       for (String speler  : spelers) {
         namen[i]  = speler;
@@ -197,7 +202,7 @@ public final class PgnToLatex {
             ronde = 1;
           }
           String  uitslag = partij.getTag(CaissaConstants.PGNTAG_RESULT);
-          if (ronde > noSpelers
+          if ((enkel > 0 && ronde > noSpelers)
               && (Arrays.binarySearch(halve, wit,
                                       String.CASE_INSENSITIVE_ORDER) > -1
                   || Arrays.binarySearch(halve, zwart,
@@ -208,39 +213,62 @@ public final class PgnToLatex {
                                               String.CASE_INSENSITIVE_ORDER);
           int   iZwart  = Arrays.binarySearch(namen, zwart,
                                               String.CASE_INSENSITIVE_ORDER);
+          // Zorgt ervoor dat de index binnen de limieten blijft.
+          ronde--;
           if ("1-0".equals(uitslag)) {
             punten[iWit].addPartij();
             punten[iWit].addPunt(1.0);
-            matrix[iWit][iZwart * enkel] =
-              Math.max(matrix[iWit][iZwart * enkel], 0.0) + 1.0;
             punten[iZwart].addPartij();
-            matrix[iZwart][iWit * enkel + enkel - 1] =
-              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0);
+            if (enkel == 0) {
+              matrix[iWit][ronde]   =
+                  Math.max(matrix[iWit][ronde], 0.0) + 1.0;
+              matrix[iZwart][ronde] =
+                  Math.max(matrix[iZwart][ronde], 0.0);
+            } else {
+              matrix[iWit][iZwart * enkel]  =
+                Math.max(matrix[iWit][iZwart * enkel], 0.0) + 1.0;
+              matrix[iZwart][iWit * enkel + enkel - 1]  =
+                  Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0);
+            }
           } else if ("1/2-1/2".equals(uitslag)) {
             punten[iWit].addPartij();
             punten[iWit].addPunt(0.5);
-            matrix[iWit][iZwart * enkel] =
-              Math.max(matrix[iWit][iZwart * enkel], 0.0) + 0.5;
             punten[iZwart].addPartij();
             punten[iZwart].addPunt(0.5);
-            matrix[iZwart][iWit * enkel + enkel - 1] =
-              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 0.5;
+            if (enkel == 0) {
+              matrix[iWit][ronde]   =
+                  Math.max(matrix[iWit][ronde], 0.0) + 0.5;
+              matrix[iZwart][ronde] =
+                  Math.max(matrix[iZwart][ronde], 0.0) + 0.5;
+            } else {
+              matrix[iWit][iZwart * enkel]              =
+                Math.max(matrix[iWit][iZwart * enkel], 0.0) + 0.5;
+              matrix[iZwart][iWit * enkel + enkel - 1]  =
+                  Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 0.5;
+            }
           } else if ("0-1".equals(uitslag)) {
             punten[iWit].addPartij();
-            matrix[iWit][iZwart * enkel] = 0.0;
-              Math.max(matrix[iWit][iZwart * enkel], 0.0);
             punten[iZwart].addPartij();
             punten[iZwart].addPunt(1.0);
-            matrix[iZwart][iWit * enkel + enkel - 1] =
-              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 1.0;
+            if (enkel == 0) {
+              matrix[iWit][ronde]   =
+                  Math.max(matrix[iWit][ronde], 0.0);
+              matrix[iZwart][ronde] =
+                  Math.max(matrix[iZwart][ronde], 0.0) + 1.0;
+            } else {
+              matrix[iWit][iZwart * enkel]              = 0.0;
+                Math.max(matrix[iWit][iZwart * enkel], 0.0);
+              matrix[iZwart][iWit * enkel + enkel - 1]  =
+                  Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 1.0;
+            }
           }
         }
       }
-      // Bereken Weerstandspunten
+      // Bereken Weerstandspunten en herinitialiseer de matrix.
       for (i = 0; i < noSpelers; i++) {
         Double weerstandspunten = 0.0;
         for (int j = 0; j < kolommen; j++) {
-          if (matrix[i][j] > 0.0) {
+          if (enkel > 0 && matrix[i][j] > 0.0) {
             weerstandspunten += punten[j / enkel].getPunten() * matrix[i][j];
           }
           matrix[i][j]  = -1.0;
@@ -254,7 +282,8 @@ public final class PgnToLatex {
                                   String.CASE_INSENSITIVE_ORDER)] = i;
       }
 
-      // Maak de Matrix
+      // Maak de Matrix nogmaals vanwege de sortering die de volgorde van de
+      // spelers aanpaste.
       for (PGN partij: partijen) {
         String  wit     = partij.getTag(CaissaConstants.PGNTAG_WHITE);
         String  zwart   = partij.getTag(CaissaConstants.PGNTAG_BLACK);
@@ -268,13 +297,15 @@ public final class PgnToLatex {
             ronde = 1;
           }
           String  uitslag = partij.getTag(CaissaConstants.PGNTAG_RESULT);
-          if (ronde > noSpelers
+          if ((enkel > 0 && ronde > noSpelers)
               && (Arrays.binarySearch(halve, wit,
                                       String.CASE_INSENSITIVE_ORDER) > -1
                   || Arrays.binarySearch(halve, zwart,
                                          String.CASE_INSENSITIVE_ORDER) > -1)) {
             continue;
           }
+          // Zorgt ervoor dat de index binnen de limieten blijft.
+          ronde--;
           int   iWit    =
             stand[Arrays.binarySearch(namen, wit,
                                       String.CASE_INSENSITIVE_ORDER)];
@@ -282,20 +313,41 @@ public final class PgnToLatex {
             stand[Arrays.binarySearch(namen, zwart,
                                       String.CASE_INSENSITIVE_ORDER)];
           if ("1-0".equals(uitslag)) {
-            matrix[iWit][iZwart * enkel] =
-              Math.max(matrix[iWit][iZwart * enkel], 0.0) + 1.0;
-            matrix[iZwart][iWit * enkel + enkel - 1] =
-              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0);
+            if (enkel == 0) {
+              matrix[iWit][ronde]   =
+                  Math.max(matrix[iWit][ronde], 0.0) + 1.0;
+              matrix[iZwart][ronde] =
+                  Math.max(matrix[iZwart][ronde], 0.0);
+            } else {
+              matrix[iWit][iZwart * enkel]  =
+                Math.max(matrix[iWit][iZwart * enkel], 0.0) + 1.0;
+              matrix[iZwart][iWit * enkel + enkel - 1]  =
+                  Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0);
+            }
           } else if ("1/2-1/2".equals(uitslag)) {
-            matrix[iWit][iZwart * enkel] =
-              Math.max(matrix[iWit][iZwart * enkel], 0.0) + 0.5;
-            matrix[iZwart][iWit * enkel + enkel - 1] =
-              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 0.5;
+            if (enkel == 0) {
+              matrix[iWit][ronde]   =
+                  Math.max(matrix[iWit][ronde], 0.0) + 0.5;
+              matrix[iZwart][ronde] =
+                  Math.max(matrix[iZwart][ronde], 0.0) + 0.5;
+            } else {
+              matrix[iWit][iZwart * enkel]              =
+                Math.max(matrix[iWit][iZwart * enkel], 0.0) + 0.5;
+              matrix[iZwart][iWit * enkel + enkel - 1]  =
+                  Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 0.5;
+            }
           } else if ("0-1".equals(uitslag)) {
-            matrix[iWit][iZwart * enkel] =
-              Math.max(matrix[iWit][iZwart * enkel], 0.0);
-            matrix[iZwart][iWit * enkel + enkel - 1] =
-              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 1.0;
+            if (enkel == 0) {
+              matrix[iWit][ronde]   =
+                  Math.max(matrix[iWit][ronde], 0.0);
+              matrix[iZwart][ronde] =
+                  Math.max(matrix[iZwart][ronde], 0.0) + 1.0;
+            } else {
+              matrix[iWit][iZwart * enkel]              = 0.0;
+                Math.max(matrix[iWit][iZwart * enkel], 0.0);
+              matrix[iZwart][iWit * enkel + enkel - 1]  =
+                  Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 1.0;
+            }
           }
         }
       }
@@ -432,6 +484,8 @@ public final class PgnToLatex {
       output.newLine();
       output.write("\\end{titlepage}");
       output.newLine();
+      output.write("\\topmargin =-15.mm");
+      output.newLine();
       if (DoosConstants.WAAR.equalsIgnoreCase(metMatrix)) {
         output.write("\\begin{landscape}");
         output.newLine();
@@ -446,17 +500,19 @@ public final class PgnToLatex {
         output.write("    \\hline");
         output.newLine();
         output.write("    \\multicolumn{2}{|c|}{} ");
-        for (i = 0; i < noSpelers; i++) {
-          if (enkel == 1) {
+        for (i = 0; i < (enkel == 0 ? kolommen : noSpelers); i++) {
+          if (enkel < 2) {
             output.write(" & " + (i + 1));
           } else {
             output.write(" & \\multicolumn{2}{c|}{" + (i + 1) + "} ");
           }
         }
-        output.write("& " + resourceBundle.getString("tag.punten")
-                     + " & " + resourceBundle.getString("tag.partijen")
-                     + " & " + resourceBundle.getString("tag.sb")
-                     + " \\\\");
+        output.write("& " + resourceBundle.getString("tag.punten"));
+        if (enkel > 0) {
+          output.write(" & " + resourceBundle.getString("tag.partijen")
+                       + " & " + resourceBundle.getString("tag.sb"));
+        }
+        output.write(" \\\\");
         output.newLine();
         output.write("    \\cline{3-" + (2 + kolommen) + "}");
         output.newLine();
@@ -472,35 +528,45 @@ public final class PgnToLatex {
         output.write("    \\hline");
         output.newLine();
         for (i = 0; i < noSpelers; i++) {
-          output.write((i + 1) + " & " + punten[i].getNaam() + " & ");
+          if (enkel == 0) {
+            output.write("\\multicolumn{2}{|l|}{" + punten[i].getNaam() + "} & ");
+          } else {
+            output.write((i + 1) + " & " + punten[i].getNaam() + " & ");
+          }
           for (int j = 0; j < kolommen; j++) {
-            if (i == j / enkel) {
-              output.write("\\multicolumn{1}"
-                           + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ");
-            } else {
-              if ((j / enkel) * enkel != j ) {
+            if (enkel > 0) {
+              if (i == j / enkel) {
                 output.write("\\multicolumn{1}"
-                             + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{");
+                             + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ");
+                continue;
+              } else {
+                if ((j / enkel) * enkel != j ) {
+                  output.write("\\multicolumn{1}"
+                               + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{");
+                }
               }
-              if (matrix[i][j] == 0.0) {
-                output.write("0");
-              } else if (matrix[i][j] == 0.5) {
-                output.write("\\textonehalf");
-              } else if (matrix[i][j] >= 1.0) {
-                output.write("" + ((Double)matrix[i][j]).intValue()
-                             + Utilities.kwart(matrix[i][j]));
-              }
-              if ((j / enkel) * enkel != j ) {
-                output.write("}");
-              }
-              output.write(" & ");
             }
+            if (matrix[i][j] == 0.0) {
+              output.write("0");
+            } else if (matrix[i][j] == 0.5) {
+              output.write("\\textonehalf");
+            } else if (matrix[i][j] >= 1.0) {
+              output.write("" + ((Double)matrix[i][j]).intValue()
+                           + Utilities.kwart(matrix[i][j]));
+            }
+            if (enkel > 0 && (j / enkel) * enkel != j ) {
+              output.write("}");
+            }
+            output.write(" & ");
           }
           output.write(punten[i].getPunten().intValue()
-                       + Utilities.kwart(punten[i].getPunten()) + " & ");
-          output.write(punten[i].getPartijen() + " & ");
-          output.write(punten[i].getWeerstandspunten().intValue()
-              + Utilities.kwart(punten[i].getWeerstandspunten()) + " \\\\");
+                       + Utilities.kwart(punten[i].getPunten()));
+          if (enkel > 0) {
+            output.write(" & " + punten[i].getPartijen() + " & ");
+            output.write(punten[i].getWeerstandspunten().intValue()
+                         + Utilities.kwart(punten[i].getWeerstandspunten()));
+          }
+          output.write(" \\\\");
           output.newLine();
           output.write("    \\hline");
           output.newLine();
@@ -514,8 +580,6 @@ public final class PgnToLatex {
         output.write("\\newpage");
         output.newLine();
       }
-      output.write("\\topmargin =-15.mm");
-      output.newLine();
 
       for (PGN partij: partijen) {
         if (!partij.isBye()) {
