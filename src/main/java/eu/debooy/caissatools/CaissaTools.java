@@ -114,6 +114,8 @@ public final class CaissaTools {
                          resourceBundle.getString("help.startpgn"), 80);
     DoosUtils.naarScherm("  SpelerStatistiek  ",
                          resourceBundle.getString("help.spelerstatistiek"), 80);
+    DoosUtils.naarScherm("  VertaalPgn        ",
+                         resourceBundle.getString("help.vertaalpgn"), 80);
     DoosUtils.naarScherm("");
     ChessTheatre.help();
     DoosUtils.naarScherm("");

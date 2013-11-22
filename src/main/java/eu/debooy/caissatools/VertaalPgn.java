@@ -185,6 +185,6 @@ public class VertaalPgn {
         MessageFormat.format(resourceBundle.getString("help.vantaal"),
                              Locale.getDefault().getLanguage()), 80);
     DoosUtils.naarScherm();
-    DoosUtils.naarScherm(resourceBundle.getString("help.vertaalpgn"), 80);
+    DoosUtils.naarScherm(resourceBundle.getString("help.vertaalpgn.extra"), 80);
   }
 }
