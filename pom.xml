@@ -7,14 +7,14 @@
   </parent>
   <groupId>eu.debooy.caissa</groupId>
   <artifactId>caissatools</artifactId>
-  <version>1.0.0</version>
+  <version>1.1.0-SNAPSHOT</version>
   <packaging>jar</packaging>
   <name>Caissa Tools</name>
   <description>Verschillende tools voor schakers.</description>
   <inceptionYear>2008</inceptionYear>
   <scm>
-    <connection>scm:svn:http://svn.debooy.eu/svn/CaissaTools/tags/caissatools-1.0.0</connection>
-    <developerConnection>scm:svn:http://svn.debooy.eu/svn/CaissaTools/tags/caissatools-1.0.0</developerConnection>
+    <connection>scm:svn:http://svn.debooy.eu/svn/CaissaTools/trunk</connection>
+    <developerConnection>scm:svn:http://svn.debooy.eu/svn/CaissaTools/trunk</developerConnection>
   </scm>
 
   <developers>
