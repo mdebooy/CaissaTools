@@ -35,7 +35,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
@@ -59,7 +58,6 @@ public final class ChessTheatre {
     BufferedWriter  updates       = null;
     int             maxBestanden  = 50;
     int             minPartijen   = 1;
-    List<PGN>       partijen      = new ArrayList<PGN>();
     String          charsetIn     = Charset.defaultCharset().name();
     String          charsetUit    = Charset.defaultCharset().name();
     String          versie        = manifestInfo.getBuildVersion();
@@ -117,8 +115,8 @@ public final class ChessTheatre {
       zip = zip.substring(0, zip.length() - 4);
     }
 
-    partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn,
-                                           new PGNSortByEvent());
+    List<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn,
+                                                     new PGNSortByEvent());
     Collections.sort(partijen);
     int aantalPartijen  = partijen.size() / maxBestanden + 1;
     if (aantalPartijen < minPartijen) {

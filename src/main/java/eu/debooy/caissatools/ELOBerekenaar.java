@@ -50,7 +50,7 @@ import java.util.TreeMap;
  * @author Marco de Booij
  */
 public final class ELOBerekenaar {
-  private static final  int START_ELO       = 1600;
+  private static final  int START_ELO = 1600;
 
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
@@ -65,7 +65,6 @@ public final class ELOBerekenaar {
     int               verwerkt    = 0;
     Map<String, Integer>
                       spelers     = new TreeMap<String, Integer>();
-    List<PGN>         partijen    = new ArrayList<PGN>();
     List<Spelerinfo>  spelerinfos = new ArrayList<Spelerinfo>();
     String            charsetIn   = Charset.defaultCharset().name();
     String            charsetUit  = Charset.defaultCharset().name();
@@ -164,15 +163,14 @@ public final class ELOBerekenaar {
         spelerinfos.add(spelerId, spelerinfo);
       }
     } catch (BestandException e) {
-      DoosUtils.foutNaarScherm(
+      DoosUtils.naarScherm(
           MessageFormat.format(
-              resourceBundle.getString("error.maaknieuwbestand"),
-              spelerBestand));
+              resourceBundle.getString("message.nieuwbestand"), spelerBestand));
     } catch (ParseException e) {
       DoosUtils.foutNaarScherm(
           MessageFormat.format(
               resourceBundle.getString("error.foutedatumin"),
-              spelerBestand) + " [" + e.getLocalizedMessage() + "].");
+              spelerBestand) + " [" + e.getLocalizedMessage() + "]");
     } finally {
       try {
         if (cvs != null) {
@@ -182,8 +180,10 @@ public final class ELOBerekenaar {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
+
+    List<PGN> partijen  = CaissaUtils.laadPgnBestand(toernooiBestand,
+                                                     charsetIn);
     try {
-      partijen  = CaissaUtils.laadPgnBestand(toernooiBestand, charsetIn);
       Collections.sort(partijen);
       for (PGN  partij : partijen) {
         if (!partij.isBye()

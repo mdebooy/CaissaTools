@@ -17,6 +17,7 @@
 package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
+import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Arguments;
@@ -27,7 +28,6 @@ import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
 
-import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -35,8 +35,10 @@ import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.Date;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
 
@@ -50,13 +52,11 @@ public final class SpelerStatistiek {
 
   private SpelerStatistiek() {}
 
-  public static void execute(String[] args) {
-    BufferedReader  input       = null;
+  public static void execute(String[] args) throws PgnException {
     BufferedWriter  output      = null;
-    int             partijen    = 0;
+    int             verwerkt    = 0;
     String          charsetIn   = Charset.defaultCharset().name();
     String          charsetUit  = Charset.defaultCharset().name();
-    String[]        datumDeel   = null;
     String          eindDatum   = "0000.00.00";
     String          hulpDatum   = "";
     String          sleutel     = "";
@@ -98,136 +98,76 @@ public final class SpelerStatistiek {
     String  speler        = arguments.getArgument("speler");
     String  statistiekTag = arguments.getArgument("tag");
 
-    try {
-      input   = Bestand.openInvoerBestand(bestand + ".pgn", charsetIn);
-      output  = Bestand.openUitvoerBestand(bestand + ".tex", charsetUit);
-      String line = input.readLine();
-      // Zoek naar de eerste TAG
-      while (null != line && !line.startsWith("[")) {
-        line = input.readLine();
+    List<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
+
+    for (PGN partij: partijen) {
+      String  uitslag = partij.getTag("Result");
+      String  wit     = partij.getTag("White");
+      String  zwart   = partij.getTag("Black");
+      int i = 0;
+      for (String s: uitslagen) {
+        if (s.equals(uitslag)) {
+          break;
+        }
+        i++;
       }
-      while (line != null) {
-        PGN partij = new PGN();
-        // Verwerk de TAGs
-        while (line != null && line.startsWith("[")) {
-          String tag = line.substring(1, line.indexOf(' '));
-          String value = line.substring(line.indexOf('"') + 1,
-              line.length() - 2);
-          try {
-            partij.addTag(tag, value);
-          } catch (PgnException e) {
-            DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+
+      if (speler.equals(wit) || speler.equals(zwart)) {
+        verwerkt++;
+        // Verwerk de 'datums'
+        hulpDatum = partij.getTag("EventDate");
+        if (DoosUtils.isNotBlankOrNull(hulpDatum)
+            && hulpDatum.indexOf('?') < 0) {
+          if (hulpDatum.compareTo(startDatum) < 0 ) {
+            startDatum  = hulpDatum;
           }
-          line = input.readLine();
-        }
-
-        String uitslag = partij.getTag("Result");
-        while (null != line && !line.endsWith(uitslag)) {
-          line = input.readLine();
-        }
-
-        // Verwerk de spelers
-        String  wit   = partij.getTag("White");
-        String  zwart = partij.getTag("Black");
-        int i = 0;
-        for (String s: uitslagen) {
-          if (s.equals(uitslag)) {
-            break;
-          }
-          i++;
-        }
-
-        if ("Date".equals(statistiekTag)) {
-          datumDeel = hulpDatum.split("\\.");
-          if (datumDeel.length == 0) {
-            datumDeel  = new String[] {"", "", ""};
+          if (hulpDatum.compareTo(eindDatum) > 0 ) {
+            eindDatum   = hulpDatum;
           }
         }
-
-        if (speler.equals(wit)) {
-          partijen++;
-          // Verwerk de 'datums'
-          hulpDatum = partij.getTag("EventDate");
-          if (DoosUtils.isNotBlankOrNull(hulpDatum)
-              && hulpDatum.indexOf('?') < 0) {
-            if (hulpDatum.compareTo(startDatum) < 0 ) {
-              startDatum  = hulpDatum;
-            }
-            if (hulpDatum.compareTo(eindDatum) > 0 ) {
-              eindDatum   = hulpDatum;
-            }
+        hulpDatum = partij.getTag("Date");
+        if (DoosUtils.isNotBlankOrNull(hulpDatum)
+            && hulpDatum.indexOf('?') < 0) {
+          if (hulpDatum.compareTo(startDatum) < 0 ) {
+            startDatum  = hulpDatum;
           }
-          hulpDatum = partij.getTag("Date");
-          if (DoosUtils.isNotBlankOrNull(hulpDatum)
-              && hulpDatum.indexOf('?') < 0) {
-            if (hulpDatum.compareTo(startDatum) < 0 ) {
-              startDatum  = hulpDatum;
-            }
-            if (hulpDatum.compareTo(eindDatum) > 0 ) {
-              eindDatum   = hulpDatum;
-            }
+          if (hulpDatum.compareTo(eindDatum) > 0 ) {
+            eindDatum   = hulpDatum;
           }
-          if (DoosUtils.isNotBlankOrNull(statistiekTag)) {
-            if ("Date".equals(statistiekTag)) {
-              sleutel = datumDeel[0];
-            } else { 
-              sleutel = DoosUtils.nullToEmpty(partij.getTag(statistiekTag));
+        }
+        if (DoosUtils.isNotBlankOrNull(statistiekTag)) {
+          if ("Date".equals(statistiekTag)) {
+            int punt  = hulpDatum.indexOf('.');
+            if (punt < 1) {
+              sleutel = "????";
+            } else {
+              sleutel = hulpDatum.substring(0, punt);
             }
-          } else {
+          } else { 
+            sleutel = DoosUtils.nullToEmpty(partij.getTag(statistiekTag));
+          }
+        } else {
+          if (speler.equals(wit)) {
             sleutel = zwart;
-          }
-          int[] statistiek  = getStatistiek(sleutel, items);
-          statistiek[i]++;
-          items.put(sleutel, statistiek);
-        } else if (speler.equals(zwart)) {
-          partijen++;
-          // Verwerk de 'datums'
-          hulpDatum = partij.getTag("EventDate");
-          if (DoosUtils.isNotBlankOrNull(hulpDatum)
-              && hulpDatum.indexOf('?') < 0) {
-            if (hulpDatum.compareTo(startDatum) < 0 ) {
-              startDatum  = hulpDatum;
-            }
-            if (hulpDatum.compareTo(eindDatum) > 0 ) {
-              eindDatum   = hulpDatum;
-            }
-          }
-          hulpDatum = partij.getTag("Date");
-          if (DoosUtils.isNotBlankOrNull(hulpDatum)
-              && hulpDatum.indexOf('?') < 0) {
-            if (hulpDatum.compareTo(startDatum) < 0 ) {
-              startDatum  = hulpDatum;
-            }
-            if (hulpDatum.compareTo(eindDatum) > 0 ) {
-              eindDatum   = hulpDatum;
-            }
-          }
-          if (DoosUtils.isNotBlankOrNull(statistiekTag)) {
-            if ("Date".equals(statistiekTag)) {
-              sleutel = datumDeel[0];
-            } else { 
-              sleutel = DoosUtils.nullToEmpty(partij.getTag(statistiekTag));
-            }
           } else {
             sleutel = wit;
           }
-          int[] statistiek  = getStatistiek(sleutel, items);
+        }
+        int[] statistiek  = getStatistiek(sleutel, items);
+        if (speler.equals(wit)) {
+          statistiek[i]++;
+        } else {
           statistiek[5 - i]++;
-          items.put(sleutel, statistiek);
         }
-        
-
-        // Zoek naar de eerste TAG
-        while (null != line && !line.startsWith("[")) {
-          line = input.readLine();
-        }
+        items.put(sleutel, statistiek);
       }
+    }
 
-      // Maak de .tex file
-      output.write("\\documentclass[dutch,a4,10pt]{report}");
+    // Maak de .tex file
+    try {
+      output  = Bestand.openUitvoerBestand(bestand + ".tex", charsetUit);
+      output.write("\\documentclass[dutch,a4paper,10pt]{report}");
       output.newLine();
-      output.newLine();
-      output.write("\\usepackage{skak}");
       output.newLine();
       output.write("\\usepackage{babel}");
       output.newLine();
@@ -254,7 +194,7 @@ public final class SpelerStatistiek {
       output.newLine();
       output.write("\\headsep =0.mm");
       output.newLine();
-      output.write("\\textheight =250.mm");
+      output.write("\\textheight =265.mm");
       output.newLine();
       output.write("\\textwidth =165.mm");
       output.newLine();
@@ -334,12 +274,12 @@ public final class SpelerStatistiek {
       output.newLine();
       output.write("      \\endhead");
       output.newLine();
-      for (String item: items.keySet()) {
-        int[] statistiek  = items.get(item);
+      for (Entry<String, int[]> item : items.entrySet()) {
+        int[] statistiek  = item.getValue();
         for (int i = 0; i < 6; i++) {
           totaal[i] += statistiek[i];
         }
-        printStatistiek(item, statistiek, output);
+        printStatistiek(item.getKey(), statistiek, output);
       }
       printStatistiek("Totaal", totaal, output);
       output.write("    \\end{longtable}");
@@ -350,16 +290,14 @@ public final class SpelerStatistiek {
       output.newLine();
       output.write("\\end{document}");
       output.newLine();
-      input.close();
-      output.close();
     } catch (IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
-        if (input != null) {
-          input.close();
+        if (output != null) {
+          output.close();
         }
       } catch (IOException ex) {
         DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
@@ -369,12 +307,18 @@ public final class SpelerStatistiek {
     DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
                          + bestand + ".tex");
     DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
-                         + partijen);
+                         + partijen.size());
+    DoosUtils.naarScherm(resourceBundle.getString("label.verwerkt") + " "
+                         + verwerkt);
     DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
   }
 
   /**
    * Maakt de datum informatie voor de titel pagina.
+   * 
+   * @param startDatum
+   * @param eindDatum
+   * @return
    */
   protected static String datumInTitel(String startDatum, String eindDatum) {
     StringBuffer  titelDatum  = new StringBuffer();
@@ -402,6 +346,16 @@ public final class SpelerStatistiek {
     return titelDatum.toString();
   }
 
+  /**
+   * Geeft een tabel met resultaten voor de sleutel. De elementen zijn:
+   *  wit-wint, remise, zwart-wint, wit-wint, remise, zwart-wint
+   * De eerste 3 elementen zijn voor gespeeld met wit en de laatste 3 voor
+   * gespeeld met zwart.
+   * 
+   * @param sleutel
+   * @param tabel
+   * @return
+   */
   protected static int[] getStatistiek(String sleutel,
                                        Map<String, int[]> tabel) {
     if (tabel.containsKey(sleutel)) {
@@ -445,6 +399,14 @@ public final class SpelerStatistiek {
     DoosUtils.naarScherm();
   }
 
+  /**
+   * Print de statistieken per groep.
+   * 
+   * @param sleutel
+   * @param statistiek
+   * @param output
+   * @throws IOException
+   */
   private static void printStatistiek(String sleutel, int[] statistiek,
                                       BufferedWriter output)
       throws IOException {
@@ -463,6 +425,15 @@ public final class SpelerStatistiek {
     output.newLine();
   }
 
+  /**
+   * Print een gedeelte van de statistieken per groep.
+   * 
+   * @param winst
+   * @param remise
+   * @param verlies
+   * @param output
+   * @throws IOException
+   */
   private static void printStatistiekDeel(int winst, int remise, int verlies,
                                           BufferedWriter output)
       throws IOException {
@@ -482,6 +453,13 @@ public final class SpelerStatistiek {
     }
   }
 
+  /**
+   * Zet de naam in de juiste volgorde. Eerst de voornaam (van achter de komma)
+   * en dan de achternaam (van voor de komma).
+   * 
+   * @param naam
+   * @return
+   */
   private static String swapNaam(String naam) {
     String[]  deel  = naam.split(",");
     if (deel.length == 1) {

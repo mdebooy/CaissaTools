@@ -82,7 +82,11 @@ public final class CaissaTools {
       return;
     }
     if ("spelerstatistiek".equalsIgnoreCase(commando)) {
-      SpelerStatistiek.execute(commandoArgs);
+      try {
+        SpelerStatistiek.execute(commandoArgs);
+      } catch (PgnException e) {
+        DoosUtils.foutNaarScherm(e.getMessage());
+      }
       return;
     }
     if ("vertaalpgn".equalsIgnoreCase(commando)) {

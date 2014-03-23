@@ -34,7 +34,6 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.Iterator;
@@ -55,7 +54,6 @@ public final class PgnToHtml {
 
   public static void execute(String[] args) throws PgnException {
     BufferedWriter  output      = null;
-    List<PGN>       partijen    = new ArrayList<PGN>();
     Set<String>     spelers     = new HashSet<String>();
     String          charsetIn   = Charset.defaultCharset().name();
     String          charsetUit  = Charset.defaultCharset().name();
@@ -96,7 +94,7 @@ public final class PgnToHtml {
                                             - File.separator.length());
     }
 
-    partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
+    List<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
 
     try {
       for (PGN partij: partijen) {

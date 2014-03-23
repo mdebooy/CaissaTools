@@ -33,7 +33,6 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -42,7 +41,7 @@ import java.util.ResourceBundle;
 /**
  * @author Marco de Booij
  */
-public class VertaalPgn {
+public final class VertaalPgn {
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
@@ -50,7 +49,6 @@ public class VertaalPgn {
 
   public static void execute(String[] args) throws PgnException {
     BufferedWriter  output      = null;
-    List<PGN>       partijen    = new ArrayList<PGN>();
     String          bestand     = "";
     String          charsetIn   = Charset.defaultCharset().name();
     String          charsetUit  = Charset.defaultCharset().name();
@@ -126,7 +124,7 @@ public class VertaalPgn {
       return;
     }
 
-    partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
+    List<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
 
     try {
       output  = Bestand.openUitvoerBestand(bestand + "_" + naarTaal + ".pgn",
