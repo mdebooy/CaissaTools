@@ -44,6 +44,7 @@ import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.Set;
 
 
 /**
@@ -58,7 +59,7 @@ public final class PgnToLatex {
   public static void execute(String[] args) throws PgnException {
     BufferedWriter  output      = null;
     List<PGN>       partijen    = new ArrayList<PGN>();
-    HashSet<String> spelers     = new HashSet<String>();
+    Set<String>     spelers     = new HashSet<String>();
     String          charsetIn   = Charset.defaultCharset().name();
     String          charsetUit  = Charset.defaultCharset().name();
     String          eindDatum   = "0000.00.00";
@@ -353,232 +354,152 @@ public final class PgnToLatex {
       }
 
       // Maak de .tex file
-      output.write("\\documentclass[dutch,twocolumn,a4paper,10pt]{report}");
-      output.newLine();
-      output.newLine();
-      output.write("\\usepackage{skak}");
-      output.newLine();
-      output.write("\\usepackage{babel}");
-      output.newLine();
-      output.write("\\usepackage{color}");
-      output.newLine();
-      output.write("\\usepackage{colortbl}");
-      output.newLine();
-      output.write("\\usepackage[T1]{fontenc}");
-      output.newLine();
-      output.write("\\usepackage[pdftex]{graphicx}");
-      output.newLine();
-      output.write("\\usepackage{pdflscape}");
-      output.newLine();
-      output.newLine();
-      output.write("\\topmargin =0.mm");
-      output.newLine();
-      output.write("\\oddsidemargin =0.mm");
-      output.newLine();
-      output.write("\\evensidemargin =0.mm");
-      output.newLine();
-      output.write("\\headheight =0.mm");
-      output.newLine();
-      output.write("\\headsep =0.mm");
-      output.newLine();
-      output.write("\\textheight =265.mm");
-      output.newLine();
-      output.write("\\textwidth =165.mm");
-      output.newLine();
-      output.write("\\parindent =0.mm");
-      output.newLine();
-      output.newLine();
-      output.write("\\newcommand{\\chessgame}[7]{");
-      output.newLine();
-      output.write("  $\\circ$ \\textbf{#1} \\hfill Ronde {#4}\\\\");
-      output.newLine();
-      output.write("  $\\bullet$ \\textbf{#2}\\\\");
-      output.newLine();
-      output.write("  {#3} \\hfill {#6} \\hfill {#5}\\\\");
-      output.newLine();
-      output.write("  \\styleB");
-      output.newLine();
-      output.write("  \\newgame");
-      output.newLine();
-      output.write("  \\mainline{#7} {\\bf #5}");
-      output.newLine();
-      output.write("  \\[\\showboard\\]");
-      output.newLine();
-      output.write("  \\begin{center} \\hrule \\end{center}");
-      output.newLine();
-      output.write("}");
-      output.newLine();
-      output.newLine();
-      output.write("\\newcommand{\\chessempty}[6]{");
-      output.newLine();
-      output.write("  $\\circ$ \\textbf{#1} \\hfill Ronde {#4}\\\\");
-      output.newLine();
-      output.write("  $\\bullet$ \\textbf{#2}\\\\");
-      output.newLine();
-      output.write("  {#3} \\hfill {#6} \\hfill {#5}\\\\");
-      output.newLine();
-      output.write("  \\begin{center} \\hrule \\end{center}");
-      output.newLine();
-      output.write("}");
-      output.newLine();
-      output.newLine();
-      output.write("%" + resourceBundle.getString("latex.splitsmelding"));
-      output.newLine();
-      output.write("\\raggedbottom \\topskip 1\\topskip plus1000pt % like "
+      Bestand.schrijfRegel(output, "\\documentclass[dutch,twocolumn,a4paper,10pt]{report}", 2);
+      Bestand.schrijfRegel(output, "\\usepackage{skak}");
+      Bestand.schrijfRegel(output, "\\usepackage{babel}");
+      Bestand.schrijfRegel(output, "\\usepackage{color}");
+      Bestand.schrijfRegel(output, "\\usepackage{colortbl}");
+      Bestand.schrijfRegel(output, "\\usepackage[T1]{fontenc}");
+      Bestand.schrijfRegel(output, "\\usepackage[pdftex]{graphicx}");
+      Bestand.schrijfRegel(output, "\\usepackage{pdflscape}", 2);
+      Bestand.schrijfRegel(output, "\\topmargin =0.mm");
+      Bestand.schrijfRegel(output, "\\oddsidemargin =0.mm");
+      Bestand.schrijfRegel(output, "\\evensidemargin =0.mm");
+      Bestand.schrijfRegel(output, "\\headheight =0.mm");
+      Bestand.schrijfRegel(output, "\\headsep =0.mm");
+      Bestand.schrijfRegel(output, "\\textheight =265.mm");
+      Bestand.schrijfRegel(output, "\\textwidth =165.mm");
+      Bestand.schrijfRegel(output, "\\parindent =0.mm", 2);
+      Bestand.schrijfRegel(output, "\\newcommand{\\chessgame}[7]{");
+      Bestand.schrijfRegel(output, "  $\\circ$ \\textbf{#1} \\hfill Ronde {#4}\\\\");
+      Bestand.schrijfRegel(output, "  $\\bullet$ \\textbf{#2}\\\\");
+      Bestand.schrijfRegel(output, "  {#3} \\hfill {#6} \\hfill {#5}\\\\");
+      Bestand.schrijfRegel(output, "  \\styleB");
+      Bestand.schrijfRegel(output, "  \\newgame");
+      Bestand.schrijfRegel(output, "  \\mainline{#7} {\\bf #5}");
+      Bestand.schrijfRegel(output, "  \\[\\showboard\\]");
+      Bestand.schrijfRegel(output, "  \\begin{center} \\hrule \\end{center}");
+      Bestand.schrijfRegel(output, "}", 2);
+      Bestand.schrijfRegel(output, "\\newcommand{\\chessempty}[6]{");
+      Bestand.schrijfRegel(output, "  $\\circ$ \\textbf{#1} \\hfill Ronde {#4}\\\\");
+      Bestand.schrijfRegel(output, "  $\\bullet$ \\textbf{#2}\\\\");
+      Bestand.schrijfRegel(output, "  {#3} \\hfill {#6} \\hfill {#5}\\\\");
+      Bestand.schrijfRegel(output, "  \\begin{center} \\hrule \\end{center}");
+      Bestand.schrijfRegel(output, "}", 2);
+      Bestand.schrijfRegel(output, "%" + resourceBundle.getString("latex.splitsmelding"));
+      Bestand.schrijfRegel(output, "\\raggedbottom \\topskip 1\\topskip plus1000pt % like "
                    + "\\raggedbottom; moreso \\def\\need#1{\\vskip #1"
-                   + "\\penalty0 \\vskip-#1\\relax}");
-      output.newLine();
-      output.newLine();
-      output.write("\\title{" + titel + "}");
-      output.newLine();
-      output.write("\\author{" + auteur + "}");
-      output.newLine();
-      output.write("\\date{" + datum + "}");
-      output.newLine();
-      output.newLine();
-      output.write("\\ifpdf");
-      output.newLine();
-      output.write("\\pdfinfo{");
-      output.newLine();
-      output.write("   /Author (" + auteur + ")");
-      output.newLine();
-      output.write("   /Title  (" + titel + ")");
-      output.newLine();
+                   + "\\penalty0 \\vskip-#1\\relax}", 2);
+      Bestand.schrijfRegel(output, "\\title{" + titel + "}");
+      Bestand.schrijfRegel(output, "\\author{" + auteur + "}");
+      Bestand.schrijfRegel(output, "\\date{" + datum + "}", 2);
+      Bestand.schrijfRegel(output, "\\ifpdf");
+      Bestand.schrijfRegel(output, "\\pdfinfo{");
+      Bestand.schrijfRegel(output, "   /Author (" + auteur + ")");
+      Bestand.schrijfRegel(output, "   /Title  (" + titel + ")");
       if (DoosUtils.isNotBlankOrNull(keywords)) {
-        output.write("   /Keywords (" + keywords + ")");
-        output.newLine();
+        Bestand.schrijfRegel(output, "   /Keywords (" + keywords + ")");
       }
-      output.write("}");
-      output.newLine();
-      output.write("\\fi");
-      output.newLine();
-      output.newLine();
-      output.write("\\begin{document}");
-      output.newLine();
+      Bestand.schrijfRegel(output, "}");
+      Bestand.schrijfRegel(output, "\\fi", 2);
+      Bestand.schrijfRegel(output, "\\begin{document}");
       if (DoosUtils.isNotBlankOrNull(logo)) {
-        output.write("\\DeclareGraphicsExtensions{.pdf,.png,.gif,.jpg}");
-        output.newLine();
+        Bestand.schrijfRegel(output, "\\DeclareGraphicsExtensions{.pdf,.png,.gif,.jpg}");
       }
-      output.write("\\begin{titlepage}");
-      output.newLine();
-      output.write("  \\begin{center}");
-      output.newLine();
-      output.write("    \\huge " + titel + " \\\\");
-      output.newLine();
-      output.write("    \\vspace{1in}");
-      output.newLine();
-      output.write("    \\large " + auteur + " \\\\");
-      output.newLine();
+      Bestand.schrijfRegel(output, "\\begin{titlepage}");
+      Bestand.schrijfRegel(output, "  \\begin{center}");
+      Bestand.schrijfRegel(output, "    \\huge " + titel + " \\\\");
+      Bestand.schrijfRegel(output, "    \\vspace{1in}");
+      Bestand.schrijfRegel(output, "    \\large " + auteur + " \\\\");
       if (DoosUtils.isNotBlankOrNull(logo)) {
-        output.write("    \\vspace{2in}");
-        output.newLine();
-        output.write("    \\includegraphics[width=6cm]{"+ logo + "} \\\\");
-        output.newLine();
+        Bestand.schrijfRegel(output, "    \\vspace{2in}");
+        Bestand.schrijfRegel(output, "    \\includegraphics[width=6cm]{"+ logo + "} \\\\");
       }
-      output.write("    \\vspace{1in}");
-      output.newLine();
-      output.write("    \\large " + datumInTitel(startDatum, eindDatum)
+      Bestand.schrijfRegel(output, "    \\vspace{1in}");
+      Bestand.schrijfRegel(output, "    \\large " + datumInTitel(startDatum, eindDatum)
                    + " \\\\");
-      output.newLine();
-      output.write("  \\end{center}");
-      output.newLine();
-      output.write("\\end{titlepage}");
-      output.newLine();
-      output.write("\\topmargin =-15.mm");
-      output.newLine();
+      Bestand.schrijfRegel(output, "  \\end{center}");
+      Bestand.schrijfRegel(output, "\\end{titlepage}");
+      Bestand.schrijfRegel(output, "\\topmargin =-15.mm");
       if (DoosConstants.WAAR.equalsIgnoreCase(metMatrix)) {
-        output.write("\\begin{landscape}");
-        output.newLine();
-        output.write("  \\begin{center}");
-        output.newLine();
-        output.write("    \\begin{tabular} { | c | l | ");
+        Bestand.schrijfRegel(output, "\\begin{landscape}");
+        Bestand.schrijfRegel(output, "  \\begin{center}");
+        Bestand.schrijfRegel(output, "    \\begin{tabular} { | c | l | ", 2);
         for (i = 0; i < kolommen; i++) {
-          output.write(" c | ");
+          Bestand.schrijfRegel(output, " c | ", 2);
         }
-        output.write("r | r | r | }");
-        output.newLine();
-        output.write("    \\hline");
-        output.newLine();
-        output.write("    \\multicolumn{2}{|c|}{} ");
+        Bestand.schrijfRegel(output, "r | r | r | }");
+        Bestand.schrijfRegel(output, "    \\hline");
+        Bestand.schrijfRegel(output, "    \\multicolumn{2}{|c|}{} ");
         for (i = 0; i < (enkel == 0 ? kolommen : noSpelers); i++) {
           if (enkel < 2) {
-            output.write(" & " + (i + 1));
+            Bestand.schrijfRegel(output, " & " + (i + 1), 2);
           } else {
-            output.write(" & \\multicolumn{2}{c|}{" + (i + 1) + "} ");
+            Bestand.schrijfRegel(output, " & \\multicolumn{2}{c|}{" + (i + 1) + "} ", 2);
           }
         }
-        output.write("& " + resourceBundle.getString("tag.punten"));
+        Bestand.schrijfRegel(output, "& " + resourceBundle.getString("tag.punten"), 2);
         if (enkel > 0) {
-          output.write(" & " + resourceBundle.getString("tag.partijen")
-                       + " & " + resourceBundle.getString("tag.sb"));
+          Bestand.schrijfRegel(output, " & " + resourceBundle.getString("tag.partijen")
+                       + " & " + resourceBundle.getString("tag.sb"), 2);
         }
-        output.write(" \\\\");
-        output.newLine();
-        output.write("    \\cline{3-" + (2 + kolommen) + "}");
-        output.newLine();
+        Bestand.schrijfRegel(output, " \\\\");
+        Bestand.schrijfRegel(output, "    \\cline{3-" + (2 + kolommen) + "}");
         if (enkel == 2) {
-          output.write("    \\multicolumn{2}{|c|}{} & ");
+          Bestand.schrijfRegel(output, "    \\multicolumn{2}{|c|}{} & ", 0);
           for (i = 0; i < noSpelers; i++) {
-            output.write(resourceBundle.getString("tag.wit") + " & " +
-                         resourceBundle.getString("tag.zwart") + " & ");
+            Bestand.schrijfRegel(output, resourceBundle.getString("tag.wit") + " & " +
+                         resourceBundle.getString("tag.zwart") + " & ", 0);
           }
-          output.write("& & \\\\");
-          output.newLine();
+          Bestand.schrijfRegel(output, "& & \\\\");
         }
-        output.write("    \\hline");
-        output.newLine();
+        Bestand.schrijfRegel(output, "    \\hline");
         for (i = 0; i < noSpelers; i++) {
           if (enkel == 0) {
-            output.write("\\multicolumn{2}{|l|}{" + punten[i].getNaam() + "} & ");
+            Bestand.schrijfRegel(output, "\\multicolumn{2}{|l|}{" + punten[i].getNaam() + "} & ", 0);
           } else {
-            output.write((i + 1) + " & " + punten[i].getNaam() + " & ");
+            Bestand.schrijfRegel(output, (i + 1) + " & " + punten[i].getNaam() + " & ", 0);
           }
           for (int j = 0; j < kolommen; j++) {
             if (enkel > 0) {
               if (i == j / enkel) {
-                output.write("\\multicolumn{1}"
-                             + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ");
+                Bestand.schrijfRegel(output, "\\multicolumn{1}"
+                             + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ", 0);
                 continue;
               } else {
                 if ((j / enkel) * enkel != j ) {
-                  output.write("\\multicolumn{1}"
-                               + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{");
+                  Bestand.schrijfRegel(output, "\\multicolumn{1}"
+                               + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{", 0);
                 }
               }
             }
             if (matrix[i][j] == 0.0) {
-              output.write("0");
+              Bestand.schrijfRegel(output, "0", 0);
             } else if (matrix[i][j] == 0.5) {
-              output.write("\\textonehalf");
+              Bestand.schrijfRegel(output, "\\textonehalf", 0);
             } else if (matrix[i][j] >= 1.0) {
-              output.write("" + ((Double)matrix[i][j]).intValue()
-                           + Utilities.kwart(matrix[i][j]));
+              Bestand.schrijfRegel(output, "" + ((Double)matrix[i][j]).intValue()
+                           + Utilities.kwart(matrix[i][j]), 0);
             }
             if (enkel > 0 && (j / enkel) * enkel != j ) {
-              output.write("}");
+              Bestand.schrijfRegel(output, "}", 0);
             }
-            output.write(" & ");
+            Bestand.schrijfRegel(output, " & ", 0);
           }
-          output.write(punten[i].getPunten().intValue()
-                       + Utilities.kwart(punten[i].getPunten()));
+          Bestand.schrijfRegel(output, punten[i].getPunten().intValue()
+                       + Utilities.kwart(punten[i].getPunten()), 0);
           if (enkel > 0) {
-            output.write(" & " + punten[i].getPartijen() + " & ");
-            output.write(punten[i].getWeerstandspunten().intValue()
-                         + Utilities.kwart(punten[i].getWeerstandspunten()));
+            Bestand.schrijfRegel(output, " & " + punten[i].getPartijen() + " & ", 0);
+            Bestand.schrijfRegel(output, punten[i].getWeerstandspunten().intValue()
+                         + Utilities.kwart(punten[i].getWeerstandspunten()), 0);
           }
-          output.write(" \\\\");
-          output.newLine();
-          output.write("    \\hline");
-          output.newLine();
+          Bestand.schrijfRegel(output, " \\\\");
+          Bestand.schrijfRegel(output, "    \\hline");
         }
-        output.write("    \\end{tabular}");
-        output.newLine();
-        output.write("  \\end{center}");
-        output.newLine();
-        output.write("\\end{landscape}");
-        output.newLine();
-        output.write("\\newpage");
-        output.newLine();
+        Bestand.schrijfRegel(output, "    \\end{tabular}");
+        Bestand.schrijfRegel(output, "  \\end{center}");
+        Bestand.schrijfRegel(output, "\\end{landscape}");
+        Bestand.schrijfRegel(output, "\\newpage");
       }
 
       for (PGN partij: partijen) {
@@ -587,43 +508,39 @@ public final class PgnToLatex {
           String zwart  = partij.getTag(CaissaConstants.PGNTAG_BLACK);
           String zetten = partij.getZuivereZetten();
           if (DoosUtils.isNotBlankOrNull(zetten)) {
-            output.write("\\begin{chessgame}{" + wit + "}{"
+            Bestand.schrijfRegel(output, "\\begin{chessgame}{" + wit + "}{"
                 + zwart + "}{" + partij.getTag(CaissaConstants.PGNTAG_DATE)
                 + "}{" + partij.getTag(CaissaConstants.PGNTAG_ROUND) + "}{"
                 + partij.getTag("Result").replaceAll("1/2", "\\\\textonehalf")
-                + "}{");
+                + "}{", 0);
             String  eco = partij.getTag("ECO");
             if (DoosUtils.isNotBlankOrNull(eco)) {
-              output.write(eco);
+              Bestand.schrijfRegel(output, eco, 0);
             }
             if (!partij.isRanked()) {
-              output.write(" " +
-                           resourceBundle.getString("tekst.buitencompetitie"));
+              Bestand.schrijfRegel(output, " " +
+                           resourceBundle.getString("tekst.buitencompetitie"), 0);
             }
-            output.write("}{"+ partij.getZuivereZetten()
-                                     .replaceAll("#", "\\\\#"));
-            output.write("}\\end{chessgame}");
-            output.newLine();
+            Bestand.schrijfRegel(output, "}{"+ partij.getZuivereZetten()
+                                     .replaceAll("#", "\\\\#"), 0);
+            Bestand.schrijfRegel(output, "}\\end{chessgame}");
           } else {
             if (!partij.getTag(CaissaConstants.PGNTAG_RESULT).equals("*")) {
-              output.write("\\begin{chessempty}{" + wit + "}{"
+              Bestand.schrijfRegel(output, "\\begin{chessempty}{" + wit + "}{"
                   + zwart + "}{" + partij.getTag(CaissaConstants.PGNTAG_DATE)
                   + "}{" + partij.getTag(CaissaConstants.PGNTAG_ROUND) + "}{"
                   + partij.getTag(CaissaConstants.PGNTAG_RESULT)
-                          .replaceAll("1/2", "\\\\textonehalf") + "}{");
+                          .replaceAll("1/2", "\\\\textonehalf") + "}{", 0);
               if (!partij.isRanked()) {
-                output.write(resourceBundle.getString("tekst.buitencompetitie"));
+                Bestand.schrijfRegel(output, resourceBundle.getString("tekst.buitencompetitie"), 0);
               }
-              output.write("}\\end{chessempty}");
-              output.newLine();
+              Bestand.schrijfRegel(output, "}\\end{chessempty}");
             }
           }
         }
       }
 
-      output.write("\\end{document}");
-      output.newLine();
-      output.close();
+      Bestand.schrijfRegel(output, "\\end{document}");
     } catch (IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {
@@ -649,7 +566,7 @@ public final class PgnToLatex {
    * Maakt de datum informatie voor de titel pagina.
    */
   protected static String datumInTitel(String startDatum, String eindDatum) {
-    StringBuffer  titelDatum  = new StringBuffer();
+    StringBuilder titelDatum  = new StringBuilder();
     Date          datum       = null;
     try {
       datum = Datum.toDate(startDatum, CaissaConstants.PGN_DATUM_FORMAAT);

@@ -134,8 +134,7 @@ public final class VertaalPgn {
         String  zetten  = partij.getZetten();
         partij.setZetten(CaissaUtils.vertaalStukken(zetten,
                                                     vanStukken, naarStukken));
-        output.write(partij.toString());
-        output.newLine();
+        Bestand.schrijfRegel(output, partij.toString());
       }
       output.close();
     } catch (IOException e) {

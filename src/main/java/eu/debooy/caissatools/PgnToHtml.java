@@ -199,215 +199,157 @@ public final class PgnToHtml {
       // Maak de matrix.html file
       output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
                                            + "matrix.html", charsetUit);
-      output.write("<table>");
-      output.newLine();
-      output.write("  <colgroup>");
-      output.newLine();
-      output.write("    <col width=\"34\" />");
-      output.newLine();
-      output.write("    <col width=\"186\" />");
-      output.newLine();
+      Bestand.schrijfRegel(output, "<table>");
+      Bestand.schrijfRegel(output, "  <colgroup>");
+      Bestand.schrijfRegel(output, "    <col width=\"34\" />");
+      Bestand.schrijfRegel(output, "    <col width=\"186\" />");
       for (int i = 0; i < noSpelers; i++) {
-        output.write("    <col width=\"17\" />");
+        Bestand.schrijfRegel(output, "    <col width=\"17\" />", 0);
         if (enkel == 2) {
-          output.write("<col width=\"17\" />");
+          Bestand.schrijfRegel(output, "<col width=\"17\" />", 0);
         }
-        output.newLine();
+        Bestand.schrijfRegel(output, "");
       }
-      output.write("    <col width=\"34\" /><col width=\"10\" />");
-      output.newLine();
-      output.write("    <col width=\"34\" />");
-      output.newLine();
-      output.write("    <col width=\"34\" /><col width=\"10\" />");
-      output.newLine();
-      output.write("  </colgroup>");
-      output.newLine();
-      output.write("  <tbody>");
-      output.newLine();
-      output.write("    <tr>");
-      output.newLine();
-      output.write("      <th colspan=\"2\"></th>");
-      output.newLine();
+      Bestand.schrijfRegel(output, "    <col width=\"34\" /><col width=\"10\" />");
+      Bestand.schrijfRegel(output, "    <col width=\"34\" />");
+      Bestand.schrijfRegel(output, "    <col width=\"34\" /><col width=\"10\" />");
+      Bestand.schrijfRegel(output, "  </colgroup>");
+      Bestand.schrijfRegel(output, "  <tbody>");
+      Bestand.schrijfRegel(output, "    <tr>");
+      Bestand.schrijfRegel(output, "      <th colspan=\"2\"></th>");
       for (int i = 0; i < noSpelers; i++) {
-        output.write("      <th");
+        Bestand.schrijfRegel(output, "      <th", 0);
         if (enkel == 2) {
-          output.write(" colspan=\"2\"");
+          Bestand.schrijfRegel(output, " colspan=\"2\"", 0);
         }
-        output.write(" align=\"center\">" + (i + 1) + "</th>");
-        output.newLine();
+        Bestand.schrijfRegel(output, " align=\"center\">" + (i + 1) + "</th>");
       }
-      output.write("      <th align=\"right\" colspan=\"2\">"
+      Bestand.schrijfRegel(output, "      <th align=\"right\" colspan=\"2\">"
                    + resourceBundle.getString("tag.punten") + "</th>");
-      output.newLine();
-      output.write("      <th align=\"right\">"
+      Bestand.schrijfRegel(output, "      <th align=\"right\">"
                    + resourceBundle.getString("tag.partijen") + "</th>");
-      output.newLine();
-      output.write("      <th align=\"right\" colspan=\"2\">"
+      Bestand.schrijfRegel(output, "      <th align=\"right\" colspan=\"2\">"
                    + resourceBundle.getString("tag.sb") + "</th>");
-      output.newLine();
-      output.write("    </tr>");
-      output.newLine();
+      Bestand.schrijfRegel(output, "    </tr>");
       if (enkel == 2) {
-        output.write("    <tr>");
-        output.newLine();
-        output.write("      <th colspan=\"2\"></th>");
-        output.newLine();
+        Bestand.schrijfRegel(output, "    <tr>");
+        Bestand.schrijfRegel(output, "      <th colspan=\"2\"></th>");
         for (int i = 0; i < noSpelers; i++) {
-          output.write("      <th align=\"center\">"
+          Bestand.schrijfRegel(output, "      <th align=\"center\">"
                    + resourceBundle.getString("tag.wit")
                    + "</th><th align=\"center\">"
                    + resourceBundle.getString("tag.zwart") + "</th>");
-          output.newLine();
         }
-        output.write("      <th colspan=\"2\"></th>");
-        output.newLine();
-        output.write("      <th></th>");
-        output.newLine();
-        output.write("      <th colspan=\"2\"></th>");
-        output.newLine();
-        output.write("    </tr>");
-        output.newLine();
+        Bestand.schrijfRegel(output, "      <th colspan=\"2\"></th>");
+        Bestand.schrijfRegel(output, "      <th></th>");
+        Bestand.schrijfRegel(output, "      <th colspan=\"2\"></th>");
+        Bestand.schrijfRegel(output, "    </tr>");
       }
       for (int i = 0; i < noSpelers; i++) {
-        output.write("    <tr>");
-        output.newLine();
-        output.write("      <th align=\"center\">" + (i + 1) + "</th>");
-        output.newLine();
-        output.write("      <th align=\"left\">"
+        Bestand.schrijfRegel(output, "    <tr>");
+        Bestand.schrijfRegel(output, "      <th align=\"center\">" + (i + 1) + "</th>");
+        Bestand.schrijfRegel(output, "      <th align=\"left\">"
                      + swapNaam(punten[i].getNaam()) + "</th>");
-        output.newLine();
         for (int j = 0; j < kolommen; j++) {
           if ((j / enkel) * enkel == j ) {
-            output.write("      ");
+            Bestand.schrijfRegel(output, "      ", 0);
           }
           if (i == j / enkel) {
-            output.write("<td class=\"zelf\"></td>");
+            Bestand.schrijfRegel(output, "<td class=\"zelf\"></td>", 0);
           } else {
-            output.write("<td align=\"center\"");
+            Bestand.schrijfRegel(output, "<td align=\"center\"", 0);
             if ((j / enkel) * enkel != j ) {
-              output.write(" class=\"zwart\"");
+              Bestand.schrijfRegel(output, " class=\"zwart\"", 0);
             }
-            output.write(">");
+            Bestand.schrijfRegel(output, ">", 0);
             if (matrix[i][j] == 0.0) {
-              output.write("0");
+              Bestand.schrijfRegel(output, "0", 0);
             } else if (matrix[i][j] == 0.5) {
-              output.write(Utilities.kwart(matrix[i][j]));
+              Bestand.schrijfRegel(output, Utilities.kwart(matrix[i][j]), 0);
             } else if (matrix[i][j] >= 1.0) {
-              output.write("" + ((Double)matrix[i][j]).intValue()
-                           + Utilities.kwart(matrix[i][j]));
+              Bestand.schrijfRegel(output, "" + ((Double)matrix[i][j]).intValue()
+                           + Utilities.kwart(matrix[i][j]), 0);
             }
-            output.write("</td>");
+            Bestand.schrijfRegel(output, "</td>", 0);
           }
           if ((j / enkel) * enkel != j ) {
-            output.newLine();
+            Bestand.schrijfRegel(output, "");
           }
         }
-        output.write("      <td align=\"right\">");
+        Bestand.schrijfRegel(output, "      <td align=\"right\">", 0);
         if (punten[i].getPunten() == 0.0
             || punten[i].getPunten() >= 1.0) {
-          output.write("" + punten[i].getPunten().intValue());
+          Bestand.schrijfRegel(output, "" + punten[i].getPunten().intValue(), 0);
         }
-        output.write("</td><td>" + Utilities.kwart(punten[i].getPunten())
+        Bestand.schrijfRegel(output, "</td><td>" + Utilities.kwart(punten[i].getPunten())
                      + "</td>");
-        output.newLine();
-        output.write("      <td align=\"right\">" + punten[i].getPartijen()
+        Bestand.schrijfRegel(output, "      <td align=\"right\">" + punten[i].getPartijen()
                      + "</td>");
-        output.newLine();
-        output.write("      <td align=\"right\">");
+        Bestand.schrijfRegel(output, "      <td align=\"right\">");
         if (punten[i].getWeerstandspunten() == 0.0
             || punten[i].getWeerstandspunten() >= 1.0) {
-          output.write("" + punten[i].getWeerstandspunten().intValue());
+          Bestand.schrijfRegel(output, "" + punten[i].getWeerstandspunten().intValue(), 0);
         }
-        output.write("</td><td>"
+        Bestand.schrijfRegel(output, "</td><td>"
                      + Utilities.kwart(punten[i].getWeerstandspunten())
                      + "</td>");
-        output.newLine();
-        output.write("    </tr>");
-        output.newLine();
+        Bestand.schrijfRegel(output, "    </tr>");
       }
-      output.write("  </tbody>");
-      output.newLine();
-      output.write("</table>");
-      output.newLine();
+      Bestand.schrijfRegel(output, "  </tbody>");
+      Bestand.schrijfRegel(output, "</table>");
       output.close();
 
       // Maak de index.html file
       Arrays.sort(punten);
       output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
                                            + "index.html", charsetUit);
-      output.write("<table>");
-      output.newLine();
-      output.write("  <colgroup>");
-      output.newLine();
-      output.write("    <col width=\"34\" />");
-      output.newLine();
-      output.write("    <col width=\"186\" />");
-      output.newLine();
-      output.write("    <col width=\"78\" /><col width=\"10\" />");
-      output.newLine();
-      output.write("    <col width=\"88\" />");
-      output.newLine();
-      output.write("    <col width=\"78\" /><col width=\"10\" />");
-      output.newLine();
-      output.write("  </colgroup>");
-      output.newLine();
-      output.write("  <tbody>");
-      output.newLine();
-      output.write("    <tr>");
-      output.newLine();
-      output.write("      <th align=\"center\">"
+      Bestand.schrijfRegel(output, "<table>");
+      Bestand.schrijfRegel(output, "  <colgroup>");
+      Bestand.schrijfRegel(output, "    <col width=\"34\" />");
+      Bestand.schrijfRegel(output, "    <col width=\"186\" />");
+      Bestand.schrijfRegel(output, "    <col width=\"78\" /><col width=\"10\" />");
+      Bestand.schrijfRegel(output, "    <col width=\"88\" />");
+      Bestand.schrijfRegel(output, "    <col width=\"78\" /><col width=\"10\" />");
+      Bestand.schrijfRegel(output, "  </colgroup>");
+      Bestand.schrijfRegel(output, "  <tbody>");
+      Bestand.schrijfRegel(output, "    <tr>");
+      Bestand.schrijfRegel(output, "      <th align=\"center\">"
                    + resourceBundle.getString("tag.nummer") + "</th>");
-      output.newLine();
-      output.write("      <th align=\"left\">"
+      Bestand.schrijfRegel(output, "      <th align=\"left\">"
                    + resourceBundle.getString("tag.naam") + "</th>");
-      output.newLine();
-      output.write("      <th align=\"right\" colspan=\"2\">"
+      Bestand.schrijfRegel(output, "      <th align=\"right\" colspan=\"2\">"
                    + resourceBundle.getString("tag.punten") + "</th>");
-      output.newLine();
-      output.write("      <th align=\"right\">"
+      Bestand.schrijfRegel(output, "      <th align=\"right\">"
                    + resourceBundle.getString("tag.partijen") + "</th>");
-      output.newLine();
-      output.write("      <th align=\"right\" colspan=\"2\">"
+      Bestand.schrijfRegel(output, "      <th align=\"right\" colspan=\"2\">"
                    + resourceBundle.getString("tag.sb") + "</th>");
-      output.newLine();
-      output.write("    </tr>");
-      output.newLine();
+      Bestand.schrijfRegel(output, "    </tr>");
       for (int i = 0; i < noSpelers; i++) {
-        output.write("    <tr>");
-        output.newLine();
-        output.write("      <td align=\"center\">" + (i + 1) + "</td>");
-        output.newLine();
-        output.write("      <td align=\"left\">"
+        Bestand.schrijfRegel(output, "    <tr>");
+        Bestand.schrijfRegel(output, "      <td align=\"center\">" + (i + 1) + "</td>");
+        Bestand.schrijfRegel(output, "      <td align=\"left\">"
                      + swapNaam(punten[i].getNaam()) + "</td>");
-        output.newLine();
-        output.write("      <td align=\"right\">");
+        Bestand.schrijfRegel(output, "      <td align=\"right\">", 0);
         if (punten[i].getPunten() == 0.0
             || punten[i].getPunten() >= 1.0) {
-          output.write("" + punten[i].getPunten().intValue());
+          Bestand.schrijfRegel(output, "" + punten[i].getPunten().intValue(), 0);
         }
-        output.write("</td><td>" + Utilities.kwart(punten[i].getPunten())
+        Bestand.schrijfRegel(output, "</td><td>" + Utilities.kwart(punten[i].getPunten())
                      + "</td>");
-        output.newLine();
-        output.write("      <td align=\"right\">" + punten[i].getPartijen()
+        Bestand.schrijfRegel(output, "      <td align=\"right\">" + punten[i].getPartijen()
                      + "</td>");
-        output.newLine();
-        output.write("      <td align=\"right\">");
+        Bestand.schrijfRegel(output, "      <td align=\"right\">", 0);
         if (punten[i].getWeerstandspunten() == 0.0
             || punten[i].getWeerstandspunten() >= 1.0) {
-          output.write("" + punten[i].getWeerstandspunten().intValue());
+          Bestand.schrijfRegel(output, "" + punten[i].getWeerstandspunten().intValue(), 0);
         }
-        output.write("</td><td>"
+        Bestand.schrijfRegel(output, "</td><td>"
                      + Utilities.kwart(punten[i].getWeerstandspunten())
                      + "</td>");
-        output.newLine();
-        output.write("    </tr>");
-        output.newLine();
+        Bestand.schrijfRegel(output, "    </tr>");
       }
-      output.write("  </tbody>");
-      output.newLine();
-      output.write("</table>");
-      output.newLine();
-      output.close();
+      Bestand.schrijfRegel(output, "  </tbody>");
+      Bestand.schrijfRegel(output, "</table>");
     } catch (IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {

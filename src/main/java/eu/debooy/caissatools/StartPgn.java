@@ -83,49 +83,26 @@ public final class StartPgn {
       output  = Bestand.openUitvoerBestand(pgnFile);
       for (int i = 0; i < (noSpelers -1); i++) {
         for (int j = i + 1; j < noSpelers; j++) {
-          output.write("[Event \"" + event + "\"]");
-          output.newLine();
-          output.write("[Site \"" + site + "\"]");
-          output.newLine();
-          output.write("[Date \"" + date + "\"]");
-          output.newLine();
-          output.write("[Round \"-\"]");
-          output.newLine();
-          output.write("[White \"" + speler[i] + "\"]");
-          output.newLine();
-          output.write("[Black \"" + speler[j] + "\"]");
-          output.newLine();
-          output.write("[Result \"*\"]");
-          output.newLine();
-          output.write("[EventDate \"" + date + "\"]");
-          output.newLine();
-          output.newLine();
-          output.write("*");
-          output.newLine();
-          output.newLine();
-          output.write("[Event \"" + event + "\"]");
-          output.newLine();
-          output.write("[Site \"" + site + "\"]");
-          output.newLine();
-          output.write("[Date \"" + date + "\"]");
-          output.newLine();
-          output.write("[Round \"-\"]");
-          output.newLine();
-          output.write("[White \"" + speler[j] + "\"]");
-          output.newLine();
-          output.write("[Black \"" + speler[i] + "\"]");
-          output.newLine();
-          output.write("[Result \"*\"]");
-          output.newLine();
-          output.write("[EventDate \"" + date + "\"]");
-          output.newLine();
-          output.newLine();
-          output.write("*");
-          output.newLine();
-          output.newLine();
+          Bestand.schrijfRegel(output, "[Event \"" + event + "\"]");
+          Bestand.schrijfRegel(output, "[Site \"" + site + "\"]");
+          Bestand.schrijfRegel(output, "[Date \"" + date + "\"]");
+          Bestand.schrijfRegel(output, "[Round \"-\"]");
+          Bestand.schrijfRegel(output, "[White \"" + speler[i] + "\"]");
+          Bestand.schrijfRegel(output, "[Black \"" + speler[j] + "\"]");
+          Bestand.schrijfRegel(output, "[Result \"*\"]");
+          Bestand.schrijfRegel(output, "[EventDate \"" + date + "\"]", 2);
+          Bestand.schrijfRegel(output, "*", 2);
+          Bestand.schrijfRegel(output, "[Event \"" + event + "\"]");
+          Bestand.schrijfRegel(output, "[Site \"" + site + "\"]");
+          Bestand.schrijfRegel(output, "[Date \"" + date + "\"]");
+          Bestand.schrijfRegel(output, "[Round \"-\"]");
+          Bestand.schrijfRegel(output, "[White \"" + speler[j] + "\"]");
+          Bestand.schrijfRegel(output, "[Black \"" + speler[i] + "\"]");
+          Bestand.schrijfRegel(output, "[Result \"*\"]");
+          Bestand.schrijfRegel(output, "[EventDate \"" + date + "\"]", 2);
+          Bestand.schrijfRegel(output, "*", 2);
         }
       }
-      output.close();
     } catch (IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {

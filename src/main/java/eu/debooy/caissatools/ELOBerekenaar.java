@@ -309,15 +309,14 @@ public final class ELOBerekenaar {
 
       output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
                                            + spelerBestand, charsetUit);
-      StringBuffer  lijn  = new StringBuffer();
+      StringBuilder lijn  = new StringBuilder();
       lijn.append("\"speler\",\"elo\",\"partijen\",\"eersteEloDatum\",")
           .append("\"minElo\",\"minEloDatum\",\"maxElo\",\"maxEloDatum\"");
-      output.write(lijn.toString());
-      output.newLine();
+      Bestand.schrijfRegel(output, lijn.toString());
       for (Integer spelerId  : spelers.values()) {
         try {
           aantal  = spelerinfos.get(spelerId).getPartijen();
-          lijn    = new StringBuffer();
+          lijn    = new StringBuilder();
           lijn.append("\"")
               .append(spelerinfos.get(spelerId).getNaam()).append("\",")
               .append(spelerinfos.get(spelerId).getElo()).append(",")
@@ -340,8 +339,7 @@ public final class ELOBerekenaar {
           DoosUtils.foutNaarScherm(resourceBundle.getString("error.foutedatum")
                                + e.getLocalizedMessage() + "].");
         }
-        output.write(lijn.toString());
-        output.newLine();
+        Bestand.schrijfRegel(output, lijn.toString());
       }
     } catch (IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
