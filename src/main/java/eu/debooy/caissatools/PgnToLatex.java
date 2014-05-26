@@ -424,24 +424,24 @@ public final class PgnToLatex {
       if (DoosConstants.WAAR.equalsIgnoreCase(metMatrix)) {
         Bestand.schrijfRegel(output, "\\begin{landscape}");
         Bestand.schrijfRegel(output, "  \\begin{center}");
-        Bestand.schrijfRegel(output, "    \\begin{tabular} { | c | l | ", 2);
+        Bestand.schrijfRegel(output, "    \\begin{tabular} { | c | l | ", 0);
         for (i = 0; i < kolommen; i++) {
-          Bestand.schrijfRegel(output, " c | ", 2);
+          Bestand.schrijfRegel(output, " c | ", 0);
         }
         Bestand.schrijfRegel(output, "r | r | r | }");
         Bestand.schrijfRegel(output, "    \\hline");
-        Bestand.schrijfRegel(output, "    \\multicolumn{2}{|c|}{} ");
+        Bestand.schrijfRegel(output, "    \\multicolumn{2}{|c|}{} ", 0);
         for (i = 0; i < (enkel == 0 ? kolommen : noSpelers); i++) {
           if (enkel < 2) {
-            Bestand.schrijfRegel(output, " & " + (i + 1), 2);
+            Bestand.schrijfRegel(output, " & " + (i + 1), 0);
           } else {
-            Bestand.schrijfRegel(output, " & \\multicolumn{2}{c|}{" + (i + 1) + "} ", 2);
+            Bestand.schrijfRegel(output, " & \\multicolumn{2}{c|}{" + (i + 1) + "} ", 0);
           }
         }
-        Bestand.schrijfRegel(output, "& " + resourceBundle.getString("tag.punten"), 2);
+        Bestand.schrijfRegel(output, "& " + resourceBundle.getString("tag.punten"), 0);
         if (enkel > 0) {
           Bestand.schrijfRegel(output, " & " + resourceBundle.getString("tag.partijen")
-                       + " & " + resourceBundle.getString("tag.sb"), 2);
+                       + " & " + resourceBundle.getString("tag.sb"), 0);
         }
         Bestand.schrijfRegel(output, " \\\\");
         Bestand.schrijfRegel(output, "    \\cline{3-" + (2 + kolommen) + "}");

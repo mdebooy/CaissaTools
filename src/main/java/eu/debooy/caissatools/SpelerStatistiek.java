@@ -375,7 +375,7 @@ public final class SpelerStatistiek {
     printStatistiekDeel(statistiek[0] + statistiek[3],
                         statistiek[1] + statistiek[4],
                         statistiek[2] + statistiek[5], output);
-    output.write(" \\\\");
+    Bestand.schrijfRegel(output, " \\\\");
     Bestand.schrijfRegel(output, "      \\hline");
   }
 

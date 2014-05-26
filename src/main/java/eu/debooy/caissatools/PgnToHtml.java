@@ -285,7 +285,7 @@ public final class PgnToHtml {
                      + "</td>");
         Bestand.schrijfRegel(output, "      <td align=\"right\">" + punten[i].getPartijen()
                      + "</td>");
-        Bestand.schrijfRegel(output, "      <td align=\"right\">");
+        Bestand.schrijfRegel(output, "      <td align=\"right\">", 0);
         if (punten[i].getWeerstandspunten() == 0.0
             || punten[i].getWeerstandspunten() >= 1.0) {
           Bestand.schrijfRegel(output, "" + punten[i].getWeerstandspunten().intValue(), 0);

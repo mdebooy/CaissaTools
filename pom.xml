@@ -83,7 +83,7 @@
   </dependencies>
 
   <properties>
-    <caissa.version>0.1.10</caissa.version>
+    <caissa.version>0.1.11-SNAPSHOT</caissa.version>
     <doosutils.version>1.3.0-SNAPSHOT</doosutils.version>
   </properties>
 </project>
