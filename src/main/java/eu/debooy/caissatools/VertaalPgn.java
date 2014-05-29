@@ -118,7 +118,9 @@ public final class VertaalPgn {
                                  .getStukcodes();
     // Verwerk command line invoer en stop.
     if (!pgn.isEmpty()) {
-      DoosUtils.naarScherm(CaissaUtils.vertaalStukken(pgn,
+      PGN partij  = new PGN();
+      partij.setZetten(pgn);
+      DoosUtils.naarScherm(CaissaUtils.vertaalStukken(partij.getZetten(),
                                                       vanStukken, naarStukken));
 
       return;

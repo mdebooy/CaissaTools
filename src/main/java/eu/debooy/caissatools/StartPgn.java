@@ -16,6 +16,7 @@
  */
 package eu.debooy.caissatools;
 
+import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.DoosUtils;
@@ -83,23 +84,39 @@ public final class StartPgn {
       output  = Bestand.openUitvoerBestand(pgnFile);
       for (int i = 0; i < (noSpelers -1); i++) {
         for (int j = i + 1; j < noSpelers; j++) {
-          Bestand.schrijfRegel(output, "[Event \"" + event + "\"]");
-          Bestand.schrijfRegel(output, "[Site \"" + site + "\"]");
-          Bestand.schrijfRegel(output, "[Date \"" + date + "\"]");
-          Bestand.schrijfRegel(output, "[Round \"-\"]");
-          Bestand.schrijfRegel(output, "[White \"" + speler[i] + "\"]");
-          Bestand.schrijfRegel(output, "[Black \"" + speler[j] + "\"]");
-          Bestand.schrijfRegel(output, "[Result \"*\"]");
-          Bestand.schrijfRegel(output, "[EventDate \"" + date + "\"]", 2);
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_EVENT
+                                       + " \"" + event + "\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_SITE
+                                       + " \"" + site + "\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_DATE
+                                       + " \"" + date + "\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_ROUND
+                                       + " \"-\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_WHITE
+                                       + " \"" + speler[i] + "\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_BLACK
+                                       + " \"" + speler[j] + "\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_RESULT
+                                       + " \"*\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_EVENTDATE
+                                       + " \"" + date + "\"]", 2);
           Bestand.schrijfRegel(output, "*", 2);
-          Bestand.schrijfRegel(output, "[Event \"" + event + "\"]");
-          Bestand.schrijfRegel(output, "[Site \"" + site + "\"]");
-          Bestand.schrijfRegel(output, "[Date \"" + date + "\"]");
-          Bestand.schrijfRegel(output, "[Round \"-\"]");
-          Bestand.schrijfRegel(output, "[White \"" + speler[j] + "\"]");
-          Bestand.schrijfRegel(output, "[Black \"" + speler[i] + "\"]");
-          Bestand.schrijfRegel(output, "[Result \"*\"]");
-          Bestand.schrijfRegel(output, "[EventDate \"" + date + "\"]", 2);
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_EVENT
+                                       + " \"" + event + "\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_SITE
+                                       + " \"" + site + "\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_DATE
+                                       + " \"" + date + "\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_ROUND
+                                       + " \"-\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_WHITE
+                                       + " \"" + speler[j] + "\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_BLACK
+                                       + " \"" + speler[i] + "\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_RESULT
+                                       + " \"*\"]");
+          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_EVENTDATE
+                                       + " \"" + date + "\"]", 2);
           Bestand.schrijfRegel(output, "*", 2);
         }
       }
