@@ -32,6 +32,7 @@ import eu.debooy.doosutils.html.Utilities;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -39,6 +40,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
+import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
 
@@ -199,157 +201,285 @@ public final class PgnToHtml {
       // Maak de matrix.html file
       output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
                                            + "matrix.html", charsetUit);
-      Bestand.schrijfRegel(output, "<table>");
-      Bestand.schrijfRegel(output, "  <colgroup>");
-      Bestand.schrijfRegel(output, "    <col width=\"34\" />");
-      Bestand.schrijfRegel(output, "    <col width=\"186\" />");
-      for (int i = 0; i < noSpelers; i++) {
-        Bestand.schrijfRegel(output, "    <col width=\"17\" />", 0);
-        if (enkel == 2) {
-          Bestand.schrijfRegel(output, "<col width=\"17\" />", 0);
+      InputStream   instream  = null;
+      Properties    props     = new Properties();
+      StringBuilder prefix    = new StringBuilder();
+
+      instream  = PgnToHtml.class.getClassLoader()
+                           .getResourceAsStream("matrix.properties");
+      props.load(instream);
+
+      if (props.containsKey("indent")) {
+        int indent = Integer.valueOf(props.getProperty("indent"));
+        while (prefix.length() < indent) {
+          prefix.append(" ");
         }
-        Bestand.schrijfRegel(output, "");
       }
-      Bestand.schrijfRegel(output, "    <col width=\"34\" /><col width=\"10\" />");
-      Bestand.schrijfRegel(output, "    <col width=\"34\" />");
-      Bestand.schrijfRegel(output, "    <col width=\"34\" /><col width=\"10\" />");
-      Bestand.schrijfRegel(output, "  </colgroup>");
-      Bestand.schrijfRegel(output, "  <tbody>");
-      Bestand.schrijfRegel(output, "    <tr>");
-      Bestand.schrijfRegel(output, "      <th colspan=\"2\"></th>");
-      for (int i = 0; i < noSpelers; i++) {
-        Bestand.schrijfRegel(output, "      <th", 0);
-        if (enkel == 2) {
-          Bestand.schrijfRegel(output, " colspan=\"2\"", 0);
+
+      // Start de tabel
+      Bestand.schrijfRegel(output, prefix + props.getProperty("table.begin"));
+      // De colgroup
+      int k = 1;
+      if (props.containsKey("table.colgroup.begin." + k)) {
+        while (props.containsKey("table.colgroup.begin." + k)) {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.colgroup.begin." + k));
+          k++;
         }
-        Bestand.schrijfRegel(output, " align=\"center\">" + (i + 1) + "</th>");
       }
-      Bestand.schrijfRegel(output, "      <th align=\"right\" colspan=\"2\">"
-                   + resourceBundle.getString("tag.punten") + "</th>");
-      Bestand.schrijfRegel(output, "      <th align=\"right\">"
-                   + resourceBundle.getString("tag.partijen") + "</th>");
-      Bestand.schrijfRegel(output, "      <th align=\"right\" colspan=\"2\">"
-                   + resourceBundle.getString("tag.sb") + "</th>");
-      Bestand.schrijfRegel(output, "    </tr>");
+      for (int i = 0; i < noSpelers; i++) {
+        if (enkel == 1) {
+          Bestand.schrijfRegel(output,
+                               prefix
+                                 + props.getProperty("table.colgroup.enkel"));
+        } else {
+          Bestand.schrijfRegel(output,
+              prefix
+                + props.getProperty("table.colgroup.dubbel"));
+        }
+      }
+      k = 1;
+      if (props.containsKey("table.colgroup.eind." + k)) {
+        while (props.containsKey("table.colgroup.eind." + k)) {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.colgroup.eind." + k));
+          k++;
+        }
+      }
+      // De thead
+      k = 1;
+      if (props.containsKey("table.head.begin." + k)) {
+        while (props.containsKey("table.head.begin." + k)) {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.head.begin." + k));
+          k++;
+        }
+      }
+      for (int i = 0; i < noSpelers; i++) {
+        if (enkel == 1) {
+          Bestand.schrijfRegel(output,
+              prefix
+                + MessageFormat.format(props.getProperty("table.head.enkel"),
+                                       (i + 1)));
+        } else {
+          Bestand.schrijfRegel(output,
+              prefix
+                + MessageFormat.format(props.getProperty("table.head.dubbel"),
+                                       (i + 1)));
+        }
+      }
+      Bestand.schrijfRegel(output,
+          prefix
+            + MessageFormat.format(props.getProperty("table.head.punten"),
+                                   resourceBundle.getString("tag.punten")));
+      Bestand.schrijfRegel(output,
+          prefix
+            + MessageFormat.format(props.getProperty("table.head.partijen"),
+                                   resourceBundle.getString("tag.partijen")));
+      Bestand.schrijfRegel(output,
+          prefix + MessageFormat.format(props.getProperty("table.head.sb"),
+                                        resourceBundle.getString("tag.sb")));
       if (enkel == 2) {
-        Bestand.schrijfRegel(output, "    <tr>");
-        Bestand.schrijfRegel(output, "      <th colspan=\"2\"></th>");
+        Bestand.schrijfRegel(output,
+            prefix + props.getProperty("table.head.eind.1"));
+        Bestand.schrijfRegel(output,
+            prefix + props.getProperty("table.head.begin.2"));
+        Bestand.schrijfRegel(output,
+            prefix + props.getProperty("table.head.begin.3"));
         for (int i = 0; i < noSpelers; i++) {
-          Bestand.schrijfRegel(output, "      <th align=\"center\">"
-                   + resourceBundle.getString("tag.wit")
-                   + "</th><th align=\"center\">"
-                   + resourceBundle.getString("tag.zwart") + "</th>");
+          Bestand.schrijfRegel(output,
+              prefix
+                + MessageFormat.format(props.getProperty("table.head.dubbel2"),
+                                       resourceBundle.getString("tag.wit"),
+                                       resourceBundle.getString("tag.zwart")));
         }
-        Bestand.schrijfRegel(output, "      <th colspan=\"2\"></th>");
-        Bestand.schrijfRegel(output, "      <th></th>");
-        Bestand.schrijfRegel(output, "      <th colspan=\"2\"></th>");
-        Bestand.schrijfRegel(output, "    </tr>");
+        Bestand.schrijfRegel(output,
+            prefix
+              + MessageFormat.format(props.getProperty("table.head.punten"),
+                                     ""));
+        Bestand.schrijfRegel(output,
+            prefix
+              + MessageFormat.format(props.getProperty("table.head.partijen"),
+                                     ""));
+        Bestand.schrijfRegel(output,
+            prefix + MessageFormat.format(props.getProperty("table.head.sb"),
+                                          ""));
       }
+      k = 1;
+      if (props.containsKey("table.head.eind." + k)) {
+        while (props.containsKey("table.head.eind." + k)) {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.head.eind." + k));
+          k++;
+        }
+      }
+      // De tbody
+      Bestand.schrijfRegel(output,
+                           prefix + props.getProperty("table.body.begin"));
       for (int i = 0; i < noSpelers; i++) {
-        Bestand.schrijfRegel(output, "    <tr>");
-        Bestand.schrijfRegel(output, "      <th align=\"center\">" + (i + 1) + "</th>");
-        Bestand.schrijfRegel(output, "      <th align=\"left\">"
-                     + swapNaam(punten[i].getNaam()) + "</th>");
+        Bestand.schrijfRegel(output,
+            prefix + props.getProperty("table.body.start"));
+        Bestand.schrijfRegel(output,
+            prefix + MessageFormat.format(props.getProperty("table.body.nr"),
+                                          (i + 1)));
+        Bestand.schrijfRegel(output,
+            prefix + MessageFormat.format(props.getProperty("table.body.naam"),
+                         swapNaam(punten[i].getNaam())));
         for (int j = 0; j < kolommen; j++) {
           if ((j / enkel) * enkel == j ) {
-            Bestand.schrijfRegel(output, "      ", 0);
+            Bestand.schrijfRegel(output, prefix + "      ", 0);
           }
           if (i == j / enkel) {
-            Bestand.schrijfRegel(output, "<td class=\"zelf\"></td>", 0);
+            Bestand.schrijfRegel(output, props.getProperty("table.body.zelf"),
+                                 0);
           } else {
-            Bestand.schrijfRegel(output, "<td align=\"center\"", 0);
-            if ((j / enkel) * enkel != j ) {
-              Bestand.schrijfRegel(output, " class=\"zwart\"", 0);
+            // -1 is een niet gespeelde partij.
+            if ((j / enkel) * enkel == j) {
+              Bestand.schrijfRegel(output,
+                  MessageFormat.format(props.getProperty("table.body.wit"),
+                      (matrix[i][j] < 0.0 ? "" :
+                        (matrix[i][j] == 0.5 ?
+                           Utilities.kwart(matrix[i][j]) :
+                             "" + ((Double)matrix[i][j]).intValue()
+                             + Utilities.kwart(matrix[i][j])))),
+                                           0);
+            } else {
+              Bestand.schrijfRegel(output,
+                  MessageFormat.format(props.getProperty("table.body.zwart"),
+                      (matrix[i][j] < 0.0 ? "" :
+                        (matrix[i][j] == 0.5 ?
+                           Utilities.kwart(matrix[i][j]) :
+                             "" + ((Double)matrix[i][j]).intValue()
+                             + Utilities.kwart(matrix[i][j])))),
+                                           0);
             }
-            Bestand.schrijfRegel(output, ">", 0);
-            if (matrix[i][j] == 0.0) {
-              Bestand.schrijfRegel(output, "0", 0);
-            } else if (matrix[i][j] == 0.5) {
-              Bestand.schrijfRegel(output, Utilities.kwart(matrix[i][j]), 0);
-            } else if (matrix[i][j] >= 1.0) {
-              Bestand.schrijfRegel(output, "" + ((Double)matrix[i][j]).intValue()
-                           + Utilities.kwart(matrix[i][j]), 0);
-            }
-            Bestand.schrijfRegel(output, "</td>", 0);
           }
           if ((j / enkel) * enkel != j ) {
             Bestand.schrijfRegel(output, "");
           }
         }
-        Bestand.schrijfRegel(output, "      <td align=\"right\">", 0);
-        if (punten[i].getPunten() == 0.0
-            || punten[i].getPunten() >= 1.0) {
-          Bestand.schrijfRegel(output, "" + punten[i].getPunten().intValue(), 0);
-        }
-        Bestand.schrijfRegel(output, "</td><td>" + Utilities.kwart(punten[i].getPunten())
-                     + "</td>");
-        Bestand.schrijfRegel(output, "      <td align=\"right\">" + punten[i].getPartijen()
-                     + "</td>");
-        Bestand.schrijfRegel(output, "      <td align=\"right\">", 0);
-        if (punten[i].getWeerstandspunten() == 0.0
-            || punten[i].getWeerstandspunten() >= 1.0) {
-          Bestand.schrijfRegel(output, "" + punten[i].getWeerstandspunten().intValue(), 0);
-        }
-        Bestand.schrijfRegel(output, "</td><td>"
-                     + Utilities.kwart(punten[i].getWeerstandspunten())
-                     + "</td>");
-        Bestand.schrijfRegel(output, "    </tr>");
+        Bestand.schrijfRegel(output,
+            prefix
+              + MessageFormat.format(props.getProperty("table.body.punten"),
+                                     (punten[i].getPunten() == 0.5 ?
+                                         "" : punten[i].getPunten().intValue()),
+                                     Utilities.kwart(punten[i].getPunten())));
+        Bestand.schrijfRegel(output,
+            prefix
+              + MessageFormat.format(props.getProperty("table.body.partijen"),
+                                     punten[i].getPartijen()));
+        Bestand.schrijfRegel(output,
+            prefix + MessageFormat.format(props.getProperty("table.body.sb"),
+                         (punten[i].getWeerstandspunten() == 0.5 ?
+                             "" : punten[i].getWeerstandspunten().intValue()),
+                         Utilities.kwart(punten[i].getWeerstandspunten())));
+        Bestand.schrijfRegel(output,
+                             prefix + props.getProperty("table.body.stop"));
       }
-      Bestand.schrijfRegel(output, "  </tbody>");
-      Bestand.schrijfRegel(output, "</table>");
+      // Alles netjes afsluiten
+      Bestand.schrijfRegel(output,
+                           prefix + props.getProperty("table.body.eind"));
+      Bestand.schrijfRegel(output, prefix + props.getProperty("table.eind"));
+
       output.close();
 
       // Maak de index.html file
       Arrays.sort(punten);
-      output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
-                                           + "index.html", charsetUit);
-      Bestand.schrijfRegel(output, "<table>");
-      Bestand.schrijfRegel(output, "  <colgroup>");
-      Bestand.schrijfRegel(output, "    <col width=\"34\" />");
-      Bestand.schrijfRegel(output, "    <col width=\"186\" />");
-      Bestand.schrijfRegel(output, "    <col width=\"78\" /><col width=\"10\" />");
-      Bestand.schrijfRegel(output, "    <col width=\"88\" />");
-      Bestand.schrijfRegel(output, "    <col width=\"78\" /><col width=\"10\" />");
-      Bestand.schrijfRegel(output, "  </colgroup>");
-      Bestand.schrijfRegel(output, "  <tbody>");
-      Bestand.schrijfRegel(output, "    <tr>");
-      Bestand.schrijfRegel(output, "      <th align=\"center\">"
-                   + resourceBundle.getString("tag.nummer") + "</th>");
-      Bestand.schrijfRegel(output, "      <th align=\"left\">"
-                   + resourceBundle.getString("tag.naam") + "</th>");
-      Bestand.schrijfRegel(output, "      <th align=\"right\" colspan=\"2\">"
-                   + resourceBundle.getString("tag.punten") + "</th>");
-      Bestand.schrijfRegel(output, "      <th align=\"right\">"
-                   + resourceBundle.getString("tag.partijen") + "</th>");
-      Bestand.schrijfRegel(output, "      <th align=\"right\" colspan=\"2\">"
-                   + resourceBundle.getString("tag.sb") + "</th>");
-      Bestand.schrijfRegel(output, "    </tr>");
-      for (int i = 0; i < noSpelers; i++) {
-        Bestand.schrijfRegel(output, "    <tr>");
-        Bestand.schrijfRegel(output, "      <td align=\"center\">" + (i + 1) + "</td>");
-        Bestand.schrijfRegel(output, "      <td align=\"left\">"
-                     + swapNaam(punten[i].getNaam()) + "</td>");
-        Bestand.schrijfRegel(output, "      <td align=\"right\">", 0);
-        if (punten[i].getPunten() == 0.0
-            || punten[i].getPunten() >= 1.0) {
-          Bestand.schrijfRegel(output, "" + punten[i].getPunten().intValue(), 0);
+      output    = Bestand.openUitvoerBestand(uitvoerdir + File.separator
+                                             + "index.html", charsetUit);
+      prefix    = new StringBuilder();
+      instream  = PgnToHtml.class.getClassLoader()
+                           .getResourceAsStream("index.properties");
+      props     = new Properties();
+      props.load(instream);
+
+      if (props.containsKey("indent")) {
+        int indent = Integer.valueOf(props.getProperty("indent"));
+        while (prefix.length() < indent) {
+          prefix.append(" ");
         }
-        Bestand.schrijfRegel(output, "</td><td>" + Utilities.kwart(punten[i].getPunten())
-                     + "</td>");
-        Bestand.schrijfRegel(output, "      <td align=\"right\">" + punten[i].getPartijen()
-                     + "</td>");
-        Bestand.schrijfRegel(output, "      <td align=\"right\">", 0);
-        if (punten[i].getWeerstandspunten() == 0.0
-            || punten[i].getWeerstandspunten() >= 1.0) {
-          Bestand.schrijfRegel(output, "" + punten[i].getWeerstandspunten().intValue(), 0);
-        }
-        Bestand.schrijfRegel(output, "</td><td>"
-                     + Utilities.kwart(punten[i].getWeerstandspunten())
-                     + "</td>");
-        Bestand.schrijfRegel(output, "    </tr>");
       }
-      Bestand.schrijfRegel(output, "  </tbody>");
-      Bestand.schrijfRegel(output, "</table>");
+
+      // Start de tabel
+      Bestand.schrijfRegel(output, prefix + props.getProperty("table.begin"));
+      // De colgroup
+      k = 1;
+      if (props.containsKey("table.colgroup." + k)) {
+        while (props.containsKey("table.colgroup." + k)) {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.colgroup." + k));
+          k++;
+        }
+      }
+      // De thead
+      k = 1;
+      if (props.containsKey("table.head.begin." + k)) {
+        while (props.containsKey("table.head.begin." + k)) {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.head.begin." + k));
+          k++;
+        }
+      }
+      Bestand.schrijfRegel(output,
+          prefix
+            + MessageFormat.format(props.getProperty("table.head.nr"),
+                                   resourceBundle.getString("tag.nummer")));
+      Bestand.schrijfRegel(output,
+          prefix + MessageFormat.format(props.getProperty("table.head.naam"),
+                                        resourceBundle.getString("tag.naam")));
+      Bestand.schrijfRegel(output,
+          prefix
+            + MessageFormat.format(props.getProperty("table.head.punten"),
+                                   resourceBundle.getString("tag.punten")));
+      Bestand.schrijfRegel(output,
+          prefix
+            + MessageFormat.format(props.getProperty("table.head.partijen"),
+                                   resourceBundle.getString("tag.partijen")));
+      Bestand.schrijfRegel(output,
+          prefix + MessageFormat.format(props.getProperty("table.head.sb"),
+                                        resourceBundle.getString("tag.sb")));
+      k = 1;
+      if (props.containsKey("table.head.eind." + k)) {
+        while (props.containsKey("table.head.eind." + k)) {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.head.eind." + k));
+          k++;
+        }
+      }
+      // De tbody
+      Bestand.schrijfRegel(output,
+                           prefix + props.getProperty("table.body.begin"));
+      for (int i = 0; i < noSpelers; i++) {
+        Bestand.schrijfRegel(output,
+                             prefix + props.getProperty("table.body.start"));
+        Bestand.schrijfRegel(output,
+            prefix + MessageFormat.format(props.getProperty("table.body.nr"),
+                                          (i + 1)));
+        Bestand.schrijfRegel(output,
+            prefix + MessageFormat.format(props.getProperty("table.body.naam"),
+                                          swapNaam(punten[i].getNaam())));
+        Bestand.schrijfRegel(output,
+            prefix
+              + MessageFormat.format(props.getProperty("table.body.punten"),
+                                     (punten[i].getPunten() == 0.5 ?
+                                         "" : punten[i].getPunten().intValue()),
+                                     Utilities.kwart(punten[i].getPunten())));
+        Bestand.schrijfRegel(output,
+            prefix
+              + MessageFormat.format(props.getProperty("table.body.partijen"),
+                                     punten[i].getPartijen()));
+        Bestand.schrijfRegel(output,
+            prefix + MessageFormat.format(props.getProperty("table.body.sb"),
+                         (punten[i].getWeerstandspunten() == 0.5 ?
+                             "" : punten[i].getWeerstandspunten().intValue()),
+                         Utilities.kwart(punten[i].getWeerstandspunten())));
+        Bestand.schrijfRegel(output,
+                             prefix + props.getProperty("table.body.stop"));
+      }
+      // Alles netjes afsluiten
+      Bestand.schrijfRegel(output,
+                           prefix + props.getProperty("table.body.eind"));
+      Bestand.schrijfRegel(output, prefix + props.getProperty("table.eind"));
     } catch (IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {
