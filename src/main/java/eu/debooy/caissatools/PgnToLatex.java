@@ -99,12 +99,20 @@ public final class PgnToLatex {
       }
     }
     // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
-    int       enkel     = 0;
-    if (DoosConstants.WAAR.equalsIgnoreCase(arguments.getArgument("enkel"))) {
-      enkel   = 1;
-    }
-    if (DoosConstants.ONWAAR.equalsIgnoreCase(arguments.getArgument("enkel"))) {
-      enkel   = 2;
+    // 1 is default waarde.
+    int       enkel     = 1;
+    if (arguments.hasArgument("enkel")) {
+      switch (arguments.getArgument("enkel")) {
+      case DoosConstants.WAAR:
+        enkel = CaissaConstants.TOERNOOI_ENKEL;
+        break;
+      case DoosConstants.ONWAAR:
+        enkel = CaissaConstants.TOERNOOI_DUBBEL;
+        break;
+      default:
+        enkel = CaissaConstants.TOERNOOI_MATCH;
+        break;
+      }
     }
     String[]  halve     =
       DoosUtils.nullToEmpty(arguments.getArgument("halve")).split(";");
@@ -169,19 +177,17 @@ public final class PgnToLatex {
 
       // Maak de Matrix
       int           noSpelers = spelers.size();
-      int           kolommen  = (enkel == 0 ? partijen.size()
-                                            : noSpelers * enkel);
+      int           kolommen  = (enkel == CaissaConstants.TOERNOOI_MATCH
+                                    ? partijen.size() : noSpelers * enkel);
       Spelerinfo[]  punten    = new Spelerinfo[noSpelers];
       String[]      namen     = new String[noSpelers];
       double[][]    matrix    = new double[noSpelers][kolommen];
       int           i         = 0;
       for (String speler  : spelers) {
-        namen[i]  = speler;
-        for (int j = 0; j < kolommen; j++) {
-          matrix[i][j] = -1.0;
-        }
-        i++;
+        namen[i++]  = speler;
       }
+
+      // Initialiseer de Spelerinfo array.
       Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
       for (i = 0; i < noSpelers; i++) {
         punten[i] = new Spelerinfo();
@@ -189,357 +195,16 @@ public final class PgnToLatex {
       }
 
       // Bepaal de score en weerstandspunten.
-      for (PGN partij: partijen) {
-        String  wit     = partij.getTag(CaissaConstants.PGNTAG_WHITE);
-        String  zwart   = partij.getTag(CaissaConstants.PGNTAG_BLACK);
-        if (partij.isRanked()
-            && !"bye".equalsIgnoreCase(wit)
-            && !"bye".equalsIgnoreCase(zwart)) {
-          int     ronde   = 1;
-          try {
-            ronde = Integer.valueOf(partij.getTag(CaissaConstants.PGNTAG_ROUND))
-                           .intValue();
-          } catch (NumberFormatException nfe) {
-            ronde = 1;
-          }
-          String  uitslag = partij.getTag(CaissaConstants.PGNTAG_RESULT);
-          if ((enkel > 0 && ronde > noSpelers)
-              && (Arrays.binarySearch(halve, wit,
-                                      String.CASE_INSENSITIVE_ORDER) > -1
-                  || Arrays.binarySearch(halve, zwart,
-                                         String.CASE_INSENSITIVE_ORDER) > -1)) {
-            continue;
-          }
-          int   iWit    = Arrays.binarySearch(namen, wit,
-                                              String.CASE_INSENSITIVE_ORDER);
-          int   iZwart  = Arrays.binarySearch(namen, zwart,
-                                              String.CASE_INSENSITIVE_ORDER);
-          // Zorgt ervoor dat de index binnen de limieten blijft.
-          ronde--;
-          if ("1-0".equals(uitslag)) {
-            punten[iWit].addPartij();
-            punten[iWit].addPunt(1.0);
-            punten[iZwart].addPartij();
-            if (enkel == 0) {
-              matrix[iWit][ronde]   =
-                  Math.max(matrix[iWit][ronde], 0.0) + 1.0;
-              matrix[iZwart][ronde] =
-                  Math.max(matrix[iZwart][ronde], 0.0);
-            } else {
-              matrix[iWit][iZwart * enkel]  =
-                Math.max(matrix[iWit][iZwart * enkel], 0.0) + 1.0;
-              matrix[iZwart][iWit * enkel + enkel - 1]  =
-                  Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0);
-            }
-          } else if ("1/2-1/2".equals(uitslag)) {
-            punten[iWit].addPartij();
-            punten[iWit].addPunt(0.5);
-            punten[iZwart].addPartij();
-            punten[iZwart].addPunt(0.5);
-            if (enkel == 0) {
-              matrix[iWit][ronde]   =
-                  Math.max(matrix[iWit][ronde], 0.0) + 0.5;
-              matrix[iZwart][ronde] =
-                  Math.max(matrix[iZwart][ronde], 0.0) + 0.5;
-            } else {
-              matrix[iWit][iZwart * enkel]              =
-                Math.max(matrix[iWit][iZwart * enkel], 0.0) + 0.5;
-              matrix[iZwart][iWit * enkel + enkel - 1]  =
-                  Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 0.5;
-            }
-          } else if ("0-1".equals(uitslag)) {
-            punten[iWit].addPartij();
-            punten[iZwart].addPartij();
-            punten[iZwart].addPunt(1.0);
-            if (enkel == 0) {
-              matrix[iWit][ronde]   =
-                  Math.max(matrix[iWit][ronde], 0.0);
-              matrix[iZwart][ronde] =
-                  Math.max(matrix[iZwart][ronde], 0.0) + 1.0;
-            } else {
-              matrix[iWit][iZwart * enkel]              = 0.0;
-                Math.max(matrix[iWit][iZwart * enkel], 0.0);
-              matrix[iZwart][iWit * enkel + enkel - 1]  =
-                  Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 1.0;
-            }
-          }
-        }
-      }
-      // Bereken Weerstandspunten en herinitialiseer de matrix.
-      for (i = 0; i < noSpelers; i++) {
-        Double weerstandspunten = 0.0;
-        for (int j = 0; j < kolommen; j++) {
-          if (enkel > 0 && matrix[i][j] > 0.0) {
-            weerstandspunten += punten[j / enkel].getPunten() * matrix[i][j];
-          }
-          matrix[i][j]  = -1.0;
-        }
-        punten[i].setWeerstandspunten(weerstandspunten);
-      }
-      Arrays.sort(punten);
-      int[] stand = new int[noSpelers];
-      for (i = 0; i < noSpelers; i++) {
-        stand[Arrays.binarySearch(namen, punten[i].getNaam(),
-                                  String.CASE_INSENSITIVE_ORDER)] = i;
-      }
-
-      // Maak de Matrix nogmaals vanwege de sortering die de volgorde van de
-      // spelers aanpaste.
-      for (PGN partij: partijen) {
-        String  wit     = partij.getTag(CaissaConstants.PGNTAG_WHITE);
-        String  zwart   = partij.getTag(CaissaConstants.PGNTAG_BLACK);
-        if (partij.isRanked()
-            && !partij.isBye()) {
-          int     ronde   = 1;
-          try {
-            ronde = Integer.valueOf(partij.getTag(CaissaConstants.PGNTAG_ROUND))
-                           .intValue();
-          } catch (NumberFormatException nfe) {
-            ronde = 1;
-          }
-          String  uitslag = partij.getTag(CaissaConstants.PGNTAG_RESULT);
-          if ((enkel > 0 && ronde > noSpelers)
-              && (Arrays.binarySearch(halve, wit,
-                                      String.CASE_INSENSITIVE_ORDER) > -1
-                  || Arrays.binarySearch(halve, zwart,
-                                         String.CASE_INSENSITIVE_ORDER) > -1)) {
-            continue;
-          }
-          // Zorgt ervoor dat de index binnen de limieten blijft.
-          ronde--;
-          int   iWit    =
-            stand[Arrays.binarySearch(namen, wit,
-                                      String.CASE_INSENSITIVE_ORDER)];
-          int   iZwart  =
-            stand[Arrays.binarySearch(namen, zwart,
-                                      String.CASE_INSENSITIVE_ORDER)];
-          if ("1-0".equals(uitslag)) {
-            if (enkel == 0) {
-              matrix[iWit][ronde]   =
-                  Math.max(matrix[iWit][ronde], 0.0) + 1.0;
-              matrix[iZwart][ronde] =
-                  Math.max(matrix[iZwart][ronde], 0.0);
-            } else {
-              matrix[iWit][iZwart * enkel]  =
-                Math.max(matrix[iWit][iZwart * enkel], 0.0) + 1.0;
-              matrix[iZwart][iWit * enkel + enkel - 1]  =
-                  Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0);
-            }
-          } else if ("1/2-1/2".equals(uitslag)) {
-            if (enkel == 0) {
-              matrix[iWit][ronde]   =
-                  Math.max(matrix[iWit][ronde], 0.0) + 0.5;
-              matrix[iZwart][ronde] =
-                  Math.max(matrix[iZwart][ronde], 0.0) + 0.5;
-            } else {
-              matrix[iWit][iZwart * enkel]              =
-                Math.max(matrix[iWit][iZwart * enkel], 0.0) + 0.5;
-              matrix[iZwart][iWit * enkel + enkel - 1]  =
-                  Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 0.5;
-            }
-          } else if ("0-1".equals(uitslag)) {
-            if (enkel == 0) {
-              matrix[iWit][ronde]   =
-                  Math.max(matrix[iWit][ronde], 0.0);
-              matrix[iZwart][ronde] =
-                  Math.max(matrix[iZwart][ronde], 0.0) + 1.0;
-            } else {
-              matrix[iWit][iZwart * enkel]              = 0.0;
-                Math.max(matrix[iWit][iZwart * enkel], 0.0);
-              matrix[iZwart][iWit * enkel + enkel - 1]  =
-                  Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 1.0;
-            }
-          }
-        }
-      }
+      CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
+                                    true);
 
       // Maak de .tex file
-      Bestand.schrijfRegel(output, "\\documentclass[dutch,twocolumn,a4paper,10pt]{report}", 2);
-      Bestand.schrijfRegel(output, "\\usepackage{skak}");
-      Bestand.schrijfRegel(output, "\\usepackage{babel}");
-      Bestand.schrijfRegel(output, "\\usepackage{color}");
-      Bestand.schrijfRegel(output, "\\usepackage{colortbl}");
-      Bestand.schrijfRegel(output, "\\usepackage[T1]{fontenc}");
-      Bestand.schrijfRegel(output, "\\usepackage[pdftex]{graphicx}");
-      Bestand.schrijfRegel(output, "\\usepackage{pdflscape}", 2);
-      Bestand.schrijfRegel(output, "\\topmargin =0.mm");
-      Bestand.schrijfRegel(output, "\\oddsidemargin =0.mm");
-      Bestand.schrijfRegel(output, "\\evensidemargin =0.mm");
-      Bestand.schrijfRegel(output, "\\headheight =0.mm");
-      Bestand.schrijfRegel(output, "\\headsep =0.mm");
-      Bestand.schrijfRegel(output, "\\textheight =265.mm");
-      Bestand.schrijfRegel(output, "\\textwidth =165.mm");
-      Bestand.schrijfRegel(output, "\\parindent =0.mm", 2);
-      Bestand.schrijfRegel(output, "\\newcommand{\\chessgame}[7]{");
-      Bestand.schrijfRegel(output, "  $\\circ$ \\textbf{#1} \\hfill Ronde {#4}\\\\");
-      Bestand.schrijfRegel(output, "  $\\bullet$ \\textbf{#2}\\\\");
-      Bestand.schrijfRegel(output, "  {#3} \\hfill {#6} \\hfill {#5}\\\\");
-      Bestand.schrijfRegel(output, "  \\styleB");
-      Bestand.schrijfRegel(output, "  \\newgame");
-      Bestand.schrijfRegel(output, "  \\mainline{#7} {\\bf #5}");
-      Bestand.schrijfRegel(output, "  \\[\\showboard\\]");
-      Bestand.schrijfRegel(output, "  \\begin{center} \\hrule \\end{center}");
-      Bestand.schrijfRegel(output, "}", 2);
-      Bestand.schrijfRegel(output, "\\newcommand{\\chessempty}[6]{");
-      Bestand.schrijfRegel(output, "  $\\circ$ \\textbf{#1} \\hfill Ronde {#4}\\\\");
-      Bestand.schrijfRegel(output, "  $\\bullet$ \\textbf{#2}\\\\");
-      Bestand.schrijfRegel(output, "  {#3} \\hfill {#6} \\hfill {#5}\\\\");
-      Bestand.schrijfRegel(output, "  \\begin{center} \\hrule \\end{center}");
-      Bestand.schrijfRegel(output, "}", 2);
-      Bestand.schrijfRegel(output, "%" + resourceBundle.getString("latex.splitsmelding"));
-      Bestand.schrijfRegel(output, "\\raggedbottom \\topskip 1\\topskip plus1000pt % like "
-                   + "\\raggedbottom; moreso \\def\\need#1{\\vskip #1"
-                   + "\\penalty0 \\vskip-#1\\relax}", 2);
-      Bestand.schrijfRegel(output, "\\title{" + titel + "}");
-      Bestand.schrijfRegel(output, "\\author{" + auteur + "}");
-      Bestand.schrijfRegel(output, "\\date{" + datum + "}", 2);
-      Bestand.schrijfRegel(output, "\\ifpdf");
-      Bestand.schrijfRegel(output, "\\pdfinfo{");
-      Bestand.schrijfRegel(output, "   /Author (" + auteur + ")");
-      Bestand.schrijfRegel(output, "   /Title  (" + titel + ")");
-      if (DoosUtils.isNotBlankOrNull(keywords)) {
-        Bestand.schrijfRegel(output, "   /Keywords (" + keywords + ")");
-      }
-      Bestand.schrijfRegel(output, "}");
-      Bestand.schrijfRegel(output, "\\fi", 2);
-      Bestand.schrijfRegel(output, "\\begin{document}");
-      if (DoosUtils.isNotBlankOrNull(logo)) {
-        Bestand.schrijfRegel(output, "\\DeclareGraphicsExtensions{.pdf,.png,.gif,.jpg}");
-      }
-      Bestand.schrijfRegel(output, "\\begin{titlepage}");
-      Bestand.schrijfRegel(output, "  \\begin{center}");
-      Bestand.schrijfRegel(output, "    \\huge " + titel + " \\\\");
-      Bestand.schrijfRegel(output, "    \\vspace{1in}");
-      Bestand.schrijfRegel(output, "    \\large " + auteur + " \\\\");
-      if (DoosUtils.isNotBlankOrNull(logo)) {
-        Bestand.schrijfRegel(output, "    \\vspace{2in}");
-        Bestand.schrijfRegel(output, "    \\includegraphics[width=6cm]{"+ logo + "} \\\\");
-      }
-      Bestand.schrijfRegel(output, "    \\vspace{1in}");
-      Bestand.schrijfRegel(output, "    \\large " + datumInTitel(startDatum, eindDatum)
-                   + " \\\\");
-      Bestand.schrijfRegel(output, "  \\end{center}");
-      Bestand.schrijfRegel(output, "\\end{titlepage}");
-      Bestand.schrijfRegel(output, "\\topmargin =-15.mm");
+      maakHeading(output, auteur, datum, eindDatum, keywords, logo, startDatum,
+                  titel);
       if (DoosConstants.WAAR.equalsIgnoreCase(metMatrix)) {
-        Bestand.schrijfRegel(output, "\\begin{landscape}");
-        Bestand.schrijfRegel(output, "  \\begin{center}");
-        Bestand.schrijfRegel(output, "    \\begin{tabular} { | c | l | ", 0);
-        for (i = 0; i < kolommen; i++) {
-          Bestand.schrijfRegel(output, " c | ", 0);
-        }
-        Bestand.schrijfRegel(output, "r | r | r | }");
-        Bestand.schrijfRegel(output, "    \\hline");
-        Bestand.schrijfRegel(output, "    \\multicolumn{2}{|c|}{} ", 0);
-        for (i = 0; i < (enkel == 0 ? kolommen : noSpelers); i++) {
-          if (enkel < 2) {
-            Bestand.schrijfRegel(output, " & " + (i + 1), 0);
-          } else {
-            Bestand.schrijfRegel(output, " & \\multicolumn{2}{c|}{" + (i + 1) + "} ", 0);
-          }
-        }
-        Bestand.schrijfRegel(output, "& " + resourceBundle.getString("tag.punten"), 0);
-        if (enkel > 0) {
-          Bestand.schrijfRegel(output, " & " + resourceBundle.getString("tag.partijen")
-                       + " & " + resourceBundle.getString("tag.sb"), 0);
-        }
-        Bestand.schrijfRegel(output, " \\\\");
-        Bestand.schrijfRegel(output, "    \\cline{3-" + (2 + kolommen) + "}");
-        if (enkel == 2) {
-          Bestand.schrijfRegel(output, "    \\multicolumn{2}{|c|}{} & ", 0);
-          for (i = 0; i < noSpelers; i++) {
-            Bestand.schrijfRegel(output, resourceBundle.getString("tag.wit") + " & " +
-                         resourceBundle.getString("tag.zwart") + " & ", 0);
-          }
-          Bestand.schrijfRegel(output, "& & \\\\");
-        }
-        Bestand.schrijfRegel(output, "    \\hline");
-        for (i = 0; i < noSpelers; i++) {
-          if (enkel == 0) {
-            Bestand.schrijfRegel(output, "\\multicolumn{2}{|l|}{" + punten[i].getNaam() + "} & ", 0);
-          } else {
-            Bestand.schrijfRegel(output, (i + 1) + " & " + punten[i].getNaam() + " & ", 0);
-          }
-          for (int j = 0; j < kolommen; j++) {
-            if (enkel > 0) {
-              if (i == j / enkel) {
-                Bestand.schrijfRegel(output, "\\multicolumn{1}"
-                             + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ", 0);
-                continue;
-              } else {
-                if ((j / enkel) * enkel != j ) {
-                  Bestand.schrijfRegel(output, "\\multicolumn{1}"
-                               + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{", 0);
-                }
-              }
-            }
-            if (matrix[i][j] == 0.0) {
-              Bestand.schrijfRegel(output, "0", 0);
-            } else if (matrix[i][j] == 0.5) {
-              Bestand.schrijfRegel(output, "\\textonehalf", 0);
-            } else if (matrix[i][j] >= 1.0) {
-              Bestand.schrijfRegel(output, "" + ((Double)matrix[i][j]).intValue()
-                           + Utilities.kwart(matrix[i][j]), 0);
-            }
-            if (enkel > 0 && (j / enkel) * enkel != j ) {
-              Bestand.schrijfRegel(output, "}", 0);
-            }
-            Bestand.schrijfRegel(output, " & ", 0);
-          }
-          Bestand.schrijfRegel(output, punten[i].getPunten().intValue()
-                       + Utilities.kwart(punten[i].getPunten()), 0);
-          if (enkel > 0) {
-            Bestand.schrijfRegel(output, " & " + punten[i].getPartijen() + " & ", 0);
-            Bestand.schrijfRegel(output, punten[i].getWeerstandspunten().intValue()
-                         + Utilities.kwart(punten[i].getWeerstandspunten()), 0);
-          }
-          Bestand.schrijfRegel(output, " \\\\");
-          Bestand.schrijfRegel(output, "    \\hline");
-        }
-        Bestand.schrijfRegel(output, "    \\end{tabular}");
-        Bestand.schrijfRegel(output, "  \\end{center}");
-        Bestand.schrijfRegel(output, "\\end{landscape}");
-        Bestand.schrijfRegel(output, "\\newpage");
+        maakMatrix(output, punten, enkel, matrix, kolommen, noSpelers);
       }
-
-      for (PGN partij: partijen) {
-        if (!partij.isBye()) {
-          String wit    = partij.getTag(CaissaConstants.PGNTAG_WHITE);
-          String zwart  = partij.getTag(CaissaConstants.PGNTAG_BLACK);
-          String zetten = partij.getZuivereZetten();
-          if (DoosUtils.isNotBlankOrNull(zetten)) {
-            Bestand.schrijfRegel(output, "\\begin{chessgame}{" + wit + "}{"
-                + zwart + "}{" + partij.getTag(CaissaConstants.PGNTAG_DATE)
-                + "}{" + partij.getTag(CaissaConstants.PGNTAG_ROUND) + "}{"
-                + partij.getTag("Result").replaceAll("1/2", "\\\\textonehalf")
-                + "}{", 0);
-            String  eco = partij.getTag("ECO");
-            if (DoosUtils.isNotBlankOrNull(eco)) {
-              Bestand.schrijfRegel(output, eco, 0);
-            }
-            if (!partij.isRanked()) {
-              Bestand.schrijfRegel(output, " " +
-                           resourceBundle.getString("tekst.buitencompetitie"), 0);
-            }
-            Bestand.schrijfRegel(output, "}{"+ partij.getZuivereZetten()
-                                     .replaceAll("#", "\\\\#"), 0);
-            Bestand.schrijfRegel(output, "}\\end{chessgame}");
-          } else {
-            if (!partij.getTag(CaissaConstants.PGNTAG_RESULT).equals("*")) {
-              Bestand.schrijfRegel(output, "\\begin{chessempty}{" + wit + "}{"
-                  + zwart + "}{" + partij.getTag(CaissaConstants.PGNTAG_DATE)
-                  + "}{" + partij.getTag(CaissaConstants.PGNTAG_ROUND) + "}{"
-                  + partij.getTag(CaissaConstants.PGNTAG_RESULT)
-                          .replaceAll("1/2", "\\\\textonehalf") + "}{", 0);
-              if (!partij.isRanked()) {
-                Bestand.schrijfRegel(output, resourceBundle.getString("tekst.buitencompetitie"), 0);
-              }
-              Bestand.schrijfRegel(output, "}\\end{chessempty}");
-            }
-          }
-        }
-      }
-
+      verwerkPartijen(partijen, output);
       Bestand.schrijfRegel(output, "\\end{document}");
     } catch (IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -629,5 +294,208 @@ public final class PgnToLatex {
         MessageFormat.format(resourceBundle.getString("help.paramverplicht"),
                              "bestand"), 80);
     DoosUtils.naarScherm();
+  }
+
+  // Maak de heading van het .tex bestand.
+  public static void maakHeading(BufferedWriter output, String auteur,
+                                 String datum, String eindDatum,
+                                 Object keywords, Object logo,
+                                 String startDatum, String titel)
+      throws IOException {
+    Bestand.schrijfRegel(output, "\\documentclass[dutch,twocolumn,a4paper,10pt]{report}", 2);
+    Bestand.schrijfRegel(output, "\\usepackage{skak}");
+    Bestand.schrijfRegel(output, "\\usepackage{babel}");
+    Bestand.schrijfRegel(output, "\\usepackage{color}");
+    Bestand.schrijfRegel(output, "\\usepackage{colortbl}");
+    Bestand.schrijfRegel(output, "\\usepackage[T1]{fontenc}");
+    Bestand.schrijfRegel(output, "\\usepackage[pdftex]{graphicx}");
+    Bestand.schrijfRegel(output, "\\usepackage{pdflscape}", 2);
+    Bestand.schrijfRegel(output, "\\topmargin =0.mm");
+    Bestand.schrijfRegel(output, "\\oddsidemargin =0.mm");
+    Bestand.schrijfRegel(output, "\\evensidemargin =0.mm");
+    Bestand.schrijfRegel(output, "\\headheight =0.mm");
+    Bestand.schrijfRegel(output, "\\headsep =0.mm");
+    Bestand.schrijfRegel(output, "\\textheight =265.mm");
+    Bestand.schrijfRegel(output, "\\textwidth =165.mm");
+    Bestand.schrijfRegel(output, "\\parindent =0.mm", 2);
+    Bestand.schrijfRegel(output, "\\newcommand{\\chessgame}[7]{");
+    Bestand.schrijfRegel(output, "  $\\circ$ \\textbf{#1} \\hfill Ronde {#4}\\\\");
+    Bestand.schrijfRegel(output, "  $\\bullet$ \\textbf{#2}\\\\");
+    Bestand.schrijfRegel(output, "  {#3} \\hfill {#6} \\hfill {#5}\\\\");
+    Bestand.schrijfRegel(output, "  \\styleB");
+    Bestand.schrijfRegel(output, "  \\newgame");
+    Bestand.schrijfRegel(output, "  \\mainline{#7} {\\bf #5}");
+    Bestand.schrijfRegel(output, "  \\[\\showboard\\]");
+    Bestand.schrijfRegel(output, "  \\begin{center} \\hrule \\end{center}");
+    Bestand.schrijfRegel(output, "}", 2);
+    Bestand.schrijfRegel(output, "\\newcommand{\\chessempty}[6]{");
+    Bestand.schrijfRegel(output, "  $\\circ$ \\textbf{#1} \\hfill Ronde {#4}\\\\");
+    Bestand.schrijfRegel(output, "  $\\bullet$ \\textbf{#2}\\\\");
+    Bestand.schrijfRegel(output, "  {#3} \\hfill {#6} \\hfill {#5}\\\\");
+    Bestand.schrijfRegel(output, "  \\begin{center} \\hrule \\end{center}");
+    Bestand.schrijfRegel(output, "}", 2);
+    Bestand.schrijfRegel(output, "%" + resourceBundle.getString("latex.splitsmelding"));
+    Bestand.schrijfRegel(output, "\\raggedbottom \\topskip 1\\topskip plus1000pt % like "
+                 + "\\raggedbottom; moreso \\def\\need#1{\\vskip #1"
+                 + "\\penalty0 \\vskip-#1\\relax}", 2);
+    Bestand.schrijfRegel(output, "\\title{" + titel + "}");
+    Bestand.schrijfRegel(output, "\\author{" + auteur + "}");
+    Bestand.schrijfRegel(output, "\\date{" + datum + "}", 2);
+    Bestand.schrijfRegel(output, "\\ifpdf");
+    Bestand.schrijfRegel(output, "\\pdfinfo{");
+    Bestand.schrijfRegel(output, "   /Author (" + auteur + ")");
+    Bestand.schrijfRegel(output, "   /Title  (" + titel + ")");
+    if (DoosUtils.isNotBlankOrNull(keywords)) {
+      Bestand.schrijfRegel(output, "   /Keywords (" + keywords + ")");
+    }
+    Bestand.schrijfRegel(output, "}");
+    Bestand.schrijfRegel(output, "\\fi", 2);
+    Bestand.schrijfRegel(output, "\\begin{document}");
+    if (DoosUtils.isNotBlankOrNull(logo)) {
+      Bestand.schrijfRegel(output, "\\DeclareGraphicsExtensions{.pdf,.png,.gif,.jpg}");
+    }
+    Bestand.schrijfRegel(output, "\\begin{titlepage}");
+    Bestand.schrijfRegel(output, "  \\begin{center}");
+    Bestand.schrijfRegel(output, "    \\huge " + titel + " \\\\");
+    Bestand.schrijfRegel(output, "    \\vspace{1in}");
+    Bestand.schrijfRegel(output, "    \\large " + auteur + " \\\\");
+    if (DoosUtils.isNotBlankOrNull(logo)) {
+      Bestand.schrijfRegel(output, "    \\vspace{2in}");
+      Bestand.schrijfRegel(output, "    \\includegraphics[width=6cm]{"+ logo + "} \\\\");
+    }
+    Bestand.schrijfRegel(output, "    \\vspace{1in}");
+    Bestand.schrijfRegel(output, "    \\large " + datumInTitel(startDatum, eindDatum)
+                 + " \\\\");
+    Bestand.schrijfRegel(output, "  \\end{center}");
+    Bestand.schrijfRegel(output, "\\end{titlepage}");
+    Bestand.schrijfRegel(output, "\\topmargin =-15.mm");
+  }
+
+  // Maak de matrix in het .tex bestand.
+  public static void maakMatrix(BufferedWriter output, Spelerinfo[] punten,
+                                int enkel, double[][] matrix, int kolommen,
+                                int noSpelers)
+      throws IOException {
+    Bestand.schrijfRegel(output, "\\begin{landscape}");
+    Bestand.schrijfRegel(output, "  \\begin{center}");
+    Bestand.schrijfRegel(output, "    \\begin{tabular} { | c | l | ", 0);
+    for (int i = 0; i < kolommen; i++) {
+      Bestand.schrijfRegel(output, "c | ", 0);
+    }
+    Bestand.schrijfRegel(output, "r | r | r | }");
+    Bestand.schrijfRegel(output, "    \\hline");
+    Bestand.schrijfRegel(output, "    \\multicolumn{2}{|c|}{} ", 0);
+    for (int i = 0; i < (enkel == 0 ? kolommen : noSpelers); i++) {
+      if (enkel < 2) {
+        Bestand.schrijfRegel(output, " & " + (i + 1), 0);
+      } else {
+        Bestand.schrijfRegel(output, " & \\multicolumn{2}{c|}{" + (i + 1) + "} ", 0);
+      }
+    }
+    Bestand.schrijfRegel(output, "& " + resourceBundle.getString("tag.punten"), 0);
+    if (enkel > 0) {
+      Bestand.schrijfRegel(output, " & " + resourceBundle.getString("tag.partijen")
+                   + " & " + resourceBundle.getString("tag.sb"), 0);
+    }
+    Bestand.schrijfRegel(output, " \\\\");
+    Bestand.schrijfRegel(output, "    \\cline{3-" + (2 + kolommen) + "}");
+    if (enkel == 2) {
+      Bestand.schrijfRegel(output, "    \\multicolumn{2}{|c|}{} & ", 0);
+      for (int i = 0; i < noSpelers; i++) {
+        Bestand.schrijfRegel(output, resourceBundle.getString("tag.wit") + " & " +
+                     resourceBundle.getString("tag.zwart") + " & ", 0);
+      }
+      Bestand.schrijfRegel(output, "& & \\\\");
+    }
+    Bestand.schrijfRegel(output, "    \\hline");
+    for (int i = 0; i < noSpelers; i++) {
+      if (enkel == 0) {
+        Bestand.schrijfRegel(output, "\\multicolumn{2}{|l|}{" + punten[i].getNaam() + "} & ", 0);
+      } else {
+        Bestand.schrijfRegel(output, (i + 1) + " & " + punten[i].getNaam() + " & ", 0);
+      }
+      for (int j = 0; j < kolommen; j++) {
+        if (enkel > 0) {
+          if (i == j / enkel) {
+            Bestand.schrijfRegel(output, "\\multicolumn{1}"
+                         + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ", 0);
+            continue;
+          } else {
+            if ((j / enkel) * enkel != j ) {
+              Bestand.schrijfRegel(output, "\\multicolumn{1}"
+                           + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{", 0);
+            }
+          }
+        }
+        if (matrix[i][j] == 0.0) {
+          Bestand.schrijfRegel(output, "0", 0);
+        } else if (matrix[i][j] == 0.5) {
+          Bestand.schrijfRegel(output, "\\textonehalf", 0);
+        } else if (matrix[i][j] >= 1.0) {
+          Bestand.schrijfRegel(output, "" + ((Double)matrix[i][j]).intValue()
+                       + Utilities.kwart(matrix[i][j]), 0);
+        }
+        if (enkel > 0 && (j / enkel) * enkel != j ) {
+          Bestand.schrijfRegel(output, "}", 0);
+        }
+        Bestand.schrijfRegel(output, " & ", 0);
+      }
+      Bestand.schrijfRegel(output, punten[i].getPunten().intValue()
+                   + Utilities.kwart(punten[i].getPunten()), 0);
+      if (enkel > 0) {
+        Bestand.schrijfRegel(output, " & " + punten[i].getPartijen() + " & ", 0);
+        Bestand.schrijfRegel(output, punten[i].getWeerstandspunten().intValue()
+                     + Utilities.kwart(punten[i].getWeerstandspunten()), 0);
+      }
+      Bestand.schrijfRegel(output, " \\\\");
+      Bestand.schrijfRegel(output, "    \\hline");
+    }
+    Bestand.schrijfRegel(output, "    \\end{tabular}");
+    Bestand.schrijfRegel(output, "  \\end{center}");
+    Bestand.schrijfRegel(output, "\\end{landscape}");
+    Bestand.schrijfRegel(output, "\\newpage");
+  }
+
+  // Zet de partijen in het .tex bestand.
+  public static void verwerkPartijen(List<PGN> partijen, BufferedWriter output)
+      throws IOException {
+    for (PGN partij: partijen) {
+      if (!partij.isBye()) {
+        String wit    = partij.getTag(CaissaConstants.PGNTAG_WHITE);
+        String zwart  = partij.getTag(CaissaConstants.PGNTAG_BLACK);
+        String zetten = partij.getZuivereZetten();
+        if (DoosUtils.isNotBlankOrNull(zetten)) {
+          Bestand.schrijfRegel(output, "\\begin{chessgame}{" + wit + "}{"
+              + zwart + "}{" + partij.getTag(CaissaConstants.PGNTAG_DATE)
+              + "}{" + partij.getTag(CaissaConstants.PGNTAG_ROUND) + "}{"
+              + partij.getTag("Result").replaceAll("1/2", "\\\\textonehalf")
+              + "}{", 0);
+          String  eco = partij.getTag("ECO");
+          if (DoosUtils.isNotBlankOrNull(eco)) {
+            Bestand.schrijfRegel(output, eco, 0);
+          }
+          if (!partij.isRanked()) {
+            Bestand.schrijfRegel(output, " " +
+                         resourceBundle.getString("tekst.buitencompetitie"), 0);
+          }
+          Bestand.schrijfRegel(output, "}{"+ partij.getZuivereZetten()
+                                   .replaceAll("#", "\\\\#"), 0);
+          Bestand.schrijfRegel(output, "}\\end{chessgame}");
+        } else {
+          if (!partij.getTag(CaissaConstants.PGNTAG_RESULT).equals("*")) {
+            Bestand.schrijfRegel(output, "\\begin{chessempty}{" + wit + "}{"
+                + zwart + "}{" + partij.getTag(CaissaConstants.PGNTAG_DATE)
+                + "}{" + partij.getTag(CaissaConstants.PGNTAG_ROUND) + "}{"
+                + partij.getTag(CaissaConstants.PGNTAG_RESULT)
+                        .replaceAll("1/2", "\\\\textonehalf") + "}{", 0);
+            if (!partij.isRanked()) {
+              Bestand.schrijfRegel(output,
+                  resourceBundle.getString("tekst.buitencompetitie"), 0);
+            }
+            Bestand.schrijfRegel(output, "}\\end{chessempty}");
+          }
+        }
+      }
+    }
   }
 }

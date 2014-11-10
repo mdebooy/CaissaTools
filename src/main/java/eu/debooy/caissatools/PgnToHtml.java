@@ -62,7 +62,7 @@ public final class PgnToHtml {
 
     Banner.printBanner(resourceBundle.getString("banner.pgntohtml"));
 
-    Arguments       arguments   = new Arguments(args);
+    Arguments arguments = new Arguments(args);
     arguments.setParameters(new String[] {"bestand", "charsetin", "charsetuit",
                                           "enkel", "halve", "uitvoerdir"});
     arguments.setVerplicht(new String[] {"bestand"});
@@ -71,18 +71,30 @@ public final class PgnToHtml {
       return;
     }
 
-    String  bestand = arguments.getArgument("bestand");
-    int     enkel   = 1;
-    if (DoosConstants.ONWAAR.equalsIgnoreCase(arguments.getArgument("enkel"))) {
-      enkel = 2;
-    }
+    String    bestand   = arguments.getArgument("bestand");
     if (arguments.hasArgument("charsetin")) {
       charsetIn   = arguments.getArgument("charsetin");
     }
     if (arguments.hasArgument("charsetuit")) {
       charsetUit  = arguments.getArgument("charsetuit");
     }
-    String[]  halve       =
+    // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
+    // 1 is default waarde.
+    int       enkel     = 1;
+    if (arguments.hasArgument("enkel")) {
+      switch (arguments.getArgument("enkel")) {
+      case DoosConstants.WAAR:
+        enkel = 1;
+        break;
+      case DoosConstants.ONWAAR:
+        enkel = 2;
+        break;
+      default:
+        enkel = 0;
+        break;
+      }
+    }
+    String[]  halve     =
       DoosUtils.nullToEmpty(arguments.getArgument("halve")).split(";");
     String    uitvoerdir  = arguments.getArgument("uitvoerdir");
     if (null == uitvoerdir) {
@@ -104,16 +116,16 @@ public final class PgnToHtml {
         String  wit   = partij.getTag(CaissaConstants.PGNTAG_WHITE);
         String  zwart = partij.getTag(CaissaConstants.PGNTAG_BLACK);
         if (!"bye".equalsIgnoreCase(wit)
-            || DoosUtils.isNotBlankOrNull(wit)) {
+            && DoosUtils.isNotBlankOrNull(wit)) {
           spelers.add(wit);
         }
         if (!"bye".equalsIgnoreCase(zwart)
-            || DoosUtils.isNotBlankOrNull(zwart)) {
+            && DoosUtils.isNotBlankOrNull(zwart)) {
           spelers.add(zwart);
         }
       }
 
-      // Maak de Matrix
+      // Maak de Matrix.
       int           noSpelers = spelers.size();
       int           kolommen  = noSpelers * enkel;
       Spelerinfo[]  punten    = new Spelerinfo[noSpelers];
@@ -133,72 +145,12 @@ public final class PgnToHtml {
         punten[i].setNaam(namen[i]);
       }
 
+
       // Bepaal de score en weerstandspunten.
-      for (PGN partij: partijen) {
-        String  wit     = partij.getTag(CaissaConstants.PGNTAG_WHITE);
-        String  zwart   = partij.getTag(CaissaConstants.PGNTAG_BLACK);
-        if (partij.isRanked()
-            && !partij.isBye()) {
-          int     ronde   = 1;
-          try {
-            ronde = Integer.valueOf(partij.getTag(CaissaConstants.PGNTAG_ROUND))
-                           .intValue();
-          } catch (NumberFormatException nfe) {
-            ronde = 1;
-          }
-          String  uitslag = partij.getTag(CaissaConstants.PGNTAG_RESULT);
-          if (ronde > noSpelers
-              && (Arrays.binarySearch(halve, wit,
-                                      String.CASE_INSENSITIVE_ORDER) > -1
-                  || Arrays.binarySearch(halve, zwart,
-                                         String.CASE_INSENSITIVE_ORDER) > -1)) {
-            continue;
-          }
-          int   iWit    = Arrays.binarySearch(namen, wit,
-                                              String.CASE_INSENSITIVE_ORDER);
-          int   iZwart  = Arrays.binarySearch(namen, zwart,
-                                              String.CASE_INSENSITIVE_ORDER);
-          if ("1-0".equals(uitslag)) {
-            punten[iWit].addPartij();
-            punten[iWit].addPunt(1.0);
-            matrix[iWit][iZwart * enkel] =
-              Math.max(matrix[iWit][iZwart * enkel], 0.0) + 1.0;
-            punten[iZwart].addPartij();
-            matrix[iZwart][iWit * enkel + enkel - 1] =
-              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0);
-          } else if ("1/2-1/2".equals(uitslag)) {
-            punten[iWit].addPartij();
-            punten[iWit].addPunt(0.5);
-            matrix[iWit][iZwart * enkel] =
-              Math.max(matrix[iWit][iZwart * enkel], 0.0) + 0.5;
-            punten[iZwart].addPartij();
-            punten[iZwart].addPunt(0.5);
-            matrix[iZwart][iWit * enkel + enkel - 1] =
-              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 0.5;
-          } else if ("0-1".equals(uitslag)) {
-            punten[iWit].addPartij();
-            matrix[iWit][iZwart * enkel] =
-              Math.max(matrix[iWit][iZwart * enkel], 0.0);
-            punten[iZwart].addPartij();
-            punten[iZwart].addPunt(1.0);
-            matrix[iZwart][iWit * enkel + enkel - 1] =
-              Math.max(matrix[iZwart][iWit * enkel + enkel - 1], 0.0) + 1.0;
-          }
-        }
-      }
+      CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
+                                    false);
 
-      // Bereken Weerstandspunten
-      for (int i = 0; i < noSpelers; i++) {
-        Double weerstandspunten = 0.0;
-        for (int j = 0; j < kolommen; j++) {
-          if (matrix[i][j] > 0.0) {
-            weerstandspunten += punten[j / enkel].getPunten() * matrix[i][j];
-          }
-        }
-        punten[i].setWeerstandspunten(weerstandspunten);
-      }
-
-      // Maak de matrix.html file
+      // Maak het matrix.html bestand.
       output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
                                            + "matrix.html", charsetUit);
       InputStream   instream  = null;
