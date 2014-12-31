@@ -36,7 +36,6 @@ import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
@@ -58,7 +57,6 @@ public final class PgnToLatex {
 
   public static void execute(String[] args) throws PgnException {
     BufferedWriter  output      = null;
-    List<PGN>       partijen    = new ArrayList<PGN>();
     Set<String>     spelers     = new HashSet<String>();
     String          charsetIn   = Charset.defaultCharset().name();
     String          charsetUit  = Charset.defaultCharset().name();
@@ -126,8 +124,8 @@ public final class PgnToLatex {
 
     Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
 
-    partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn,
-                                           new PGNSortByEvent());
+    List<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn,
+                                                     new PGNSortByEvent());
     Collections.sort(partijen);
 
     for (PGN partij: partijen) {
