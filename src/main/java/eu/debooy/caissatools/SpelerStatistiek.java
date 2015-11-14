@@ -173,6 +173,7 @@ public final class SpelerStatistiek {
       Bestand.schrijfRegel(output, "\\usepackage{colortbl}");
       Bestand.schrijfRegel(output, "\\usepackage{longtable}");
       Bestand.schrijfRegel(output, "\\usepackage[T1]{fontenc}");
+      Bestand.schrijfRegel(output, "\\usepackage{textcomp}");
       Bestand.schrijfRegel(output, "\\usepackage[pdftex]{graphicx}");
       Bestand.schrijfRegel(output, "\\usepackage{pdflscape}", 2);
       Bestand.schrijfRegel(output, "\\topmargin =0.mm");
