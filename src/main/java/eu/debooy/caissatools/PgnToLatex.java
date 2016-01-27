@@ -18,8 +18,10 @@ package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
+import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Spelerinfo;
+import eu.debooy.caissa.exceptions.FenException;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.caissa.sorteer.PGNSortByEvent;
 import eu.debooy.doosutils.Arguments;
@@ -31,38 +33,53 @@ import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
 
+import java.io.BufferedReader;
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.Date;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
+import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 
 
 /**
+ * Versie 526 is de laatste goede.
  * @author Marco de Booij
  */
 public final class PgnToLatex {
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
-  private PgnToLatex() {}
+  private static final String KEYWORDS  = "K";
+  private static final String LOGO      = "L";
+  private static final String MATRIX    = "M";
+  private static final String NORMAAL   = "N";
+  private static final String PARTIJEN  = "P";
+  
+  PgnToLatex() {}
 
   public static void execute(String[] args) throws PgnException {
-    BufferedWriter  output      = null;
-    Set<String>     spelers     = new HashSet<String>();
-    String          charsetIn   = Charset.defaultCharset().name();
-    String          charsetUit  = Charset.defaultCharset().name();
-    String          eindDatum   = "0000.00.00";
-    String          hulpDatum   = "";
-    String          startDatum  = "9999.99.99";
+    String              charsetIn   = Charset.defaultCharset().name();
+    String              charsetUit  = Charset.defaultCharset().name();
+    String              eindDatum   = "0000.00.00";
+    String              hulpDatum   = "";
+    BufferedWriter      output      = null;
+    Map<String, String> texPartij   = new HashMap<String, String>();
+    Set<String>         spelers     = new HashSet<String>();
+    String              startDatum  = "9999.99.99";
+    String              template    = "";
 
     Banner.printBanner(resourceBundle.getString("banner.pgntolatex"));
 
@@ -70,7 +87,7 @@ public final class PgnToLatex {
     arguments.setParameters(new String[] {"auteur", "bestand", "charsetin",
                                           "charsetuit", "datum", "enkel",
                                           "halve", "keywords", "logo", "matrix",
-                                          "titel"});
+                                          "template", "titel"});
     arguments.setVerplicht(new String[] {"bestand"});
     if (!arguments.isValid()) {
       help();
@@ -116,9 +133,19 @@ public final class PgnToLatex {
       DoosUtils.nullToEmpty(arguments.getArgument("halve")).split(";");
     String    keywords  = arguments.getArgument("keywords");
     String    logo      = arguments.getArgument("logo");
-    String    metMatrix = arguments.getArgument("matrix");
-    if (DoosUtils.isBlankOrNull(metMatrix)) {
-      metMatrix = DoosConstants.WAAR;
+    boolean   metMatrix = true;
+    if (arguments.hasArgument("matrix")) {
+      metMatrix =
+          DoosConstants.WAAR.equalsIgnoreCase(arguments.getArgument("matrix"));
+    }
+    if (arguments.hasArgument("template")) {
+      template  = arguments.getArgument("template");
+      File  tex = new File(template);
+      if (!tex.exists()) {
+        DoosUtils.foutNaarScherm(
+            MessageFormat.format(resourceBundle.getString("error.template"),
+                                 template));
+      }
     }
     String  titel       = arguments.getArgument("titel");
 
@@ -140,7 +167,7 @@ public final class PgnToLatex {
           || DoosUtils.isNotBlankOrNull(zwart)) {
         spelers.add(zwart);
       }
-  
+
       // Verwerk de 'datums'
       hulpDatum = partij.getTag(CaissaConstants.PGNTAG_EVENTDATE);
       if (DoosUtils.isNotBlankOrNull(hulpDatum)
@@ -173,37 +200,134 @@ public final class PgnToLatex {
     try {
       output  = Bestand.openUitvoerBestand(bestand + ".tex", charsetUit);
 
-      // Maak de Matrix
       int           noSpelers = spelers.size();
       int           kolommen  = (enkel == CaissaConstants.TOERNOOI_MATCH
                                     ? partijen.size() : noSpelers * enkel);
-      Spelerinfo[]  punten    = new Spelerinfo[noSpelers];
-      String[]      namen     = new String[noSpelers];
       double[][]    matrix    = new double[noSpelers][kolommen];
-      int           i         = 0;
-      for (String speler  : spelers) {
-        namen[i++]  = speler;
+      String[]      namen     = new String[noSpelers];
+      Spelerinfo[]  punten    = new Spelerinfo[noSpelers];
+      // Maak de Matrix
+      if (metMatrix) {
+        int i = 0;
+        for (String speler  : spelers) {
+          namen[i++]  = speler;
+        }
+
+        // Initialiseer de Spelerinfo array.
+        Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
+        for (i = 0; i < noSpelers; i++) {
+          punten[i] = new Spelerinfo();
+          punten[i].setNaam(namen[i]);
+        }
+
+        // Bepaal de score en weerstandspunten.
+        CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
+                                      true);
       }
 
-      // Initialiseer de Spelerinfo array.
-      Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
-      for (i = 0; i < noSpelers; i++) {
-        punten[i] = new Spelerinfo();
-        punten[i].setNaam(namen[i]);
+      // Zet de te vervangen waardes.
+      Map<String, String> parameters  = new HashMap<String, String>();
+      parameters.put("Auteur", auteur);
+      parameters.put("Datum", datum);
+      if (DoosUtils.isNotBlankOrNull(keywords)) {
+        parameters.put("Keywords", keywords);
       }
-
-      // Bepaal de score en weerstandspunten.
-      CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
-                                    true);
+      if (DoosUtils.isNotBlankOrNull(logo)) {
+        parameters.put("Logo", logo);
+      }
+      parameters.put("Periode", datumInTitel(startDatum, eindDatum));
+      parameters.put("Titel", titel);
 
       // Maak de .tex file
-      maakHeading(output, auteur, datum, eindDatum, keywords, logo, startDatum,
-                  titel);
-      if (DoosConstants.WAAR.equalsIgnoreCase(metMatrix)) {
-        maakMatrix(output, punten, enkel, matrix, kolommen, noSpelers);
+      BufferedReader  texInvoer = null;
+      if (arguments.hasArgument("template")) {
+        texInvoer = Bestand.openInvoerBestand(template);
+      } else {
+        texInvoer =
+            new BufferedReader(
+                new InputStreamReader(PgnToHtml.class.getClassLoader()
+                    .getResourceAsStream("Caissa.tex")));
       }
-      verwerkPartijen(partijen, output);
-      Bestand.schrijfRegel(output, "\\end{document}");
+
+      String  regel   = null;
+      String  status  = NORMAAL;
+      String  type    = "";
+      while ((regel = texInvoer.readLine()) != null) {
+        if (regel.startsWith("%@Include ")) {
+          type  = regel.split(" ")[1].toLowerCase();
+          switch(type) {
+          case "matrix":
+            if (metMatrix) {
+              maakMatrix(output, punten, enkel, matrix, kolommen, noSpelers);
+            }
+            break;
+          default:
+            break;
+          }
+        } else if (regel.startsWith("%@IncludeStart ")) {
+          type  = regel.split(" ")[1].toLowerCase();
+          switch(type) {
+          case "keywords":
+            status  = KEYWORDS;
+            break;
+          case "logo":
+            status  = LOGO;
+            break;
+          case "matrix":
+            status = MATRIX;
+            break;
+          case "partij":
+            status  = PARTIJEN;
+            break;
+          default:
+            break;
+          }
+        } else if (regel.startsWith("%@IncludeEind ")) {
+          switch (type) {
+          case "partij":
+            verwerkPartijen(partijen, texPartij, output);
+            break;
+          default:
+            break;
+          }
+          status  = NORMAAL;
+          type    = "";
+        } else if (regel.startsWith("%@I18N ")) {
+          Bestand.schrijfRegel(output,
+                               "% "
+                                   + resourceBundle
+                                         .getString(regel.split(" ")[1]
+                                                         .toLowerCase()));
+        } else {
+          switch (status) {
+          case KEYWORDS:
+            if (DoosUtils.isNotBlankOrNull(keywords)) {
+              Bestand.schrijfRegel(output, replaceParameters(regel,
+                                                             parameters));
+            }
+            break;
+          case LOGO:
+            if (DoosUtils.isNotBlankOrNull(logo)) {
+              Bestand.schrijfRegel(output, replaceParameters(regel,
+                                                             parameters));
+            }
+            break;
+          case MATRIX:
+            if (metMatrix) {
+              Bestand.schrijfRegel(output, replaceParameters(regel,
+                                                             parameters));
+            }
+            break;
+          case PARTIJEN:
+            String[]  splits  = regel.substring(1).split("=");
+            texPartij.put(splits[0], splits[1]);
+            break;
+          default:
+            Bestand.schrijfRegel(output, replaceParameters(regel, parameters));
+            break;
+          }
+        }
+      }
     } catch (IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {
@@ -285,6 +409,8 @@ public final class PgnToLatex {
                          resourceBundle.getString("help.logo"), 80);
     DoosUtils.naarScherm("  --matrix     ",
                          resourceBundle.getString("help.matrix"), 80);
+    DoosUtils.naarScherm("  --template   ",
+                         resourceBundle.getString("help.template"), 80);
     DoosUtils.naarScherm("  --titel      ",
                          resourceBundle.getString("help.documenttitel"), 80);
     DoosUtils.naarScherm();
@@ -294,88 +420,21 @@ public final class PgnToLatex {
     DoosUtils.naarScherm();
   }
 
-  // Maak de heading van het .tex bestand.
-  public static void maakHeading(BufferedWriter output, String auteur,
-                                 String datum, String eindDatum,
-                                 Object keywords, Object logo,
-                                 String startDatum, String titel)
-      throws IOException {
-    Bestand.schrijfRegel(output, "\\documentclass[dutch,twocolumn,a4paper,10pt]{report}", 2);
-    Bestand.schrijfRegel(output, "\\usepackage{skak}");
-    Bestand.schrijfRegel(output, "\\usepackage{babel}");
-    Bestand.schrijfRegel(output, "\\usepackage{color}");
-    Bestand.schrijfRegel(output, "\\usepackage{colortbl}");
-    Bestand.schrijfRegel(output, "\\usepackage[T1]{fontenc}");
-    Bestand.schrijfRegel(output, "\\usepackage[pdftex]{graphicx}");
-    Bestand.schrijfRegel(output, "\\usepackage{pdflscape}", 2);
-    Bestand.schrijfRegel(output, "\\topmargin =0.mm");
-    Bestand.schrijfRegel(output, "\\oddsidemargin =0.mm");
-    Bestand.schrijfRegel(output, "\\evensidemargin =0.mm");
-    Bestand.schrijfRegel(output, "\\headheight =0.mm");
-    Bestand.schrijfRegel(output, "\\headsep =0.mm");
-    Bestand.schrijfRegel(output, "\\textheight =265.mm");
-    Bestand.schrijfRegel(output, "\\textwidth =165.mm");
-    Bestand.schrijfRegel(output, "\\parindent =0.mm", 2);
-    Bestand.schrijfRegel(output, "\\newcommand{\\chessgame}[7]{");
-    Bestand.schrijfRegel(output, "  $\\circ$ \\textbf{#1} \\hfill Ronde {#4}\\\\");
-    Bestand.schrijfRegel(output, "  $\\bullet$ \\textbf{#2}\\\\");
-    Bestand.schrijfRegel(output, "  {#3} \\hfill {#6} \\hfill {#5}\\\\");
-    Bestand.schrijfRegel(output, "  \\styleB");
-    Bestand.schrijfRegel(output, "  \\newgame");
-    Bestand.schrijfRegel(output, "  \\mainline{#7} {\\bf #5}");
-    Bestand.schrijfRegel(output, "  \\[\\showboard\\]");
-    Bestand.schrijfRegel(output, "  \\begin{center} \\hrule \\end{center}");
-    Bestand.schrijfRegel(output, "}", 2);
-    Bestand.schrijfRegel(output, "\\newcommand{\\chessempty}[6]{");
-    Bestand.schrijfRegel(output, "  $\\circ$ \\textbf{#1} \\hfill Ronde {#4}\\\\");
-    Bestand.schrijfRegel(output, "  $\\bullet$ \\textbf{#2}\\\\");
-    Bestand.schrijfRegel(output, "  {#3} \\hfill {#6} \\hfill {#5}\\\\");
-    Bestand.schrijfRegel(output, "  \\begin{center} \\hrule \\end{center}");
-    Bestand.schrijfRegel(output, "}", 2);
-    Bestand.schrijfRegel(output, "%" + resourceBundle.getString("latex.splitsmelding"));
-    Bestand.schrijfRegel(output, "\\raggedbottom \\topskip 1\\topskip plus1000pt % like "
-                 + "\\raggedbottom; moreso \\def\\need#1{\\vskip #1"
-                 + "\\penalty0 \\vskip-#1\\relax}", 2);
-    Bestand.schrijfRegel(output, "\\title{" + titel + "}");
-    Bestand.schrijfRegel(output, "\\author{" + auteur + "}");
-    Bestand.schrijfRegel(output, "\\date{" + datum + "}", 2);
-    Bestand.schrijfRegel(output, "\\ifpdf");
-    Bestand.schrijfRegel(output, "\\pdfinfo{");
-    Bestand.schrijfRegel(output, "   /Author (" + auteur + ")");
-    Bestand.schrijfRegel(output, "   /Title  (" + titel + ")");
-    if (DoosUtils.isNotBlankOrNull(keywords)) {
-      Bestand.schrijfRegel(output, "   /Keywords (" + keywords + ")");
-    }
-    Bestand.schrijfRegel(output, "}");
-    Bestand.schrijfRegel(output, "\\fi", 2);
-    Bestand.schrijfRegel(output, "\\begin{document}");
-    if (DoosUtils.isNotBlankOrNull(logo)) {
-      Bestand.schrijfRegel(output, "\\DeclareGraphicsExtensions{.pdf,.png,.gif,.jpg}");
-    }
-    Bestand.schrijfRegel(output, "\\begin{titlepage}");
-    Bestand.schrijfRegel(output, "  \\begin{center}");
-    Bestand.schrijfRegel(output, "    \\huge " + titel + " \\\\");
-    Bestand.schrijfRegel(output, "    \\vspace{1in}");
-    Bestand.schrijfRegel(output, "    \\large " + auteur + " \\\\");
-    if (DoosUtils.isNotBlankOrNull(logo)) {
-      Bestand.schrijfRegel(output, "    \\vspace{2in}");
-      Bestand.schrijfRegel(output, "    \\includegraphics[width=6cm]{"+ logo + "} \\\\");
-    }
-    Bestand.schrijfRegel(output, "    \\vspace{1in}");
-    Bestand.schrijfRegel(output, "    \\large " + datumInTitel(startDatum, eindDatum)
-                 + " \\\\");
-    Bestand.schrijfRegel(output, "  \\end{center}");
-    Bestand.schrijfRegel(output, "\\end{titlepage}");
-    Bestand.schrijfRegel(output, "\\topmargin =-15.mm");
-  }
-
-  // Maak de matrix in het .tex bestand.
+  /**
+   * Maak de matrix in het .tex bestand.
+   * 
+   * @param BufferedWriter output
+   * @param Spelerinfo[] punten
+   * @param int enkel
+   * @param double[][] matrix
+   * @param int kolommen
+   * @param int noSpelers
+   * @throws IOException
+   */
   public static void maakMatrix(BufferedWriter output, Spelerinfo[] punten,
                                 int enkel, double[][] matrix, int kolommen,
                                 int noSpelers)
       throws IOException {
-    Bestand.schrijfRegel(output, "\\begin{landscape}");
-    Bestand.schrijfRegel(output, "  \\begin{center}");
     Bestand.schrijfRegel(output, "    \\begin{tabular} { | c | l | ", 0);
     for (int i = 0; i < kolommen; i++) {
       Bestand.schrijfRegel(output, "c | ", 0);
@@ -449,50 +508,126 @@ public final class PgnToLatex {
       Bestand.schrijfRegel(output, "    \\hline");
     }
     Bestand.schrijfRegel(output, "    \\end{tabular}");
-    Bestand.schrijfRegel(output, "  \\end{center}");
-    Bestand.schrijfRegel(output, "\\end{landscape}");
-    Bestand.schrijfRegel(output, "\\newpage");
   }
 
-  // Zet de partijen in het .tex bestand.
-  public static void verwerkPartijen(List<PGN> partijen, BufferedWriter output)
+  /**
+   * Vervang de parameters door hun waardes.
+   * 
+   * @param String regel
+   * @param Map<String, String> parameters
+   * @return
+   */
+  public static String replaceParameters(String regel,
+                                  Map<String, String> parameters) {
+    String resultaat  = regel;
+    for (Entry<String, String> parameter : parameters.entrySet()) {
+      resultaat = resultaat.replaceAll("@"+parameter.getKey()+"@",
+                                       parameter.getValue());
+    }
+
+    return resultaat;
+  }
+
+  /**
+   * Zet de partijen in het .tex bestand.
+   * 
+   * @param List<PGN> partijen
+   * @param String[] texPartij
+   * @param BufferedWriter output
+   * @throws IOException
+   */
+  public static void verwerkPartijen(List<PGN> partijen,
+                                     Map<String, String> texPartij,
+                                     BufferedWriter output)
       throws IOException {
+    FEN fen = null;
     for (PGN partij: partijen) {
       if (!partij.isBye()) {
-        String wit    = partij.getTag(CaissaConstants.PGNTAG_WHITE);
-        String zwart  = partij.getTag(CaissaConstants.PGNTAG_BLACK);
-        String zetten = partij.getZuivereZetten();
+        String  regel     = "";
+        String  resultaat = partij.getTag(CaissaConstants.PGNTAG_RESULT)
+            .replaceAll("1/2", "\\\\textonehalf");
+        String  zetten    = partij.getZuivereZetten().replaceAll("#", "\\\\#");
         if (DoosUtils.isNotBlankOrNull(zetten)) {
-          Bestand.schrijfRegel(output, "\\begin{chessgame}{" + wit + "}{"
-              + zwart + "}{" + partij.getTag(CaissaConstants.PGNTAG_DATE)
-              + "}{" + partij.getTag(CaissaConstants.PGNTAG_ROUND) + "}{"
-              + partij.getTag("Result").replaceAll("1/2", "\\\\textonehalf")
-              + "}{", 0);
-          String  eco = partij.getTag("ECO");
-          if (DoosUtils.isNotBlankOrNull(eco)) {
-            Bestand.schrijfRegel(output, eco, 0);
-          }
-          if (!partij.isRanked()) {
-            Bestand.schrijfRegel(output, " " +
-                         resourceBundle.getString("tekst.buitencompetitie"), 0);
-          }
-          Bestand.schrijfRegel(output, "}{"+ partij.getZuivereZetten()
-                                   .replaceAll("#", "\\\\#"), 0);
-          Bestand.schrijfRegel(output, "}\\end{chessgame}");
-        } else {
-          if (!partij.getTag(CaissaConstants.PGNTAG_RESULT).equals("*")) {
-            Bestand.schrijfRegel(output, "\\begin{chessempty}{" + wit + "}{"
-                + zwart + "}{" + partij.getTag(CaissaConstants.PGNTAG_DATE)
-                + "}{" + partij.getTag(CaissaConstants.PGNTAG_ROUND) + "}{"
-                + partij.getTag(CaissaConstants.PGNTAG_RESULT)
-                        .replaceAll("1/2", "\\\\textonehalf") + "}{", 0);
-            if (!partij.isRanked()) {
-              Bestand.schrijfRegel(output,
-                  resourceBundle.getString("tekst.buitencompetitie"), 0);
+          if (partij.hasTag("FEN")) {
+            // Partij met andere beginstelling.
+            try {
+              fen = new FEN(partij.getTag("FEN"));
+            } catch (FenException e) {
+              DoosUtils.foutNaarScherm(partij.toString() + " - "
+                                       + e.getMessage());
             }
-            Bestand.schrijfRegel(output, "}\\end{chessempty}");
+            regel = texPartij.get("fenpartij");
+          } else {
+            // 'Gewone' partij.
+            regel = texPartij.get("schaakpartij");
+          }
+        } else {
+          // Partij zonder zetten.
+          if (!resultaat.equals("*")) {
+            regel = texPartij.get("legepartij");
           }
         }
+        int i = regel.indexOf('@');
+        while (i >= 0) {
+          int j = regel.indexOf('@', i+1);
+          if (j > i) {
+            String  tag = regel.substring(i+1, j);
+            if (partij.hasTag(tag)) {
+              switch (tag) {
+              case CaissaConstants.PGNTAG_RESULT:
+                regel = regel.replace("@" + tag + "@",
+                    partij.getTag(tag).replaceAll("1/2", "\\\\textonehalf"));
+                break;
+              case CaissaConstants.PGNTAG_ECO:
+                String extra = "";
+                if (!partij.isRanked()) {
+                  extra = " "
+                      + resourceBundle.getString("tekst.buitencompetitie");
+                }
+                regel = regel.replace("@" + tag + "@",
+                                      partij.getTag(tag) + extra);
+                break;
+              default:
+                regel = regel.replace("@" + tag + "@", partij.getTag(tag));
+                break;
+              }
+            } else {
+              switch (tag) {
+              case CaissaConstants.PGNTAG_ECO:
+                String extra = "";
+                if (!partij.isRanked()) {
+                  extra = " "
+                      + resourceBundle.getString("tekst.buitencompetitie");
+                }
+                regel = regel.replace("@" + tag + "@", extra);
+                break;
+              case "_EnkelZetten":
+                regel = regel.replace("@_EnkelZetten@",
+                                      partij.getZuivereZetten()
+                                            .replace("#", "\\mate"));
+                break;
+              case "_Start":
+                regel = regel.replace("@_Start@",
+                                      fen.getAanZet()+" "+ fen.getZetnummer());
+                break;
+              case "_Stelling":
+                regel = regel.replace("@_Stelling@", fen.getPositie());
+                break;
+              case "_Zetten":
+                regel = regel.replace("@_Zetten@",
+                                      partij.getZetten()
+                                            .replace("#", "\\mate"));
+                break;
+              default:
+                regel = regel.replace("@" + tag + "@", tag);
+                break;
+              }
+            }
+            j = i;
+          }
+          i = regel.indexOf('@', j+1);
+        }
+        Bestand.schrijfRegel(output, regel);
       }
     }
   }
