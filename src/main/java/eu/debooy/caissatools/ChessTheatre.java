@@ -22,7 +22,6 @@ import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.FenException;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.caissa.exceptions.ZetException;
-import eu.debooy.caissa.sorteer.PGNSortByEvent;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.DoosUtils;
@@ -35,11 +34,11 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
+import java.util.TreeSet;
 
 
 /**
@@ -115,9 +114,10 @@ public final class ChessTheatre {
       zip = zip.substring(0, zip.length() - 4);
     }
 
-    List<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn,
-                                                     new PGNSortByEvent());
-    Collections.sort(partijen);
+    Collection<PGN>
+              partijen    = new TreeSet<PGN>(new PGN.byEventComparator());
+    partijen.addAll(CaissaUtils.laadPgnBestand(bestand, charsetIn));
+
     int aantalPartijen  = partijen.size() / maxBestanden + 1;
     if (aantalPartijen < minPartijen) {
       aantalPartijen  = minPartijen;

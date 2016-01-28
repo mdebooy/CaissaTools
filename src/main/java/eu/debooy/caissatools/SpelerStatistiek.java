@@ -34,8 +34,8 @@ import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.text.ParseException;
+import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -98,7 +98,8 @@ public final class SpelerStatistiek {
     String  speler        = arguments.getArgument("speler");
     String  statistiekTag = arguments.getArgument("tag");
 
-    List<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
+    Collection<PGN>
+            partijen      = CaissaUtils.laadPgnBestand(bestand, charsetIn);
 
     for (PGN partij: partijen) {
       String  uitslag = partij.getTag("Result");

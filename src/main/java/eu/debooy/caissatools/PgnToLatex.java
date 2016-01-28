@@ -23,7 +23,6 @@ import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.FenException;
 import eu.debooy.caissa.exceptions.PgnException;
-import eu.debooy.caissa.sorteer.PGNSortByEvent;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Datum;
@@ -42,16 +41,16 @@ import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.Arrays;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
+import java.util.TreeSet;
 
 
 /**
@@ -76,6 +75,7 @@ public final class PgnToLatex {
     String              eindDatum   = "0000.00.00";
     String              hulpDatum   = "";
     BufferedWriter      output      = null;
+    BufferedReader      texInvoer   = null;
     Map<String, String> texPartij   = new HashMap<String, String>();
     Set<String>         spelers     = new HashSet<String>();
     String              startDatum  = "9999.99.99";
@@ -151,9 +151,9 @@ public final class PgnToLatex {
 
     Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
 
-    List<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn,
-                                                     new PGNSortByEvent());
-    Collections.sort(partijen);
+    Collection<PGN>
+            partijen    = new TreeSet<PGN>(new PGN.byEventComparator());
+    partijen.addAll(CaissaUtils.laadPgnBestand(bestand, charsetIn));
 
     for (PGN partij: partijen) {
       // Verwerk de spelers
@@ -239,14 +239,13 @@ public final class PgnToLatex {
       parameters.put("Titel", titel);
 
       // Maak de .tex file
-      BufferedReader  texInvoer = null;
       if (arguments.hasArgument("template")) {
-        texInvoer = Bestand.openInvoerBestand(template);
+        texInvoer = Bestand.openInvoerBestand(template, charsetIn);
       } else {
         texInvoer =
             new BufferedReader(
                 new InputStreamReader(PgnToHtml.class.getClassLoader()
-                    .getResourceAsStream("Caissa.tex")));
+                    .getResourceAsStream("Caissa.tex"), charsetIn));
       }
 
       String  regel   = null;
@@ -336,6 +335,13 @@ public final class PgnToLatex {
       try {
         if (output != null) {
           output.close();
+        }
+      } catch (IOException ex) {
+        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
+      }
+      try {
+        if (texInvoer != null) {
+          texInvoer.close();
         }
       } catch (IOException ex) {
         DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
@@ -518,7 +524,7 @@ public final class PgnToLatex {
    * @return
    */
   public static String replaceParameters(String regel,
-                                  Map<String, String> parameters) {
+                                         Map<String, String> parameters) {
     String resultaat  = regel;
     for (Entry<String, String> parameter : parameters.entrySet()) {
       resultaat = resultaat.replaceAll("@"+parameter.getKey()+"@",
@@ -536,7 +542,7 @@ public final class PgnToLatex {
    * @param BufferedWriter output
    * @throws IOException
    */
-  public static void verwerkPartijen(List<PGN> partijen,
+  public static void verwerkPartijen(Collection<PGN> partijen,
                                      Map<String, String> texPartij,
                                      BufferedWriter output)
       throws IOException {

@@ -37,13 +37,14 @@ import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Collections;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
+import java.util.TreeSet;
 
 
 /**
@@ -181,10 +182,11 @@ public final class ELOBerekenaar {
       }
     }
 
-    List<PGN> partijen  = CaissaUtils.laadPgnBestand(toernooiBestand,
-                                                     charsetIn);
+    Collection<PGN>
+        partijen  = new TreeSet<PGN>(new PGN.defaultComparator());
+    partijen.addAll(CaissaUtils.laadPgnBestand(toernooiBestand, charsetIn));
+
     try {
-      Collections.sort(partijen);
       for (PGN  partij : partijen) {
         if (!partij.isBye()
             && partij.isRated()) {

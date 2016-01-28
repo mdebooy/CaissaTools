@@ -36,9 +36,9 @@ import java.io.InputStream;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
@@ -108,7 +108,7 @@ public final class PgnToHtml {
                                             - File.separator.length());
     }
 
-    List<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
+    Collection<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
 
     try {
       for (PGN partij: partijen) {

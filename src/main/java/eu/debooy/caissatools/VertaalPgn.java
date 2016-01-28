@@ -33,7 +33,7 @@ import java.io.BufferedWriter;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
-import java.util.List;
+import java.util.Collection;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -126,7 +126,7 @@ public final class VertaalPgn {
       return;
     }
 
-    List<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
+    Collection<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
 
     try {
       output  = Bestand.openUitvoerBestand(bestand + "_" + naarTaal + ".pgn",
