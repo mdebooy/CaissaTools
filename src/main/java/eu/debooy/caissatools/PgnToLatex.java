@@ -244,7 +244,7 @@ public final class PgnToLatex {
       } else {
         texInvoer =
             new BufferedReader(
-                new InputStreamReader(PgnToHtml.class.getClassLoader()
+                new InputStreamReader(PgnToLatex.class.getClassLoader()
                     .getResourceAsStream("Caissa.tex"), charsetIn));
       }
 
@@ -452,30 +452,38 @@ public final class PgnToLatex {
       if (enkel < 2) {
         Bestand.schrijfRegel(output, " & " + (i + 1), 0);
       } else {
-        Bestand.schrijfRegel(output, " & \\multicolumn{2}{c|}{" + (i + 1) + "} ", 0);
+        Bestand.schrijfRegel(output,
+                             " & \\multicolumn{2}{c|}{" + (i + 1) + "} ", 0);
       }
     }
-    Bestand.schrijfRegel(output, "& " + resourceBundle.getString("tag.punten"), 0);
+    Bestand.schrijfRegel(output,
+                         "& " + resourceBundle.getString("tag.punten"), 0);
     if (enkel > 0) {
-      Bestand.schrijfRegel(output, " & " + resourceBundle.getString("tag.partijen")
-                   + " & " + resourceBundle.getString("tag.sb"), 0);
+      Bestand.schrijfRegel(output,
+                           " & " + resourceBundle.getString("tag.partijen")
+                             + " & " + resourceBundle.getString("tag.sb"), 0);
     }
     Bestand.schrijfRegel(output, " \\\\");
     Bestand.schrijfRegel(output, "    \\cline{3-" + (2 + kolommen) + "}");
     if (enkel == 2) {
       Bestand.schrijfRegel(output, "    \\multicolumn{2}{|c|}{} & ", 0);
       for (int i = 0; i < noSpelers; i++) {
-        Bestand.schrijfRegel(output, resourceBundle.getString("tag.wit") + " & " +
-                     resourceBundle.getString("tag.zwart") + " & ", 0);
+        Bestand.schrijfRegel(output, resourceBundle.getString("tag.wit")
+                                       + " & "
+                                       + resourceBundle.getString("tag.zwart")
+                                       + " & ", 0);
       }
       Bestand.schrijfRegel(output, "& & \\\\");
     }
     Bestand.schrijfRegel(output, "    \\hline");
     for (int i = 0; i < noSpelers; i++) {
       if (enkel == 0) {
-        Bestand.schrijfRegel(output, "\\multicolumn{2}{|l|}{" + punten[i].getNaam() + "} & ", 0);
+        Bestand.schrijfRegel(output,
+                             "\\multicolumn{2}{|l|}{" + punten[i].getNaam()
+                               + "} & ", 0);
       } else {
-        Bestand.schrijfRegel(output, (i + 1) + " & " + punten[i].getNaam() + " & ", 0);
+        Bestand.schrijfRegel(output,
+                             (i + 1) + " & " + punten[i].getNaam() + " & ", 0);
       }
       for (int j = 0; j < kolommen; j++) {
         if (enkel > 0) {
@@ -503,12 +511,19 @@ public final class PgnToLatex {
         }
         Bestand.schrijfRegel(output, " & ", 0);
       }
-      Bestand.schrijfRegel(output, punten[i].getPunten().intValue()
-                   + Utilities.kwart(punten[i].getPunten()), 0);
+      int     pntn  = punten[i].getPunten().intValue();
+      String  decim = Utilities.kwart(punten[i].getPunten());
+      Bestand.schrijfRegel(output,
+          ((pntn == 0 && "".equals(decim)) || pntn >= 1 ?
+              pntn : "") + decim, 0);
       if (enkel > 0) {
-        Bestand.schrijfRegel(output, " & " + punten[i].getPartijen() + " & ", 0);
-        Bestand.schrijfRegel(output, punten[i].getWeerstandspunten().intValue()
-                     + Utilities.kwart(punten[i].getWeerstandspunten()), 0);
+        int     wpntn   = punten[i].getWeerstandspunten().intValue();
+        String  wdecim  = Utilities.kwart(punten[i].getWeerstandspunten());
+        Bestand.schrijfRegel(output,
+                             " & " + punten[i].getPartijen() + " & ", 0);
+        Bestand.schrijfRegel(output,
+                             ((wpntn == 0 && "".equals(wdecim)) || wpntn >= 1 ?
+                                 wpntn : "") + wdecim, 0);
       }
       Bestand.schrijfRegel(output, " \\\\");
       Bestand.schrijfRegel(output, "    \\hline");
@@ -565,7 +580,11 @@ public final class PgnToLatex {
             regel = texPartij.get("fenpartij");
           } else {
             // 'Gewone' partij.
-            regel = texPartij.get("schaakpartij");
+            if (partij.getZetten().isEmpty()) {
+              regel = texPartij.get("legepartij");
+            } else {
+              regel = texPartij.get("schaakpartij");
+            }
           }
         } else {
           // Partij zonder zetten.

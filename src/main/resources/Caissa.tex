@@ -1,0 +1,101 @@
+\documentclass[twocolumn,a4paper,10pt]{report}
+
+\usepackage{skak}
+\usepackage{texmate}
+\usepackage[dutch]{babel}
+\usepackage{color}
+\usepackage{colortbl}
+\usepackage[T1]{fontenc}
+\usepackage[pdftex]{graphicx}
+\usepackage{pdflscape}
+
+\topmargin =0.mm
+\oddsidemargin =0.mm
+\evensidemargin =0.mm
+\headheight =0.mm
+\headsep =0.mm
+\textheight =265.mm
+\textwidth =165.mm
+\parindent =0.mm
+
+\newcommand{\chessgame}[7]{
+  $\circ$ \textbf{#1} \hfill Ronde {#4}\\
+  $\bullet$ \textbf{#2}\\
+  {#3} \hfill {#6} \hfill {#5}\\
+  \styleB
+  \newgame
+  \mainline{#7} {\bf #5}
+  \[\showboard\]
+  \begin{center} \hrule \end{center}
+}
+
+\newcommand{\fengame}[9]{
+  $\circ$ \textbf{#1} \hfill Ronde {#4}\\
+  $\bullet$ \textbf{#2}\\
+  {#3} \hfill {#6} \hfill {#5}\\
+  \styleB
+  \newgame
+  \position[{#8}] {#9}
+  \[\showboard\]
+  \mainline{#7} {\bf #5}
+  \[\showboard\]
+  \begin{center} \hrule \end{center}
+}
+
+\newcommand{\chessempty}[6]{
+  $\circ$ \textbf{#1} \hfill Ronde {#4}\\
+  $\bullet$ \textbf{#2}\\
+  {#3} \hfill {#6} \hfill {#5}\\
+  \begin{center} \hrule \end{center}
+}
+
+%@I18N latex.splitsmelding
+\raggedbottom \topskip 1\topskip plus1000pt % like \raggedbottom; moreso \def\need#1{\vskip #1\penalty0 \vskip-#1\relax}
+
+\title{@Titel@}
+\author{@Auteur@}
+\date{@Datum@}
+
+\ifpdf
+\pdfinfo{
+   /Author (@Auteur@)
+   /Title  (@Titel@)
+%@IncludeStart Keywords
+   /Keywords (@Keywords@)
+%@IncludeEind Keywords
+}
+\fi
+
+\begin{document}
+%@IncludeStart Logo
+\DeclareGraphicsExtensions{.pdf,.png,.gif,.jpg}
+%@IncludeEind Logo
+\begin{titlepage}
+  \begin{center}
+    \huge @Titel@ \\
+    \vspace{1in}
+    \large @Auteur@ \\
+%@IncludeStart Logo
+    \vspace{2in}
+    \includegraphics[width=6cm]{@Logo@} \\
+%@IncludeEind Logo
+    \vspace{1in}
+    \large @Periode@ \\
+  \end{center}
+\end{titlepage}
+
+%@IncludeStart Matrix
+\topmargin =-15.mm
+\begin{landscape}
+  \begin{center}
+%@Include Matrix
+  \end{center}
+\end{landscape}
+\newpage
+%@IncludeEind Matrix
+%@IncludeStart Partij
+%schaakpartij=\begin{chessgame}{@White@}{@Black@}{@Date@}{@Round@}{@Result@}{@ECO@}{@_Zetten@}\end{chessgame}
+%legepartij=\begin{chessempty}{@White@}{@Black@}{@Date@}{@Round@}{@Result@}{@ECO@}\end{chessempty}
+%fenpartij=\begin{fengame}{@White@}{@Black@}{@Date@}{@Round@}{@Result@}{@ECO@}{@_EnkelZetten@}{@_Start@}{@_Stelling@}\end{fengame}
+%@IncludeEind Partij
+\end{document}

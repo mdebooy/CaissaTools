@@ -55,10 +55,9 @@ public final class PgnToHtml {
   private PgnToHtml() {}
 
   public static void execute(String[] args) throws PgnException {
-    BufferedWriter  output      = null;
-    Set<String>     spelers     = new HashSet<String>();
-    String          charsetIn   = Charset.defaultCharset().name();
-    String          charsetUit  = Charset.defaultCharset().name();
+    Set<String> spelers     = new HashSet<String>();
+    String      charsetIn   = Charset.defaultCharset().name();
+    String      charsetUit  = Charset.defaultCharset().name();
 
     Banner.printBanner(resourceBundle.getString("banner.pgntohtml"));
 
@@ -110,252 +109,117 @@ public final class PgnToHtml {
 
     Collection<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
 
+    for (PGN partij: partijen) {
+      // Verwerk de spelers
+      String  wit   = partij.getTag(CaissaConstants.PGNTAG_WHITE);
+      String  zwart = partij.getTag(CaissaConstants.PGNTAG_BLACK);
+      if (!"bye".equalsIgnoreCase(wit)
+          && DoosUtils.isNotBlankOrNull(wit)) {
+        spelers.add(wit);
+      }
+      if (!"bye".equalsIgnoreCase(zwart)
+          && DoosUtils.isNotBlankOrNull(zwart)) {
+        spelers.add(zwart);
+      }
+    }
+
+    // Maak de Matrix.
+    int           noSpelers = spelers.size();
+    int           kolommen  = noSpelers * enkel;
+    Spelerinfo[]  punten    = new Spelerinfo[noSpelers];
+    String[]      namen     = new String[noSpelers];
+    double[][]    matrix    = new double[noSpelers][noSpelers * enkel];
+    Iterator<String>
+                speler    = spelers.iterator();
+    for (int i = 0; i < noSpelers; i++) {
+      namen[i]  = speler.next();
+      for (int j = 0; j < kolommen; j++) {
+        matrix[i][j] = -1.0;
+      }
+    }
+    Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
+    for (int i = 0; i < noSpelers; i++) {
+      punten[i] = new Spelerinfo();
+      punten[i].setNaam(namen[i]);
+    }
+
+
+    // Bepaal de score en weerstandspunten.
+    CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
+                                  false);
+
+    // Maak het matrix.html bestand.
+    maakMatrix(punten, uitvoerdir + File.separator + "matrix.html",
+               charsetUit, matrix, enkel, noSpelers, kolommen);
+
+    // Maak de index.html file
+    maakIndex(punten, uitvoerdir + File.separator + "index.html", charsetUit,
+              matrix, enkel, noSpelers);
+
+    DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
+                         + bestand);
+    DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
+                         + partijen.size());
+    DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
+                         + uitvoerdir);
+    DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
+  }
+
+  /**
+   * Geeft de 'help' pagina.
+   */
+  protected static void help() {
+    DoosUtils.naarScherm("java -jar CaissaTools.jar PgnToHtml ["
+                         + resourceBundle.getString("label.optie")
+                         + "] --bestand=<"
+                         + resourceBundle.getString("label.pgnbestand") + ">");
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm("  --bestand    ",
+                         resourceBundle.getString("help.bestand"), 80);
+    DoosUtils.naarScherm("  --charsetin  ",
+        MessageFormat.format(resourceBundle.getString("help.charsetin"),
+                             Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --charsetuit ",
+        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
+                             Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --enkel      ",
+                         resourceBundle.getString("help.enkel"), 80);
+    DoosUtils.naarScherm("  --halve      ",
+                         resourceBundle.getString("help.halve"), 80);
+    DoosUtils.naarScherm("  --uitvoerdir ",
+                         resourceBundle.getString("help.uitvoerdir"), 80);
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("help.paramverplicht"),
+                             "bestand"), 80);
+    DoosUtils.naarScherm();
+  }
+
+  public static void maakIndex(Spelerinfo[] punten, String bestand,
+                               String charsetUit, double[][] matrix,
+                               int enkel, int noSpelers) {
+    Arrays.sort(punten);
+    InputStream     instream  = null;
+    BufferedWriter  output    = null;
+    Properties      props     = new Properties();
+    StringBuilder   prefix    = new StringBuilder();
     try {
-      for (PGN partij: partijen) {
-        // Verwerk de spelers
-        String  wit   = partij.getTag(CaissaConstants.PGNTAG_WHITE);
-        String  zwart = partij.getTag(CaissaConstants.PGNTAG_BLACK);
-        if (!"bye".equalsIgnoreCase(wit)
-            && DoosUtils.isNotBlankOrNull(wit)) {
-          spelers.add(wit);
-        }
-        if (!"bye".equalsIgnoreCase(zwart)
-            && DoosUtils.isNotBlankOrNull(zwart)) {
-          spelers.add(zwart);
-        }
-      }
-
-      // Maak de Matrix.
-      int           noSpelers = spelers.size();
-      int           kolommen  = noSpelers * enkel;
-      Spelerinfo[]  punten    = new Spelerinfo[noSpelers];
-      String[]      namen     = new String[noSpelers];
-      double[][]    matrix    = new double[noSpelers][noSpelers * enkel];
-      Iterator<String>
-                  speler    = spelers.iterator();
-      for (int i = 0; i < noSpelers; i++) {
-        namen[i]  = speler.next();
-        for (int j = 0; j < kolommen; j++) {
-          matrix[i][j] = -1.0;
-        }
-      }
-      Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
-      for (int i = 0; i < noSpelers; i++) {
-        punten[i] = new Spelerinfo();
-        punten[i].setNaam(namen[i]);
-      }
-
-
-      // Bepaal de score en weerstandspunten.
-      CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
-                                    false);
-
-      // Maak het matrix.html bestand.
-      output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
-                                           + "matrix.html", charsetUit);
-      InputStream   instream  = null;
-      Properties    props     = new Properties();
-      StringBuilder prefix    = new StringBuilder();
-
+      output    = Bestand.openUitvoerBestand(bestand, charsetUit);
       instream  = PgnToHtml.class.getClassLoader()
-                           .getResourceAsStream("matrix.properties");
+                           .getResourceAsStream("index.properties");
       props.load(instream);
-
+  
       if (props.containsKey("indent")) {
         int indent = Integer.valueOf(props.getProperty("indent"));
         while (prefix.length() < indent) {
           prefix.append(" ");
         }
       }
-
+  
       // Start de tabel
       Bestand.schrijfRegel(output, prefix + props.getProperty("table.begin"));
       // De colgroup
       int k = 1;
-      if (props.containsKey("table.colgroup.begin." + k)) {
-        while (props.containsKey("table.colgroup.begin." + k)) {
-          Bestand.schrijfRegel(output,
-              prefix + props.getProperty("table.colgroup.begin." + k));
-          k++;
-        }
-      }
-      for (int i = 0; i < noSpelers; i++) {
-        if (enkel == 1) {
-          Bestand.schrijfRegel(output,
-                               prefix
-                                 + props.getProperty("table.colgroup.enkel"));
-        } else {
-          Bestand.schrijfRegel(output,
-              prefix
-                + props.getProperty("table.colgroup.dubbel"));
-        }
-      }
-      k = 1;
-      if (props.containsKey("table.colgroup.eind." + k)) {
-        while (props.containsKey("table.colgroup.eind." + k)) {
-          Bestand.schrijfRegel(output,
-              prefix + props.getProperty("table.colgroup.eind." + k));
-          k++;
-        }
-      }
-      // De thead
-      k = 1;
-      if (props.containsKey("table.head.begin." + k)) {
-        while (props.containsKey("table.head.begin." + k)) {
-          Bestand.schrijfRegel(output,
-              prefix + props.getProperty("table.head.begin." + k));
-          k++;
-        }
-      }
-      for (int i = 0; i < noSpelers; i++) {
-        if (enkel == 1) {
-          Bestand.schrijfRegel(output,
-              prefix
-                + MessageFormat.format(props.getProperty("table.head.enkel"),
-                                       (i + 1)));
-        } else {
-          Bestand.schrijfRegel(output,
-              prefix
-                + MessageFormat.format(props.getProperty("table.head.dubbel"),
-                                       (i + 1)));
-        }
-      }
-      Bestand.schrijfRegel(output,
-          prefix
-            + MessageFormat.format(props.getProperty("table.head.punten"),
-                                   resourceBundle.getString("tag.punten")));
-      Bestand.schrijfRegel(output,
-          prefix
-            + MessageFormat.format(props.getProperty("table.head.partijen"),
-                                   resourceBundle.getString("tag.partijen")));
-      Bestand.schrijfRegel(output,
-          prefix + MessageFormat.format(props.getProperty("table.head.sb"),
-                                        resourceBundle.getString("tag.sb")));
-      if (enkel == 2) {
-        Bestand.schrijfRegel(output,
-            prefix + props.getProperty("table.head.eind.1"));
-        Bestand.schrijfRegel(output,
-            prefix + props.getProperty("table.head.begin.2"));
-        Bestand.schrijfRegel(output,
-            prefix + props.getProperty("table.head.begin.3"));
-        for (int i = 0; i < noSpelers; i++) {
-          Bestand.schrijfRegel(output,
-              prefix
-                + MessageFormat.format(props.getProperty("table.head.dubbel2"),
-                                       resourceBundle.getString("tag.wit"),
-                                       resourceBundle.getString("tag.zwart")));
-        }
-        Bestand.schrijfRegel(output,
-            prefix
-              + MessageFormat.format(props.getProperty("table.head.punten"),
-                                     ""));
-        Bestand.schrijfRegel(output,
-            prefix
-              + MessageFormat.format(props.getProperty("table.head.partijen"),
-                                     ""));
-        Bestand.schrijfRegel(output,
-            prefix + MessageFormat.format(props.getProperty("table.head.sb"),
-                                          ""));
-      }
-      k = 1;
-      if (props.containsKey("table.head.eind." + k)) {
-        while (props.containsKey("table.head.eind." + k)) {
-          Bestand.schrijfRegel(output,
-              prefix + props.getProperty("table.head.eind." + k));
-          k++;
-        }
-      }
-      // De tbody
-      Bestand.schrijfRegel(output,
-                           prefix + props.getProperty("table.body.begin"));
-      for (int i = 0; i < noSpelers; i++) {
-        Bestand.schrijfRegel(output,
-            prefix + props.getProperty("table.body.start"));
-        Bestand.schrijfRegel(output,
-            prefix + MessageFormat.format(props.getProperty("table.body.nr"),
-                                          (i + 1)));
-        Bestand.schrijfRegel(output,
-            prefix + MessageFormat.format(props.getProperty("table.body.naam"),
-                         swapNaam(punten[i].getNaam())));
-        for (int j = 0; j < kolommen; j++) {
-          if ((j / enkel) * enkel == j ) {
-            Bestand.schrijfRegel(output, prefix + "      ", 0);
-          }
-          if (i == j / enkel) {
-            Bestand.schrijfRegel(output, props.getProperty("table.body.zelf"),
-                                 0);
-          } else {
-            // -1 is een niet gespeelde partij.
-            if ((j / enkel) * enkel == j) {
-              Bestand.schrijfRegel(output,
-                  MessageFormat.format(props.getProperty("table.body.wit"),
-                      (matrix[i][j] < 0.0 ? "" :
-                        (matrix[i][j] == 0.5 ?
-                           Utilities.kwart(matrix[i][j]) :
-                             "" + ((Double)matrix[i][j]).intValue()
-                             + Utilities.kwart(matrix[i][j])))),
-                                           0);
-            } else {
-              Bestand.schrijfRegel(output,
-                  MessageFormat.format(props.getProperty("table.body.zwart"),
-                      (matrix[i][j] < 0.0 ? "" :
-                        (matrix[i][j] == 0.5 ?
-                           Utilities.kwart(matrix[i][j]) :
-                             "" + ((Double)matrix[i][j]).intValue()
-                             + Utilities.kwart(matrix[i][j])))),
-                                           0);
-            }
-          }
-          if ((j / enkel) * enkel != j ) {
-            Bestand.schrijfRegel(output, "");
-          }
-        }
-        Bestand.schrijfRegel(output,
-            prefix
-              + MessageFormat.format(props.getProperty("table.body.punten"),
-                                     (punten[i].getPunten() == 0.5 ?
-                                         "" : punten[i].getPunten().intValue()),
-                                     Utilities.kwart(punten[i].getPunten())));
-        Bestand.schrijfRegel(output,
-            prefix
-              + MessageFormat.format(props.getProperty("table.body.partijen"),
-                                     punten[i].getPartijen()));
-        Bestand.schrijfRegel(output,
-            prefix + MessageFormat.format(props.getProperty("table.body.sb"),
-                         (punten[i].getWeerstandspunten() == 0.5 ?
-                             "" : punten[i].getWeerstandspunten().intValue()),
-                         Utilities.kwart(punten[i].getWeerstandspunten())));
-        Bestand.schrijfRegel(output,
-                             prefix + props.getProperty("table.body.stop"));
-      }
-      // Alles netjes afsluiten
-      Bestand.schrijfRegel(output,
-                           prefix + props.getProperty("table.body.eind"));
-      Bestand.schrijfRegel(output, prefix + props.getProperty("table.eind"));
-
-      output.close();
-
-      // Maak de index.html file
-      Arrays.sort(punten);
-      output    = Bestand.openUitvoerBestand(uitvoerdir + File.separator
-                                             + "index.html", charsetUit);
-      prefix    = new StringBuilder();
-      instream  = PgnToHtml.class.getClassLoader()
-                           .getResourceAsStream("index.properties");
-      props     = new Properties();
-      props.load(instream);
-
-      if (props.containsKey("indent")) {
-        int indent = Integer.valueOf(props.getProperty("indent"));
-        while (prefix.length() < indent) {
-          prefix.append(" ");
-        }
-      }
-
-      // Start de tabel
-      Bestand.schrijfRegel(output, prefix + props.getProperty("table.begin"));
-      // De colgroup
-      k = 1;
       if (props.containsKey("table.colgroup." + k)) {
         while (props.containsKey("table.colgroup." + k)) {
           Bestand.schrijfRegel(output,
@@ -402,31 +266,7 @@ public final class PgnToHtml {
       Bestand.schrijfRegel(output,
                            prefix + props.getProperty("table.body.begin"));
       for (int i = 0; i < noSpelers; i++) {
-        Bestand.schrijfRegel(output,
-                             prefix + props.getProperty("table.body.start"));
-        Bestand.schrijfRegel(output,
-            prefix + MessageFormat.format(props.getProperty("table.body.nr"),
-                                          (i + 1)));
-        Bestand.schrijfRegel(output,
-            prefix + MessageFormat.format(props.getProperty("table.body.naam"),
-                                          swapNaam(punten[i].getNaam())));
-        Bestand.schrijfRegel(output,
-            prefix
-              + MessageFormat.format(props.getProperty("table.body.punten"),
-                                     (punten[i].getPunten() == 0.5 ?
-                                         "" : punten[i].getPunten().intValue()),
-                                     Utilities.kwart(punten[i].getPunten())));
-        Bestand.schrijfRegel(output,
-            prefix
-              + MessageFormat.format(props.getProperty("table.body.partijen"),
-                                     punten[i].getPartijen()));
-        Bestand.schrijfRegel(output,
-            prefix + MessageFormat.format(props.getProperty("table.body.sb"),
-                         (punten[i].getWeerstandspunten() == 0.5 ?
-                             "" : punten[i].getWeerstandspunten().intValue()),
-                         Utilities.kwart(punten[i].getWeerstandspunten())));
-        Bestand.schrijfRegel(output,
-                             prefix + props.getProperty("table.body.stop"));
+        maakIndexBody(output, prefix.toString(), props, punten[i], i + 1);
       }
       // Alles netjes afsluiten
       Bestand.schrijfRegel(output,
@@ -445,44 +285,227 @@ public final class PgnToHtml {
         DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
       }
     }
-
-    DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + bestand);
-    DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
-                         + partijen.size());
-    DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
-                         + uitvoerdir);
-    DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
   }
 
-  /**
-   * Geeft de 'help' pagina.
-   */
-  protected static void help() {
-    DoosUtils.naarScherm("java -jar CaissaTools.jar PgnToHtml ["
-                         + resourceBundle.getString("label.optie")
-                         + "] --bestand=<"
-                         + resourceBundle.getString("label.pgnbestand") + ">");
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm("  --bestand    ",
-                         resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("  --charsetin  ",
-        MessageFormat.format(resourceBundle.getString("help.charsetin"),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --charsetuit ",
-        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --enkel      ",
-                         resourceBundle.getString("help.enkel"), 80);
-    DoosUtils.naarScherm("  --halve      ",
-                         resourceBundle.getString("help.halve"), 80);
-    DoosUtils.naarScherm("  --uitvoerdir ",
-                         resourceBundle.getString("help.uitvoerdir"), 80);
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("help.paramverplicht"),
-                             "bestand"), 80);
-    DoosUtils.naarScherm();
+  public static void maakIndexBody(BufferedWriter output, String prefix,
+                                   Properties props, Spelerinfo speler,
+                                   int plaats) throws IOException {
+    Bestand.schrijfRegel(output,
+        prefix + props.getProperty("table.body.start"));
+    Bestand.schrijfRegel(output,
+        prefix + MessageFormat.format(props.getProperty("table.body.nr"),
+                                      (plaats)));
+    Bestand.schrijfRegel(output,
+        prefix + MessageFormat.format(props.getProperty("table.body.naam"),
+                                      swapNaam(speler.getNaam())));
+    int     pntn  = speler.getPunten().intValue();
+    String  decim = Utilities.kwart(speler.getPunten());
+    Bestand.schrijfRegel(output,
+        prefix + MessageFormat.format(props.getProperty("table.body.punten"),
+            ((pntn == 0 && "".equals(decim)) || pntn >= 1 ? pntn : decim),
+            (pntn == 0 && "".equals(decim)) || pntn >= 1 ? decim : ""));
+    Bestand.schrijfRegel(output,
+        prefix + MessageFormat.format(props.getProperty("table.body.partijen"),
+                                      speler.getPartijen()));
+    int     wpntn   = speler.getWeerstandspunten().intValue();
+    String  wdecim  = Utilities.kwart(speler.getWeerstandspunten());
+    Bestand.schrijfRegel(output,
+        prefix + MessageFormat.format(props.getProperty("table.body.sb"),
+            ((wpntn == 0 && "".equals(wdecim)) || wpntn >= 1 ? wpntn : wdecim),
+            (wpntn == 0 && "".equals(wdecim)) || wpntn >= 1 ? wdecim : ""));
+    Bestand.schrijfRegel(output, prefix + props.getProperty("table.body.stop"));
+  }
+
+  public static void maakMatrix(Spelerinfo[]  punten, String bestand,
+                                String charsetUit, double[][] matrix,
+                                int enkel, int noSpelers, int kolommen) {
+    InputStream     instream  = null;
+    BufferedWriter  output    = null;
+    Properties      props     = new Properties();
+    StringBuilder   prefix    = new StringBuilder();
+    try {
+      output  = Bestand.openUitvoerBestand(bestand, charsetUit);
+      instream = PgnToHtml.class.getClassLoader()
+          .getResourceAsStream("matrix.properties");
+      props.load(instream);
+  
+      if (props.containsKey("indent")) {
+        int indent = Integer.valueOf(props.getProperty("indent"));
+        while (prefix.length() < indent) {
+          prefix.append(" ");
+        }
+      }
+  
+      // Start de tabel
+      Bestand.schrijfRegel(output, prefix + props.getProperty("table.begin"));
+      // De colgroup
+      int k = 1;
+      if (props.containsKey("table.colgroup.begin." + k)) {
+        while (props.containsKey("table.colgroup.begin." + k)) {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.colgroup.begin." + k));
+          k++;
+        }
+      }
+      for (int i = 0; i < noSpelers; i++) {
+        if (enkel == 1) {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.colgroup.enkel"));
+        } else {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.colgroup.dubbel"));
+        }
+      }
+      k = 1;
+      if (props.containsKey("table.colgroup.eind." + k)) {
+        while (props.containsKey("table.colgroup.eind." + k)) {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.colgroup.eind." + k));
+          k++;
+        }
+      }
+      // De thead
+      k = 1;
+      if (props.containsKey("table.head.begin." + k)) {
+        while (props.containsKey("table.head.begin." + k)) {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.head.begin." + k));
+          k++;
+        }
+      }
+      for (int i = 0; i < noSpelers; i++) {
+        if (enkel == 1) {
+          Bestand.schrijfRegel(output, prefix + MessageFormat
+              .format(props.getProperty("table.head.enkel"), (i + 1)));
+        } else {
+          Bestand.schrijfRegel(output, prefix + MessageFormat
+              .format(props.getProperty("table.head.dubbel"), (i + 1)));
+        }
+      }
+      Bestand.schrijfRegel(output,
+          prefix + MessageFormat.format(props.getProperty("table.head.punten"),
+              resourceBundle.getString("tag.punten")));
+      Bestand.schrijfRegel(output,
+          prefix + MessageFormat.format(
+              props.getProperty("table.head.partijen"),
+              resourceBundle.getString("tag.partijen")));
+      Bestand.schrijfRegel(output,
+          prefix + MessageFormat.format(props.getProperty("table.head.sb"),
+              resourceBundle.getString("tag.sb")));
+      if (enkel == 2) {
+        Bestand.schrijfRegel(output,
+            prefix + props.getProperty("table.head.eind.1"));
+        Bestand.schrijfRegel(output,
+            prefix + props.getProperty("table.head.begin.2"));
+        Bestand.schrijfRegel(output,
+            prefix + props.getProperty("table.head.begin.3"));
+        for (int i = 0; i < noSpelers; i++) {
+          Bestand.schrijfRegel(output,
+              prefix
+                  + MessageFormat.format(
+                      props.getProperty("table.head.dubbel2"),
+                      resourceBundle.getString("tag.wit"),
+                      resourceBundle.getString("tag.zwart")));
+        }
+        Bestand.schrijfRegel(output, prefix
+            + MessageFormat.format(props.getProperty("table.head.punten"), ""));
+        Bestand.schrijfRegel(output, prefix
+            + MessageFormat.format(props.getProperty("table.head.partijen"),
+                                   ""));
+        Bestand.schrijfRegel(output, prefix
+            + MessageFormat.format(props.getProperty("table.head.sb"), ""));
+      }
+      k = 1;
+      if (props.containsKey("table.head.eind." + k)) {
+        while (props.containsKey("table.head.eind." + k)) {
+          Bestand.schrijfRegel(output,
+              prefix + props.getProperty("table.head.eind." + k));
+          k++;
+        }
+      }
+      // De tbody
+      Bestand.schrijfRegel(output,
+          prefix + props.getProperty("table.body.begin"));
+      for (int i = 0; i < noSpelers; i++) {
+        maakMatrixBody(output, prefix.toString(), props, punten[i], i,
+                       enkel, kolommen, matrix);
+      }
+      // Alles netjes afsluiten
+      Bestand.schrijfRegel(output, prefix
+                                   + props.getProperty("table.body.eind"));
+      Bestand.schrijfRegel(output, prefix + props.getProperty("table.eind"));
+    } catch (IOException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+    } catch (BestandException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+    } finally {
+      try {
+        if (output != null) {
+          output.close();
+        }
+      } catch (IOException ex) {
+        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
+      }
+    }
+  }
+
+  public static void maakMatrixBody(BufferedWriter output, String prefix,
+                                    Properties props, Spelerinfo speler,
+                                    int i, int enkel, int kolommen,
+                                    double[][] matrix) throws IOException {
+    Bestand.schrijfRegel(output,
+        prefix + props.getProperty("table.body.start"));
+    Bestand.schrijfRegel(output, prefix
+        + MessageFormat.format(props.getProperty("table.body.nr"), (i + 1)));
+    Bestand.schrijfRegel(output,
+        prefix + MessageFormat.format(props.getProperty("table.body.naam"),
+                                      swapNaam(speler.getNaam())));
+    for (int j = 0; j < kolommen; j++) {
+      if ((j / enkel) * enkel == j) {
+        Bestand.schrijfRegel(output, prefix + "      ", 0);
+      }
+      if (i == j / enkel) {
+        Bestand.schrijfRegel(output, props.getProperty("table.body.zelf"), 0);
+      } else {
+        // -1 is een niet gespeelde partij.
+        if ((j / enkel) * enkel == j) {
+          Bestand.schrijfRegel(output,
+              MessageFormat.format(props.getProperty("table.body.wit"),
+                  (matrix[i][j] < 0.0 ? ""
+                      : (matrix[i][j] == 0.5 ? Utilities.kwart(matrix[i][j])
+                          : "" + ((Double) matrix[i][j]).intValue()
+                              + Utilities.kwart(matrix[i][j])))),
+              0);
+        } else {
+          Bestand.schrijfRegel(output,
+              MessageFormat.format(props.getProperty("table.body.zwart"),
+                  (matrix[i][j] < 0.0 ? ""
+                      : (matrix[i][j] == 0.5 ? Utilities.kwart(matrix[i][j])
+                          : "" + ((Double) matrix[i][j]).intValue()
+                              + Utilities.kwart(matrix[i][j])))),
+              0);
+        }
+      }
+      if ((j / enkel) * enkel != j) {
+        Bestand.schrijfRegel(output, "");
+      }
+    }
+    int     pntn  = speler.getPunten().intValue();
+    String  decim = Utilities.kwart(speler.getPunten());
+    Bestand.schrijfRegel(output,
+        prefix + MessageFormat.format(props.getProperty("table.body.punten"),
+            ((pntn == 0 && "".equals(decim)) || pntn >= 1 ? pntn : decim),
+            (pntn == 0 && "".equals(decim)) || pntn >= 1 ? decim : ""));
+    Bestand.schrijfRegel(output, prefix + MessageFormat.format(
+        props.getProperty("table.body.partijen"), speler.getPartijen()));
+    int     wpntn   = speler.getWeerstandspunten().intValue();
+    String  wdecim  = Utilities.kwart(speler.getWeerstandspunten());
+    Bestand.schrijfRegel(output,
+        prefix + MessageFormat.format(props.getProperty("table.body.sb"),
+            ((wpntn == 0 && "".equals(wdecim)) || wpntn >= 1 ? wpntn : wdecim),
+            (wpntn == 0 && "".equals(wdecim)) || wpntn >= 1 ? wdecim : ""));
+    Bestand.schrijfRegel(output,
+        prefix + props.getProperty("table.body.stop"));
   }
 
   private static String swapNaam(String naam) {
