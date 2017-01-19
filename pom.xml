@@ -14,8 +14,8 @@
   <description>Verschillende tools voor schakers.</description>
   <inceptionYear>2008</inceptionYear>
   <scm>
-    <connection>scm:svn:http://svn.debooy.eu/svn/CaissaTools/trunk</connection>
-    <developerConnection>scm:svn:http://svn.debooy.eu/svn/CaissaTools/trunk</developerConnection>
+    <connection>scm:git:ssh://ptah.debooy.eu/srv/git/debooy/CaissaTools.git</connection>
+    <developerConnection>scm:git:ssh://ptah.debooy.eu/srv/git/debooy/CaissaTools.git</developerConnection>
   </scm>
 
   <developers>
