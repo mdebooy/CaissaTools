@@ -150,14 +150,18 @@ public final class ELOBerekenaar {
         spelerinfo.setElo(Integer.valueOf(veld[1]));
         spelerinfo.setNaam(veld[0]);
         spelerinfo.setPartijen(Integer.valueOf(veld[2]));
+        spelerinfo.setEerstePartij(Datum.toDate(veld[3],
+                                   CaissaConstants.PGN_DATUM_FORMAAT));
+        spelerinfo.setLaatstePartij(Datum.toDate(veld[4],
+                                    CaissaConstants.PGN_DATUM_FORMAAT));
         if (spelerinfo.getPartijen() > ELO.MIN_PARTIJEN) {
-          spelerinfo.setOfficieel(Datum.toDate(veld[3],
+          spelerinfo.setOfficieel(Datum.toDate(veld[5],
                                   CaissaConstants.PGN_DATUM_FORMAAT));
-          spelerinfo.setMinElo(Integer.valueOf(veld[4]));
-          spelerinfo.setMinDatum(Datum.toDate(veld[5],
+          spelerinfo.setMinElo(Integer.valueOf(veld[6]));
+          spelerinfo.setMinDatum(Datum.toDate(veld[7],
                                  CaissaConstants.PGN_DATUM_FORMAAT));
-          spelerinfo.setMaxElo(Integer.valueOf(veld[6]));
-          spelerinfo.setMaxDatum(Datum.toDate(veld[7],
+          spelerinfo.setMaxElo(Integer.valueOf(veld[8]));
+          spelerinfo.setMaxDatum(Datum.toDate(veld[9],
                                  CaissaConstants.PGN_DATUM_FORMAAT));
         }
         spelerinfo.setSpelerId(spelerId);
@@ -203,11 +207,22 @@ public final class ELOBerekenaar {
               }
               uitslag++;
             }
+            try {
+              eloDatum  =
+                  Datum.toDate(datum, CaissaConstants.PGN_DATUM_FORMAAT);
+            } catch (ParseException e) {
+              DoosUtils.foutNaarScherm(
+                  MessageFormat.format(
+                      resourceBundle.getString("error.foutedatum"),
+                      datum) + " [" + e.getLocalizedMessage() + "].");
+              eloDatum  = null;
+            }
             if (uitslag < 3) {
               if (!spelers.containsKey(wit)) {
                 int spelerId  = spelers.size();
                 spelers.put(wit, spelerId);
                 Spelerinfo  spelerinfo  = new Spelerinfo();
+                spelerinfo.setEerstePartij(eloDatum);
                 spelerinfo.setElo(startElo);
                 spelerinfo.setNaam(wit);
                 spelerinfo.setPartijen(Integer.valueOf(0));
@@ -218,6 +233,7 @@ public final class ELOBerekenaar {
                 int spelerId  = spelers.size();
                 spelers.put(zwart, spelerId);
                 Spelerinfo  spelerinfo  = new Spelerinfo();
+                spelerinfo.setEerstePartij(eloDatum);
                 spelerinfo.setElo(startElo);
                 spelerinfo.setNaam(zwart);
                 spelerinfo.setPartijen(Integer.valueOf(0));
@@ -248,18 +264,8 @@ public final class ELOBerekenaar {
                                    + spelerinfos.get(zwartId).getPartijen());
                 geschiedenis.newLine();
               }
-              // Min and Max ELO
-              try {
-                eloDatum  =
-                    Datum.toDate(datum, CaissaConstants.PGN_DATUM_FORMAAT);
-              } catch (ParseException e) {
-                DoosUtils.foutNaarScherm(
-                    MessageFormat.format(
-                        resourceBundle.getString("error.foutedatum"),
-                        datum) + " [" + e.getLocalizedMessage() + "].");
-                eloDatum  = null;
-              }
               // Wit
+              spelerinfos.get(witId).setLaatstePartij(eloDatum);
               aantal    = spelerinfos.get(witId).getPartijen();
               witElo    = spelerinfos.get(witId).getElo();
               if (aantal == ELO.MIN_PARTIJEN + 1) {
@@ -280,6 +286,7 @@ public final class ELOBerekenaar {
                 }
               }
               // Zwart
+              spelerinfos.get(zwartId).setLaatstePartij(eloDatum);
               aantal    = spelerinfos.get(zwartId).getPartijen();
               zwartElo  = spelerinfos.get(zwartId).getElo();
               if (aantal == ELO.MIN_PARTIJEN + 1) {
@@ -312,7 +319,8 @@ public final class ELOBerekenaar {
       output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
                                            + spelerBestand, charsetUit);
       StringBuilder lijn  = new StringBuilder();
-      lijn.append("\"speler\",\"elo\",\"partijen\",\"eersteEloDatum\",")
+      lijn.append("\"speler\",\"elo\",\"partijen\",")
+          .append("\"eerstePartij\",\"laatstePartij\",\"eersteEloDatum\",")
           .append("\"minElo\",\"minEloDatum\",\"maxElo\",\"maxEloDatum\"");
       Bestand.schrijfRegel(output, lijn.toString());
       for (Integer spelerId  : spelers.values()) {
@@ -322,7 +330,15 @@ public final class ELOBerekenaar {
           lijn.append("\"")
               .append(spelerinfos.get(spelerId).getNaam()).append("\",")
               .append(spelerinfos.get(spelerId).getElo()).append(",")
-              .append(aantal).append(",");
+              .append(aantal).append(",")
+              .append(Datum.fromDate(spelerinfos.get(spelerId)
+                                                .getEerstePartij(), 
+                                     CaissaConstants.PGN_DATUM_FORMAAT))
+              .append(",")
+              .append(Datum.fromDate(spelerinfos.get(spelerId)
+                                                .getLaatstePartij(), 
+                                     CaissaConstants.PGN_DATUM_FORMAAT))
+              .append(",");
           if (spelerinfos.get(spelerId).getPartijen() <= ELO.MIN_PARTIJEN) {
             lijn.append(",,,,");
           } else {
