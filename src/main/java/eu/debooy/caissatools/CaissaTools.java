@@ -69,6 +69,14 @@ public final class CaissaTools {
       }
       return;
     }
+    if ("pgntojson".equalsIgnoreCase(commando)) {
+      try {
+        PgnToJson.execute(commandoArgs);
+      } catch (PgnException e) {
+        DoosUtils.foutNaarScherm(e.getMessage());
+      }
+      return;
+    }
     if ("pgntolatex".equalsIgnoreCase(commando)) {
       try {
         PgnToLatex.execute(commandoArgs);
@@ -112,6 +120,8 @@ public final class CaissaTools {
                          resourceBundle.getString("help.eloberekenaar"), 80);
     DoosUtils.naarScherm("  PgnToHtml         ",
                          resourceBundle.getString("help.pgntohtml"), 80);
+    DoosUtils.naarScherm("  PgnToJson         ",
+                         resourceBundle.getString("help.pgntojson"), 80);
     DoosUtils.naarScherm("  PgnToLatex        ",
                          resourceBundle.getString("help.pgntolatex"), 80);
     DoosUtils.naarScherm("  StartPgn          ",
@@ -126,6 +136,8 @@ public final class CaissaTools {
     ELOBerekenaar.help();
     DoosUtils.naarScherm("");
     PgnToHtml.help();
+    DoosUtils.naarScherm("");
+    PgnToJson.help();
     DoosUtils.naarScherm("");
     PgnToLatex.help();
     DoosUtils.naarScherm("");
