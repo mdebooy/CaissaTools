@@ -86,7 +86,8 @@ public final class PgnToLatex {
     Arguments arguments = new Arguments(args);
     arguments.setParameters(new String[] {"auteur", "bestand", "charsetin",
                                           "charsetuit", "datum", "enkel",
-                                          "halve", "keywords", "logo", "matrix",
+                                          "halve", "keywords", "logo",
+                                          "matrix", "matrixopstand",
                                           "template", "titel"});
     arguments.setVerplicht(new String[] {"bestand"});
     if (!arguments.isValid()) {
@@ -105,7 +106,7 @@ public final class PgnToLatex {
     if (arguments.hasArgument("charsetuit")) {
       charsetUit  = arguments.getArgument("charsetuit");
     }
-    String    datum     = arguments.getArgument("datum");
+    String    datum         = arguments.getArgument("datum");
     if (DoosUtils.isBlankOrNull(datum)) {
       try {
         datum = Datum.fromDate(new Date(), "dd/MM/yyyy HH:mm:ss");
@@ -115,7 +116,7 @@ public final class PgnToLatex {
     }
     // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
     // 1 is default waarde.
-    int       enkel     = 1;
+    int       enkel         = 1;
     if (arguments.hasArgument("enkel")) {
       switch (arguments.getArgument("enkel")) {
       case DoosConstants.WAAR:
@@ -129,14 +130,20 @@ public final class PgnToLatex {
         break;
       }
     }
-    String[]  halve     =
+    String[]  halve         =
       DoosUtils.nullToEmpty(arguments.getArgument("halve")).split(";");
-    String    keywords  = arguments.getArgument("keywords");
-    String    logo      = arguments.getArgument("logo");
-    boolean   metMatrix = true;
+    String    keywords      = arguments.getArgument("keywords");
+    String    logo          = arguments.getArgument("logo");
+    boolean   metMatrix     = true;
     if (arguments.hasArgument("matrix")) {
       metMatrix =
           DoosConstants.WAAR.equalsIgnoreCase(arguments.getArgument("matrix"));
+    }
+    boolean   matrixOpStand = false;
+    if (arguments.hasArgument("matrixopstand")) {
+      matrixOpStand =
+          DoosConstants.WAAR.equalsIgnoreCase(
+              arguments.getArgument("matrixopstand"));
     }
     if (arguments.hasArgument("template")) {
       template  = arguments.getArgument("template");
@@ -222,7 +229,7 @@ public final class PgnToLatex {
 
         // Bepaal de score en weerstandspunten.
         CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
-                                      true);
+                                      matrixOpStand);
       }
 
       // Zet de te vervangen waardes.
@@ -393,31 +400,33 @@ public final class PgnToLatex {
                          + "] --bestand=<"
                          + resourceBundle.getString("label.pgnbestand") + ">");
     DoosUtils.naarScherm();
-    DoosUtils.naarScherm("  --auteur     ",
+    DoosUtils.naarScherm("  --auteur        ",
                          resourceBundle.getString("help.auteur"), 80);
-    DoosUtils.naarScherm("  --bestand    ",
+    DoosUtils.naarScherm("  --bestand       ",
                          resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("  --charsetin  ",
+    DoosUtils.naarScherm("  --charsetin     ",
         MessageFormat.format(resourceBundle.getString("help.charsetin"),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --charsetuit ",
+    DoosUtils.naarScherm("  --charsetuit    ",
         MessageFormat.format(resourceBundle.getString("help.charsetuit"),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --datum      ",
+    DoosUtils.naarScherm("  --datum         ",
                          resourceBundle.getString("help.speeldatum"), 80);
-    DoosUtils.naarScherm("  --enkel      ",
+    DoosUtils.naarScherm("  --enkel         ",
                          resourceBundle.getString("help.enkel"), 80);
-    DoosUtils.naarScherm("  --halve      ",
+    DoosUtils.naarScherm("  --halve         ",
                          resourceBundle.getString("help.halve"), 80);
-    DoosUtils.naarScherm("  --keywords   ",
+    DoosUtils.naarScherm("  --keywords      ",
                          resourceBundle.getString("help.keywords"), 80);
-    DoosUtils.naarScherm("  --logo       ",
+    DoosUtils.naarScherm("  --logo          ",
                          resourceBundle.getString("help.logo"), 80);
-    DoosUtils.naarScherm("  --matrix     ",
+    DoosUtils.naarScherm("  --matrix        ",
                          resourceBundle.getString("help.matrix"), 80);
-    DoosUtils.naarScherm("  --template   ",
+    DoosUtils.naarScherm("  --matrixopstand ",
+                         resourceBundle.getString("help.matrixopstand"), 80);
+    DoosUtils.naarScherm("  --template      ",
                          resourceBundle.getString("help.template"), 80);
-    DoosUtils.naarScherm("  --titel      ",
+    DoosUtils.naarScherm("  --titel         ",
                          resourceBundle.getString("help.documenttitel"), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(

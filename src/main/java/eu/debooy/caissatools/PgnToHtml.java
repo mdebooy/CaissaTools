@@ -63,14 +63,15 @@ public final class PgnToHtml {
 
     Arguments arguments = new Arguments(args);
     arguments.setParameters(new String[] {"bestand", "charsetin", "charsetuit",
-                                          "enkel", "halve", "uitvoerdir"});
+                                          "enkel", "halve", "matrixopstand",
+                                          "uitvoerdir"});
     arguments.setVerplicht(new String[] {"bestand"});
     if (!arguments.isValid()) {
       help();
       return;
     }
 
-    String    bestand   = arguments.getArgument("bestand");
+    String    bestand       = arguments.getArgument("bestand");
     if (arguments.hasArgument("charsetin")) {
       charsetIn   = arguments.getArgument("charsetin");
     }
@@ -79,7 +80,7 @@ public final class PgnToHtml {
     }
     // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
     // 1 is default waarde.
-    int       enkel     = 1;
+    int       enkel         = 1;
     if (arguments.hasArgument("enkel")) {
       switch (arguments.getArgument("enkel")) {
       case DoosConstants.WAAR:
@@ -95,7 +96,13 @@ public final class PgnToHtml {
     }
     String[]  halve     =
       DoosUtils.nullToEmpty(arguments.getArgument("halve")).split(";");
-    String    uitvoerdir  = arguments.getArgument("uitvoerdir");
+    boolean   matrixOpStand = false;
+    if (arguments.hasArgument("matrixopstand")) {
+      matrixOpStand =
+          DoosConstants.WAAR.equalsIgnoreCase(
+              arguments.getArgument("matrixopstand"));
+    }
+    String    uitvoerdir    = arguments.getArgument("uitvoerdir");
     if (null == uitvoerdir) {
       uitvoerdir  = ".";
     }
@@ -146,7 +153,7 @@ public final class PgnToHtml {
 
     // Bepaal de score en weerstandspunten.
     CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
-                                  false);
+                                  matrixOpStand);
 
     // Maak het matrix.html bestand.
     maakMatrix(punten, uitvoerdir + File.separator + "matrix.html",
@@ -174,19 +181,21 @@ public final class PgnToHtml {
                          + "] --bestand=<"
                          + resourceBundle.getString("label.pgnbestand") + ">");
     DoosUtils.naarScherm();
-    DoosUtils.naarScherm("  --bestand    ",
+    DoosUtils.naarScherm("  --bestand       ",
                          resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("  --charsetin  ",
+    DoosUtils.naarScherm("  --charsetin     ",
         MessageFormat.format(resourceBundle.getString("help.charsetin"),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --charsetuit ",
+    DoosUtils.naarScherm("  --charsetuit    ",
         MessageFormat.format(resourceBundle.getString("help.charsetuit"),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --enkel      ",
+    DoosUtils.naarScherm("  --enkel         ",
                          resourceBundle.getString("help.enkel"), 80);
-    DoosUtils.naarScherm("  --halve      ",
+    DoosUtils.naarScherm("  --halve         ",
                          resourceBundle.getString("help.halve"), 80);
-    DoosUtils.naarScherm("  --uitvoerdir ",
+    DoosUtils.naarScherm("  --matrixopstand ",
+                         resourceBundle.getString("help.matrixopstand"), 80);
+    DoosUtils.naarScherm("  --uitvoerdir    ",
                          resourceBundle.getString("help.uitvoerdir"), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
