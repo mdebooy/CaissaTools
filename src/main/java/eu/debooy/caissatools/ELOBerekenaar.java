@@ -99,6 +99,9 @@ public final class ELOBerekenaar {
     if (arguments.hasArgument("startDatum")) {
       startDatum  = arguments.getArgument("startDatum");
     }
+    if (arguments.hasArgument("startELO")) {
+      startElo    = Integer.parseInt(arguments.getArgument("startELO"));
+    }
     String  toernooiBestand = arguments.getArgument("toernooiBestand");
     if (!toernooiBestand.endsWith(".pgn")) {
       toernooiBestand = toernooiBestand + ".pgn";
