@@ -56,6 +56,8 @@ public final class ELOBerekenaar {
 
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+  private static  Integer         kFactor;
+  private static  Integer         maxVerschil = ELO.MAX_VERSCHIL;
 
   private ELOBerekenaar() {}
 
@@ -73,9 +75,10 @@ public final class ELOBerekenaar {
     Arguments arguments = new Arguments(args);
     arguments.setParameters(new String[] {"charsetin", "charsetuit",
                                           "geschiedenisBestand", "invoerdir",
-                                          "spelerBestand", "startDatum",
-                                          "startELO", "toernooiBestand",
-                                          "uitvoerdir"});
+                                          "maxVerschil", "spelerBestand",
+                                          "startDatum", "startELO",
+                                          "toernooiBestand", "uitvoerdir",
+                                          "vasteKfactor"});
     arguments.setVerplicht(new String[] {"spelerBestand", "toernooiBestand"});
     if (!arguments.isValid()) {
       help();
@@ -89,6 +92,14 @@ public final class ELOBerekenaar {
       charsetUit  = arguments.getArgument("charsetuit");
     }
     String  spelerBestand   = arguments.getArgument("spelerBestand");
+    if (spelerBestand.contains(File.separator)) {
+      help();
+      DoosUtils.foutNaarScherm(
+          MessageFormat.format(
+              resourceBundle.getString("error.bevatdirectory"),
+                                       "spelerBestand"));
+      return;
+    }
     if (!spelerBestand.endsWith(".csv")) {
       spelerBestand = spelerBestand + ".csv";
     }
@@ -103,6 +114,14 @@ public final class ELOBerekenaar {
       startElo    = Integer.parseInt(arguments.getArgument("startELO"));
     }
     String  toernooiBestand = arguments.getArgument("toernooiBestand");
+    if (toernooiBestand.contains(File.separator)) {
+      help();
+      DoosUtils.foutNaarScherm(
+          MessageFormat.format(
+              resourceBundle.getString("error.bevatdirectory"),
+                                       "toernooiBestand"));
+      return;
+    }
     if (!toernooiBestand.endsWith(".pgn")) {
       toernooiBestand = toernooiBestand + ".pgn";
     }
@@ -124,12 +143,27 @@ public final class ELOBerekenaar {
                                          uitvoerdir.length()
                                          - File.separator.length());
     }
+    if (arguments.hasArgument("vasteKfactor")) {
+      kFactor = Integer.parseInt(arguments.getArgument("vasteKfactor"));
+    }
+    if (arguments.hasArgument("maxVerschil")) {
+      if (null == kFactor) {
+        help();
+        DoosUtils.foutNaarScherm(resourceBundle.getString("error.maxverschil"));
+        return;
+      }
+      maxVerschil = Integer.parseInt(arguments.getArgument("maxVerschil"));
+    }
 
     String  geschiedenisBestand = null;
     if (arguments.hasArgument("geschiedenisBestand")) {
       geschiedenisBestand = arguments.getArgument("geschiedenisBestand");
       if (geschiedenisBestand.contains(File.separator)) {
         help();
+        DoosUtils.foutNaarScherm(
+            MessageFormat.format(
+                resourceBundle.getString("error.bevatdirectory"),
+                                         "geschiedenisBestand"));
         return;
       }
       if (!geschiedenisBestand.endsWith(".csv")) {
@@ -150,7 +184,7 @@ public final class ELOBerekenaar {
                                     uitvoerdir + File.separator
                                     + geschiedenisBestand,
                                     charsetIn, charsetUit);
-    if (Integer.valueOf(info.split(":")[1]) > 0) {
+    if (info.contains(":") && Integer.valueOf(info.split(":")[1]) > 0) {
       schrijfSpelers(spelers, spelerinfos,
                      uitvoerdir + File.separator + spelerBestand, charsetUit);
     }
@@ -161,8 +195,14 @@ public final class ELOBerekenaar {
                          + startDatum);
     DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
                          + info.split(":")[0]);
-    DoosUtils.naarScherm(resourceBundle.getString("label.verwerkt") + " "
-                         + info.split(":")[1]);
+    if (info.contains(":")) {
+      DoosUtils.naarScherm(resourceBundle.getString("label.verwerkt") + " "
+                           + info.split(":")[1]);
+    }
+    if (null != kFactor) {
+      DoosUtils.naarScherm(resourceBundle.getString("label.kFactor") + " "
+                           + kFactor);
+    }
     DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
   }
 
@@ -189,6 +229,9 @@ public final class ELOBerekenaar {
                          80);
     DoosUtils.naarScherm("  --invoerdir           ",
                          resourceBundle.getString("help.invoerdir"), 80);
+    DoosUtils.naarScherm("  --maxVerschil         ",
+        MessageFormat.format(resourceBundle.getString("help.maxverschil"),
+                             ELO.MAX_VERSCHIL), 80);
     DoosUtils.naarScherm("  --spelerBestand       ",
                          resourceBundle.getString("help.spelerbestand"), 80);
     DoosUtils.naarScherm("  --startDatum          ",
@@ -200,6 +243,8 @@ public final class ELOBerekenaar {
                          resourceBundle.getString("help.toernooibestand"), 80);
     DoosUtils.naarScherm("  --uitvoerdir          ",
                          resourceBundle.getString("help.uitvoerdir"), 80);
+    DoosUtils.naarScherm("  --vasteKfactor        ",
+                         resourceBundle.getString("help.vastekfactor"), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("help.paramsverplicht"),
@@ -277,8 +322,14 @@ public final class ELOBerekenaar {
                                    int uitslag) {
     spelerinfos.get(id).setLaatstePartij(eloDatum);
     int     aantal  = spelerinfos.get(id).getPartijen();
-    Integer elo     = ELO.berekenELO(spelerinfos.get(id).getElo(), uitslag,
-                                     andereElo, aantal);
+    Integer elo;
+    if (null == kFactor) {
+      elo     = ELO.berekenELO(spelerinfos.get(id).getElo(), uitslag, andereElo,
+                               aantal);
+    } else {
+      elo     = ELO.berekenELO(spelerinfos.get(id).getElo(), uitslag, andereElo,
+                               kFactor, maxVerschil);
+    }
     spelerinfos.get(id).setElo(elo);
     spelerinfos.get(id).addPartij();
     aantal++;
