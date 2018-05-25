@@ -276,7 +276,7 @@ public final class ELOBerekenaar {
                                    CaissaConstants.PGN_DATUM_FORMAAT));
         spelerinfo.setLaatstePartij(Datum.toDate(veld[4],
                                     CaissaConstants.PGN_DATUM_FORMAAT));
-        if (spelerinfo.getPartijen() > ELO.MIN_PARTIJEN) {
+        if (spelerinfo.getPartijen() >= ELO.MIN_PARTIJEN) {
           spelerinfo.setOfficieel(Datum.toDate(veld[5],
                                   CaissaConstants.PGN_DATUM_FORMAAT));
           spelerinfo.setMinElo(Integer.valueOf(veld[6]));
