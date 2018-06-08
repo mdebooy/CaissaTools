@@ -64,21 +64,23 @@ public final class ELOBerekenaar {
   public static void execute(String[] args) throws PgnException {
     String            charsetIn   = Charset.defaultCharset().name();
     String            charsetUit  = Charset.defaultCharset().name();
+    String            eindDatum   = "9999.99.99";
     List<Spelerinfo>  spelerinfos = new ArrayList<Spelerinfo>();
     Map<String, Integer>
                       spelers     = new TreeMap<String, Integer>();
     String            startDatum  = "0000.00.00";
     int               startElo    = START_ELO;
+    List<String>      fouten      = new ArrayList<String>();
 
     Banner.printBanner(resourceBundle.getString("banner.eloberekenaar"));
 
     Arguments arguments = new Arguments(args);
-    arguments.setParameters(new String[] {"charsetin", "charsetuit",
-                                          "geschiedenisBestand", "invoerdir",
-                                          "maxVerschil", "spelerBestand",
-                                          "startDatum", "startELO",
-                                          "toernooiBestand", "uitvoerdir",
-                                          "vasteKfactor"});
+    arguments.setParameters(new String[] {"charsetin", "charsetuit", 
+                                          "eindDatum", "geschiedenisBestand",
+                                          "invoerdir", "maxVerschil",
+                                          "spelerBestand", "startDatum",
+                                          "startELO", "toernooiBestand",
+                                          "uitvoerdir", "vasteKfactor"});
     arguments.setVerplicht(new String[] {"spelerBestand", "toernooiBestand"});
     if (!arguments.isValid()) {
       help();
@@ -93,34 +95,41 @@ public final class ELOBerekenaar {
     }
     String  spelerBestand   = arguments.getArgument("spelerBestand");
     if (spelerBestand.contains(File.separator)) {
-      help();
-      DoosUtils.foutNaarScherm(
+      fouten.add(
           MessageFormat.format(
               resourceBundle.getString("error.bevatdirectory"),
                                        "spelerBestand"));
-      return;
     }
     if (!spelerBestand.endsWith(".csv")) {
       spelerBestand = spelerBestand + ".csv";
     }
     if (spelerBestand.contains(File.separator)) {
-      help();
-      return;
+      fouten.add(
+          MessageFormat.format(
+              resourceBundle.getString("error.bevatdirectory"),
+                                       "spelerBestand"));
+    }
+    if (arguments.hasArgument("eindDatum")) {
+      eindDatum   = arguments.getArgument("eindDatum");
     }
     if (arguments.hasArgument("startDatum")) {
       startDatum  = arguments.getArgument("startDatum");
+    }
+    if (eindDatum.compareTo(startDatum) < 0) {
+      fouten.add(
+          MessageFormat.format(
+              resourceBundle.getString("error.eind.voor.start"),
+                                       startDatum, eindDatum));
     }
     if (arguments.hasArgument("startELO")) {
       startElo    = Integer.parseInt(arguments.getArgument("startELO"));
     }
     String  toernooiBestand = arguments.getArgument("toernooiBestand");
     if (toernooiBestand.contains(File.separator)) {
-      help();
-      DoosUtils.foutNaarScherm(
+      fouten.add(
           MessageFormat.format(
               resourceBundle.getString("error.bevatdirectory"),
                                        "toernooiBestand"));
-      return;
     }
     if (!toernooiBestand.endsWith(".pgn")) {
       toernooiBestand = toernooiBestand + ".pgn";
@@ -148,9 +157,7 @@ public final class ELOBerekenaar {
     }
     if (arguments.hasArgument("maxVerschil")) {
       if (null == kFactor) {
-        help();
-        DoosUtils.foutNaarScherm(resourceBundle.getString("error.maxverschil"));
-        return;
+        fouten.add(resourceBundle.getString("error.maxverschil"));
       }
       maxVerschil = Integer.parseInt(arguments.getArgument("maxVerschil"));
     }
@@ -159,17 +166,24 @@ public final class ELOBerekenaar {
     if (arguments.hasArgument("geschiedenisBestand")) {
       geschiedenisBestand = arguments.getArgument("geschiedenisBestand");
       if (geschiedenisBestand.contains(File.separator)) {
-        help();
-        DoosUtils.foutNaarScherm(
+        fouten.add(
             MessageFormat.format(
                 resourceBundle.getString("error.bevatdirectory"),
                                          "geschiedenisBestand"));
-        return;
       }
       if (!geschiedenisBestand.endsWith(".csv")) {
         geschiedenisBestand = geschiedenisBestand + ".csv";
       }
     }
+
+    if (!fouten.isEmpty() ) {
+      help();
+      for (String fout : fouten) {
+        DoosUtils.foutNaarScherm(fout);
+      }
+      return;
+    }
+
     if (DoosUtils.isBlankOrNull(geschiedenisBestand)) {
       geschiedenisBestand =
           spelerBestand.substring(0, spelerBestand.length() - 4) + "H.csv";
@@ -178,7 +192,8 @@ public final class ELOBerekenaar {
     startDatum  = leesSpelers(spelers, spelerinfos, startDatum,
                               uitvoerdir + File.separator + spelerBestand,
                               charsetUit);
-    String  info  = verwerkToernooi(spelers, spelerinfos, startDatum, startElo,
+    String  info  = verwerkToernooi(spelers, spelerinfos, startDatum, eindDatum,
+                                    startElo,
                                     invoerdir + File.separator
                                     + toernooiBestand,
                                     uitvoerdir + File.separator
@@ -193,6 +208,10 @@ public final class ELOBerekenaar {
                          + uitvoerdir + File.separator + spelerBestand);
     DoosUtils.naarScherm(resourceBundle.getString("label.startdatum") + " "
                          + startDatum);
+    if (!"9999.99.99".equals(eindDatum)) {
+      DoosUtils.naarScherm(resourceBundle.getString("label.einddatum") + " "
+                           + eindDatum);
+    }
     DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
                          + info.split(":")[0]);
     if (info.contains(":")) {
@@ -224,6 +243,8 @@ public final class ELOBerekenaar {
     DoosUtils.naarScherm("  --charsetuit          ",
         MessageFormat.format(resourceBundle.getString("help.charsetuit"),
                              Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --eindDatum           ",
+                         resourceBundle.getString("help.einddatum"), 80);
     DoosUtils.naarScherm("  --geschiedenisBestand ",
                          resourceBundle.getString("help.geschiedenisbestand"),
                          80);
@@ -415,8 +436,8 @@ public final class ELOBerekenaar {
 
   private static String verwerkToernooi(Map<String, Integer> spelers,
                                         List<Spelerinfo> spelerinfos,
-                                        String startDatum, int startElo,
-                                        String toernooiBestand,
+                                        String startDatum, String eindDatum,
+                                        int startElo, String toernooiBestand,
                                         String geschiedenisBestand,
                                         String charsetIn,
                                         String charsetUit) {
@@ -437,7 +458,8 @@ public final class ELOBerekenaar {
         if (!partij.isBye()
             && partij.isRated()) {
           String  datum       = partij.getTag("Date");
-          if (startDatum.compareTo(datum) <= 0) {
+          if (startDatum.compareTo(datum) <= 0
+              && eindDatum.compareTo(datum) >= 0) {
             verwerkt++;
             String  wit       = partij.getTag("White");
             String  zwart     = partij.getTag("Black");
