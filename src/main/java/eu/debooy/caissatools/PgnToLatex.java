@@ -229,7 +229,7 @@ public final class PgnToLatex {
 
         // Bepaal de score en weerstandspunten.
         CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
-                                      matrixOpStand);
+                                      matrixOpStand, CaissaConstants.TIEBREAK_SB);
       }
 
       // Zet de te vervangen waardes.
@@ -526,8 +526,8 @@ public final class PgnToLatex {
           ((pntn == 0 && "".equals(decim)) || pntn >= 1 ?
               pntn : "") + decim, 0);
       if (enkel > 0) {
-        int     wpntn   = punten[i].getWeerstandspunten().intValue();
-        String  wdecim  = Utilities.kwart(punten[i].getWeerstandspunten());
+        int     wpntn   = punten[i].getTieBreakScore().intValue();
+        String  wdecim  = Utilities.kwart(punten[i].getTieBreakScore());
         Bestand.schrijfRegel(output,
                              " & " + punten[i].getPartijen() + " & ", 0);
         Bestand.schrijfRegel(output,

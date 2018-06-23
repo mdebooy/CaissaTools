@@ -151,9 +151,9 @@ public final class PgnToHtml {
     }
 
 
-    // Bepaal de score en weerstandspunten.
+    // Bepaal de score en SB score.
     CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
-                                  matrixOpStand);
+                                  matrixOpStand, CaissaConstants.TIEBREAK_SB);
 
     // Maak het matrix.html bestand.
     maakMatrix(punten, uitvoerdir + File.separator + "matrix.html",
@@ -316,8 +316,8 @@ public final class PgnToHtml {
     Bestand.schrijfRegel(output,
         prefix + MessageFormat.format(props.getProperty("table.body.partijen"),
                                       speler.getPartijen()));
-    int     wpntn   = speler.getWeerstandspunten().intValue();
-    String  wdecim  = Utilities.kwart(speler.getWeerstandspunten());
+    int     wpntn   = speler.getTieBreakScore().intValue();
+    String  wdecim  = Utilities.kwart(speler.getTieBreakScore());
     Bestand.schrijfRegel(output,
         prefix + MessageFormat.format(props.getProperty("table.body.sb"),
             ((wpntn == 0 && "".equals(wdecim)) || wpntn >= 1 ? wpntn : wdecim),
@@ -507,8 +507,8 @@ public final class PgnToHtml {
             (pntn == 0 && "".equals(decim)) || pntn >= 1 ? decim : ""));
     Bestand.schrijfRegel(output, prefix + MessageFormat.format(
         props.getProperty("table.body.partijen"), speler.getPartijen()));
-    int     wpntn   = speler.getWeerstandspunten().intValue();
-    String  wdecim  = Utilities.kwart(speler.getWeerstandspunten());
+    int     wpntn   = speler.getTieBreakScore().intValue();
+    String  wdecim  = Utilities.kwart(speler.getTieBreakScore());
     Bestand.schrijfRegel(output,
         prefix + MessageFormat.format(props.getProperty("table.body.sb"),
             ((wpntn == 0 && "".equals(wdecim)) || wpntn >= 1 ? wpntn : wdecim),
