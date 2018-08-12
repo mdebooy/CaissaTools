@@ -28,6 +28,35 @@ import java.util.ResourceBundle;
  * @author Marco de Booij
  */
 public final class CaissaTools {
+  public static final String  AUTEUR              = "auteur";
+  public static final String  BESTAND             = "bestand";
+  public static final String  CHARDSETIN          = "charsetin";
+  public static final String  CHARDSETUIT         = "charsetuit";
+  public static final String  DATUM               = "datum";
+  public static final String  EINDDATUM           = "eindDatum";
+  public static final String  ENKEL               = "enkel";
+  public static final String  EXTRAINFO           = "extraInfo";
+  public static final String  GESCHIEDENISBESTAND = "geschiedenisBestand";
+  public static final String  HALVE               = "halve";
+  public static final String  INVOERDIR           = "invoerdir";
+  public static final String  KEYWORDS            = "keywords";
+  public static final String  LOGO                = "logo";
+  public static final String  MATRIX              = "matrix";
+  public static final String  MATRIXOPSTAND       = "matrixopstand";
+  public static final String  MAXVERSCHIL         = "maxVerschil";
+  public static final String  SPELERBESTAND       = "spelerBestand";
+  public static final String  STARTDATUM          = "startDatum";
+  public static final String  STARTELO            = "startELO";
+  public static final String  TEMPLATE            = "template";
+  public static final String  TITEL               = "titel";
+  public static final String  TOERNOOIBESTAND     = "toernooiBestand";
+  public static final String  UITVOERDIR          = "uitvoerdir";
+  public static final String  VASTEKFACTOR        = "vasteKfactor";
+
+  public static final String  EXTENSIE_CSV        = ".csv";
+  public static final String  EXTENSIE_PGN        = ".pgn";
+  public static final String  EXTENSIE_TEX        = ".tex";
+
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 

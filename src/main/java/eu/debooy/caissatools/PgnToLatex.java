@@ -84,29 +84,37 @@ public final class PgnToLatex {
     Banner.printBanner(resourceBundle.getString("banner.pgntolatex"));
 
     Arguments arguments = new Arguments(args);
-    arguments.setParameters(new String[] {"auteur", "bestand", "charsetin",
-                                          "charsetuit", "datum", "enkel",
-                                          "halve", "keywords", "logo",
-                                          "matrix", "matrixopstand",
-                                          "template", "titel"});
-    arguments.setVerplicht(new String[] {"bestand"});
+    arguments.setParameters(new String[] {CaissaTools.AUTEUR,
+                                          CaissaTools.BESTAND,
+                                          CaissaTools.CHARDSETIN,
+                                          CaissaTools.CHARDSETUIT,
+                                          CaissaTools.DATUM,
+                                          CaissaTools.ENKEL,
+                                          CaissaTools.HALVE,
+                                          CaissaTools.KEYWORDS,
+                                          CaissaTools.LOGO,
+                                          CaissaTools.MATRIX,
+                                          CaissaTools.MATRIXOPSTAND,
+                                          CaissaTools.TEMPLATE,
+                                          CaissaTools.TITEL});
+    arguments.setVerplicht(new String[] {CaissaTools.BESTAND});
     if (!arguments.isValid()) {
       help();
       return;
     }
 
-    String  auteur  = arguments.getArgument("auteur");
-    String  bestand = arguments.getArgument("bestand");
-    if (bestand.endsWith(".pgn")) {
+    String  auteur  = arguments.getArgument(CaissaTools.AUTEUR);
+    String  bestand = arguments.getArgument("CaissaTools.BESTAND");
+    if (bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
       bestand   = bestand.substring(0, bestand.length() - 4);
     }
-    if (arguments.hasArgument("charsetin")) {
-      charsetIn   = arguments.getArgument("charsetin");
+    if (arguments.hasArgument(CaissaTools.CHARDSETIN)) {
+      charsetIn   = arguments.getArgument(CaissaTools.CHARDSETIN);
     }
-    if (arguments.hasArgument("charsetuit")) {
-      charsetUit  = arguments.getArgument("charsetuit");
+    if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
+      charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
     }
-    String    datum         = arguments.getArgument("datum");
+    String    datum         = arguments.getArgument(CaissaTools.DATUM);
     if (DoosUtils.isBlankOrNull(datum)) {
       try {
         datum = Datum.fromDate(new Date(), "dd/MM/yyyy HH:mm:ss");
@@ -117,8 +125,8 @@ public final class PgnToLatex {
     // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
     // 1 is default waarde.
     int       enkel         = 1;
-    if (arguments.hasArgument("enkel")) {
-      switch (arguments.getArgument("enkel")) {
+    if (arguments.hasArgument(CaissaTools.ENKEL)) {
+      switch (arguments.getArgument(CaissaTools.ENKEL)) {
       case DoosConstants.WAAR:
         enkel = CaissaConstants.TOERNOOI_ENKEL;
         break;
@@ -131,22 +139,24 @@ public final class PgnToLatex {
       }
     }
     String[]  halve         =
-      DoosUtils.nullToEmpty(arguments.getArgument("halve")).split(";");
-    String    keywords      = arguments.getArgument("keywords");
-    String    logo          = arguments.getArgument("logo");
+      DoosUtils.nullToEmpty(arguments.getArgument(CaissaTools.HALVE))
+               .split(";");
+    String    keywords      = arguments.getArgument(CaissaTools.KEYWORDS);
+    String    logo          = arguments.getArgument(CaissaTools.LOGO);
     boolean   metMatrix     = true;
-    if (arguments.hasArgument("matrix")) {
+    if (arguments.hasArgument(CaissaTools.MATRIX)) {
       metMatrix =
-          DoosConstants.WAAR.equalsIgnoreCase(arguments.getArgument("matrix"));
+          DoosConstants.WAAR
+              .equalsIgnoreCase(arguments.getArgument(CaissaTools.MATRIX));
     }
     boolean   matrixOpStand = false;
-    if (arguments.hasArgument("matrixopstand")) {
+    if (arguments.hasArgument(CaissaTools.MATRIXOPSTAND)) {
       matrixOpStand =
           DoosConstants.WAAR.equalsIgnoreCase(
-              arguments.getArgument("matrixopstand"));
+              arguments.getArgument(CaissaTools.MATRIXOPSTAND));
     }
-    if (arguments.hasArgument("template")) {
-      template  = arguments.getArgument("template");
+    if (arguments.hasArgument(CaissaTools.TEMPLATE)) {
+      template  = arguments.getArgument(CaissaTools.TEMPLATE);
       File  tex = new File(template);
       if (!tex.exists()) {
         DoosUtils.foutNaarScherm(
@@ -154,7 +164,7 @@ public final class PgnToLatex {
                                  template));
       }
     }
-    String  titel       = arguments.getArgument("titel");
+    String  titel       = arguments.getArgument(CaissaTools.TITEL);
 
     Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
 
@@ -205,7 +215,8 @@ public final class PgnToLatex {
     }
 
     try {
-      output  = Bestand.openUitvoerBestand(bestand + ".tex", charsetUit);
+      output  = Bestand.openUitvoerBestand(bestand + CaissaTools.EXTENSIE_TEX,
+                                           charsetUit);
 
       int           noSpelers = spelers.size();
       int           kolommen  = (enkel == CaissaConstants.TOERNOOI_MATCH
@@ -229,7 +240,8 @@ public final class PgnToLatex {
 
         // Bepaal de score en weerstandspunten.
         CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
-                                      matrixOpStand, CaissaConstants.TIEBREAK_SB);
+                                      matrixOpStand,
+                                      CaissaConstants.TIEBREAK_SB);
       }
 
       // Zet de te vervangen waardes.
@@ -431,7 +443,7 @@ public final class PgnToLatex {
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("help.paramverplicht"),
-                             "bestand"), 80);
+                             CaissaTools.BESTAND), 80);
     DoosUtils.naarScherm();
   }
 
