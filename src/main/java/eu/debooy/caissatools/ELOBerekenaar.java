@@ -313,26 +313,27 @@ public final class ELOBerekenaar {
         int         spelerId    = spelers.size();
         spelers.put(veld[0], spelerId);
         Spelerinfo  spelerinfo  = new Spelerinfo();
-        spelerinfo.setElo(Integer.valueOf(veld[1]));
         spelerinfo.setNaam(veld[0]);
-        spelerinfo.setPartijen(Integer.valueOf(veld[2]));
-        spelerinfo.setEerstePartij(Datum.toDate(veld[3],
+        spelerinfo.setElo(Integer.valueOf(veld[1]));
+        spelerinfo.setElogroei(Integer.valueOf(veld[2]));
+        spelerinfo.setPartijen(Integer.valueOf(veld[3]));
+        spelerinfo.setEerstePartij(Datum.toDate(veld[4],
                                    CaissaConstants.PGN_DATUM_FORMAAT));
-        spelerinfo.setLaatstePartij(Datum.toDate(veld[4],
+        spelerinfo.setLaatstePartij(Datum.toDate(veld[5],
                                     CaissaConstants.PGN_DATUM_FORMAAT));
         if (spelerinfo.getPartijen() >= ELO.MIN_PARTIJEN) {
-          spelerinfo.setOfficieel(Datum.toDate(veld[5],
+          spelerinfo.setOfficieel(Datum.toDate(veld[6],
                                   CaissaConstants.PGN_DATUM_FORMAAT));
-          spelerinfo.setMinElo(Integer.valueOf(veld[6]));
-          spelerinfo.setMinDatum(Datum.toDate(veld[7],
+          spelerinfo.setMinElo(Integer.valueOf(veld[7]));
+          spelerinfo.setMinDatum(Datum.toDate(veld[8],
                                  CaissaConstants.PGN_DATUM_FORMAAT));
-          spelerinfo.setMaxElo(Integer.valueOf(veld[8]));
-          spelerinfo.setMaxDatum(Datum.toDate(veld[9],
+          spelerinfo.setMaxElo(Integer.valueOf(veld[9]));
+          spelerinfo.setMaxDatum(Datum.toDate(veld[10],
                                  CaissaConstants.PGN_DATUM_FORMAAT));
         }
         spelerinfo.setSpelerId(spelerId);
         spelerinfos.add(spelerId, spelerinfo);
-        if (veld[4].compareTo(laatsteDatum) >= 0) {
+        if (veld[5].compareTo(laatsteDatum) >= 0) {
           calendar.setTime(spelerinfo.getLaatstePartij());
           calendar.add(Calendar.DATE, 1);
           laatsteDatum  = Datum.fromDate(calendar.getTime(),
@@ -364,8 +365,8 @@ public final class ELOBerekenaar {
   private static void pasSpelerAan(int id, List<Spelerinfo> spelerinfos,
                                    Date eloDatum, Integer andereElo,
                                    int uitslag) {
-    spelerinfos.get(id).setLaatstePartij(eloDatum);
-    int     aantal  = spelerinfos.get(id).getPartijen();
+    Integer vorigeElo = spelerinfos.get(id).getElo();
+    int     aantal    = spelerinfos.get(id).getPartijen();
     Integer elo;
     if (null == kFactor) {
       elo     = ELO.berekenELO(spelerinfos.get(id).getElo(), uitslag, andereElo,
@@ -375,6 +376,8 @@ public final class ELOBerekenaar {
                                kFactor, maxVerschil);
     }
     spelerinfos.get(id).setElo(elo);
+    spelerinfos.get(id).setElogroei(elo-vorigeElo);
+    spelerinfos.get(id).setLaatstePartij(eloDatum);
     spelerinfos.get(id).addPartij();
     aantal++;
     if (aantal == ELO.MIN_PARTIJEN) {
@@ -418,7 +421,7 @@ public final class ELOBerekenaar {
     try {
       uitvoer = Bestand.openUitvoerBestand(spelerBestand, charsetUit);
       StringBuilder lijn  = new StringBuilder();
-      lijn.append("\"speler\",\"elo\",\"partijen\",")
+      lijn.append("\"speler\",\"elo\",\"groei\",\"partijen\",")
           .append("\"eerstePartij\",\"laatstePartij\",\"eersteEloDatum\",")
           .append("\"minElo\",\"minEloDatum\",\"maxElo\",\"maxEloDatum\"");
       Bestand.schrijfRegel(uitvoer, lijn.toString());
@@ -428,6 +431,7 @@ public final class ELOBerekenaar {
           lijn.append("\"")
               .append(spelerinfos.get(spelerId).getNaam()).append("\",")
               .append(spelerinfos.get(spelerId).getElo()).append(",")
+              .append(spelerinfos.get(spelerId).getElogroei()).append(",")
               .append(spelerinfos.get(spelerId).getPartijen()).append(",")
               .append(Datum.fromDate(spelerinfos.get(spelerId)
                                                 .getEerstePartij(), 
