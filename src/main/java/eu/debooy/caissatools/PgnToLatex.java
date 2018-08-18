@@ -104,7 +104,7 @@ public final class PgnToLatex {
     }
 
     String  auteur  = arguments.getArgument(CaissaTools.AUTEUR);
-    String  bestand = arguments.getArgument("CaissaTools.BESTAND");
+    String  bestand = arguments.getArgument(CaissaTools.BESTAND);
     if (bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
       bestand   = bestand.substring(0, bestand.length() - 4);
     }
