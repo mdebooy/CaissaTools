@@ -56,71 +56,91 @@ public final class PgnToJson {
   public static void execute(String[] args) throws PgnException {
     String          charsetIn   = Charset.defaultCharset().name();
     String          charsetUit  = Charset.defaultCharset().name();
+    List<String>    fouten      = new ArrayList<String>();
     BufferedWriter  output      = null;
 
     Banner.printBanner(resourceBundle.getString("banner.pgntojson"));
 
     Arguments arguments = new Arguments(args);
-    arguments.setParameters(new String[] {"bestand", "charsetin", "charsetuit",
-                                          "invoerdir", "json", "pgnviewer",
-                                          "uitvoerdir"});
-    arguments.setVerplicht(new String[] {"bestand"});
+    arguments.setParameters(new String[] {CaissaTools.BESTAND,
+                                          CaissaTools.CHARDSETIN,
+                                          CaissaTools.CHARDSETUIT,
+                                          CaissaTools.INVOERDIR,
+                                          CaissaTools.JSON,
+                                          CaissaTools.PGNVIEWER,
+                                          CaissaTools.UITVOERDIR});
+    arguments.setVerplicht(new String[] {CaissaTools.BESTAND});
     if (!arguments.isValid()) {
       help();
       return;
     }
 
-    String    bestand   = arguments.getArgument("bestand");
-    if (!bestand.endsWith(".pgn")) {
-      bestand     = bestand + ".pgn";
+    String    bestand       = arguments.getArgument(CaissaTools.BESTAND);
+    if (bestand.contains(File.separator)) {
+      fouten.add(
+          MessageFormat.format(
+              resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
+                                       CaissaTools.BESTAND));
     }
-    if (arguments.hasArgument("charsetin")) {
-      charsetIn   = arguments.getArgument("charsetin");
+    if (bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
+      bestand = bestand.substring(0, bestand.length() - 4);
     }
-    if (arguments.hasArgument("charsetuit")) {
-      charsetUit  = arguments.getArgument("charsetuit");
+    if (arguments.hasArgument(CaissaTools.CHARDSETIN)) {
+      charsetIn   = arguments.getArgument(CaissaTools.CHARDSETIN);
+    }
+    if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
+      charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
     }
     String    invoerdir   = ".";
-    if (arguments.hasArgument("invoerdir")) {
-      invoerdir   = arguments.getArgument("invoerdir");
+    if (arguments.hasArgument(CaissaTools.INVOERDIR)) {
+      invoerdir   = arguments.getArgument(CaissaTools.INVOERDIR);
     }
     if (invoerdir.endsWith(File.separator)) {
       invoerdir   = invoerdir.substring(0,
                                         invoerdir.length()
                                         - File.separator.length());
     }
-    String    jsonBestand = "";
-    if (arguments.hasArgument("json")) {
-      jsonBestand = arguments.getArgument("json");
-    }
-    if (DoosUtils.isBlankOrNull(jsonBestand)) {
-      jsonBestand = bestand.substring(0, bestand.length() - 4);
-    }
-    if (!jsonBestand.endsWith(".json")) {
-      jsonBestand = jsonBestand + ".json";
-    }
     String    uitvoerdir  = invoerdir;
-    if (arguments.hasArgument("uitvoerdir")) {
-      uitvoerdir  = arguments.getArgument("uitvoerdir");
+    if (arguments.hasArgument(CaissaTools.UITVOERDIR)) {
+      uitvoerdir  = arguments.getArgument(CaissaTools.UITVOERDIR);
     }
     if (uitvoerdir.endsWith(File.separator)) {
       uitvoerdir  = uitvoerdir.substring(0,
                                          uitvoerdir.length()
                                          - File.separator.length());
     }
+    String    jsonBestand = "";
+    if (arguments.hasArgument(CaissaTools.JSON)) {
+      jsonBestand = arguments.getArgument(CaissaTools.JSON);
+    }
+    if (DoosUtils.isBlankOrNull(jsonBestand)) {
+      jsonBestand = bestand;
+    }
+    if (!jsonBestand.endsWith(CaissaTools.EXTENSIE_JSON)) {
+      jsonBestand = jsonBestand + CaissaTools.EXTENSIE_JSON;
+    }
     boolean   pgnviewer   = false;
-    if (arguments.hasArgument("pgnviewer")) {
+    if (arguments.hasArgument(CaissaTools.PGNVIEWER)) {
       pgnviewer   =
           DoosConstants.WAAR
-                       .equalsIgnoreCase(arguments.getArgument("pgnviewer"));
+              .equalsIgnoreCase(arguments.getArgument(CaissaTools.PGNVIEWER));
+    }
+
+    if (!fouten.isEmpty() ) {
+      help();
+      for (String fout : fouten) {
+        DoosUtils.foutNaarScherm(fout);
+      }
+      return;
     }
 
     ObjectMapper    mapper    = new ObjectMapper();
     List<Map<String, String>>
                     lijst     = new ArrayList<Map<String, String>>();
     Collection<PGN> partijen  =
-        CaissaUtils.laadPgnBestand(invoerdir + File.separator + bestand,
-                                     charsetIn);
+        CaissaUtils.laadPgnBestand(invoerdir + File.separator + bestand
+                                     + CaissaTools.EXTENSIE_PGN,
+                                   charsetIn);
     try {
       int partijnr  = 1;
       for (PGN partij: partijen) {
@@ -130,9 +150,11 @@ public final class PgnToJson {
           obj.put(tag.getKey(), tag.getValue());
         }
         obj.put("_moves", partij.getZetten());
-        if (pgnviewer) {
+        if (pgnviewer
+            && DoosUtils.isNotBlankOrNull(partij.getZuivereZetten())) {
           obj.put("_pgnviewer",
-                  CaissaUtils.pgnZettenToChessTheatre(partij.getZetten()));
+                  CaissaUtils
+                      .pgnZettenToChessTheatre(partij.getZuivereZetten()));
         }
         lijst.add(obj);
         partijnr++;
@@ -143,7 +165,7 @@ public final class PgnToJson {
       mapper.writeValue(output, lijst);
     } catch (BestandException | FenException | FileNotFoundException
              | IOException e) {
-      System.err.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
         if (output != null) {
@@ -155,7 +177,8 @@ public final class PgnToJson {
     }
 
     DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + invoerdir + File.separator + bestand);
+                         + invoerdir + File.separator + bestand
+                         + CaissaTools.EXTENSIE_PGN);
     DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
                          + partijen.size());
     DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
@@ -191,7 +214,7 @@ public final class PgnToJson {
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("help.paramverplicht"),
-                             "bestand"), 80);
+                             CaissaTools.BESTAND), 80);
     DoosUtils.naarScherm();
   }
 }

@@ -28,7 +28,9 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -43,43 +45,70 @@ public final class StartPgn {
   private StartPgn() {}
 
   public static void execute(String[] args) {
+    List<String>    fouten  = new ArrayList<String>();
     BufferedWriter  output  = null;
 
     Banner.printBanner(resourceBundle.getString("banner.startpgn"));
 
     Arguments       arguments   = new Arguments(args);
-    arguments.setParameters(new String[] {"bestand", "date", "event", "site",
-                                          "spelers", "uitvoerdir"});
-    arguments.setVerplicht(new String[] {"bestand", "date", "event", "site",
-                                         "spelers"});
+    arguments.setParameters(new String[] {CaissaTools.BESTAND,
+                                          CaissaTools.DATE,
+                                          CaissaTools.EVENT,
+                                          CaissaTools.SITE,
+                                          CaissaTools.SPELERS,
+                                          CaissaTools.UITVOERDIR});
+    arguments.setVerplicht(new String[] {CaissaTools.BESTAND,
+                                         CaissaTools.DATE,
+                                         CaissaTools.EVENT,
+                                         CaissaTools.SITE,
+                                         CaissaTools.SPELERS});
     if (!arguments.isValid()) {
       help();
       return;
     }
 
-    String    bestand     = arguments.getArgument("bestand");
-    String    date        = arguments.getArgument("date");
-    String    event       = arguments.getArgument("event");
-    String    site        = arguments.getArgument("site");
-    String[]  speler      = arguments.getArgument("spelers").split(";");
-    String    uitvoerdir  = arguments.getArgument("uitvoerdir");
-    if (null == uitvoerdir) {
-      uitvoerdir  = ".";
+    String    bestand     = arguments.getArgument(CaissaTools.BESTAND);
+    if (bestand.contains(File.separator)) {
+      fouten.add(
+          MessageFormat.format(
+              resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
+                                       CaissaTools.BESTAND));
     }
-
-    Arrays.sort(speler, String.CASE_INSENSITIVE_ORDER);
-    int noSpelers = speler.length;
-
-    if (bestand.endsWith(".pgn")) {
-      bestand = bestand.substring(0, bestand.length() - 4);
+    if (!bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
+      bestand = bestand + CaissaTools.EXTENSIE_PGN;
+    }
+    String    date        = arguments.getArgument(CaissaTools.DATE);
+    String    event       = arguments.getArgument(CaissaTools.EVENT);
+    String    site        = arguments.getArgument(CaissaTools.SITE);
+    String[]  speler      = arguments.getArgument(CaissaTools.SPELERS)
+                                     .split(";");
+    String    uitvoerdir  = ".";
+    if (arguments.hasArgument(CaissaTools.UITVOERDIR)) {
+      uitvoerdir  = arguments.getArgument(CaissaTools.UITVOERDIR);
     }
     if (uitvoerdir.endsWith(File.separator)) {
       uitvoerdir  = uitvoerdir.substring(0,
                                          uitvoerdir.length()
                                          - File.separator.length());
     }
-    File  pgnFile = new File(uitvoerdir + File.separator + bestand
-                             + ".pgn");
+    if (uitvoerdir.endsWith(File.separator)) {
+      uitvoerdir  = uitvoerdir.substring(0,
+                                         uitvoerdir.length()
+                                         - File.separator.length());
+    }
+
+    if (!fouten.isEmpty() ) {
+      help();
+      for (String fout : fouten) {
+        DoosUtils.foutNaarScherm(fout);
+      }
+      return;
+    }
+
+    Arrays.sort(speler, String.CASE_INSENSITIVE_ORDER);
+    int noSpelers = speler.length;
+
+    File  pgnFile = new File(uitvoerdir + File.separator + bestand);
     try {
       output  = Bestand.openUitvoerBestand(pgnFile);
       for (int i = 0; i < (noSpelers -1); i++) {
@@ -135,7 +164,7 @@ public final class StartPgn {
     }
 
     DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + uitvoerdir + File.separator + bestand + ".pgn");
+                         + uitvoerdir + File.separator + bestand);
     DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
                          + uitvoerdir);
     DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
@@ -184,7 +213,7 @@ public final class StartPgn {
     DoosUtils.naarScherm(
         MessageFormat.format(
             resourceBundle.getString("help.paramverplichtbehalve"),
-            "uitvoerdir"), 80);
+                             CaissaTools.UITVOERDIR), 80);
     DoosUtils.naarScherm();
   }
 }

@@ -30,10 +30,13 @@ import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -48,12 +51,13 @@ public final class VertaalPgn {
   private VertaalPgn() {}
 
   public static void execute(String[] args) throws PgnException {
-    BufferedWriter  output      = null;
     String          bestand     = "";
     String          charsetIn   = Charset.defaultCharset().name();
     String          charsetUit  = Charset.defaultCharset().name();
+    List<String>    fouten      = new ArrayList<String>();
     String          naarStukken = "";
     String          naarTaal    = Locale.getDefault().getLanguage();
+    BufferedWriter  output      = null;
     String          pgn         = "";
     String          vanStukken  = "";
     String          vanTaal     = Locale.getDefault().getLanguage();
@@ -61,52 +65,83 @@ public final class VertaalPgn {
     Banner.printBanner(resourceBundle.getString("banner.vertaalpgn"));
 
     Arguments arguments = new Arguments(args);
-    arguments.setParameters(new String[] {"bestand", "charsetin", "charsetuit",
-                                          "naartaal", "pgn", "vantaal"});
+    arguments.setParameters(new String[] {CaissaTools.BESTAND,
+                                          CaissaTools.CHARDSETIN,
+                                          CaissaTools.CHARDSETUIT,
+                                          CaissaTools.INVOERDIR,
+                                          CaissaTools.NAARTAAL,
+                                          CaissaTools.PGN,
+                                          CaissaTools.UITVOERDIR,
+                                          CaissaTools.VANTAAL});
     if (!arguments.isValid()) {
       help();
       return;
     }
 
-    if (arguments.hasArgument("bestand")) {
-      bestand     = arguments.getArgument("bestand");
-      if (bestand.endsWith(".pgn")) {
-        bestand   = bestand.substring(0, bestand.length() - 4);
+    
+    if (arguments.hasArgument(CaissaTools.BESTAND)) {
+      bestand     =
+          DoosUtils.nullToEmpty(arguments.getArgument(CaissaTools.BESTAND));
+      if (bestand.contains(File.separator)) {
+        fouten.add(
+            MessageFormat.format(
+                resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
+                                         CaissaTools.BESTAND));
+      }
+      if (bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
+        bestand = bestand.substring(0, bestand.length() - 4);
       }
     }
-    if (arguments.hasArgument("charsetin")) {
-      charsetIn   = arguments.getArgument("charsetin");
+    if (arguments.hasArgument(CaissaTools.CHARDSETIN)) {
+      charsetIn   = arguments.getArgument(CaissaTools.CHARDSETIN);
     }
-    if (arguments.hasArgument("charsetuit")) {
-      charsetUit  = arguments.getArgument("charsetuit");
+    if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
+      charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
     }
-    if (arguments.hasArgument("naartaal")) {
-      naarTaal    = arguments.getArgument("naartaal").toLowerCase();
+    String    invoerdir   = ".";
+    if (arguments.hasArgument(CaissaTools.INVOERDIR)) {
+      invoerdir   = arguments.getArgument(CaissaTools.INVOERDIR);
     }
-    if (arguments.hasArgument("pgn")) {
-      pgn         = arguments.getArgument("pgn");
+    if (invoerdir.endsWith(File.separator)) {
+      invoerdir   = invoerdir.substring(0,
+                                        invoerdir.length()
+                                        - File.separator.length());
     }
-    if (arguments.hasArgument("vantaal")) {
-      vanTaal     = arguments.getArgument("vantaal").toLowerCase();
+    String    uitvoerdir  = invoerdir;
+    if (arguments.hasArgument(CaissaTools.UITVOERDIR)) {
+      uitvoerdir  = arguments.getArgument(CaissaTools.UITVOERDIR);
+    }
+    if (uitvoerdir.endsWith(File.separator)) {
+      uitvoerdir  = uitvoerdir.substring(0,
+                                         uitvoerdir.length()
+                                         - File.separator.length());
+    }
+    if (arguments.hasArgument(CaissaTools.NAARTAAL)) {
+      naarTaal    = arguments.getArgument(CaissaTools.NAARTAAL).toLowerCase();
+    }
+    if (arguments.hasArgument(CaissaTools.PGN)) {
+      pgn         = arguments.getArgument(CaissaTools.PGN);
+    }
+    if (arguments.hasArgument(CaissaTools.VANTAAL)) {
+      vanTaal     = arguments.getArgument(CaissaTools.VANTAAL).toLowerCase();
     }
 
-    // Laatste test op juistheid
-    if (naarTaal.equals(vanTaal)
-        || (bestand.isEmpty()  && pgn.isEmpty())
-        || (!bestand.isEmpty() && !pgn.isEmpty())) {
+    if (naarTaal.equals(vanTaal)) {
+      fouten.add(MessageFormat
+            .format(resourceBundle.getString(CaissaTools.ERR_TALENGELIJK),
+                    vanTaal, naarTaal));
+    }
+    if (bestand.isEmpty()  && pgn.isEmpty()) {
+      fouten.add(resourceBundle.getString(CaissaTools.ERR_GEENINVOER));
+    }
+    if (!bestand.isEmpty() && !pgn.isEmpty()) {
+      fouten.add(resourceBundle.getString(CaissaTools.ERR_BESTANDENPGN));
+    }
+
+    if (!fouten.isEmpty() ) {
       help();
-      DoosUtils.naarScherm();
-      if (naarTaal.equals(vanTaal)) {
-        DoosUtils.foutNaarScherm(
-          MessageFormat.format(resourceBundle.getString("error.talen.gelijk"),
-                               vanTaal, naarTaal));
-      }
-      if (bestand.isEmpty()  && pgn.isEmpty()) {
-        DoosUtils.foutNaarScherm(resourceBundle.getString("error.geen.invoer"));
-      }
-      if (!bestand.isEmpty() && !pgn.isEmpty()) {
-        DoosUtils
-            .foutNaarScherm(resourceBundle.getString("error.bestand.en.pgn"));
+      for (String fout : fouten) {
+        DoosUtils.foutNaarScherm(fout);
       }
       return;
     }
@@ -126,10 +161,14 @@ public final class VertaalPgn {
       return;
     }
 
-    Collection<PGN> partijen  = CaissaUtils.laadPgnBestand(bestand, charsetIn);
+    Collection<PGN> partijen  =
+        CaissaUtils.laadPgnBestand(invoerdir + File.separator + bestand
+                                   + CaissaTools.EXTENSIE_PGN, charsetIn);
 
     try {
-      output  = Bestand.openUitvoerBestand(bestand + "_" + naarTaal + ".pgn",
+      output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator + bestand
+                                             + "_" + naarTaal
+                                             + CaissaTools.EXTENSIE_PGN,
                                            charsetUit);
 
       for (PGN partij: partijen) {
@@ -154,7 +193,8 @@ public final class VertaalPgn {
     }
 
     DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + bestand + "_" + naarTaal + ".pgn");
+                         + uitvoerdir + File.separator + bestand + "_"
+                         + naarTaal + ".pgn");
     DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
                          + partijen.size());
     DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
@@ -175,11 +215,15 @@ public final class VertaalPgn {
     DoosUtils.naarScherm("  --charsetuit ",
         MessageFormat.format(resourceBundle.getString("help.charsetuit"),
                              Charset.defaultCharset().name()), 80);
+    DoosUtils.naarScherm("  --invoerdir  ",
+                         resourceBundle.getString("help.invoerdir"), 80);
     DoosUtils.naarScherm("  --naartaal   ",
         MessageFormat.format(resourceBundle.getString("help.naartaal"),
                              Locale.getDefault().getLanguage()), 80);
     DoosUtils.naarScherm("  --pgn        ",
                          resourceBundle.getString("help.pgnzetten"), 80);
+    DoosUtils.naarScherm("  --uitvoerdir ",
+                         resourceBundle.getString("help.uitvoerdir"), 80);
     DoosUtils.naarScherm("  --vantaal    ",
         MessageFormat.format(resourceBundle.getString("help.vantaal"),
                              Locale.getDefault().getLanguage()), 80);

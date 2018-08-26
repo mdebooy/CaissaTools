@@ -29,6 +29,7 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.access.CsvBestand;
+import eu.debooy.doosutils.access.CsvBestand.CsvBestandBuilder;
 import eu.debooy.doosutils.exception.BestandException;
 
 import java.io.BufferedWriter;
@@ -62,17 +63,25 @@ public final class ELOBerekenaar {
 
   private ELOBerekenaar() {}
 
+  public static void main(String[] args) throws PgnException {
+    String[]  params  = new String[] {"--toernooiBestand=competitie1",
+                                      "--spelerBestand=competitie",
+                                      "--invoerdir=/tmp",
+                                      "--eindDatum=1997.12.31"};
+    execute(params);
+  }
+
   public static void execute(String[] args) throws PgnException {
     String            charsetIn   = Charset.defaultCharset().name();
     String            charsetUit  = Charset.defaultCharset().name();
     String            eindDatum   = "9999.99.99";
     boolean           extraInfo   = false;
+    List<String>      fouten      = new ArrayList<String>();
     List<Spelerinfo>  spelerinfos = new ArrayList<Spelerinfo>();
     Map<String, Integer>
                       spelers     = new TreeMap<String, Integer>();
     String            startDatum  = "0000.00.00";
     int               startElo    = START_ELO;
-    List<String>      fouten      = new ArrayList<String>();
 
     Banner.printBanner(resourceBundle.getString("banner.eloberekenaar"));
 
@@ -112,17 +121,11 @@ public final class ELOBerekenaar {
     if (spelerBestand.contains(File.separator)) {
       fouten.add(
           MessageFormat.format(
-              resourceBundle.getString("error.bevatdirectory"),
+              resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
                                        CaissaTools.SPELERBESTAND));
     }
-    if (!spelerBestand.endsWith(".csv")) {
-      spelerBestand = spelerBestand + ".csv";
-    }
-    if (spelerBestand.contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              resourceBundle.getString("error.bevatdirectory"),
-                                       CaissaTools.SPELERBESTAND));
+    if (!spelerBestand.endsWith(CaissaTools.EXTENSIE_CSV)) {
+      spelerBestand = spelerBestand + CaissaTools.EXTENSIE_CSV;
     }
     if (arguments.hasArgument(CaissaTools.EINDDATUM)) {
       eindDatum   = arguments.getArgument(CaissaTools.EINDDATUM);
@@ -133,7 +136,7 @@ public final class ELOBerekenaar {
     if (eindDatum.compareTo(startDatum) < 0) {
       fouten.add(
           MessageFormat.format(
-              resourceBundle.getString("error.eind.voor.start"),
+              resourceBundle.getString(CaissaTools.ERR_EINDVOORSTART),
                                        startDatum, eindDatum));
     }
     if (arguments.hasArgument(CaissaTools.STARTELO)) {
@@ -145,11 +148,11 @@ public final class ELOBerekenaar {
     if (toernooiBestand.contains(File.separator)) {
       fouten.add(
           MessageFormat.format(
-              resourceBundle.getString("error.bevatdirectory"),
+              resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
                                        CaissaTools.TOERNOOIBESTAND));
     }
-    if (!toernooiBestand.endsWith(".pgn")) {
-      toernooiBestand = toernooiBestand + ".pgn";
+    if (!toernooiBestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
+      toernooiBestand = toernooiBestand + CaissaTools.EXTENSIE_PGN;
     }
     String    invoerdir   = ".";
     if (arguments.hasArgument(CaissaTools.INVOERDIR)) {
@@ -175,7 +178,7 @@ public final class ELOBerekenaar {
     }
     if (arguments.hasArgument(CaissaTools.MAXVERSCHIL)) {
       if (null == kFactor) {
-        fouten.add(resourceBundle.getString("error.maxverschil"));
+        fouten.add(resourceBundle.getString(CaissaTools.ERR_MAXVERSCHIL));
       }
       maxVerschil =
           Integer.parseInt(arguments.getArgument(CaissaTools.MAXVERSCHIL));
@@ -188,11 +191,11 @@ public final class ELOBerekenaar {
       if (geschiedenisBestand.contains(File.separator)) {
         fouten.add(
             MessageFormat.format(
-                resourceBundle.getString("error.bevatdirectory"),
+                resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
                                          CaissaTools.GESCHIEDENISBESTAND));
       }
-      if (!geschiedenisBestand.endsWith(".csv")) {
-        geschiedenisBestand = geschiedenisBestand + ".csv";
+      if (!geschiedenisBestand.endsWith(CaissaTools.EXTENSIE_CSV)) {
+        geschiedenisBestand = geschiedenisBestand + CaissaTools.EXTENSIE_CSV;
       }
     }
 
@@ -307,7 +310,10 @@ public final class ELOBerekenaar {
     try {
       Calendar  calendar  = Calendar.getInstance();
       // Is eigenlijk een uitvoer.
-      invoer  = new CsvBestand(spelerBestand, charsetUit);
+      CsvBestandBuilder builder =
+          new CsvBestandBuilder().setBestand(spelerBestand)
+                                 .setCharsetIn(charsetUit);
+      invoer  = builder.build();
       while (invoer.hasNext()) {
         String[]    veld        = invoer.next();
         int         spelerId    = spelers.size();
@@ -347,7 +353,7 @@ public final class ELOBerekenaar {
     } catch (ParseException e) {
       DoosUtils.foutNaarScherm(
           MessageFormat.format(
-              resourceBundle.getString("error.foutedatumin"),
+              resourceBundle.getString(CaissaTools.ERR_FOUTEDATUMIN),
               spelerBestand) + " [" + e.getLocalizedMessage() + "]");
     } finally {
       try {
@@ -456,8 +462,9 @@ public final class ELOBerekenaar {
                                        CaissaConstants.PGN_DATUM_FORMAAT));
           }
         } catch (ParseException e) {
-          DoosUtils.foutNaarScherm(resourceBundle.getString("error.foutedatum")
-                               + e.getLocalizedMessage() + "].");
+          DoosUtils.foutNaarScherm(resourceBundle
+              .getString(CaissaTools.ERR_FOUTEDATUM) + e.getLocalizedMessage()
+                         + "].");
         }
         Bestand.schrijfRegel(uitvoer, lijn.toString());
       }
@@ -523,7 +530,7 @@ public final class ELOBerekenaar {
             } catch (ParseException e) {
               DoosUtils.foutNaarScherm(
                   MessageFormat.format(
-                      resourceBundle.getString("error.foutedatum"),
+                      resourceBundle.getString(CaissaTools.ERR_FOUTEDATUM),
                       datum) + " [" + e.getLocalizedMessage() + "].");
               eloDatum  = null;
             }

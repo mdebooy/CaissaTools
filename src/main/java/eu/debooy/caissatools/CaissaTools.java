@@ -28,34 +28,66 @@ import java.util.ResourceBundle;
  * @author Marco de Booij
  */
 public final class CaissaTools {
-  public static final String  AUTEUR              = "auteur";
-  public static final String  BESTAND             = "bestand";
-  public static final String  CHARDSETIN          = "charsetin";
-  public static final String  CHARDSETUIT         = "charsetuit";
-  public static final String  DATUM               = "datum";
-  public static final String  EINDDATUM           = "eindDatum";
-  public static final String  ENKEL               = "enkel";
-  public static final String  EXTRAINFO           = "extraInfo";
-  public static final String  GESCHIEDENISBESTAND = "geschiedenisBestand";
-  public static final String  HALVE               = "halve";
-  public static final String  INVOERDIR           = "invoerdir";
-  public static final String  KEYWORDS            = "keywords";
-  public static final String  LOGO                = "logo";
-  public static final String  MATRIX              = "matrix";
-  public static final String  MATRIXOPSTAND       = "matrixopstand";
-  public static final String  MAXVERSCHIL         = "maxVerschil";
-  public static final String  SPELERBESTAND       = "spelerBestand";
-  public static final String  STARTDATUM          = "startDatum";
-  public static final String  STARTELO            = "startELO";
-  public static final String  TEMPLATE            = "template";
-  public static final String  TITEL               = "titel";
-  public static final String  TOERNOOIBESTAND     = "toernooiBestand";
-  public static final String  UITVOERDIR          = "uitvoerdir";
-  public static final String  VASTEKFACTOR        = "vasteKfactor";
+  public static final String  AUTEUR                = "auteur";
+  public static final String  BESTAND               = "bestand";
+  public static final String  CHARDSETIN            = "charsetin";
+  public static final String  CHARDSETUIT           = "charsetuit";
+  public static final String  DATE                  = "date";
+  public static final String  DATUM                 = "datum";
+  public static final String  EVENT                 = "event";
+  public static final String  EINDDATUM             = "eindDatum";
+  public static final String  ENKEL                 = "enkel";
+  public static final String  EXTRAINFO             = "extraInfo";
+  public static final String  GESCHIEDENISBESTAND   = "geschiedenisBestand";
+  public static final String  HALVE                 = "halve";
+  public static final String  INVOERDIR             = "invoerdir";
+  public static final String  JSON                  = "json";
+  public static final String  KEYWORDS              = "keywords";
+  public static final String  LOGO                  = "logo";
+  public static final String  MATRIX                = "matrix";
+  public static final String  MATRIXOPSTAND         = "matrixopstand";
+  public static final String  MAXBESTANDEN          = "maxBestanden";
+  public static final String  MAXVERSCHIL           = "maxVerschil";
+  public static final String  MINPARTIJEN           = "minPartijen";
+  public static final String  NAARTAAL              = "naartaal";
+  public static final String  PGN                   = "pgn";
+  public static final String  PGNVIEWER             = "pgnviewer";
+  public static final String  SITE                  = "site";
+  public static final String  SPELERBESTAND         = "spelerBestand";
+  public static final String  SPELER                = "speler";
+  public static final String  SPELERS               = "spelers";
+  public static final String  STARTDATUM            = "startDatum";
+  public static final String  STARTELO              = "startELO";
+  public static final String  TAG                   = "tag";
+  public static final String  TEMPLATE              = "template";
+  public static final String  TITEL                 = "titel";
+  public static final String  TOERNOOIBESTAND       = "toernooiBestand";
+  public static final String  UITVOERDIR            = "uitvoerdir";
+  public static final String  VANTAAL               = "vantaal";
+  public static final String  VASTEKFACTOR          = "vasteKfactor";
+  public static final String  ZIP                   = "zip";
 
-  public static final String  EXTENSIE_CSV        = ".csv";
-  public static final String  EXTENSIE_PGN        = ".pgn";
-  public static final String  EXTENSIE_TEX        = ".tex";
+  public static final String  ERR_BESTANDENPGN      = "error.bestand.en.pgn";
+  public static final String  ERR_BEVATDIRECTORY    = "error.bevatdirectory";
+  public static final String  ERR_EINDVOORSTART     = "error.eind.voor.start";
+  public static final String  ERR_FOUTEDATUM        = "error.foutedatum";
+  public static final String  ERR_FOUTEDATUMIN      = "error.foutedatumin";
+  public static final String  ERR_GEENINVOER        = "error.geen.invoer";
+  public static final String  ERR_MAAKNIEUWBESTAND  = "error.maaknieuwbestand";
+  public static final String  ERR_TALENGELIJK       = "error.talen.gelijk";
+  public static final String  ERR_TEMPLATE          = "error.template";
+  public static final String  ERR_MAXVERSCHIL       = "error.maxverschil";
+
+  public static final String  EXTENSIE_CSV          = ".csv";
+  public static final String  EXTENSIE_JSON         = ".json";
+  public static final String  EXTENSIE_PGN          = ".pgn";
+  public static final String  EXTENSIE_TEX          = ".tex";
+  public static final String  EXTENSIE_ZIP          = ".zip";
+
+  public static final String  MSG_NIEUWBESTAND      = "message.nieuwbestand";
+
+  public static final String  XML_HEADING           =
+      "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>";
 
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());

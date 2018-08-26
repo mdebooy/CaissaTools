@@ -40,11 +40,13 @@ import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.text.ParseException;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -61,6 +63,7 @@ public final class PgnToLatex {
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
+  private static final String HLINE     = "\\hline";
   private static final String KEYWORDS  = "K";
   private static final String LOGO      = "L";
   private static final String MATRIX    = "M";
@@ -73,6 +76,7 @@ public final class PgnToLatex {
     String              charsetIn   = Charset.defaultCharset().name();
     String              charsetUit  = Charset.defaultCharset().name();
     String              eindDatum   = "0000.00.00";
+    List<String>        fouten      = new ArrayList<String>();
     String              hulpDatum   = "";
     BufferedWriter      output      = null;
     BufferedReader      texInvoer   = null;
@@ -91,12 +95,14 @@ public final class PgnToLatex {
                                           CaissaTools.DATUM,
                                           CaissaTools.ENKEL,
                                           CaissaTools.HALVE,
+                                          CaissaTools.INVOERDIR,
                                           CaissaTools.KEYWORDS,
                                           CaissaTools.LOGO,
                                           CaissaTools.MATRIX,
                                           CaissaTools.MATRIXOPSTAND,
                                           CaissaTools.TEMPLATE,
-                                          CaissaTools.TITEL});
+                                          CaissaTools.TITEL,
+                                          CaissaTools.UITVOERDIR});
     arguments.setVerplicht(new String[] {CaissaTools.BESTAND});
     if (!arguments.isValid()) {
       help();
@@ -105,6 +111,12 @@ public final class PgnToLatex {
 
     String  auteur  = arguments.getArgument(CaissaTools.AUTEUR);
     String  bestand = arguments.getArgument(CaissaTools.BESTAND);
+    if (bestand.contains(File.separator)) {
+      fouten.add(
+          MessageFormat.format(
+              resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
+                                       CaissaTools.BESTAND));
+    }
     if (bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
       bestand   = bestand.substring(0, bestand.length() - 4);
     }
@@ -113,6 +125,24 @@ public final class PgnToLatex {
     }
     if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
       charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
+    }
+    String    invoerdir   = ".";
+    if (arguments.hasArgument(CaissaTools.INVOERDIR)) {
+      invoerdir   = arguments.getArgument(CaissaTools.INVOERDIR);
+    }
+    if (invoerdir.endsWith(File.separator)) {
+      invoerdir   = invoerdir.substring(0,
+                                        invoerdir.length()
+                                        - File.separator.length());
+    }
+    String    uitvoerdir  = invoerdir;
+    if (arguments.hasArgument(CaissaTools.UITVOERDIR)) {
+      uitvoerdir  = arguments.getArgument(CaissaTools.UITVOERDIR);
+    }
+    if (uitvoerdir.endsWith(File.separator)) {
+      uitvoerdir  = uitvoerdir.substring(0,
+                                         uitvoerdir.length()
+                                         - File.separator.length());
     }
     String    datum         = arguments.getArgument(CaissaTools.DATUM);
     if (DoosUtils.isBlankOrNull(datum)) {
@@ -159,18 +189,29 @@ public final class PgnToLatex {
       template  = arguments.getArgument(CaissaTools.TEMPLATE);
       File  tex = new File(template);
       if (!tex.exists()) {
-        DoosUtils.foutNaarScherm(
-            MessageFormat.format(resourceBundle.getString("error.template"),
-                                 template));
+        fouten.add(MessageFormat.format(
+            resourceBundle.getString(CaissaTools.ERR_TEMPLATE),
+                                        template));
       }
     }
     String  titel       = arguments.getArgument(CaissaTools.TITEL);
+
+    if (!fouten.isEmpty() ) {
+      help();
+      for (String fout : fouten) {
+        DoosUtils.foutNaarScherm(fout);
+      }
+      return;
+    }
 
     Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
 
     Collection<PGN>
             partijen    = new TreeSet<PGN>(new PGN.byEventComparator());
-    partijen.addAll(CaissaUtils.laadPgnBestand(bestand, charsetIn));
+    partijen.addAll(CaissaUtils.laadPgnBestand(invoerdir + File.separator
+                                                 + bestand
+                                                 + CaissaTools.EXTENSIE_PGN,
+                                               charsetIn));
 
     for (PGN partij: partijen) {
       // Verwerk de spelers
@@ -215,7 +256,9 @@ public final class PgnToLatex {
     }
 
     try {
-      output  = Bestand.openUitvoerBestand(bestand + CaissaTools.EXTENSIE_TEX,
+      output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
+                                             + bestand
+                                             + CaissaTools.EXTENSIE_TEX,
                                            charsetUit);
 
       int           noSpelers = spelers.size();
@@ -368,7 +411,8 @@ public final class PgnToLatex {
     }
 
     DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + bestand + ".tex");
+                         + uitvoerdir + File.separator
+                         + bestand + CaissaTools.EXTENSIE_TEX);
     DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
                          + partijen.size());
     DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
@@ -428,6 +472,8 @@ public final class PgnToLatex {
                          resourceBundle.getString("help.enkel"), 80);
     DoosUtils.naarScherm("  --halve         ",
                          resourceBundle.getString("help.halve"), 80);
+    DoosUtils.naarScherm("  --invoerdir     ",
+                         resourceBundle.getString("help.invoerdir"), 80);
     DoosUtils.naarScherm("  --keywords      ",
                          resourceBundle.getString("help.keywords"), 80);
     DoosUtils.naarScherm("  --logo          ",
@@ -440,6 +486,8 @@ public final class PgnToLatex {
                          resourceBundle.getString("help.template"), 80);
     DoosUtils.naarScherm("  --titel         ",
                          resourceBundle.getString("help.documenttitel"), 80);
+    DoosUtils.naarScherm("  --uitvoerdir   ",
+                         resourceBundle.getString("help.uitvoerdir"), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("help.paramverplicht"),
@@ -467,7 +515,7 @@ public final class PgnToLatex {
       Bestand.schrijfRegel(output, "c | ", 0);
     }
     Bestand.schrijfRegel(output, "r | r | r | }");
-    Bestand.schrijfRegel(output, "    \\hline");
+    Bestand.schrijfRegel(output, "    " + HLINE);
     Bestand.schrijfRegel(output, "    \\multicolumn{2}{|c|}{} ", 0);
     for (int i = 0; i < (enkel == 0 ? kolommen : noSpelers); i++) {
       if (enkel < 2) {
@@ -496,7 +544,7 @@ public final class PgnToLatex {
       }
       Bestand.schrijfRegel(output, "& & \\\\");
     }
-    Bestand.schrijfRegel(output, "    \\hline");
+    Bestand.schrijfRegel(output, "    " + HLINE);
     for (int i = 0; i < noSpelers; i++) {
       if (enkel == 0) {
         Bestand.schrijfRegel(output,
@@ -547,7 +595,7 @@ public final class PgnToLatex {
                                  wpntn : "") + wdecim, 0);
       }
       Bestand.schrijfRegel(output, " \\\\");
-      Bestand.schrijfRegel(output, "    \\hline");
+      Bestand.schrijfRegel(output, "    " + HLINE);
     }
     Bestand.schrijfRegel(output, "    \\end{tabular}");
   }
