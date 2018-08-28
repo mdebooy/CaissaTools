@@ -16,6 +16,7 @@
  */
 package eu.debooy.caissatools;
 
+import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
@@ -28,6 +29,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.text.MessageFormat;
 import java.util.Locale;
 
 import org.junit.AfterClass;
@@ -66,8 +68,29 @@ public class PgnToLatexTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToLatex.class, "execute", args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 35, out.size());
+    assertEquals("Zonder parameters - helptekst", 38, out.size());
     assertEquals("Zonder parameters - fouten", 0, 0);
+  }
+
+  @Test
+  public void testFouten() {
+    String[]  args      = new String[] {"--bestand=/tmp/competitie1;/tmp/competitie2;competitie3",
+                                        "--halve=Speler, 01;Speler, 02"};
+    String[]  verwacht  = new String[] {
+        MessageFormat.format(
+            resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
+                                     "/tmp/competitie1"),
+        MessageFormat.format(
+            resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
+                                     "/tmp/competitie2"),
+        resourceBundle.getString(CaissaTools.ERR_HALVE),
+        resourceBundle.getString(CaissaTools.ERR_BIJBESTAND)};
+
+    VangOutEnErr.execute(PgnToLatex.class, "execute", args, out, err);
+
+    assertEquals("Zonder parameters - helptekst", 38, out.size());
+    assertEquals("Zonder parameters - fouten", 4, err.size());
+    assertArrayEquals("Error mesages", verwacht, err.toArray());
   }
 
   @Test

@@ -69,14 +69,16 @@ public final class CaissaTools {
 
   public static final String  ERR_BESTANDENPGN      = "error.bestand.en.pgn";
   public static final String  ERR_BEVATDIRECTORY    = "error.bevatdirectory";
+  public static final String  ERR_BIJBESTAND        = "error.verplichtbijbestand";
   public static final String  ERR_EINDVOORSTART     = "error.eind.voor.start";
   public static final String  ERR_FOUTEDATUM        = "error.foutedatum";
   public static final String  ERR_FOUTEDATUMIN      = "error.foutedatumin";
   public static final String  ERR_GEENINVOER        = "error.geen.invoer";
+  public static final String  ERR_HALVE             = "error.halve.verboden";
   public static final String  ERR_MAAKNIEUWBESTAND  = "error.maaknieuwbestand";
+  public static final String  ERR_MAXVERSCHIL       = "error.maxverschil";
   public static final String  ERR_TALENGELIJK       = "error.talen.gelijk";
   public static final String  ERR_TEMPLATE          = "error.template";
-  public static final String  ERR_MAXVERSCHIL       = "error.maxverschil";
 
   public static final String  EXTENSIE_CSV          = ".csv";
   public static final String  EXTENSIE_JSON         = ".json";
