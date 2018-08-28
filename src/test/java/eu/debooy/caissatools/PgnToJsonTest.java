@@ -28,6 +28,7 @@ import java.io.BufferedReader;
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
+import java.util.Locale;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -44,6 +45,7 @@ public class PgnToJsonTest extends BatchTest {
 
   @BeforeClass
   public static void beforeClass() throws BestandException {
+    Locale.setDefault(new Locale("nl"));
     try {
       BufferedReader  bron  =
           Bestand.openInvoerBestand(PgnToJsonTest.class.getClassLoader(),

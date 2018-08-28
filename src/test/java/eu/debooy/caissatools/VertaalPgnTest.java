@@ -57,6 +57,7 @@ public class VertaalPgnTest extends BatchTest {
 
   @BeforeClass
   public static void beforeClass() throws BestandException {
+    Locale.setDefault(new Locale("nl"));
     try {
       BufferedReader  bron  =
           Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
