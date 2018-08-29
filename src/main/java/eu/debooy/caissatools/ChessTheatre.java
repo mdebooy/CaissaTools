@@ -326,7 +326,7 @@ public final class ChessTheatre {
     DoosUtils.naarScherm("  --charsetuit   ",
         MessageFormat.format(resourceBundle.getString("help.charsetuit"),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --invoerdir           ",
+    DoosUtils.naarScherm("  --invoerdir    ",
                          resourceBundle.getString("help.invoerdir"), 80);
     DoosUtils.naarScherm("  --maxBestanden ",
                          resourceBundle.getString("help.maxbestanden"), 80);

@@ -246,7 +246,7 @@ public final class PgnToHtml {
                          resourceBundle.getString("help.enkel"), 80);
     DoosUtils.naarScherm("  --halve         ",
                          resourceBundle.getString("help.halve"), 80);
-    DoosUtils.naarScherm("  --invoerdir           ",
+    DoosUtils.naarScherm("  --invoerdir     ",
                          resourceBundle.getString("help.invoerdir"), 80);
     DoosUtils.naarScherm("  --matrixopstand ",
                          resourceBundle.getString("help.matrixopstand"), 80);
