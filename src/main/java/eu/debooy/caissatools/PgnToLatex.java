@@ -69,6 +69,7 @@ public final class PgnToLatex {
   private static final String MATRIX    = "M";
   private static final String NORMAAL   = "N";
   private static final String PARTIJEN  = "P";
+  private static final String PERIODE   = "Q";
   
   PgnToLatex() {}
 
@@ -81,10 +82,8 @@ public final class PgnToLatex {
     String              hulpDatum       = "";
     BufferedWriter      output          = null;
     BufferedReader      texInvoer       = null;
-    Map<String, String> texPartij       = new HashMap<String, String>();
-    Set<String>         spelers         = new HashSet<String>();
     String              startDatum      = "9999.99.99";
-    String              template        = "";
+    List<String>        template        = new ArrayList<String>();
 
     Banner.printBanner(resourceBundle.getString("banner.pgntolatex"));
 
@@ -188,12 +187,12 @@ public final class PgnToLatex {
               arguments.getArgument(CaissaTools.MATRIXOPSTAND));
     }
     if (arguments.hasArgument(CaissaTools.TEMPLATE)) {
-      template  = arguments.getArgument(CaissaTools.TEMPLATE);
-      File  tex = new File(template);
+      File  tex = new File(arguments.getArgument(CaissaTools.TEMPLATE));
       if (!tex.exists()) {
         fouten.add(MessageFormat.format(
             resourceBundle.getString(CaissaTools.ERR_TEMPLATE),
-                                        template));
+                                     arguments.getArgument(
+                                         CaissaTools.TEMPLATE)));
       }
     }
     String  titel       = arguments.getArgument(CaissaTools.TITEL);
@@ -216,11 +215,54 @@ public final class PgnToLatex {
       return;
     }
 
+    int beginBody = -1;
+    int eindeBody = -1;
+    try {
+      String  regel;
+      if (arguments.hasArgument(CaissaTools.TEMPLATE)) {
+        texInvoer =
+            Bestand.openInvoerBestand(
+                arguments.getArgument(CaissaTools.TEMPLATE), charsetIn);
+      } else {
+        texInvoer =
+            new BufferedReader(
+                new InputStreamReader(PgnToLatex.class.getClassLoader()
+                    .getResourceAsStream("Caissa.tex"), charsetIn));
+      }
+      while ((regel = texInvoer.readLine()) != null) {
+        if (regel.startsWith("%@IncludeStart Body")) {
+          beginBody = template.size();
+        }
+        if (regel.startsWith("%@IncludeEind Body")) {
+          eindeBody = template.size();
+        }
+        template.add(regel);
+      }
+
+      output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
+                                             + bestand[0]
+                                             + CaissaTools.EXTENSIE_TEX,
+                                           charsetUit);
+    } catch (BestandException | IOException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+    } finally {
+      try {
+        if (texInvoer != null) {
+          texInvoer.close();
+        }
+      } catch (IOException ex) {
+        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
+      }
+    }
+
     Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
 
     for (int i = 0; i < bestand.length; i++) {
-      Collection<PGN>
-              partijen    = new TreeSet<PGN>(new PGN.byEventComparator());
+      Collection<PGN>     partijen  =
+          new TreeSet<PGN>(new PGN.byEventComparator());
+      Map<String, String> texPartij = new HashMap<String, String>();
+      Set<String>         spelers   = new HashSet<String>();
+
       partijen.addAll(CaissaUtils.laadPgnBestand(invoerdir + File.separator
                                                    + bestand[i]
                                                    + CaissaTools.EXTENSIE_PGN,
@@ -269,15 +311,10 @@ public final class PgnToLatex {
       }
 
       try {
-        output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
-                                               + bestand[i]
-                                               + CaissaTools.EXTENSIE_TEX,
-                                             charsetUit);
-
         int           noSpelers = spelers.size();
         int           kolommen  = (enkel == CaissaConstants.TOERNOOI_MATCH
                                       ? partijen.size() : noSpelers * enkel);
-        double[][]    matrix    = new double[noSpelers][kolommen];
+        double[][]    matrix    = null;
         String[]      namen     = new String[noSpelers];
         Spelerinfo[]  punten    = new Spelerinfo[noSpelers];
         // Maak de Matrix
@@ -295,9 +332,12 @@ public final class PgnToLatex {
           }
 
           // Bepaal de score en weerstandspunten.
-          CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
-                                        matrixOpStand,
-                                        CaissaConstants.TIEBREAK_SB);
+          if (metMatrix) {
+            matrix  = new double[noSpelers][kolommen];
+            CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix,
+                                          enkel, matrixOpStand,
+                                          CaissaConstants.TIEBREAK_SB);
+          }
         }
 
         // Zet de te vervangen waardes.
@@ -305,123 +345,48 @@ public final class PgnToLatex {
         parameters.put("Auteur", auteur);
         parameters.put("Datum", datum);
         if (DoosUtils.isNotBlankOrNull(keywords)) {
-          parameters.put("Keywords", keywords);
+          parameters.put(CaissaTools.KEYWORDS, keywords);
         }
         if (DoosUtils.isNotBlankOrNull(logo)) {
-          parameters.put("Logo", logo);
+          parameters.put(CaissaTools.LOGO, logo);
         }
-        parameters.put("Periode", datumInTitel(startDatum, eindDatum));
+        if (bestand.length == 1) {
+          parameters.put("Periode", datumInTitel(startDatum, eindDatum));
+        }
         parameters.put("Titel", titel);
 
-        // Maak de .tex file
-        if (arguments.hasArgument("template")) {
-          texInvoer = Bestand.openInvoerBestand(template, charsetIn);
-        } else {
-          texInvoer =
-              new BufferedReader(
-                  new InputStreamReader(PgnToLatex.class.getClassLoader()
-                      .getResourceAsStream("Caissa.tex"), charsetIn));
-        }
-
-        String  regel   = null;
         String  status  = NORMAAL;
-        String  type    = "";
-        while ((regel = texInvoer.readLine()) != null) {
-          if (regel.startsWith("%@Include ")) {
-            type  = regel.split(" ")[1].toLowerCase();
-            switch(type) {
-            case "matrix":
-              if (metMatrix) {
-                maakMatrix(output, punten, enkel, matrix, kolommen, noSpelers);
-              }
-              break;
-            default:
-              break;
-            }
-          } else if (regel.startsWith("%@IncludeStart ")) {
-            type  = regel.split(" ")[1].toLowerCase();
-            switch(type) {
-            case "keywords":
-              status  = KEYWORDS;
-              break;
-            case "logo":
-              status  = LOGO;
-              break;
-            case "matrix":
-              status = MATRIX;
-              break;
-            case "partij":
-              status  = PARTIJEN;
-              break;
-            default:
-              break;
-            }
-          } else if (regel.startsWith("%@IncludeEind ")) {
-            switch (type) {
-            case "partij":
-              verwerkPartijen(partijen, texPartij, output);
-              break;
-            default:
-              break;
-            }
-            status  = NORMAAL;
-            type    = "";
-          } else if (regel.startsWith("%@I18N ")) {
-            Bestand.schrijfRegel(output,
-                                 "% " + resourceBundle
-                                            .getString(regel.split(" ")[1]
-                                                            .toLowerCase()));
-          } else {
-            switch (status) {
-            case KEYWORDS:
-              if (DoosUtils.isNotBlankOrNull(keywords)) {
-                Bestand.schrijfRegel(output, replaceParameters(regel,
-                                                               parameters));
-              }
-              break;
-            case LOGO:
-              if (DoosUtils.isNotBlankOrNull(logo)) {
-                Bestand.schrijfRegel(output, replaceParameters(regel,
-                                                               parameters));
-              }
-              break;
-            case MATRIX:
-              if (metMatrix) {
-                Bestand.schrijfRegel(output, replaceParameters(regel,
-                                                               parameters));
-              }
-              break;
-            case PARTIJEN:
-              String[]  splits  = regel.substring(1).split("=");
-              texPartij.put(splits[0], splits[1]);
-              break;
-            default:
-              Bestand.schrijfRegel(output, replaceParameters(regel, parameters));
-              break;
-            }
+        if (i == 0) {
+          for (int j = 0; j < beginBody; j++) {
+            status  = schrijf(template.get(j), status, output, punten, enkel,
+                              matrix, kolommen, noSpelers, texPartij,
+                              partijen, parameters);
+          }
+        }
+        for (int j = beginBody; j < eindeBody; j++) {
+          status  = schrijf(template.get(j), status, output, punten, enkel,
+                            matrix, kolommen, noSpelers, texPartij,
+                            partijen, parameters);
+        }
+        if (i == bestand.length - 1) {
+          for (int j = eindeBody + 1; j < template.size(); j++) {
+            status  = schrijf(template.get(j), status, output, punten, enkel,
+                              matrix, kolommen, noSpelers, texPartij,
+                              partijen, parameters);
           }
         }
         aantalPartijen  += partijen.size();
       } catch (IOException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      } catch (BestandException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      } finally {
-        try {
-          if (output != null) {
-            output.close();
-          }
-        } catch (IOException ex) {
-          DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
-        }
-        try {
-          if (texInvoer != null) {
-            texInvoer.close();
-          }
-        } catch (IOException ex) {
-          DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
-        }
       }
+    }
+
+    try {
+      if (output != null) {
+        output.close();
+      }
+    } catch (IOException ex) {
+      DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
     }
 
     for (int i = 0; i < bestand.length; i++) {
@@ -504,7 +469,7 @@ public final class PgnToLatex {
                          resourceBundle.getString("help.template"), 80);
     DoosUtils.naarScherm("  --titel         ",
                          resourceBundle.getString("help.documenttitel"), 80);
-    DoosUtils.naarScherm("  --uitvoerdir   ",
+    DoosUtils.naarScherm("  --uitvoerdir    ",
                          resourceBundle.getString("help.uitvoerdir"), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
@@ -528,9 +493,9 @@ public final class PgnToLatex {
    * @param int noSpelers
    * @throws IOException
    */
-  public static void maakMatrix(BufferedWriter output, Spelerinfo[] punten,
-                                int enkel, double[][] matrix, int kolommen,
-                                int noSpelers)
+  private static void maakMatrix(BufferedWriter output, Spelerinfo[] punten,
+                                 int enkel, double[][] matrix, int kolommen,
+                                 int noSpelers)
       throws IOException {
     Bestand.schrijfRegel(output, "    \\begin{tabular} { | c | l | ", 0);
     for (int i = 0; i < kolommen; i++) {
@@ -629,8 +594,8 @@ public final class PgnToLatex {
    * @param Map<String, String> parameters
    * @return
    */
-  public static String replaceParameters(String regel,
-                                         Map<String, String> parameters) {
+  private static String replaceParameters(String regel,
+                                          Map<String, String> parameters) {
     String resultaat  = regel;
     for (Entry<String, String> parameter : parameters.entrySet()) {
       resultaat = resultaat.replaceAll("@"+parameter.getKey()+"@",
@@ -638,6 +603,98 @@ public final class PgnToLatex {
     }
 
     return resultaat;
+  }
+
+  private static String schrijf(String regel, String status,
+                                BufferedWriter output, Spelerinfo[] punten,
+                                int enkel, double[][] matrix, int kolommen,
+                                int noSpelers, Map<String, String> texPartij,
+                                Collection<PGN> partijen,
+                                Map<String, String> parameters)
+      throws IOException {
+    String  start = regel.split(" ")[0];
+          switch(start) {
+          case "%@Include":
+            if ("matrix".equals(regel.split(" ")[1].toLowerCase())
+                && null != matrix) {
+              maakMatrix(output, punten, enkel, matrix, kolommen, noSpelers);
+            }
+            break;
+          case "%@IncludeStart":
+            switch(regel.split(" ")[1].toLowerCase()) {
+            case "keywords":
+              status  = KEYWORDS;
+              break;
+            case "logo":
+              status  = LOGO;
+              break;
+            case "matrix":
+              status = MATRIX;
+              break;
+            case "partij":
+              status  = PARTIJEN;
+              break;
+            case "periode":
+              status  = PERIODE;
+              break;
+            default:
+              break;
+            }
+            break;
+          case "%@IncludeEind":
+            switch (regel.split(" ")[1].toLowerCase()) {
+            case "partij":
+              verwerkPartijen(partijen, texPartij, output);
+              break;
+            default:
+              break;
+            }
+            status  = NORMAAL;
+            break;
+          case "%@I18N":
+            Bestand.schrijfRegel(output,
+                                 "% " + resourceBundle
+                                            .getString(regel.split(" ")[1]
+                                                            .toLowerCase()));
+            break;
+          default:
+            switch (status) {
+            case KEYWORDS:
+              if (parameters.containsKey(CaissaTools.KEYWORDS)) {
+                Bestand.schrijfRegel(output, replaceParameters(regel,
+                                                               parameters));
+              }
+              break;
+            case LOGO:
+              if (parameters.containsKey(CaissaTools.LOGO)) {
+                Bestand.schrijfRegel(output, replaceParameters(regel,
+                                                               parameters));
+              }
+              break;
+            case MATRIX:
+              if (null != matrix) {
+                Bestand.schrijfRegel(output, replaceParameters(regel,
+                                                               parameters));
+              }
+              break;
+            case PARTIJEN:
+              String[]  splits  = regel.substring(1).split("=");
+              texPartij.put(splits[0], splits[1]);
+              break;
+            case PERIODE:
+              if (parameters.containsKey("Periode")) {
+                Bestand.schrijfRegel(output, replaceParameters(regel,
+                                                               parameters));
+              }
+              break;
+            default:
+              Bestand.schrijfRegel(output, replaceParameters(regel, parameters));
+              break;
+            }
+            break;
+          }
+
+    return status;
   }
 
   /**
@@ -648,9 +705,9 @@ public final class PgnToLatex {
    * @param BufferedWriter output
    * @throws IOException
    */
-  public static void verwerkPartijen(Collection<PGN> partijen,
-                                     Map<String, String> texPartij,
-                                     BufferedWriter output)
+  private static void verwerkPartijen(Collection<PGN> partijen,
+                                      Map<String, String> texPartij,
+                                      BufferedWriter output)
       throws IOException {
     FEN fen = null;
     for (PGN partij: partijen) {

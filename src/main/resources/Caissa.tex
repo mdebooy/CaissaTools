@@ -61,7 +61,7 @@
    /Author (@Auteur@)
    /Title  (@Titel@)
 %@IncludeStart Keywords
-   /Keywords (@Keywords@)
+   /Keywords (@keywords@)
 %@IncludeEind Keywords
 }
 \fi
@@ -77,13 +77,16 @@
     \large @Auteur@ \\
 %@IncludeStart Logo
     \vspace{2in}
-    \includegraphics[width=6cm]{@Logo@} \\
+    \includegraphics[width=6cm]{@logo@} \\
 %@IncludeEind Logo
+%@IncludeStart Periode
     \vspace{1in}
     \large @Periode@ \\
+%@IncludeEind Periode
   \end{center}
 \end{titlepage}
 
+%@IncludeStart Body
 %@IncludeStart Matrix
 \topmargin =-15.mm
 \begin{landscape}
@@ -98,4 +101,5 @@
 %legepartij=\begin{chessempty}{@White@}{@Black@}{@Date@}{@Round@}{@Result@}{@ECO@}\end{chessempty}
 %fenpartij=\begin{fengame}{@White@}{@Black@}{@Date@}{@Round@}{@Result@}{@ECO@}{@_EnkelZetten@}{@_Start@}{@_Stelling@}\end{fengame}
 %@IncludeEind Partij
+%@IncludeEind Body
 \end{document}
