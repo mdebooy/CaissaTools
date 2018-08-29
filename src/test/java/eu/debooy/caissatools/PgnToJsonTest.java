@@ -40,7 +40,7 @@ import org.junit.Test;
 public class PgnToJsonTest extends BatchTest {
   @AfterClass
   public static void afterClass() throws BestandException {
-    Bestand.delete(temp + File.separator + "competitie2.pgn");
+    Bestand.delete(TEMP + File.separator + "competitie2.pgn");
   }
 
   @BeforeClass
@@ -51,7 +51,7 @@ public class PgnToJsonTest extends BatchTest {
     try {
       bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
                                         "competitie2.pgn");
-      doel  = Bestand.openUitvoerBestand(temp + File.separator
+      doel  = Bestand.openUitvoerBestand(TEMP + File.separator
                                          + "competitie2.pgn");
       kopieerBestand(bron, doel);
     } finally {
@@ -86,11 +86,11 @@ public class PgnToJsonTest extends BatchTest {
   public void testPgnToJson() throws BestandException {
     String[]  args      = new String[] {"--bestand=competitie2",
                                         "--json=competitie",
-                                        "--invoerdir=" + temp,
-                                        "--uitvoerdir=" + temp};
+                                        "--invoerdir=" + TEMP,
+                                        "--uitvoerdir=" + TEMP};
 
     try {
-      Bestand.delete(temp + File.separator + "competitie.json");
+      Bestand.delete(TEMP + File.separator + "competitie.json");
     } catch (BestandException e) {
     }
 
@@ -99,32 +99,32 @@ public class PgnToJsonTest extends BatchTest {
     assertEquals("PgnToJson - helptekst", 17, out.size());
     assertEquals("PgnToJson - fouten", 0, 0);
     assertEquals("PgnToJson - 14",
-                 temp + File.separator + "competitie2.pgn",
+                 TEMP + File.separator + "competitie2.pgn",
                  out.get(13).split(":")[1].trim());
     assertEquals("PgnToJson - 15", "64",
                  out.get(14).split(":")[1].trim());
-    assertEquals("PgnToJson - 16", temp + File.separator + "competitie.json",
+    assertEquals("PgnToJson - 16", TEMP + File.separator + "competitie.json",
                  out.get(15).split(":")[1].trim());
     assertTrue("PgnToJson - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(temp + File.separator
+            Bestand.openInvoerBestand(TEMP + File.separator
                                       + "competitie.json"),
             Bestand.openInvoerBestand(PgnToJsonTest.class.getClassLoader(),
                                       "competitie1.json")));
 
-    Bestand.delete(temp + File.separator + "competitie.json");
+    Bestand.delete(TEMP + File.separator + "competitie.json");
   }
 
   @Test
   public void testMetPgnView() throws BestandException {
     String[]  args      = new String[] {"--bestand=competitie2",
-                                        "--invoerdir=" + temp,
+                                        "--invoerdir=" + TEMP,
                                         "--json=competitie",
                                         "--pgnviewer=J",
-                                        "--uitvoerdir=" + temp};
+                                        "--uitvoerdir=" + TEMP};
 
     try {
-      Bestand.delete(temp + File.separator + "competitie.json");
+      Bestand.delete(TEMP + File.separator + "competitie.json");
     } catch (BestandException e) {
     }
 
@@ -133,19 +133,19 @@ public class PgnToJsonTest extends BatchTest {
     assertEquals("PgnToJson - helptekst", 17, out.size());
     assertEquals("PgnToJson - fouten", 0, 0);
     assertEquals("PgnToJson - 14",
-                 temp + File.separator + "competitie2.pgn",
+                 TEMP + File.separator + "competitie2.pgn",
                  out.get(13).split(":")[1].trim());
     assertEquals("PgnToJson - 15", "64",
                  out.get(14).split(":")[1].trim());
-    assertEquals("PgnToJson - 16", temp + File.separator + "competitie.json",
+    assertEquals("PgnToJson - 16", TEMP + File.separator + "competitie.json",
                  out.get(15).split(":")[1].trim());
     assertTrue("PgnToJson - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(temp + File.separator
+            Bestand.openInvoerBestand(TEMP + File.separator
                                       + "competitie.json"),
             Bestand.openInvoerBestand(PgnToJsonTest.class.getClassLoader(),
                                       "competitie2.json")));
 
-    Bestand.delete(temp + File.separator + "competitie.json");
+    Bestand.delete(TEMP + File.separator + "competitie.json");
   }
 }

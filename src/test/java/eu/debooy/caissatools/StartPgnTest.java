@@ -40,7 +40,7 @@ import org.junit.Test;
 public class StartPgnTest extends BatchTest {
   @AfterClass
   public static void afterClass() throws BestandException {
-    Bestand.delete(temp + File.separator + "competitie1.pgn");
+    Bestand.delete(TEMP + File.separator + "competitie1.pgn");
   }
 
   @BeforeClass
@@ -51,7 +51,7 @@ public class StartPgnTest extends BatchTest {
     try {
       bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
                                         "competitie1.pgn");
-      doel  = Bestand.openUitvoerBestand(temp + File.separator
+      doel  = Bestand.openUitvoerBestand(TEMP + File.separator
                                          + "competitie1.pgn");
       kopieerBestand(bron, doel);
     } finally {
@@ -90,10 +90,10 @@ public class StartPgnTest extends BatchTest {
                                         "--site=\"Caissa Tools\"",
                                         "--spelers=\"Speler, 01;Speler, 02;"+
                                           "Speler, 03;Speler, 04\"",
-                                        "--uitvoerdir=" + temp};
+                                        "--uitvoerdir=" + TEMP};
 
     try {
-      Bestand.delete(temp + File.separator + "start.pgn");
+      Bestand.delete(TEMP + File.separator + "start.pgn");
     } catch (BestandException e) {
     }
 
@@ -102,17 +102,17 @@ public class StartPgnTest extends BatchTest {
     assertEquals("StartPgn - helptekst", 16, out.size());
     assertEquals("StartPgn - fouten", 0, 0);
     assertEquals("StartPgn - 14",
-                 temp + File.separator + "start.pgn",
+                 TEMP + File.separator + "start.pgn",
                  out.get(13).split(":")[1].trim());
-    assertEquals("StartPgn - 15", temp,
+    assertEquals("StartPgn - 15", TEMP,
                  out.get(14).split(":")[1].trim());
     assertTrue("StartPgn - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(temp + File.separator
+            Bestand.openInvoerBestand(TEMP + File.separator
                                       + "start.pgn"),
             Bestand.openInvoerBestand(StartPgnTest.class.getClassLoader(),
                                       "start.pgn")));
 
-    Bestand.delete(temp + File.separator + "start.pgn");
+    Bestand.delete(TEMP + File.separator + "start.pgn");
   }
 }

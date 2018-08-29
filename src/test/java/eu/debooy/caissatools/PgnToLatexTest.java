@@ -42,8 +42,8 @@ import org.junit.Test;
 public class PgnToLatexTest extends BatchTest {
   @AfterClass
   public static void afterClass() throws BestandException {
-    Bestand.delete(temp + File.separator + "competitie1.pgn");
-    Bestand.delete(temp + File.separator + "competitie2.pgn");
+    Bestand.delete(TEMP + File.separator + "competitie1.pgn");
+    Bestand.delete(TEMP + File.separator + "competitie2.pgn");
   }
 
   @BeforeClass
@@ -54,14 +54,14 @@ public class PgnToLatexTest extends BatchTest {
     try {
       bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
                                         "competitie1.pgn");
-      doel  = Bestand.openUitvoerBestand(temp + File.separator
+      doel  = Bestand.openUitvoerBestand(TEMP + File.separator
                                          + "competitie1.pgn");
       kopieerBestand(bron, doel);
       bron.close();
       doel.close();
       bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
                                         "competitie2.pgn");
-      doel  = Bestand.openUitvoerBestand(temp + File.separator
+      doel  = Bestand.openUitvoerBestand(TEMP + File.separator
                                          + "competitie2.pgn");
       kopieerBestand(bron, doel);
     } catch (IOException e) {
@@ -119,11 +119,11 @@ public class PgnToLatexTest extends BatchTest {
   public void testPgnToLatex() throws BestandException {
     String[]  args      = new String[] {"--bestand=competitie1",
                                         "--enkel=N",
-                                        "--invoerdir=" + temp,
-                                        "--uitvoerdir=" + temp};
+                                        "--invoerdir=" + TEMP,
+                                        "--uitvoerdir=" + TEMP};
 
     try {
-      Bestand.delete(temp + File.separator + "competitie1.tex");
+      Bestand.delete(TEMP + File.separator + "competitie1.tex");
     } catch (BestandException e) {
     }
 
@@ -132,18 +132,18 @@ public class PgnToLatexTest extends BatchTest {
     assertEquals("PgnToLatex - helptekst", 16, out.size());
     assertEquals("PgnToLatex - fouten", 0, 0);
     assertEquals("PgnToLatex - 14",
-                 temp + File.separator + "competitie1.tex",
+                 TEMP + File.separator + "competitie1.tex",
                  out.get(13).split(":")[1].trim());
     assertEquals("PgnToLatex - 15", "150",
                  out.get(14).split(":")[1].trim());
     assertTrue("PgnToLatex - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(temp + File.separator
+            Bestand.openInvoerBestand(TEMP + File.separator
                                       + "competitie1.tex"),
             Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
                                       "competitie1.tex")));
 
-    Bestand.delete(temp + File.separator + "competitie1.tex");
+    Bestand.delete(TEMP + File.separator + "competitie1.tex");
   }
 
   @Test
@@ -151,12 +151,12 @@ public class PgnToLatexTest extends BatchTest {
     String[]  args      = new String[] {"--auteur=Caissa Tools",
                                         "--bestand=competitie1;competitie2",
                                         "--enkel=N",
-                                        "--invoerdir=" + temp,
+                                        "--invoerdir=" + TEMP,
                                         "--titel=Testing 97/98 - 98/99",
-                                        "--uitvoerdir=" + temp};
+                                        "--uitvoerdir=" + TEMP};
 
     try {
-      Bestand.delete(temp + File.separator + "competitie1.tex");
+      Bestand.delete(TEMP + File.separator + "competitie1.tex");
     } catch (BestandException e) {
     }
 
@@ -165,33 +165,33 @@ public class PgnToLatexTest extends BatchTest {
     assertEquals("PgnToLatex 2 - helptekst", 17, out.size());
     assertEquals("PgnToLatex 2 - fouten", 0, 0);
     assertEquals("PgnToLatex 2 - 14",
-                 temp + File.separator + "competitie1.tex",
+                 TEMP + File.separator + "competitie1.tex",
                  out.get(13).split(":")[1].trim());
     assertEquals("PgnToLatex 2 - 15",
-                 temp + File.separator + "competitie2.tex",
+                 TEMP + File.separator + "competitie2.tex",
                  out.get(14).split(":")[1].trim());
     assertEquals("PgnToLatex 2 - 16", "214",
                  out.get(15).split(":")[1].trim());
     assertTrue("PgnToLatex 2 - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(temp + File.separator
+            Bestand.openInvoerBestand(TEMP + File.separator
                                       + "competitie1.tex"),
             Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
                                       "competitie4.tex")));
 
-    Bestand.delete(temp + File.separator + "competitie1.tex");
+    Bestand.delete(TEMP + File.separator + "competitie1.tex");
   }
 
   @Test
   public void testOpStand() throws BestandException {
     String[]  args      = new String[] {"--bestand=competitie1",
                                         "--enkel=N",
-                                        "--invoerdir=" + temp,
+                                        "--invoerdir=" + TEMP,
                                         "--matrixopstand=J",
-                                        "--uitvoerdir=" + temp};
+                                        "--uitvoerdir=" + TEMP};
 
     try {
-      Bestand.delete(temp + File.separator + "competitie1.tex");
+      Bestand.delete(TEMP + File.separator + "competitie1.tex");
     } catch (BestandException e) {
     }
 
@@ -200,30 +200,30 @@ public class PgnToLatexTest extends BatchTest {
     assertEquals("Op Stand - helptekst", 16, out.size());
     assertEquals("Op Stand - fouten", 0, 0);
     assertEquals("Op Stand - 14",
-                 temp + File.separator + "competitie1.tex",
+                 TEMP + File.separator + "competitie1.tex",
                  out.get(13).split(":")[1].trim());
     assertEquals("Op Stand - 15", "150",
                  out.get(14).split(":")[1].trim());
     assertTrue("Op Stand - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(temp + File.separator
+            Bestand.openInvoerBestand(TEMP + File.separator
                                       + "competitie1.tex"),
             Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
                                       "competitie2.tex")));
 
-    Bestand.delete(temp + File.separator + "competitie1.tex");
+    Bestand.delete(TEMP + File.separator + "competitie1.tex");
   }
 
   @Test
   public void testZonderMatrix() throws BestandException {
     String[]  args      = new String[] {"--bestand=competitie1",
                                         "--enkel=N",
-                                        "--invoerdir=" + temp,
+                                        "--invoerdir=" + TEMP,
                                         "--matrix=N",
-                                        "--uitvoerdir=" + temp};
+                                        "--uitvoerdir=" + TEMP};
 
     try {
-      Bestand.delete(temp + File.separator + "competitie1.tex");
+      Bestand.delete(TEMP + File.separator + "competitie1.tex");
     } catch (BestandException e) {
     }
 
@@ -232,18 +232,18 @@ public class PgnToLatexTest extends BatchTest {
     assertEquals("Zonder Matrix - helptekst", 16, out.size());
     assertEquals("Zonder Matrix - fouten", 0, 0);
     assertEquals("Zonder Matrix - 14",
-                 temp + File.separator + "competitie1.tex",
+                 TEMP + File.separator + "competitie1.tex",
                  out.get(13).split(":")[1].trim());
     assertEquals("Zonder Matrix - 15", "150",
                  out.get(14).split(":")[1].trim());
     assertTrue("Zonder Matrix - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(temp + File.separator
+            Bestand.openInvoerBestand(TEMP + File.separator
                                       + "competitie1.tex"),
             Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
                                       "competitie3.tex")));
 
-    Bestand.delete(temp + File.separator + "competitie1.tex");
+    Bestand.delete(TEMP + File.separator + "competitie1.tex");
   }
 
   @Test
@@ -251,13 +251,13 @@ public class PgnToLatexTest extends BatchTest {
     String[]  args      = new String[] {"--auteur=Caissa Tools",
                                         "--bestand=competitie1;competitie2",
                                         "--enkel=N",
-                                        "--invoerdir=" + temp,
+                                        "--invoerdir=" + TEMP,
                                         "--matrix=N",
                                         "--titel=Testing 97/98 - 98/99",
-                                        "--uitvoerdir=" + temp};
+                                        "--uitvoerdir=" + TEMP};
 
     try {
-      Bestand.delete(temp + File.separator + "competitie1.tex");
+      Bestand.delete(TEMP + File.separator + "competitie1.tex");
     } catch (BestandException e) {
     }
 
@@ -266,20 +266,20 @@ public class PgnToLatexTest extends BatchTest {
     assertEquals("Zonder Matrix 2 - helptekst", 17, out.size());
     assertEquals("Zonder Matrix 2 - fouten", 0, 0);
     assertEquals("Zonder Matrix 2 - 14",
-                 temp + File.separator + "competitie1.tex",
+                 TEMP + File.separator + "competitie1.tex",
                  out.get(13).split(":")[1].trim());
     assertEquals("Zonder Matrix 2 - 15",
-                 temp + File.separator + "competitie2.tex",
+                 TEMP + File.separator + "competitie2.tex",
                  out.get(14).split(":")[1].trim());
     assertEquals("Zonder Matrix 2 - 16", "214",
                  out.get(15).split(":")[1].trim());
     assertTrue("Zonder Matrix 2 - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(temp + File.separator
+            Bestand.openInvoerBestand(TEMP + File.separator
                                       + "competitie1.tex"),
             Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
                                       "competitie5.tex")));
 
-    Bestand.delete(temp + File.separator + "competitie1.tex");
+    Bestand.delete(TEMP + File.separator + "competitie1.tex");
   }
 }

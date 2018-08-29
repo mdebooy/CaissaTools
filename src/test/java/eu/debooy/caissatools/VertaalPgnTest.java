@@ -51,8 +51,8 @@ public class VertaalPgnTest extends BatchTest {
 
   @AfterClass
   public static void afterClass() throws BestandException {
-    Bestand.delete(temp + File.separator + "partij.pgn");
-    Bestand.delete(temp + File.separator + "partij_nl.pgn");
+    Bestand.delete(TEMP + File.separator + "partij.pgn");
+    Bestand.delete(TEMP + File.separator + "partij_nl.pgn");
   }
 
   @BeforeClass
@@ -63,7 +63,7 @@ public class VertaalPgnTest extends BatchTest {
     try {
       bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
                                         "partij.pgn");
-      doel  = Bestand.openUitvoerBestand(temp + File.separator
+      doel  = Bestand.openUitvoerBestand(TEMP + File.separator
                                          + "partij.pgn");
       kopieerBestand(bron, doel);
     } finally {
@@ -134,19 +134,19 @@ public class VertaalPgnTest extends BatchTest {
   @Test
   public void testBestand() throws PgnException {
     String[]  args          = new String[] {"--bestand=partij.pgn",
-                                            "--invoerdir=" + temp,
+                                            "--invoerdir=" + TEMP,
                                             "--vantaal=en",
                                             "--naartaal=nl"};
     VangOutEnErr.execute(VertaalPgn.class, "execute", args, out, err);
 
     Collection<PGN> partijen  =
-        CaissaUtils.laadPgnBestand(temp + File.separator + "partij_nl.pgn",
-                                   charsetIn);
+        CaissaUtils.laadPgnBestand(TEMP + File.separator + "partij_nl.pgn",
+                                   CHARSET);
 
     assertEquals("Zonder parameters - helptekst", 16, out.size());
     assertEquals("Zonder parameters - fouten", 0, err.size());
     assertEquals("Zonder parameters - uitvoer",
-                 temp + File.separator + "partij_nl.pgn",
+                 TEMP + File.separator + "partij_nl.pgn",
                  out.get(13).split(":")[1].trim());
     assertEquals("Zonder parameters - aantal (1)", "1",
                  out.get(14).split(":")[1].trim());

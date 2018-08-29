@@ -40,7 +40,7 @@ import org.junit.Test;
 public class PgnToHtmlTest extends BatchTest {
   @AfterClass
   public static void afterClass() throws BestandException {
-    Bestand.delete(temp + File.separator + "competitie1.pgn");
+    Bestand.delete(TEMP + File.separator + "competitie1.pgn");
   }
 
   @BeforeClass
@@ -51,7 +51,7 @@ public class PgnToHtmlTest extends BatchTest {
     try {
       bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
                                         "competitie1.pgn");
-      doel  = Bestand.openUitvoerBestand(temp + File.separator
+      doel  = Bestand.openUitvoerBestand(TEMP + File.separator
                                          + "competitie1.pgn");
       kopieerBestand(bron, doel);
     } finally {
@@ -86,12 +86,12 @@ public class PgnToHtmlTest extends BatchTest {
   public void testPgnToHtml() throws BestandException {
     String[]  args      = new String[] {"--bestand=competitie1",
                                         "--enkel=N",
-                                        "--invoerdir=" + temp,
-                                        "--uitvoerdir=" + temp};
+                                        "--invoerdir=" + TEMP,
+                                        "--uitvoerdir=" + TEMP};
 
     try {
-      Bestand.delete(temp + File.separator + "index.html");
-      Bestand.delete(temp + File.separator + "matrix.html");
+      Bestand.delete(TEMP + File.separator + "index.html");
+      Bestand.delete(TEMP + File.separator + "matrix.html");
     } catch (BestandException e) {
     }
 
@@ -100,38 +100,38 @@ public class PgnToHtmlTest extends BatchTest {
     assertEquals("PgnToHtml - helptekst", 17, out.size());
     assertEquals("PgnToHtml - fouten", 0, 0);
     assertEquals("PgnToHtml - 14",
-                 temp + File.separator + "competitie1.pgn",
+                 TEMP + File.separator + "competitie1.pgn",
                  out.get(13).split(":")[1].trim());
     assertEquals("PgnToHtml - 15", "150",
                  out.get(14).split(":")[1].trim());
-    assertEquals("PgnToHtml - 16", temp,
+    assertEquals("PgnToHtml - 16", TEMP,
                  out.get(15).split(":")[1].trim());
     assertTrue("PgnToHtml - equals I",
         Bestand.equals(
-            Bestand.openInvoerBestand(temp + File.separator + "index.html"),
+            Bestand.openInvoerBestand(TEMP + File.separator + "index.html"),
             Bestand.openInvoerBestand(PgnToHtmlTest.class.getClassLoader(),
                                       "index.html")));
     assertTrue("PgnToHtml - equals M",
         Bestand.equals(
-            Bestand.openInvoerBestand(temp + File.separator + "matrix.html"),
+            Bestand.openInvoerBestand(TEMP + File.separator + "matrix.html"),
             Bestand.openInvoerBestand(PgnToHtmlTest.class.getClassLoader(),
                                       "matrix1.html")));
 
-    Bestand.delete(temp + File.separator + "index.html");
-    Bestand.delete(temp + File.separator + "matrix.html");
+    Bestand.delete(TEMP + File.separator + "index.html");
+    Bestand.delete(TEMP + File.separator + "matrix.html");
   }
 
   @Test
   public void testOpStand() throws BestandException {
     String[]  args      = new String[] {"--bestand=competitie1",
                                         "--enkel=N",
-                                        "--invoerdir=" + temp,
+                                        "--invoerdir=" + TEMP,
                                         "--matrixopstand=J",
-                                        "--uitvoerdir=" + temp};
+                                        "--uitvoerdir=" + TEMP};
 
     try {
-      Bestand.delete(temp + File.separator + "index.html");
-      Bestand.delete(temp + File.separator + "matrix.html");
+      Bestand.delete(TEMP + File.separator + "index.html");
+      Bestand.delete(TEMP + File.separator + "matrix.html");
     } catch (BestandException e) {
     }
 
@@ -140,24 +140,24 @@ public class PgnToHtmlTest extends BatchTest {
     assertEquals("Op Stand - helptekst", 17, out.size());
     assertEquals("Op Stand - fouten", 0, 0);
     assertEquals("PgnToHtml - 14",
-                 temp + File.separator + "competitie1.pgn",
+                 TEMP + File.separator + "competitie1.pgn",
                  out.get(13).split(":")[1].trim());
     assertEquals("PgnToHtml - 15", "150",
                  out.get(14).split(":")[1].trim());
-    assertEquals("PgnToHtml - 16", temp,
+    assertEquals("PgnToHtml - 16", TEMP,
                  out.get(15).split(":")[1].trim());
     assertTrue("Op Stand - equals I",
         Bestand.equals(
-            Bestand.openInvoerBestand(temp + File.separator + "index.html"),
+            Bestand.openInvoerBestand(TEMP + File.separator + "index.html"),
             Bestand.openInvoerBestand(PgnToHtmlTest.class.getClassLoader(),
                                       "index.html")));
     assertTrue("PgnToHtml - equals M",
         Bestand.equals(
-            Bestand.openInvoerBestand(temp + File.separator + "matrix.html"),
+            Bestand.openInvoerBestand(TEMP + File.separator + "matrix.html"),
             Bestand.openInvoerBestand(PgnToHtmlTest.class.getClassLoader(),
                                       "matrix2.html")));
 
-    Bestand.delete(temp + File.separator + "index.html");
-    Bestand.delete(temp + File.separator + "matrix.html");
+    Bestand.delete(TEMP + File.separator + "index.html");
+    Bestand.delete(TEMP + File.separator + "matrix.html");
   }
 }
