@@ -31,6 +31,7 @@ import java.io.IOException;
 import java.util.Locale;
 
 import org.junit.AfterClass;
+import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -46,17 +47,29 @@ public class PgnToHtmlTest extends BatchTest {
   @BeforeClass
   public static void beforeClass() throws BestandException {
     Locale.setDefault(new Locale("nl"));
+    BufferedReader  bron  = null;
+    BufferedWriter  doel  = null;
     try {
-      BufferedReader  bron  =
-          Bestand.openInvoerBestand(PgnToHtmlTest.class.getClassLoader(),
-                                    "competitie1.pgn");
-      BufferedWriter  doel  = Bestand.openUitvoerBestand(temp + File.separator
-                                                         + "competitie1.pgn");
+      bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
+                                        "competitie1.pgn");
+      doel  = Bestand.openUitvoerBestand(temp + File.separator
+                                         + "competitie1.pgn");
       kopieerBestand(bron, doel);
-      bron.close();
-      doel.close();
-    } catch (IOException e) {
-      throw new BestandException(e);
+    } finally {
+      try {
+        if (null != bron) {
+          bron.close();
+        }
+      } catch (IOException e) {
+        throw new BestandException(e);
+      }
+      try {
+        if (null != doel) {
+          doel.close();
+        }
+      } catch (IOException e) {
+        throw new BestandException(e);
+      }
     }
   }
 
@@ -66,7 +79,7 @@ public class PgnToHtmlTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToHtml.class, "execute", args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 28, out.size());
+    assertEquals("Zonder parameters - helptekst", 29, out.size());
     assertEquals("Zonder parameters - fouten", 0, 0);
   }
 

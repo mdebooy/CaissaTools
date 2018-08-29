@@ -46,17 +46,29 @@ public class PgnToJsonTest extends BatchTest {
   @BeforeClass
   public static void beforeClass() throws BestandException {
     Locale.setDefault(new Locale("nl"));
+    BufferedReader  bron  = null;
+    BufferedWriter  doel  = null;
     try {
-      BufferedReader  bron  =
-          Bestand.openInvoerBestand(PgnToJsonTest.class.getClassLoader(),
-                                    "competitie2.pgn");
-      BufferedWriter  doel  = Bestand.openUitvoerBestand(temp + File.separator
-                                                         + "competitie2.pgn");
+      bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
+                                        "competitie2.pgn");
+      doel  = Bestand.openUitvoerBestand(temp + File.separator
+                                         + "competitie2.pgn");
       kopieerBestand(bron, doel);
-      bron.close();
-      doel.close();
-    } catch (IOException e) {
-      throw new BestandException(e);
+    } finally {
+      try {
+        if (null != bron) {
+          bron.close();
+        }
+      } catch (IOException e) {
+        throw new BestandException(e);
+      }
+      try {
+        if (null != doel) {
+          doel.close();
+        }
+      } catch (IOException e) {
+        throw new BestandException(e);
+      }
     }
   }
 

@@ -58,17 +58,29 @@ public class VertaalPgnTest extends BatchTest {
   @BeforeClass
   public static void beforeClass() throws BestandException {
     Locale.setDefault(new Locale("nl"));
+    BufferedReader  bron  = null;
+    BufferedWriter  doel  = null;
     try {
-      BufferedReader  bron  =
-          Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                    "partij.pgn");
-      BufferedWriter  doel  = Bestand.openUitvoerBestand(temp + File.separator
-                                                         + "partij.pgn");
+      bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
+                                        "partij.pgn");
+      doel  = Bestand.openUitvoerBestand(temp + File.separator
+                                         + "partij.pgn");
       kopieerBestand(bron, doel);
-      bron.close();
-      doel.close();
-    } catch (IOException e) {
-      throw new BestandException(e);
+    } finally {
+      try {
+        if (null != bron) {
+          bron.close();
+        }
+      } catch (IOException e) {
+        throw new BestandException(e);
+      }
+      try {
+        if (null != doel) {
+          doel.close();
+        }
+      } catch (IOException e) {
+        throw new BestandException(e);
+      }
     }
   }
 

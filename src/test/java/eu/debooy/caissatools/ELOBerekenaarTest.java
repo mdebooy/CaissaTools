@@ -48,26 +48,38 @@ public class ELOBerekenaarTest extends BatchTest {
   @BeforeClass
   public static void beforeClass() throws BestandException {
     Locale.setDefault(new Locale("nl"));
-    System.out.println("Locale: " + Locale.getDefault());
+    BufferedReader  bron  = null;
+    BufferedWriter  doel  = null;
     try {
-      BufferedReader  bron  =
-          Bestand.openInvoerBestand(ELOBerekenaarTest.class.getClassLoader(),
-                                    "competitie1.pgn");
-      BufferedWriter  doel  = Bestand.openUitvoerBestand(temp + File.separator
-                                                         + "competitie1.pgn");
+      bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
+                                        "competitie1.pgn");
+      doel  = Bestand.openUitvoerBestand(temp + File.separator
+                                         + "competitie1.pgn");
       kopieerBestand(bron, doel);
       bron.close();
       doel.close();
-
-      bron  = Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
+      bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
                                         "competitie2.pgn");
       doel  = Bestand.openUitvoerBestand(temp + File.separator
                                          + "competitie2.pgn");
       kopieerBestand(bron, doel);
-      bron.close();
-      doel.close();
     } catch (IOException e) {
       throw new BestandException(e);
+    } finally {
+      try {
+        if (null != bron) {
+          bron.close();
+        }
+      } catch (IOException e) {
+        throw new BestandException(e);
+      }
+      try {
+        if (null != doel) {
+          doel.close();
+        }
+      } catch (IOException e) {
+        throw new BestandException(e);
+      }
     }
   }
 
