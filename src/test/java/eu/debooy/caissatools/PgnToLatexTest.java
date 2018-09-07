@@ -31,6 +31,7 @@ import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Locale;
+import java.util.ResourceBundle;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -49,6 +50,9 @@ public class PgnToLatexTest extends BatchTest {
   @BeforeClass
   public static void beforeClass() throws BestandException {
     Locale.setDefault(new Locale("nl"));
+    resourceBundle  = ResourceBundle.getBundle("ApplicatieResources",
+                                               Locale.getDefault());
+
     BufferedReader  bron  = null;
     BufferedWriter  doel  = null;
     try {
@@ -108,6 +112,7 @@ public class PgnToLatexTest extends BatchTest {
         resourceBundle.getString(CaissaTools.ERR_HALVE),
         resourceBundle.getString(CaissaTools.ERR_BIJBESTAND)};
 
+    System.out.println(resourceBundle.getString(CaissaTools.ERR_HALVE));
     VangOutEnErr.execute(PgnToLatex.class, "execute", args, out, err);
 
     assertEquals("Zonder parameters - helptekst", 38, out.size());

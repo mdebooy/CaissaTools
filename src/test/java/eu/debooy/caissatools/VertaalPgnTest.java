@@ -34,6 +34,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Locale;
+import java.util.ResourceBundle;
 
 import org.junit.AfterClass;
 import org.junit.BeforeClass;
@@ -58,6 +59,9 @@ public class VertaalPgnTest extends BatchTest {
   @BeforeClass
   public static void beforeClass() throws BestandException {
     Locale.setDefault(new Locale("nl"));
+    resourceBundle  = ResourceBundle.getBundle("ApplicatieResources",
+                                               Locale.getDefault());
+
     BufferedReader  bron  = null;
     BufferedWriter  doel  = null;
     try {
