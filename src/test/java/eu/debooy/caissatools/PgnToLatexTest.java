@@ -112,7 +112,6 @@ public class PgnToLatexTest extends BatchTest {
         resourceBundle.getString(CaissaTools.ERR_HALVE),
         resourceBundle.getString(CaissaTools.ERR_BIJBESTAND)};
 
-    System.out.println(resourceBundle.getString(CaissaTools.ERR_HALVE));
     VangOutEnErr.execute(PgnToLatex.class, "execute", args, out, err);
 
     assertEquals("Zonder parameters - helptekst", 38, out.size());
