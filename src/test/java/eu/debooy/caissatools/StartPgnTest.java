@@ -82,7 +82,7 @@ public class StartPgnTest extends BatchTest {
 
     VangOutEnErr.execute(StartPgn.class, "execute", args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 29, out.size());
+    assertEquals("Zonder parameters - helptekst", 28, out.size());
     assertEquals("Zonder parameters - fouten", 0, 0);
   }
 
