@@ -28,15 +28,12 @@ import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
-import eu.debooy.doosutils.access.Bestand;
+import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.text.ParseException;
@@ -74,16 +71,16 @@ public final class PgnToLatex {
   PgnToLatex() {}
 
   public static void execute(String[] args) throws PgnException {
-    int                 aantalPartijen  = 0;
-    String              charsetIn       = Charset.defaultCharset().name();
-    String              charsetUit      = Charset.defaultCharset().name();
-    String              eindDatum       = "0000.00.00";
-    List<String>        fouten          = new ArrayList<String>();
-    String              hulpDatum       = "";
-    BufferedWriter      output          = null;
-    BufferedReader      texInvoer       = null;
-    String              startDatum      = "9999.99.99";
-    List<String>        template        = new ArrayList<String>();
+    int           aantalPartijen  = 0;
+    String        charsetIn       = Charset.defaultCharset().name();
+    String        charsetUit      = Charset.defaultCharset().name();
+    String        eindDatum       = "0000.00.00";
+    List<String>  fouten          = new ArrayList<String>();
+    String        hulpDatum       = "";
+    TekstBestand  output          = null;
+    TekstBestand  texInvoer       = null;
+    String        startDatum      = "9999.99.99";
+    List<String>  template        = new ArrayList<String>();
 
     Banner.printBanner(resourceBundle.getString("banner.pgntolatex"));
 
@@ -220,16 +217,19 @@ public final class PgnToLatex {
     try {
       String  regel;
       if (arguments.hasArgument(CaissaTools.TEMPLATE)) {
-        texInvoer =
-            Bestand.openInvoerBestand(
-                arguments.getArgument(CaissaTools.TEMPLATE), charsetIn);
+        texInvoer = new TekstBestand.Builder()
+                                    .setBestand(arguments
+                                        .getArgument(CaissaTools.TEMPLATE))
+                                    .setCharset(charsetIn).build();
       } else {
-        texInvoer =
-            new BufferedReader(
-                new InputStreamReader(PgnToLatex.class.getClassLoader()
-                    .getResourceAsStream("Caissa.tex"), charsetIn));
+        texInvoer = new TekstBestand.Builder()
+                                    .setBestand("Caissa.tex")
+                                    .setClassLoader(
+                                        PgnToLatex.class.getClassLoader())
+                                    .setCharset(charsetIn).build();
       }
-      while ((regel = texInvoer.readLine()) != null) {
+      while (texInvoer.hasNext()) {
+        regel = texInvoer.next();
         if (regel.startsWith("%@IncludeStart Body")) {
           beginBody = template.size();
         }
@@ -239,18 +239,20 @@ public final class PgnToLatex {
         template.add(regel);
       }
 
-      output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
-                                             + bestand[0]
-                                             + CaissaTools.EXTENSIE_TEX,
-                                           charsetUit);
-    } catch (BestandException | IOException e) {
+      output  = new TekstBestand.Builder()
+                                .setBestand(uitvoerdir + File.separator
+                                            + bestand[0]
+                                            + CaissaTools.EXTENSIE_TEX)
+                                .setCharset(charsetUit)
+                                .setLezen(false).build();
+    } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
         if (texInvoer != null) {
           texInvoer.close();
         }
-      } catch (IOException ex) {
+      } catch (BestandException ex) {
         DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
       }
     }
@@ -376,7 +378,7 @@ public final class PgnToLatex {
           }
         }
         aantalPartijen  += partijen.size();
-      } catch (IOException e) {
+      } catch (BestandException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
@@ -385,7 +387,7 @@ public final class PgnToLatex {
       if (output != null) {
         output.close();
       }
-    } catch (IOException ex) {
+    } catch (BestandException ex) {
       DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
     }
 
@@ -493,98 +495,99 @@ public final class PgnToLatex {
    * @param int noSpelers
    * @throws IOException
    */
-  private static void maakMatrix(BufferedWriter output, Spelerinfo[] punten,
+  private static void maakMatrix(TekstBestand output, Spelerinfo[] punten,
                                  int enkel, double[][] matrix, int kolommen,
                                  int noSpelers)
-      throws IOException {
-    Bestand.schrijfRegel(output, "    \\begin{tabular} { | c | l | ", 0);
+      throws BestandException {
+    StringBuilder lijn  = new StringBuilder();
+    lijn.append("    \\begin{tabular} { | c | l | ");
     for (int i = 0; i < kolommen; i++) {
-      Bestand.schrijfRegel(output, "c | ", 0);
+      lijn.append("c | ");
     }
-    Bestand.schrijfRegel(output, "r | r | r | }");
-    Bestand.schrijfRegel(output, "    " + HLINE);
-    Bestand.schrijfRegel(output, "    \\multicolumn{2}{|c|}{} ", 0);
+    lijn.append("r | r | r | }");
+    output.write(lijn.toString());
+    lijn  = new StringBuilder();
+    output.write("    " + HLINE);
+    lijn.append("    \\multicolumn{2}{|c|}{} ");
     for (int i = 0; i < (enkel == 0 ? kolommen : noSpelers); i++) {
       if (enkel < 2) {
-        Bestand.schrijfRegel(output, " & " + (i + 1), 0);
+        lijn.append(" & " + (i + 1));
       } else {
-        Bestand.schrijfRegel(output,
-                             " & \\multicolumn{2}{c|}{" + (i + 1) + "} ", 0);
+        lijn.append(" & \\multicolumn{2}{c|}{" + (i + 1) + "} ");
       }
     }
-    Bestand.schrijfRegel(output,
-                         "& " + resourceBundle.getString("tag.punten"), 0);
+    lijn.append("& " + resourceBundle.getString("tag.punten"));
     if (enkel > 0) {
-      Bestand.schrijfRegel(output,
-                           " & " + resourceBundle.getString("tag.partijen")
-                             + " & " + resourceBundle.getString("tag.sb"), 0);
+      lijn.append(" & " + resourceBundle.getString("tag.partijen")
+                  + " & " + resourceBundle.getString("tag.sb"));
     }
-    Bestand.schrijfRegel(output, " \\\\");
-    Bestand.schrijfRegel(output, "    \\cline{3-" + (2 + kolommen) + "}");
+    lijn.append(" \\\\");
+    output.write(lijn.toString());
+    lijn  = new StringBuilder();
+    output.write("    \\cline{3-" + (2 + kolommen) + "}");
     if (enkel == 2) {
-      Bestand.schrijfRegel(output, "    \\multicolumn{2}{|c|}{} & ", 0);
+      lijn.append("    \\multicolumn{2}{|c|}{} & ");
       for (int i = 0; i < noSpelers; i++) {
-        Bestand.schrijfRegel(output, resourceBundle.getString("tag.wit")
+        lijn.append(resourceBundle.getString("tag.wit")
                                        + " & "
                                        + resourceBundle.getString("tag.zwart")
-                                       + " & ", 0);
+                                       + " & ");
       }
-      Bestand.schrijfRegel(output, "& & \\\\");
+      lijn.append("& & \\\\");
+      output.write(lijn.toString());
+      lijn  = new StringBuilder();
     }
-    Bestand.schrijfRegel(output, "    " + HLINE);
+    output.write("    " + HLINE);
     for (int i = 0; i < noSpelers; i++) {
       if (enkel == 0) {
-        Bestand.schrijfRegel(output,
-                             "\\multicolumn{2}{|l|}{" + punten[i].getNaam()
-                               + "} & ", 0);
+        lijn.append("\\multicolumn{2}{|l|}{" + punten[i].getNaam() + "} & ");
       } else {
-        Bestand.schrijfRegel(output,
-                             (i + 1) + " & " + punten[i].getNaam() + " & ", 0);
+        lijn.append((i + 1) + " & " + punten[i].getNaam() + " & ");
       }
       for (int j = 0; j < kolommen; j++) {
         if (enkel > 0) {
           if (i == j / enkel) {
-            Bestand.schrijfRegel(output, "\\multicolumn{1}"
-                         + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ", 0);
+            lijn.append("\\multicolumn{1}"
+                        + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ");
             continue;
           } else {
             if ((j / enkel) * enkel != j ) {
-              Bestand.schrijfRegel(output, "\\multicolumn{1}"
-                           + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{", 0);
+              lijn.append("\\multicolumn{1}"
+                          + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{");
             }
           }
         }
         if (matrix[i][j] == 0.0) {
-          Bestand.schrijfRegel(output, "0", 0);
+          lijn.append("0");
         } else if (matrix[i][j] == 0.5) {
-          Bestand.schrijfRegel(output, "\\textonehalf", 0);
+          lijn.append("\\textonehalf");
         } else if (matrix[i][j] >= 1.0) {
-          Bestand.schrijfRegel(output, "" + ((Double)matrix[i][j]).intValue()
-                       + Utilities.kwart(matrix[i][j]), 0);
+          lijn.append("" + ((Double)matrix[i][j]).intValue()
+                      + Utilities.kwart(matrix[i][j]));
         }
         if (enkel > 0 && (j / enkel) * enkel != j ) {
-          Bestand.schrijfRegel(output, "}", 0);
+          lijn.append("}");
         }
-        Bestand.schrijfRegel(output, " & ", 0);
+        lijn.append(" & ");
       }
       int     pntn  = punten[i].getPunten().intValue();
       String  decim = Utilities.kwart(punten[i].getPunten());
-      Bestand.schrijfRegel(output,
+      lijn.append(
           ((pntn == 0 && "".equals(decim)) || pntn >= 1 ?
-              pntn : "") + decim, 0);
+              pntn : "") + decim);
       if (enkel > 0) {
         int     wpntn   = punten[i].getTieBreakScore().intValue();
         String  wdecim  = Utilities.kwart(punten[i].getTieBreakScore());
-        Bestand.schrijfRegel(output,
-                             " & " + punten[i].getPartijen() + " & ", 0);
-        Bestand.schrijfRegel(output,
-                             ((wpntn == 0 && "".equals(wdecim)) || wpntn >= 1 ?
-                                 wpntn : "") + wdecim, 0);
+        lijn.append(" & " + punten[i].getPartijen() + " & ");
+        lijn.append(((wpntn == 0 && "".equals(wdecim))
+                     || wpntn >= 1 ? wpntn : "") + wdecim);
       }
-      Bestand.schrijfRegel(output, " \\\\");
-      Bestand.schrijfRegel(output, "    " + HLINE);
+      lijn.append(" \\\\");
+      output.write(lijn.toString());
+      lijn  = new StringBuilder();
+      output.write("    " + HLINE);
     }
-    Bestand.schrijfRegel(output, "    \\end{tabular}");
+    output.write("    \\end{tabular}");
   }
 
   /**
@@ -606,12 +609,12 @@ public final class PgnToLatex {
   }
 
   private static String schrijf(String regel, String status,
-                                BufferedWriter output, Spelerinfo[] punten,
+                                TekstBestand output, Spelerinfo[] punten,
                                 int enkel, double[][] matrix, int kolommen,
                                 int noSpelers, Map<String, String> texPartij,
                                 Collection<PGN> partijen,
                                 Map<String, String> parameters)
-      throws IOException {
+      throws BestandException {
     String  start = regel.split(" ")[0];
           switch(start) {
           case "%@Include":
@@ -652,29 +655,24 @@ public final class PgnToLatex {
             status  = NORMAAL;
             break;
           case "%@I18N":
-            Bestand.schrijfRegel(output,
-                                 "% " + resourceBundle
-                                            .getString(regel.split(" ")[1]
-                                                            .toLowerCase()));
+            output.write("% " + resourceBundle.getString(regel.split(" ")[1]
+                                                              .toLowerCase()));
             break;
           default:
             switch (status) {
             case KEYWORDS:
               if (parameters.containsKey(CaissaTools.KEYWORDS)) {
-                Bestand.schrijfRegel(output, replaceParameters(regel,
-                                                               parameters));
+                output.write(replaceParameters(regel, parameters));
               }
               break;
             case LOGO:
               if (parameters.containsKey(CaissaTools.LOGO)) {
-                Bestand.schrijfRegel(output, replaceParameters(regel,
-                                                               parameters));
+                output.write(replaceParameters(regel, parameters));
               }
               break;
             case MATRIX:
               if (null != matrix) {
-                Bestand.schrijfRegel(output, replaceParameters(regel,
-                                                               parameters));
+                output.write(replaceParameters(regel, parameters));
               }
               break;
             case PARTIJEN:
@@ -683,12 +681,11 @@ public final class PgnToLatex {
               break;
             case PERIODE:
               if (parameters.containsKey("Periode")) {
-                Bestand.schrijfRegel(output, replaceParameters(regel,
-                                                               parameters));
+                output.write(replaceParameters(regel, parameters));
               }
               break;
             default:
-              Bestand.schrijfRegel(output, replaceParameters(regel, parameters));
+              output.write(replaceParameters(regel, parameters));
               break;
             }
             break;
@@ -707,8 +704,8 @@ public final class PgnToLatex {
    */
   private static void verwerkPartijen(Collection<PGN> partijen,
                                       Map<String, String> texPartij,
-                                      BufferedWriter output)
-      throws IOException {
+                                      TekstBestand output)
+      throws BestandException {
     FEN fen = null;
     for (PGN partij: partijen) {
       if (!partij.isBye()) {
@@ -800,7 +797,7 @@ public final class PgnToLatex {
           }
           i = regel.indexOf('@', j+1);
         }
-        Bestand.schrijfRegel(output, regel);
+        output.write(regel);
       }
     }
   }

@@ -24,11 +24,10 @@ import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosUtils;
-import eu.debooy.doosutils.access.Bestand;
+import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -56,18 +55,18 @@ public final class SpelerStatistiek {
   private SpelerStatistiek() {}
 
   public static void execute(String[] args) throws PgnException {
-    BufferedWriter  output      = null;
-    int             verwerkt    = 0;
-    String          charsetIn   = Charset.defaultCharset().name();
-    String          charsetUit  = Charset.defaultCharset().name();
-    String          eindDatum   = "0000.00.00";
-    List<String>    fouten      = new ArrayList<String>();
-    String          hulpDatum   = "";
-    String          sleutel     = "";
-    String          startDatum  = "9999.99.99";
-    String[]        uitslagen   = new String[] {"1-0", "1/2-1/2", "0-1"};
+    TekstBestand  output      = null;
+    int           verwerkt    = 0;
+    String        charsetIn   = Charset.defaultCharset().name();
+    String        charsetUit  = Charset.defaultCharset().name();
+    String        eindDatum   = "0000.00.00";
+    List<String>  fouten      = new ArrayList<String>();
+    String        hulpDatum   = "";
+    String        sleutel     = "";
+    String        startDatum  = "9999.99.99";
+    String[]      uitslagen   = new String[] {"1-0", "1/2-1/2", "0-1"};
     Map<String, int[]>
-                    items       = new TreeMap<String, int[]>( );
+                  items       = new TreeMap<String, int[]>( );
 
     Banner.printBanner(resourceBundle.getString("banner.spelerstatistiek"));
 
@@ -212,79 +211,80 @@ public final class SpelerStatistiek {
 
     // Maak de .tex file
     try {
-      output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator
-                                             + bestand
-                                             + CaissaTools.EXTENSIE_TEX,
-                                           charsetUit);
-      Bestand.schrijfRegel(output,
-                           "\\documentclass[dutch,a4paper,10pt]{report}", 2);
-      Bestand.schrijfRegel(output, "\\usepackage{babel}");
-      Bestand.schrijfRegel(output, "\\usepackage{color}");
-      Bestand.schrijfRegel(output, "\\usepackage{colortbl}");
-      Bestand.schrijfRegel(output, "\\usepackage{longtable}");
-      Bestand.schrijfRegel(output, "\\usepackage[T1]{fontenc}");
-      Bestand.schrijfRegel(output, "\\usepackage{textcomp}");
-      Bestand.schrijfRegel(output, "\\usepackage[pdftex]{graphicx}");
-      Bestand.schrijfRegel(output, "\\usepackage{pdflscape}", 2);
-      Bestand.schrijfRegel(output, "\\topmargin =0.mm");
-      Bestand.schrijfRegel(output, "\\oddsidemargin =0.mm");
-      Bestand.schrijfRegel(output, "\\evensidemargin =0.mm");
-      Bestand.schrijfRegel(output, "\\headheight =0.mm");
-      Bestand.schrijfRegel(output, "\\headsep =0.mm");
-      Bestand.schrijfRegel(output, "\\textheight =265.mm");
-      Bestand.schrijfRegel(output, "\\textwidth =165.mm");
-      Bestand.schrijfRegel(output, "\\parindent =0.mm", 2);
-      Bestand.schrijfRegel(output, "\\title{"
-                           + resourceBundle.getString("label.statistieken")
-                           + "}");
-      Bestand.schrijfRegel(output, "\\author{" + speler + "}");
-      Bestand.schrijfRegel(output, "\\date{\\today{}}", 2);
-      Bestand.schrijfRegel(output, "\\begin{document}");
+      output  = new TekstBestand.Builder()
+                                .setBestand(uitvoerdir + File.separator
+                                            + bestand
+                                            + CaissaTools.EXTENSIE_TEX)
+                                .setCharset(charsetUit)
+                                .setLezen(false).build();
+      output.write("\\documentclass[dutch,a4paper,10pt]{report}");
+      output.write("");
+      output.write("\\usepackage{babel}");
+      output.write("\\usepackage{color}");
+      output.write("\\usepackage{colortbl}");
+      output.write("\\usepackage{longtable}");
+      output.write("\\usepackage[T1]{fontenc}");
+      output.write("\\usepackage{textcomp}");
+      output.write("\\usepackage[pdftex]{graphicx}");
+      output.write("\\usepackage{pdflscape}");
+      output.write("");
+      output.write("\\topmargin =0.mm");
+      output.write("\\oddsidemargin =0.mm");
+      output.write("\\evensidemargin =0.mm");
+      output.write("\\headheight =0.mm");
+      output.write("\\headsep =0.mm");
+      output.write("\\textheight =265.mm");
+      output.write("\\textwidth =165.mm");
+      output.write("\\parindent =0.mm");
+      output.write("");
+      output.write("\\title{" + resourceBundle.getString("label.statistieken")
+                   + "}");
+      output.write("\\author{" + speler + "}");
+      output.write("\\date{\\today{}}");
+      output.write("");
+      output.write("\\begin{document}");
       if (DoosUtils.isNotBlankOrNull(logo)) {
-        Bestand.schrijfRegel(output,
-            "\\DeclareGraphicsExtensions{.pdf,.png,.gif,.jpg}");
+        output.write("\\DeclareGraphicsExtensions{.pdf,.png,.gif,.jpg}");
       }
-      Bestand.schrijfRegel(output, "\\begin{titlepage}");
-      Bestand.schrijfRegel(output, "  \\begin{center}");
-      Bestand.schrijfRegel(output, "    \\huge "
-                           + resourceBundle.getString("label.statistiekenvan")
-                           + " \\\\");
-      Bestand.schrijfRegel(output, "    \\vspace{1in}");
-      Bestand.schrijfRegel(output, "    \\huge " + swapNaam(speler) + " \\\\");
+      output.write("\\begin{titlepage}");
+      output.write("  \\begin{center}");
+      output.write("    \\huge "
+                   + resourceBundle.getString("label.statistiekenvan")
+                   + " \\\\");
+      output.write("    \\vspace{1in}");
+      output.write("    \\huge " + swapNaam(speler) + " \\\\");
       if (DoosUtils.isNotBlankOrNull(logo)) {
-        Bestand.schrijfRegel(output, "    \\vspace{2in}");
-        Bestand.schrijfRegel(output, "    \\includegraphics[width=6cm]{"+ logo
-                                     + "} \\\\");
+        output.write("    \\vspace{2in}");
+        output.write("    \\includegraphics[width=6cm]{"+ logo + "} \\\\");
       }
-      Bestand.schrijfRegel(output, "    \\vspace{1in}");
-      Bestand.schrijfRegel(output, "    \\large "
-                                   + datumInTitel(startDatum, eindDatum)
-                                   + " \\\\");
-      Bestand.schrijfRegel(output, "  \\end{center}");
-      Bestand.schrijfRegel(output, "\\end{titlepage}");
-      Bestand.schrijfRegel(output, "\\begin{landscape}");
-      Bestand.schrijfRegel(output, "  \\begin{center}");
+      output.write("    \\vspace{1in}");
+      output.write("    \\large " + datumInTitel(startDatum, eindDatum)
+                   + " \\\\");
+      output.write("  \\end{center}");
+      output.write("\\end{titlepage}");
+      output.write("\\begin{landscape}");
+      output.write("  \\begin{center}");
       int[] totaal  = new int[] {0,0,0,0,0,0};
 
-      Bestand.schrijfRegel(output, "    \\begin{longtable} { | l | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | }");
-      Bestand.schrijfRegel(output, "      \\hline");
-      Bestand.schrijfRegel(output, " & \\multicolumn{5}{c|}{ "
-                           + resourceBundle.getString("tekst.wit") + " } "
-                           + " & \\multicolumn{5}{c|}{ "
-                           + resourceBundle.getString("tekst.zwart") + " } "
-                           + " & \\multicolumn{5}{c|}{ "
-                           + resourceBundle.getString("tekst.totaal")
-                           + " } \\\\");
-      Bestand.schrijfRegel(output, "      \\cline{2-16}");
+      output.write("    \\begin{longtable} { | l | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | }");
+      output.write("      \\hline");
+      output.write(" & \\multicolumn{5}{c|}{ "
+                   + resourceBundle.getString("tekst.wit") + " } "
+                   + " & \\multicolumn{5}{c|}{ "
+                   + resourceBundle.getString("tekst.zwart") + " } "
+                   + " & \\multicolumn{5}{c|}{ "
+                   + resourceBundle.getString("tekst.totaal")
+                   + " } \\\\");
+      output.write("      \\cline{2-16}");
       String  hoofding  = " & "
                           + resourceBundle.getString("tag.winst") + " & "
                           + resourceBundle.getString("tag.remise") + " & "
                           + resourceBundle.getString("tag.verlies") + " & "
                           + resourceBundle.getString("tag.totaal") + " & "
                           + resourceBundle.getString("tag.procent");
-      Bestand.schrijfRegel(output, hoofding + hoofding + hoofding + " \\\\");
-      Bestand.schrijfRegel(output, "      \\hline");
-      Bestand.schrijfRegel(output, "      \\endhead");
+      output.write(hoofding + hoofding + hoofding + " \\\\");
+      output.write("      \\hline");
+      output.write("      \\endhead");
       for (Entry<String, int[]> item : items.entrySet()) {
         int[] statistiek  = item.getValue();
         for (int i = 0; i < 6; i++) {
@@ -293,12 +293,10 @@ public final class SpelerStatistiek {
         printStatistiek(item.getKey(), statistiek, output);
       }
       printStatistiek("Totaal", totaal, output);
-      Bestand.schrijfRegel(output, "    \\end{longtable}");
-      Bestand.schrijfRegel(output, "  \\end{center}");
-      Bestand.schrijfRegel(output, "\\end{landscape}");
-      Bestand.schrijfRegel(output, "\\end{document}");
-    } catch (IOException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+      output.write("    \\end{longtable}");
+      output.write("  \\end{center}");
+      output.write("\\end{landscape}");
+      output.write("\\end{document}");
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
@@ -306,7 +304,7 @@ public final class SpelerStatistiek {
         if (output != null) {
           output.close();
         }
-      } catch (IOException ex) {
+      } catch (BestandException ex) {
         DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
       }
     }
@@ -419,19 +417,26 @@ public final class SpelerStatistiek {
    * @throws IOException
    */
   private static void printStatistiek(String sleutel, int[] statistiek,
-                                      BufferedWriter output)
-      throws IOException {
-    Bestand.schrijfRegel(output, swapNaam(sleutel), 0);
+                                      TekstBestand output)
+      throws BestandException {
+    StringBuilder lijn  = new StringBuilder();
+    lijn.append(swapNaam(sleutel));
     // Als witspeler
-    printStatistiekDeel(statistiek[0], statistiek[1], statistiek[2], output);
+    lijn  = new StringBuilder(printStatistiekDeel(statistiek[0], statistiek[1],
+                                                  statistiek[2],
+                                                  lijn.toString(), output));
     // Als zwartspeler
-    printStatistiekDeel(statistiek[3], statistiek[4], statistiek[5], output);
+    lijn  = new StringBuilder(printStatistiekDeel(statistiek[3], statistiek[4],
+                                                  statistiek[5],
+                                                  lijn.toString(), output));
     // Totaal
-    printStatistiekDeel(statistiek[0] + statistiek[3],
-                        statistiek[1] + statistiek[4],
-                        statistiek[2] + statistiek[5], output);
-    Bestand.schrijfRegel(output, " \\\\");
-    Bestand.schrijfRegel(output, "      \\hline");
+    lijn  = new StringBuilder(printStatistiekDeel(statistiek[0] + statistiek[3],
+                                                  statistiek[1] + statistiek[4],
+                                                  statistiek[2] + statistiek[5],
+                                                  lijn.toString(), output));
+    lijn.append(" \\\\");
+    output.write(lijn.toString());
+    output.write("      \\hline");
   }
 
   /**
@@ -443,26 +448,29 @@ public final class SpelerStatistiek {
    * @param output
    * @throws IOException
    */
-  private static void printStatistiekDeel(int winst, int remise, int verlies,
-                                          BufferedWriter output)
-      throws IOException {
+  private static String printStatistiekDeel(int winst, int remise, int verlies,
+                                            String prefix, TekstBestand output)
+      throws BestandException {
     DecimalFormat format    = new DecimalFormat("0.00");
     Double        punten    = Double.valueOf(winst)
                               + Double.valueOf(remise) / 2;
     int           gespeeld  = winst + remise + verlies;
+    StringBuilder lijn      = new StringBuilder(prefix);
 
     if (gespeeld == 0) {
-      Bestand.schrijfRegel(output, " & & & & &", 0);
+      lijn.append(" & & & & &");
     } else {
-      Bestand.schrijfRegel(output, " & " + winst + " & " + remise + " & "
-                                   + verlies + " & ", 0);
+      lijn.append(" & " + winst + " & " + remise + " & " + verlies + " & ");
       if (punten != 0.5) {
-        output.write("" + punten.intValue());
+        lijn.append(punten.intValue());
+        output.write(lijn.toString());
+        lijn  = new StringBuilder();
       }
-      Bestand.schrijfRegel(output, "" + Utilities.kwart(punten) + " & ", 0);
-      Bestand.schrijfRegel(output, "" + format.format((punten / gespeeld) * 100)
-                                   + "\\%", 0);
+      lijn.append(Utilities.kwart(punten) + " & ");
+      lijn.append(format.format((punten / gespeeld) * 100) + "\\%");
     }
+
+    return lijn.toString();
   }
 
   /**

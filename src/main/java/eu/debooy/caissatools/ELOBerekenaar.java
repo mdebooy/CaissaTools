@@ -29,7 +29,6 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.access.CsvBestand;
-import eu.debooy.doosutils.access.CsvBestand.CsvBestandBuilder;
 import eu.debooy.doosutils.exception.BestandException;
 
 import java.io.BufferedWriter;
@@ -62,14 +61,6 @@ public final class ELOBerekenaar {
   private static  Integer         maxVerschil = ELO.MAX_VERSCHIL;
 
   private ELOBerekenaar() {}
-
-  public static void main(String[] args) throws PgnException {
-    String[]  params  = new String[] {"--toernooiBestand=competitie1",
-                                      "--spelerBestand=competitie",
-                                      "--invoerdir=/tmp",
-                                      "--eindDatum=1997.12.31"};
-    execute(params);
-  }
 
   public static void execute(String[] args) throws PgnException {
     String            charsetIn   = Charset.defaultCharset().name();
@@ -310,10 +301,8 @@ public final class ELOBerekenaar {
     try {
       Calendar  calendar  = Calendar.getInstance();
       // Is eigenlijk een uitvoer.
-      CsvBestandBuilder builder =
-          new CsvBestandBuilder().setBestand(spelerBestand)
-                                 .setCharsetIn(charsetUit);
-      invoer  = builder.build();
+      invoer  = new CsvBestand.Builder().setBestand(spelerBestand)
+                                        .setCharsetIn(charsetUit).build();
       while (invoer.hasNext()) {
         String[]    veld        = invoer.next();
         int         spelerId    = spelers.size();
@@ -468,9 +457,7 @@ public final class ELOBerekenaar {
         }
         Bestand.schrijfRegel(uitvoer, lijn.toString());
       }
-    } catch (IOException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    } catch (BestandException e) {
+    } catch (BestandException | IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
@@ -566,11 +553,7 @@ public final class ELOBerekenaar {
         }
       }
       info.append(partijen.size()).append(":");
-    } catch (BestandException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    } catch (PgnException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    } catch (IOException e) {
+    } catch (BestandException | IOException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {

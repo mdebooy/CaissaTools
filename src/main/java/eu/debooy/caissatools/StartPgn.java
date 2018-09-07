@@ -20,12 +20,10 @@ import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.DoosUtils;
-import eu.debooy.doosutils.access.Bestand;
+import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -45,13 +43,15 @@ public final class StartPgn {
   private StartPgn() {}
 
   public static void execute(String[] args) {
-    List<String>    fouten  = new ArrayList<String>();
-    BufferedWriter  output  = null;
+    String        charsetUit  = Charset.defaultCharset().name();
+    List<String>  fouten      = new ArrayList<String>();
+    TekstBestand  output      = null;
 
     Banner.printBanner(resourceBundle.getString("banner.startpgn"));
 
     Arguments       arguments   = new Arguments(args);
     arguments.setParameters(new String[] {CaissaTools.BESTAND,
+                                          CaissaTools.CHARDSETUIT,
                                           CaissaTools.DATE,
                                           CaissaTools.EVENT,
                                           CaissaTools.SITE,
@@ -73,6 +73,9 @@ public final class StartPgn {
           MessageFormat.format(
               resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
                                        CaissaTools.BESTAND));
+    }
+    if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
+      charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
     }
     if (!bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
       bestand = bestand + CaissaTools.EXTENSIE_PGN;
@@ -108,49 +111,54 @@ public final class StartPgn {
     Arrays.sort(speler, String.CASE_INSENSITIVE_ORDER);
     int noSpelers = speler.length;
 
-    File  pgnFile = new File(uitvoerdir + File.separator + bestand);
     try {
-      output  = Bestand.openUitvoerBestand(pgnFile);
+      output  = new TekstBestand.Builder()
+                                .setBestand(uitvoerdir + File.separator
+                                            + bestand)
+                                .setCharset(charsetUit)
+                                .setLezen(false).build();
       for (int i = 0; i < (noSpelers -1); i++) {
         for (int j = i + 1; j < noSpelers; j++) {
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_EVENT
-                                       + " \"" + event + "\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_SITE
+          output.write("[" + CaissaConstants.PGNTAG_EVENT
+                       + " \"" + event + "\"]");
+          output.write("[" + CaissaConstants.PGNTAG_SITE
                                        + " \"" + site + "\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_DATE
+          output.write("[" + CaissaConstants.PGNTAG_DATE
                                        + " \"" + date + "\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_ROUND
+          output.write("[" + CaissaConstants.PGNTAG_ROUND
                                        + " \"-\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_WHITE
+          output.write("[" + CaissaConstants.PGNTAG_WHITE
                                        + " \"" + speler[i] + "\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_BLACK
+          output.write("[" + CaissaConstants.PGNTAG_BLACK
                                        + " \"" + speler[j] + "\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_RESULT
+          output.write("[" + CaissaConstants.PGNTAG_RESULT
                                        + " \"*\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_EVENTDATE
-                                       + " \"" + date + "\"]", 2);
-          Bestand.schrijfRegel(output, "*", 2);
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_EVENT
+          output.write("[" + CaissaConstants.PGNTAG_EVENTDATE
+                                       + " \"" + date + "\"]");
+          output.write("");
+          output.write("*");
+          output.write("");
+          output.write("[" + CaissaConstants.PGNTAG_EVENT
                                        + " \"" + event + "\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_SITE
+          output.write("[" + CaissaConstants.PGNTAG_SITE
                                        + " \"" + site + "\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_DATE
+          output.write("[" + CaissaConstants.PGNTAG_DATE
                                        + " \"" + date + "\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_ROUND
+          output.write("[" + CaissaConstants.PGNTAG_ROUND
                                        + " \"-\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_WHITE
+          output.write("[" + CaissaConstants.PGNTAG_WHITE
                                        + " \"" + speler[j] + "\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_BLACK
+          output.write("[" + CaissaConstants.PGNTAG_BLACK
                                        + " \"" + speler[i] + "\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_RESULT
+          output.write("[" + CaissaConstants.PGNTAG_RESULT
                                        + " \"*\"]");
-          Bestand.schrijfRegel(output, "[" + CaissaConstants.PGNTAG_EVENTDATE
-                                       + " \"" + date + "\"]", 2);
-          Bestand.schrijfRegel(output, "*", 2);
+          output.write("[" + CaissaConstants.PGNTAG_EVENTDATE
+                                       + " \"" + date + "\"]");
+          output.write("");
+          output.write("*");
+          output.write("");
         }
       }
-    } catch (IOException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
@@ -158,7 +166,7 @@ public final class StartPgn {
         if (output != null) {
           output.close();
         }
-      } catch (IOException e) {
+      } catch (BestandException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
@@ -193,9 +201,6 @@ public final class StartPgn {
     DoosUtils.naarScherm();
     DoosUtils.naarScherm("  --bestand    ",
                          resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("  --charsetin  ",
-        MessageFormat.format(resourceBundle.getString("help.charsetin"),
-                             Charset.defaultCharset().name()), 80);
     DoosUtils.naarScherm("  --charsetuit ",
         MessageFormat.format(resourceBundle.getString("help.charsetuit"),
                              Charset.defaultCharset().name()), 80);

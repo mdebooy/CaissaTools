@@ -26,12 +26,10 @@ import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.DoosUtils;
-import eu.debooy.doosutils.access.Bestand;
+import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -51,16 +49,16 @@ public final class VertaalPgn {
   private VertaalPgn() {}
 
   public static void execute(String[] args) throws PgnException {
-    String          bestand     = "";
-    String          charsetIn   = Charset.defaultCharset().name();
-    String          charsetUit  = Charset.defaultCharset().name();
-    List<String>    fouten      = new ArrayList<String>();
-    String          naarStukken = "";
-    String          naarTaal    = Locale.getDefault().getLanguage();
-    BufferedWriter  output      = null;
-    String          pgn         = "";
-    String          vanStukken  = "";
-    String          vanTaal     = Locale.getDefault().getLanguage();
+    String        bestand     = "";
+    String        charsetIn   = Charset.defaultCharset().name();
+    String        charsetUit  = Charset.defaultCharset().name();
+    List<String>  fouten      = new ArrayList<String>();
+    String        naarStukken = "";
+    String        naarTaal    = Locale.getDefault().getLanguage();
+    TekstBestand  output      = null;
+    String        pgn         = "";
+    String        vanStukken  = "";
+    String        vanTaal     = Locale.getDefault().getLanguage();
 
     Banner.printBanner(resourceBundle.getString("banner.vertaalpgn"));
 
@@ -166,20 +164,20 @@ public final class VertaalPgn {
                                    + CaissaTools.EXTENSIE_PGN, charsetIn);
 
     try {
-      output  = Bestand.openUitvoerBestand(uitvoerdir + File.separator + bestand
-                                             + "_" + naarTaal
-                                             + CaissaTools.EXTENSIE_PGN,
-                                           charsetUit);
+      output  = new TekstBestand.Builder()
+                                .setBestand(uitvoerdir + File.separator
+                                            + bestand + "_" + naarTaal
+                                            + CaissaTools.EXTENSIE_PGN)
+                                .setCharset(charsetUit)
+                                .setLezen(false).build();
 
       for (PGN partij: partijen) {
         String  zetten  = partij.getZetten();
         partij.setZetten(CaissaUtils.vertaalStukken(zetten,
                                                     vanStukken, naarStukken));
-        Bestand.schrijfRegel(output, partij.toString());
+        output.write(partij.toString());
       }
       output.close();
-    } catch (IOException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
@@ -187,7 +185,7 @@ public final class VertaalPgn {
         if (output != null) {
           output.close();
         }
-      } catch (IOException ex) {
+      } catch (BestandException ex) {
         DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
       }
     }

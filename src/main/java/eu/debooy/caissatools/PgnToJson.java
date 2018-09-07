@@ -24,11 +24,9 @@ import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
-import eu.debooy.doosutils.access.Bestand;
-import eu.debooy.doosutils.errorhandling.exception.FileNotFoundException;
+import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -54,10 +52,10 @@ public final class PgnToJson {
   private PgnToJson() {}
 
   public static void execute(String[] args) throws PgnException {
-    String          charsetIn   = Charset.defaultCharset().name();
-    String          charsetUit  = Charset.defaultCharset().name();
-    List<String>    fouten      = new ArrayList<String>();
-    BufferedWriter  output      = null;
+    String        charsetIn   = Charset.defaultCharset().name();
+    String        charsetUit  = Charset.defaultCharset().name();
+    List<String>  fouten      = new ArrayList<String>();
+    TekstBestand  output      = null;
 
     Banner.printBanner(resourceBundle.getString("banner.pgntojson"));
 
@@ -160,18 +158,20 @@ public final class PgnToJson {
         partijnr++;
       }
 
-      File  jsonFile  = new File(uitvoerdir + File.separator + jsonBestand);
-      output  = Bestand.openUitvoerBestand(jsonFile, charsetUit);
-      mapper.writeValue(output, lijst);
-    } catch (BestandException | FenException | FileNotFoundException
-             | IOException e) {
+      output  = new TekstBestand.Builder()
+                                .setBestand(uitvoerdir + File.separator
+                                            + jsonBestand)
+                                .setCharset(charsetUit)
+                                .setLezen(false).build();
+      output.write(mapper.writeValueAsString(lijst));
+    } catch (BestandException | FenException | IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
         if (output != null) {
           output.close();
         }
-      } catch (IOException e) {
+      } catch (BestandException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
