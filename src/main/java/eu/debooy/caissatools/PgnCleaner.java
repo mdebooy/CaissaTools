@@ -16,6 +16,7 @@
  */
 package eu.debooy.caissatools;
 
+import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.PgnException;
@@ -127,7 +128,16 @@ public final class PgnCleaner {
         }
 
         if (DoosUtils.isNotBlankOrNull(partij.getZuivereZetten())) {
-          output.write(partij.toString());
+          output.write(partij.getTagsAsString());
+          String  zetten  = partij.getZetten() + " "
+                            + partij.getTag(CaissaConstants.PGNTAG_RESULT);
+          while (zetten.length() > 75) {
+            int splits  = zetten.substring(1, 75).lastIndexOf(" ");
+            output.write(zetten.substring(0, splits + 1));
+            zetten  = zetten.substring(splits + 2);
+          }
+          output.write(zetten);
+          output.write("");
           noPartijen++;
         }
       }
