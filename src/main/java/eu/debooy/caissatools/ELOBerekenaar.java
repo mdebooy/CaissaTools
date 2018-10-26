@@ -27,13 +27,10 @@ import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
-import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.access.CsvBestand;
 import eu.debooy.doosutils.exception.BestandException;
 
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.text.ParseException;
@@ -53,7 +50,12 @@ import java.util.TreeSet;
  * @author Marco de Booij
  */
 public final class ELOBerekenaar {
-  private static final  int START_ELO = 1600;
+  private static final  int       START_ELO = 1600;
+  private static final  String[]  KOLOMMEN  =
+      new String[]{"speler","elo","groei","partijen","eerstePartij",
+                   "laatstePartij","eersteEloDatum","minElo","minEloDatum",
+                   "maxElo","maxEloDatum"};
+
 
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
@@ -209,9 +211,9 @@ public final class ELOBerekenaar {
     String  info  = verwerkToernooi(spelers, spelerinfos, startDatum, eindDatum,
                                     startElo, extraInfo,
                                     invoerdir + File.separator
-                                    + toernooiBestand,
+                                      + toernooiBestand,
                                     uitvoerdir + File.separator
-                                    + geschiedenisBestand,
+                                      + geschiedenisBestand,
                                     charsetIn, charsetUit);
     if (info.contains(":") && Integer.valueOf(info.split(":")[1]) > 0) {
       schrijfSpelers(spelers, spelerinfos,
@@ -302,7 +304,7 @@ public final class ELOBerekenaar {
       Calendar  calendar  = Calendar.getInstance();
       // Is eigenlijk een uitvoer.
       invoer  = new CsvBestand.Builder().setBestand(spelerBestand)
-                                        .setCharsetIn(charsetUit).build();
+                                        .setCharset(charsetUit).build();
       while (invoer.hasNext()) {
         String[]    veld        = invoer.next();
         int         spelerId    = spelers.size();
@@ -394,77 +396,64 @@ public final class ELOBerekenaar {
     }
   }
 
-  private static void schrijfGeschiedenis(BufferedWriter geschiedenis,
-                                          String speler, String datum,
-                                          Integer elo,
-                                          Integer partijen,
-                                          Integer oudeElo, boolean extraInfo,
-                                          String tegenstander, String event)
-      throws IOException {
-    geschiedenis.write("\"" + speler + "\"," + datum + "," + elo + ","
-                       + partijen + "," + (elo - oudeElo));
-    if (extraInfo) {
-      geschiedenis.write(",\"" + tegenstander + "\"," + event);
-    }
-    geschiedenis.newLine();
-  }
-
   private static void schrijfSpelers(Map<String, Integer> spelers,
                                      List<Spelerinfo> spelerinfos,
                                      String spelerBestand, String charsetUit) {
-    BufferedWriter  uitvoer = null;
+    CsvBestand  csvBestand  = null;
     try {
-      uitvoer = Bestand.openUitvoerBestand(spelerBestand, charsetUit);
-      StringBuilder lijn  = new StringBuilder();
-      lijn.append("\"speler\",\"elo\",\"groei\",\"partijen\",")
-          .append("\"eerstePartij\",\"laatstePartij\",\"eersteEloDatum\",")
-          .append("\"minElo\",\"minEloDatum\",\"maxElo\",\"maxEloDatum\"");
-      Bestand.schrijfRegel(uitvoer, lijn.toString());
+      csvBestand  = new CsvBestand.Builder().setBestand(spelerBestand)
+                                            .setCharset(charsetUit)
+                                            .setLezen(false)
+                                            .setKolomNamen(KOLOMMEN)
+                                            .build();
+
+      Object[]  velden  = new Object[KOLOMMEN.length];
       for (Integer spelerId  : spelers.values()) {
         try {
-          lijn  = new StringBuilder();
-          lijn.append("\"")
-              .append(spelerinfos.get(spelerId).getNaam()).append("\",")
-              .append(spelerinfos.get(spelerId).getElo()).append(",")
-              .append(spelerinfos.get(spelerId).getElogroei()).append(",")
-              .append(spelerinfos.get(spelerId).getPartijen()).append(",")
-              .append(Datum.fromDate(spelerinfos.get(spelerId)
+          velden[0] = spelerinfos.get(spelerId).getNaam();
+          velden[1] = spelerinfos.get(spelerId).getElo();
+          velden[2] = spelerinfos.get(spelerId).getElogroei();
+          velden[3] = spelerinfos.get(spelerId).getPartijen();
+          velden[4] = Datum.fromDate(spelerinfos.get(spelerId)
                                                 .getEerstePartij(), 
-                                     CaissaConstants.PGN_DATUM_FORMAAT))
-              .append(",")
-              .append(Datum.fromDate(spelerinfos.get(spelerId)
+                                     CaissaConstants.PGN_DATUM_FORMAAT);
+          velden[5] = Datum.fromDate(spelerinfos.get(spelerId)
                                                 .getLaatstePartij(), 
-                                     CaissaConstants.PGN_DATUM_FORMAAT))
-              .append(",");
+                                     CaissaConstants.PGN_DATUM_FORMAAT);
           if (spelerinfos.get(spelerId).getPartijen() < ELO.MIN_PARTIJEN) {
-            lijn.append(",,,,");
+            velden[6]   = "";
+            velden[7]   = "";
+            velden[8]   = "";
+            velden[9]   = "";
+            velden[10]  = "";
           } else {
-            lijn.append(Datum.fromDate(spelerinfos.get(spelerId).getOfficieel(),
-                                       CaissaConstants.PGN_DATUM_FORMAAT))
-                .append(",")
-                .append(spelerinfos.get(spelerId).getMinElo()).append(",")
-                .append(Datum.fromDate(spelerinfos.get(spelerId).getMinDatum(),
-                                       CaissaConstants.PGN_DATUM_FORMAAT))
-                .append(",")
-                .append(spelerinfos.get(spelerId).getMaxElo()).append(",")
-                .append(Datum.fromDate(spelerinfos.get(spelerId).getMaxDatum(),
-                                       CaissaConstants.PGN_DATUM_FORMAAT));
+            velden[6]   = Datum.fromDate(spelerinfos.get(spelerId)
+                                                    .getOfficieel(),
+                                         CaissaConstants.PGN_DATUM_FORMAAT);
+            velden[7]   = spelerinfos.get(spelerId).getMinElo();
+            velden[8]   = Datum.fromDate(spelerinfos.get(spelerId)
+                                                    .getMinDatum(),
+                                         CaissaConstants.PGN_DATUM_FORMAAT);
+            velden[9]   = spelerinfos.get(spelerId).getMaxElo();
+            velden[10]  = Datum.fromDate(spelerinfos.get(spelerId)
+                                                    .getMaxDatum(),
+                                         CaissaConstants.PGN_DATUM_FORMAAT);
           }
         } catch (ParseException e) {
-          DoosUtils.foutNaarScherm(resourceBundle
-              .getString(CaissaTools.ERR_FOUTEDATUM) + e.getLocalizedMessage()
-                         + "].");
+          DoosUtils.foutNaarScherm(
+              resourceBundle.getString(CaissaTools.ERR_FOUTEDATUM)
+                                       + e.getLocalizedMessage() + "].");
         }
-        Bestand.schrijfRegel(uitvoer, lijn.toString());
+        csvBestand.write(velden);
       }
-    } catch (BestandException | IOException e) {
+    } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
-        if (null != uitvoer) {
-          uitvoer.close();
+        if (null != csvBestand) {
+          csvBestand.close();
         }
-      } catch (IOException ex) {
+      } catch (BestandException ex) {
         DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
       }
     }
@@ -478,18 +467,21 @@ public final class ELOBerekenaar {
                                         String geschiedenisBestand,
                                         String charsetIn,
                                         String charsetUit) {
-    Date            eloDatum      = null;
-    BufferedWriter  geschiedenis  = null;
-    StringBuilder   info          = new StringBuilder();
-    String[]        uitslagen     = 
+    Date          eloDatum      = null;
+    CsvBestand    geschiedenis  = null;
+    StringBuilder info          = new StringBuilder();
+    String[]      uitslagen     = 
         new String[] {CaissaConstants.PARTIJ_ZWART_WINT, 
                       CaissaConstants.PARTIJ_REMISE,
                       CaissaConstants.PARTIJ_WIT_WINT};
     int             verwerkt      = 0;
 
     try {
-      geschiedenis  = Bestand.openUitvoerBestand(geschiedenisBestand,
-                                                 charsetUit, true);
+      geschiedenis  = new CsvBestand.Builder().setBestand(geschiedenisBestand)
+                                              .setLezen(false)
+                                              .setHeader(false)
+                                              .setAppend(true)
+                                              .build();
       Collection<PGN>
           partijen  = new TreeSet<PGN>(new PGN.defaultComparator());
       partijen.addAll(CaissaUtils.laadPgnBestand(toernooiBestand, charsetIn));
@@ -535,32 +527,44 @@ public final class ELOBerekenaar {
               pasSpelerAan(witId,   spelerinfos, eloDatum, zwartElo, uitslag);
               pasSpelerAan(zwartId, spelerinfos, eloDatum, witElo, 2 - uitslag);
               if (null != geschiedenis) {
-                schrijfGeschiedenis(geschiedenis, wit, datum,
-                                    spelerinfos.get(witId).getElo(),
-                                    spelerinfos.get(witId).getPartijen(),
-                                    witElo, extraInfo, zwart,
-                                    partij
-                                        .getTag(CaissaConstants.PGNTAG_EVENT));
-                schrijfGeschiedenis(geschiedenis, zwart, datum,
-                                    spelerinfos.get(zwartId).getElo(),
-                                    spelerinfos.get(zwartId).getPartijen(),
-                                    zwartElo, extraInfo, wit,
-                                    partij
-                                        .getTag(CaissaConstants.PGNTAG_EVENT));
+                if (extraInfo) {
+                geschiedenis.write(wit, datum,
+                                  spelerinfos.get(witId).getElo(),
+                                  spelerinfos.get(witId).getPartijen(),
+                                  spelerinfos.get(witId).getElo() - witElo,
+                                  zwart,
+                                  partij.getTag(CaissaConstants.PGNTAG_EVENT));
+                geschiedenis.write(zwart, datum,
+                                   spelerinfos.get(zwartId).getElo(),
+                                   spelerinfos.get(zwartId).getPartijen(),
+                                   spelerinfos.get(zwartId)
+                                              .getElo() - zwartElo, wit,
+                                   partij.getTag(CaissaConstants.PGNTAG_EVENT));
+                } else {
+                  geschiedenis.write(wit, datum,
+                                     spelerinfos.get(witId).getElo(),
+                                     spelerinfos.get(witId).getPartijen(),
+                                     spelerinfos.get(witId).getElo() - witElo);
+                  geschiedenis.write(zwart, datum,
+                                     spelerinfos.get(zwartId).getElo(),
+                                     spelerinfos.get(zwartId).getPartijen(),
+                                     spelerinfos.get(zwartId)
+                                                .getElo() - zwartElo);
+                }
               }
             }
           }
         }
       }
       info.append(partijen.size()).append(":");
-    } catch (BestandException | IOException | PgnException e) {
+    } catch (BestandException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
         if (geschiedenis != null) {
           geschiedenis.close();
         }
-      } catch (IOException e) {
+      } catch (BestandException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
