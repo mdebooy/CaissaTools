@@ -112,10 +112,10 @@ public class StartPgnTest extends BatchTest {
                  out.get(14).split(":")[1].trim());
     assertTrue("StartPgn - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(TEMP + File.separator
-                                      + "start.pgn"),
             Bestand.openInvoerBestand(StartPgnTest.class.getClassLoader(),
-                                      "start.pgn")));
+                                      "start.pgn"),
+            Bestand.openInvoerBestand(TEMP + File.separator
+                                      + "start.pgn")));
 
     Bestand.delete(TEMP + File.separator + "start.pgn");
   }

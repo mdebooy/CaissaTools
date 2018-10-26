@@ -1,4 +1,4 @@
-"speler","elo","groei","partijen","eerstePartij","laatstePartij","eersteEloDatum","minElo","minEloDatum","maxElo","maxEloDatum"
+speler,elo,groei,partijen,eerstePartij,laatstePartij,eersteEloDatum,minElo,minEloDatum,maxElo,maxEloDatum
 "Speler, 01",1540,-4,37,1997.10.17,1999.05.02,1999.01.24,1540,1999.05.02,1551,1999.04.11
 "Speler, 02",1733,3,37,1997.10.24,1999.05.02,1999.02.14,1713,1999.02.14,1733,1999.05.02
 "Speler, 03",1631,-6,38,1997.10.03,1999.04.25,1998.12.20,1628,1999.03.14,1653,1998.12.20
