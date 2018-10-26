@@ -37,6 +37,7 @@ public final class CaissaTools {
   public static final String  EVENT                 = "event";
   public static final String  EINDDATUM             = "eindDatum";
   public static final String  ENKEL                 = "enkel";
+  public static final String  ENKELZETTEN           = "enkelzetten";
   public static final String  EXTRAINFO             = "extraInfo";
   public static final String  GESCHIEDENISBESTAND   = "geschiedenisBestand";
   public static final String  HALVE                 = "halve";
@@ -62,6 +63,7 @@ public final class CaissaTools {
   public static final String  TEMPLATE              = "template";
   public static final String  TITEL                 = "titel";
   public static final String  TOERNOOIBESTAND       = "toernooiBestand";
+  public static final String  UITVOER               = "uitvoer";
   public static final String  UITVOERDIR            = "uitvoerdir";
   public static final String  VANTAAL               = "vantaal";
   public static final String  VASTEKFACTOR          = "vasteKfactor";
@@ -69,7 +71,8 @@ public final class CaissaTools {
 
   public static final String  ERR_BESTANDENPGN      = "error.bestand.en.pgn";
   public static final String  ERR_BEVATDIRECTORY    = "error.bevatdirectory";
-  public static final String  ERR_BIJBESTAND        = "error.verplichtbijbestand";
+  public static final String  ERR_BIJBESTAND        =
+      "error.verplichtbijbestand";
   public static final String  ERR_EINDVOORSTART     = "error.eind.voor.start";
   public static final String  ERR_FOUTEDATUM        = "error.foutedatum";
   public static final String  ERR_FOUTEDATUMIN      = "error.foutedatumin";
@@ -119,6 +122,14 @@ public final class CaissaTools {
     if ("eloberekenaar".equalsIgnoreCase(commando)) {
       try {
         ELOBerekenaar.execute(commandoArgs);
+      } catch (PgnException e) {
+        DoosUtils.foutNaarScherm(e.getMessage());
+      }
+      return;
+    }
+    if ("pgncleaner".equalsIgnoreCase(commando)) {
+      try {
+        PgnCleaner.execute(commandoArgs);
       } catch (PgnException e) {
         DoosUtils.foutNaarScherm(e.getMessage());
       }
@@ -181,6 +192,8 @@ public final class CaissaTools {
                          resourceBundle.getString("help.chesstheatre"), 80);
     DoosUtils.naarScherm("  ELOBerekenaar     ",
                          resourceBundle.getString("help.eloberekenaar"), 80);
+    DoosUtils.naarScherm("  PgnCleaner        ",
+                         resourceBundle.getString("help.pgncleaner"), 80);
     DoosUtils.naarScherm("  PgnToHtml         ",
                          resourceBundle.getString("help.pgntohtml"), 80);
     DoosUtils.naarScherm("  PgnToJson         ",
@@ -197,6 +210,8 @@ public final class CaissaTools {
     ChessTheatre.help();
     DoosUtils.naarScherm("");
     ELOBerekenaar.help();
+    DoosUtils.naarScherm("");
+    PgnCleaner.help();
     DoosUtils.naarScherm("");
     PgnToHtml.help();
     DoosUtils.naarScherm("");
