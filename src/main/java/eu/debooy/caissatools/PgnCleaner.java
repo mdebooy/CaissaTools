@@ -142,7 +142,7 @@ public final class PgnCleaner {
         }
       }
     } catch (BestandException | FileNotFoundException e) {
-      System.err.println(e.getLocalizedMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
         if (output != null) {

@@ -111,77 +111,49 @@ public final class CaissaTools {
     String[]  commandoArgs  = new String[args.length-1];
     System.arraycopy(args, 1, commandoArgs, 0, args.length-1);
 
-    if ("chesstheatre".equalsIgnoreCase(commando)) {
-      try {
+    try {
+      if ("chesstheatre".equalsIgnoreCase(commando)) {
         ChessTheatre.execute(commandoArgs);
-      } catch (PgnException e) {
-        DoosUtils.foutNaarScherm(e.getMessage());
+        return;
       }
-      return;
-    }
-    if ("eloberekenaar".equalsIgnoreCase(commando)) {
-      try {
+      if ("eloberekenaar".equalsIgnoreCase(commando)) {
         ELOBerekenaar.execute(commandoArgs);
-      } catch (PgnException e) {
-        DoosUtils.foutNaarScherm(e.getMessage());
+        return;
       }
-      return;
-    }
-    if ("pgncleaner".equalsIgnoreCase(commando)) {
-      try {
+      if ("pgncleaner".equalsIgnoreCase(commando)) {
         PgnCleaner.execute(commandoArgs);
-      } catch (PgnException e) {
-        DoosUtils.foutNaarScherm(e.getMessage());
+        return;
       }
-      return;
-    }
-    if ("pgntohtml".equalsIgnoreCase(commando)) {
-      try {
+      if ("pgntohtml".equalsIgnoreCase(commando)) {
         PgnToHtml.execute(commandoArgs);
-      } catch (PgnException e) {
-        DoosUtils.foutNaarScherm(e.getMessage());
+        return;
       }
-      return;
-    }
-    if ("pgntojson".equalsIgnoreCase(commando)) {
-      try {
+      if ("pgntojson".equalsIgnoreCase(commando)) {
         PgnToJson.execute(commandoArgs);
-      } catch (PgnException e) {
-        DoosUtils.foutNaarScherm(e.getMessage());
+        return;
       }
-      return;
-    }
-    if ("pgntolatex".equalsIgnoreCase(commando)) {
-      try {
+      if ("pgntolatex".equalsIgnoreCase(commando)) {
         PgnToLatex.execute(commandoArgs);
-      } catch (PgnException e) {
-        DoosUtils.foutNaarScherm(e.getMessage());
+        return;
       }
-      return;
-    }
-    if ("startpgn".equalsIgnoreCase(commando)) {
-      StartPgn.execute(commandoArgs);
-      return;
-    }
-    if ("spelerstatistiek".equalsIgnoreCase(commando)) {
-      try {
+      if ("startpgn".equalsIgnoreCase(commando)) {
+        StartPgn.execute(commandoArgs);
+        return;
+      }
+      if ("spelerstatistiek".equalsIgnoreCase(commando)) {
         SpelerStatistiek.execute(commandoArgs);
-      } catch (PgnException e) {
-        DoosUtils.foutNaarScherm(e.getMessage());
+        return;
       }
-      return;
-    }
-    if ("vertaalpgn".equalsIgnoreCase(commando)) {
-      try {
+      if ("vertaalpgn".equalsIgnoreCase(commando)) {
         VertaalPgn.execute(commandoArgs);
-      } catch (PgnException e) {
-        DoosUtils.foutNaarScherm(e.getMessage());
+        return;
       }
-      return;
-    }
 
-    Banner.printBanner("Caissa Tools");
-    help();
+      Banner.printBanner("Caissa Tools");
+      help();
+    } catch (PgnException e) {
+      DoosUtils.foutNaarScherm(e.getMessage());
+    }
   }
 
   /**

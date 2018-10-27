@@ -618,7 +618,7 @@ public final class PgnToLatex {
     String  start = regel.split(" ")[0];
           switch(start) {
           case "%@Include":
-            if ("matrix".equals(regel.split(" ")[1].toLowerCase())
+            if ("matrix".equalsIgnoreCase(regel.split(" ")[1])
                 && null != matrix) {
               maakMatrix(output, punten, enkel, matrix, kolommen, noSpelers);
             }

@@ -50,11 +50,19 @@ import java.util.TreeSet;
  * @author Marco de Booij
  */
 public final class ELOBerekenaar {
-  private static final  int       START_ELO = 1600;
-  private static final  String[]  KOLOMMEN  =
+  private static final  int           START_ELO = 1600;
+  private static final  String[]      KOLOMMEN  =
       new String[]{"speler","elo","groei","partijen","eerstePartij",
                    "laatstePartij","eersteEloDatum","minElo","minEloDatum",
                    "maxElo","maxEloDatum"};
+  private static final  List<String>  UITSLAGEN = 
+      new ArrayList<String>() {
+        private static final  long  serialVersionUID = 1L;
+            {add(CaissaConstants.PARTIJ_ZWART_WINT); 
+             add(CaissaConstants.PARTIJ_REMISE);
+             add(CaissaConstants.PARTIJ_WIT_WINT);
+             add(CaissaConstants.PARTIJ_BEZIG);}};
+
 
 
   private static  ResourceBundle  resourceBundle  =
@@ -470,11 +478,7 @@ public final class ELOBerekenaar {
     Date          eloDatum      = null;
     CsvBestand    geschiedenis  = null;
     StringBuilder info          = new StringBuilder();
-    String[]      uitslagen     = 
-        new String[] {CaissaConstants.PARTIJ_ZWART_WINT, 
-                      CaissaConstants.PARTIJ_REMISE,
-                      CaissaConstants.PARTIJ_WIT_WINT};
-    int             verwerkt      = 0;
+    int           verwerkt      = 0;
 
     try {
       geschiedenis  = new CsvBestand.Builder().setBestand(geschiedenisBestand)
@@ -496,13 +500,7 @@ public final class ELOBerekenaar {
             String  wit       = partij.getTag(CaissaConstants.PGNTAG_WHITE);
             String  zwart     = partij.getTag(CaissaConstants.PGNTAG_BLACK);
             String  resultaat = partij.getTag(CaissaConstants.PGNTAG_RESULT);
-            int uitslag = 0;
-            for (String s: uitslagen) {
-              if (s.equals(resultaat)) {
-                break;
-              }
-              uitslag++;
-            }
+            int     uitslag   = UITSLAGEN.indexOf(resultaat);
             try {
               eloDatum  =
                   Datum.toDate(datum, CaissaConstants.PGN_DATUM_FORMAAT);
