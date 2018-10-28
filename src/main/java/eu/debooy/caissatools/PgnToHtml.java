@@ -282,19 +282,15 @@ public final class PgnToHtml {
       output.write(prefix + props.getProperty("table.begin"));
       // De colgroup
       int k = 1;
-      if (props.containsKey(HTML_TABLE_COLGROUP + k)) {
-        while (props.containsKey(HTML_TABLE_COLGROUP + k)) {
-          output.write(prefix + props.getProperty(HTML_TABLE_COLGROUP + k));
-          k++;
-        }
+      while (props.containsKey(HTML_TABLE_COLGROUP + k)) {
+        output.write(prefix + props.getProperty(HTML_TABLE_COLGROUP + k));
+        k++;
       }
       // De thead
       k = 1;
-      if (props.containsKey(HTML_TABLE_HEAD_BEGIN + k)) {
-        while (props.containsKey(HTML_TABLE_HEAD_BEGIN + k)) {
-          output.write(prefix + props.getProperty(HTML_TABLE_HEAD_BEGIN + k));
-          k++;
-        }
+      while (props.containsKey(HTML_TABLE_HEAD_BEGIN + k)) {
+        output.write(prefix + props.getProperty(HTML_TABLE_HEAD_BEGIN + k));
+        k++;
       }
       output.write(prefix
           + MessageFormat.format(props.getProperty("table.head.nr"),
@@ -312,11 +308,9 @@ public final class PgnToHtml {
           + MessageFormat.format(props.getProperty(HTML_TABLE_HEAD_SB),
                                  resourceBundle.getString("tag.sb")));
       k = 1;
-      if (props.containsKey(HTML_TABLE_HEAD_EIND + k)) {
-        while (props.containsKey(HTML_TABLE_HEAD_EIND + k)) {
-          output.write(prefix + props.getProperty(HTML_TABLE_HEAD_EIND + k));
-          k++;
-        }
+      while (props.containsKey(HTML_TABLE_HEAD_EIND + k)) {
+        output.write(prefix + props.getProperty(HTML_TABLE_HEAD_EIND + k));
+        k++;
       }
       // De tbody
       output.write(prefix + props.getProperty("table.body.begin"));
@@ -390,12 +384,10 @@ public final class PgnToHtml {
       output.write(prefix + props.getProperty("table.begin"));
       // De colgroup
       int k = 1;
-      if (props.containsKey(HTML_TABLE_COLGROUP_BEGIN + k)) {
-        while (props.containsKey(HTML_TABLE_COLGROUP_BEGIN + k)) {
-          output.write(prefix
-                       + props.getProperty(HTML_TABLE_COLGROUP_BEGIN + k));
-          k++;
-        }
+      while (props.containsKey(HTML_TABLE_COLGROUP_BEGIN + k)) {
+        output.write(prefix
+                     + props.getProperty(HTML_TABLE_COLGROUP_BEGIN + k));
+        k++;
       }
       for (int i = 0; i < noSpelers; i++) {
         if (enkel == 1) {
@@ -405,28 +397,24 @@ public final class PgnToHtml {
         }
       }
       k = 1;
-      if (props.containsKey(HTML_TABLE_COLGROUP_EIND + k)) {
-        while (props.containsKey(HTML_TABLE_COLGROUP_EIND + k)) {
-          output.write(prefix
-                       + props.getProperty(HTML_TABLE_COLGROUP_EIND + k));
-          k++;
-        }
+      while (props.containsKey(HTML_TABLE_COLGROUP_EIND + k)) {
+        output.write(prefix
+                     + props.getProperty(HTML_TABLE_COLGROUP_EIND + k));
+        k++;
       }
       // De thead
       k = 1;
-      if (props.containsKey(HTML_TABLE_HEAD_BEGIN + k)) {
-        while (props.containsKey(HTML_TABLE_HEAD_BEGIN + k)) {
-          output.write(prefix + props.getProperty(HTML_TABLE_HEAD_BEGIN + k));
-          k++;
-        }
+      while (props.containsKey(HTML_TABLE_HEAD_BEGIN + k)) {
+        output.write(prefix + props.getProperty(HTML_TABLE_HEAD_BEGIN + k));
+        k++;
       }
       for (int i = 0; i < noSpelers; i++) {
         if (enkel == 1) {
           output.write(prefix + MessageFormat
-              .format(props.getProperty("table.head.enkel"), (i + 1)));
+                .format(props.getProperty("table.head.enkel"), (i + 1)));
         } else {
           output.write(prefix + MessageFormat
-              .format(props.getProperty("table.head.dubbel"), (i + 1)));
+                .format(props.getProperty("table.head.dubbel"), (i + 1)));
         }
       }
       output.write(prefix
@@ -458,11 +446,9 @@ public final class PgnToHtml {
             + MessageFormat.format(props.getProperty(HTML_TABLE_HEAD_SB), ""));
       }
       k = 1;
-      if (props.containsKey(HTML_TABLE_HEAD_EIND + k)) {
-        while (props.containsKey(HTML_TABLE_HEAD_EIND + k)) {
-          output.write(prefix + props.getProperty(HTML_TABLE_HEAD_EIND + k));
-          k++;
-        }
+      while (props.containsKey(HTML_TABLE_HEAD_EIND + k)) {
+        output.write(prefix + props.getProperty(HTML_TABLE_HEAD_EIND + k));
+        k++;
       }
       // De tbody
       output.write(prefix + props.getProperty("table.body.begin"));

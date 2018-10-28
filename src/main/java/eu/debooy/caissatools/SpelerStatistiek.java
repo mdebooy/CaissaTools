@@ -52,6 +52,10 @@ public final class SpelerStatistiek {
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
+  private static final  String  LATEX_HLINE   = "\\hline";
+  private static final  String  LATEX_MCOLUMN = " & \\multicolumn{5}{c|}{ ";
+  private static final  String  LATEX_NEWLINE = " \\\\";
+
   private SpelerStatistiek() {}
 
   public static void execute(String[] args) throws PgnException {
@@ -250,16 +254,16 @@ public final class SpelerStatistiek {
       output.write("  \\begin{center}");
       output.write("    \\huge "
                    + resourceBundle.getString("label.statistiekenvan")
-                   + " \\\\");
+                   + LATEX_NEWLINE);
       output.write("    \\vspace{1in}");
-      output.write("    \\huge " + swapNaam(speler) + " \\\\");
+      output.write("    \\huge " + swapNaam(speler) + LATEX_NEWLINE);
       if (DoosUtils.isNotBlankOrNull(logo)) {
         output.write("    \\vspace{2in}");
         output.write("    \\includegraphics[width=6cm]{"+ logo + "} \\\\");
       }
       output.write("    \\vspace{1in}");
       output.write("    \\large " + datumInTitel(startDatum, eindDatum)
-                   + " \\\\");
+                   + LATEX_NEWLINE);
       output.write("  \\end{center}");
       output.write("\\end{titlepage}");
       output.write("\\begin{landscape}");
@@ -267,12 +271,12 @@ public final class SpelerStatistiek {
       int[] totaal  = new int[] {0,0,0,0,0,0};
 
       output.write("    \\begin{longtable} { | l | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | }");
-      output.write("      \\hline");
-      output.write(" & \\multicolumn{5}{c|}{ "
+      output.write("      " + LATEX_HLINE);
+      output.write(LATEX_MCOLUMN
                    + resourceBundle.getString("tekst.wit") + " } "
-                   + " & \\multicolumn{5}{c|}{ "
+                   + LATEX_MCOLUMN
                    + resourceBundle.getString("tekst.zwart") + " } "
-                   + " & \\multicolumn{5}{c|}{ "
+                   + LATEX_MCOLUMN
                    + resourceBundle.getString("tekst.totaal")
                    + " } \\\\");
       output.write("      \\cline{2-16}");
@@ -282,8 +286,8 @@ public final class SpelerStatistiek {
                           + resourceBundle.getString("tag.verlies") + " & "
                           + resourceBundle.getString("tag.totaal") + " & "
                           + resourceBundle.getString("tag.procent");
-      output.write(hoofding + hoofding + hoofding + " \\\\");
-      output.write("      \\hline");
+      output.write(hoofding + hoofding + hoofding + LATEX_NEWLINE);
+      output.write("      " + LATEX_HLINE);
       output.write("      \\endhead");
       for (Entry<String, int[]> item : items.entrySet()) {
         int[] statistiek  = item.getValue();
@@ -434,9 +438,9 @@ public final class SpelerStatistiek {
                                                   statistiek[1] + statistiek[4],
                                                   statistiek[2] + statistiek[5],
                                                   lijn.toString(), output));
-    lijn.append(" \\\\");
+    lijn.append(LATEX_NEWLINE);
     output.write(lijn.toString());
-    output.write("      \\hline");
+    output.write("      " + LATEX_HLINE);
   }
 
   /**
