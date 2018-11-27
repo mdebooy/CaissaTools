@@ -34,6 +34,7 @@ public final class CaissaTools {
   public static final String  CHARDSETUIT           = "charsetuit";
   public static final String  DATE                  = "date";
   public static final String  DATUM                 = "datum";
+  public static final String  DEFAULTECO            = "defaulteco";
   public static final String  EVENT                 = "event";
   public static final String  EINDDATUM             = "eindDatum";
   public static final String  ENKEL                 = "enkel";
@@ -41,6 +42,7 @@ public final class CaissaTools {
   public static final String  EXTRAINFO             = "extraInfo";
   public static final String  GESCHIEDENISBESTAND   = "geschiedenisBestand";
   public static final String  HALVE                 = "halve";
+  public static final String  INCLUDELEGE           = "includelege";
   public static final String  INVOERDIR             = "invoerdir";
   public static final String  JSON                  = "json";
   public static final String  KEYWORDS              = "keywords";

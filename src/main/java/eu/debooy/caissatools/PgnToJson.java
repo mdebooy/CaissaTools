@@ -16,6 +16,7 @@
  */
 package eu.debooy.caissatools;
 
+import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.FenException;
@@ -63,6 +64,8 @@ public final class PgnToJson {
     arguments.setParameters(new String[] {CaissaTools.BESTAND,
                                           CaissaTools.CHARDSETIN,
                                           CaissaTools.CHARDSETUIT,
+                                          CaissaTools.DEFAULTECO,
+                                          CaissaTools.INCLUDELEGE,
                                           CaissaTools.INVOERDIR,
                                           CaissaTools.JSON,
                                           CaissaTools.PGNVIEWER,
@@ -88,6 +91,16 @@ public final class PgnToJson {
     }
     if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
       charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
+    }
+    String    defaultEco  = "A00";
+    if (arguments.hasArgument(CaissaTools.DEFAULTECO)) {
+      defaultEco  = arguments.getArgument(CaissaTools.DEFAULTECO);
+    }
+    boolean   includeLege = false;
+    if (arguments.hasArgument(CaissaTools.INCLUDELEGE)) {
+      includeLege =
+          DoosConstants.WAAR
+              .equalsIgnoreCase(arguments.getArgument(CaissaTools.INCLUDELEGE));
     }
     String    invoerdir   = ".";
     if (arguments.hasArgument(CaissaTools.INVOERDIR)) {
@@ -139,23 +152,33 @@ public final class PgnToJson {
         CaissaUtils.laadPgnBestand(invoerdir + File.separator + bestand
                                      + CaissaTools.EXTENSIE_PGN,
                                    charsetIn);
+    int partijnr  = 1;
     try {
-      int partijnr  = 1;
       for (PGN partij: partijen) {
-        Map<String, String> obj = new LinkedHashMap<String, String>();
-        obj.put("_gamekey", "" + partijnr);
-        for (Map.Entry<String, String> tag : partij.getTags().entrySet()) {
-          obj.put(tag.getKey(), tag.getValue());
+        if (includeLege
+            || DoosUtils.isNotBlankOrNull(partij.getZuivereZetten())) {
+          Map<String, String> obj = new LinkedHashMap<String, String>();
+          obj.put("_gamekey", "" + partijnr);
+          for (Map.Entry<String, String> tag : partij.getTags().entrySet()) {
+            obj.put(tag.getKey(), tag.getValue());
+          }
+          if (pgnviewer && !partij.hasTag(CaissaConstants.PGNTAG_ECO)) {
+            obj.put(CaissaConstants.PGNTAG_ECO, defaultEco);
+          }
+          if (pgnviewer) {
+            obj.put("_moves", partij.getZuivereZetten());
+          } else {
+            obj.put("_moves", partij.getZetten());
+          }
+          if (pgnviewer
+              && DoosUtils.isNotBlankOrNull(partij.getZuivereZetten())) {
+            obj.put("_pgnviewer",
+                    CaissaUtils
+                        .pgnZettenToChessTheatre(partij.getZuivereZetten()));
+          }
+          lijst.add(obj);
+          partijnr++;
         }
-        obj.put("_moves", partij.getZetten());
-        if (pgnviewer
-            && DoosUtils.isNotBlankOrNull(partij.getZuivereZetten())) {
-          obj.put("_pgnviewer",
-                  CaissaUtils
-                      .pgnZettenToChessTheatre(partij.getZuivereZetten()));
-        }
-        lijst.add(obj);
-        partijnr++;
       }
 
       output  = new TekstBestand.Builder()
@@ -183,6 +206,8 @@ public final class PgnToJson {
                          + partijen.size());
     DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
                          + uitvoerdir + File.separator + jsonBestand);
+    DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
+                          + (partijnr - 1));
     DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
   }
 
@@ -195,21 +220,25 @@ public final class PgnToJson {
                          + "] --bestand=<"
                          + resourceBundle.getString("label.pgnbestand") + ">");
     DoosUtils.naarScherm();
-    DoosUtils.naarScherm("  --bestand    ",
+    DoosUtils.naarScherm("  --bestand     ",
                          resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("  --charsetin  ",
+    DoosUtils.naarScherm("  --charsetin   ",
         MessageFormat.format(resourceBundle.getString("help.charsetin"),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --charsetuit ",
+    DoosUtils.naarScherm("  --charsetuit  ",
         MessageFormat.format(resourceBundle.getString("help.charsetuit"),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --invoerdir  ",
+    DoosUtils.naarScherm("  --defaulteco  ",
+                         resourceBundle.getString("help.defaulteco"), 80);
+    DoosUtils.naarScherm("  --includelege ",
+                         resourceBundle.getString("help.includelege"), 80);
+    DoosUtils.naarScherm("  --invoerdir   ",
                          resourceBundle.getString("help.invoerdir"), 80);
-    DoosUtils.naarScherm("  --json       ",
+    DoosUtils.naarScherm("  --json        ",
                          resourceBundle.getString("help.json"), 80);
-    DoosUtils.naarScherm("  --pgnviewer  ",
+    DoosUtils.naarScherm("  --pgnviewer   ",
                          resourceBundle.getString("help.pgnviewer"), 80);
-    DoosUtils.naarScherm("  --uitvoerdir ",
+    DoosUtils.naarScherm("  --uitvoerdir  ",
                          resourceBundle.getString("help.uitvoerdir"), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
