@@ -58,6 +58,8 @@ public class StartPgnTest extends BatchTest {
       doel  = Bestand.openUitvoerBestand(TEMP + File.separator
                                          + "competitie1.pgn");
       kopieerBestand(bron, doel);
+    } catch (IOException e) {
+      throw new BestandException(e);
     } finally {
       try {
         if (null != bron) {

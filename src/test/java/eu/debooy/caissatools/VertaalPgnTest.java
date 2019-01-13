@@ -70,6 +70,8 @@ public class VertaalPgnTest extends BatchTest {
       doel  = Bestand.openUitvoerBestand(TEMP + File.separator
                                          + "partij.pgn");
       kopieerBestand(bron, doel);
+    } catch (IOException e) {
+      throw new BestandException(e);
     } finally {
       try {
         if (null != bron) {
