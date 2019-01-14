@@ -21,14 +21,12 @@ import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
 import eu.debooy.doosutils.access.Bestand;
+import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
 import eu.debooy.doosutils.test.VangOutEnErr;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
-import java.io.IOException;
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -41,6 +39,9 @@ import org.junit.Test;
  * @author Marco de Booij
  */
 public class PgnToLatexTest extends BatchTest {
+  protected static final  ClassLoader CLASSLOADER =
+      PgnToLatexTest.class.getClassLoader();
+
   @AfterClass
   public static void afterClass() throws BestandException {
     Bestand.delete(TEMP + File.separator + "competitie1.pgn");
@@ -53,37 +54,29 @@ public class PgnToLatexTest extends BatchTest {
     resourceBundle  = ResourceBundle.getBundle("ApplicatieResources",
                                                Locale.getDefault());
 
-    BufferedReader  bron  = null;
-    BufferedWriter  doel  = null;
+    TekstBestand  bron  = null;
+    TekstBestand  doel  = null;
     try {
-      bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
-                                        "competitie1.pgn");
-      doel  = Bestand.openUitvoerBestand(TEMP + File.separator
-                                         + "competitie1.pgn");
-      kopieerBestand(bron, doel);
+      bron  = new TekstBestand.Builder().setClassLoader(CLASSLOADER)
+                              .setBestand("competitie1.pgn").build();
+      doel  = new TekstBestand.Builder().setBestand(TEMP + File.separator
+                                                    + "competitie1.pgn")
+                              .setLezen(false).build();
+      doel.add(bron);
       bron.close();
       doel.close();
-      bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
-                                        "competitie2.pgn");
-      doel  = Bestand.openUitvoerBestand(TEMP + File.separator
-                                         + "competitie2.pgn");
-      kopieerBestand(bron, doel);
-    } catch (IOException e) {
-      throw new BestandException(e);
+      bron  = new TekstBestand.Builder().setClassLoader(CLASSLOADER)
+                              .setBestand("competitie2.pgn").build();
+      doel  = new TekstBestand.Builder().setBestand(TEMP + File.separator
+                                                    + "competitie2.pgn")
+                              .setLezen(false).build();
+      doel.add(bron);
     } finally {
-      try {
-        if (null != bron) {
-          bron.close();
-        }
-      } catch (IOException e) {
-        throw new BestandException(e);
+      if (null != bron) {
+        bron.close();
       }
-      try {
-        if (null != doel) {
-          doel.close();
-        }
-      } catch (IOException e) {
-        throw new BestandException(e);
+      if (null != doel) {
+        doel.close();
       }
     }
   }

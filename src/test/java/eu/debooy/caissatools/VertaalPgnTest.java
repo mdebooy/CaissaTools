@@ -23,12 +23,11 @@ import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.access.Bestand;
+import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
 import eu.debooy.doosutils.test.VangOutEnErr;
 
-import java.io.BufferedReader;
-import java.io.BufferedWriter;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -45,6 +44,9 @@ import org.junit.Test;
  * @author Marco de Booij
  */
 public class VertaalPgnTest extends BatchTest {
+  protected static final  ClassLoader CLASSLOADER =
+      VertaalPgnTest.class.getClassLoader();
+
   private final String  pgnZetten   =
       "1.e4 e5 2.d4 exd4 3.Nf3 Nc6 4.Bc4 d6 5.O-O Bg4 6.c3 dxc3 7.Nxc3 Nf6 8.Bg5 Ne5 9.Be2 Nxf3+ 10.Bxf3 Bxf3 11.Qxf3 Be7 12.Rad1 Qc8 13.Rfe1 0-0 14.Qd3 Re8 15.f4 Nh5 16.Bxe7 Rxe7 17.Qf3 Nf6 18.e5 dxe5 19.fxe5 Nd7 20.Qg3 c6 21.Rc1 Qe8 22.Ne4 Kf8 23.Nd6 Qd8 24.Qf4 Nxe5 25.Rxe5 Qxd6 26.Rce1 Rxe5 27.Rxe5 Rd8 28.Qe3 Qd1+ 29.Kf2 Qd2+ 30.Kf3 Qxe3+ 31.Kxe3 Re8 32.Rxe8+ Kxe8";
   private final String  pgnZettenNl =
@@ -62,30 +64,21 @@ public class VertaalPgnTest extends BatchTest {
     resourceBundle  = ResourceBundle.getBundle("ApplicatieResources",
                                                Locale.getDefault());
 
-    BufferedReader  bron  = null;
-    BufferedWriter  doel  = null;
+    TekstBestand  bron  = null;
+    TekstBestand  doel  = null;
     try {
-      bron  = Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
-                                        "partij.pgn");
-      doel  = Bestand.openUitvoerBestand(TEMP + File.separator
-                                         + "partij.pgn");
-      kopieerBestand(bron, doel);
-    } catch (IOException e) {
-      throw new BestandException(e);
+      bron  = new TekstBestand.Builder().setClassLoader(CLASSLOADER)
+                              .setBestand("partij.pgn").build();
+      doel  = new TekstBestand.Builder().setBestand(TEMP + File.separator
+                                                    + "partij.pgn")
+                              .setLezen(false).build();
+      doel.add(bron);
     } finally {
-      try {
-        if (null != bron) {
-          bron.close();
-        }
-      } catch (IOException e) {
-        throw new BestandException(e);
+      if (null != bron) {
+        bron.close();
       }
-      try {
-        if (null != doel) {
-          doel.close();
-        }
-      } catch (IOException e) {
-        throw new BestandException(e);
+      if (null != doel) {
+        doel.close();
       }
     }
   }
@@ -103,7 +96,7 @@ public class VertaalPgnTest extends BatchTest {
 
     VangOutEnErr.execute(VertaalPgn.class, "execute", args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 27, out.size());
+    assertEquals("Zonder parameters - helptekst", 28, out.size());
     assertEquals("Zonder parameters - fouten", 2, err.size());
     assertArrayEquals("Error mesages", verwacht, err.toArray());
   }
@@ -119,7 +112,7 @@ public class VertaalPgnTest extends BatchTest {
 
     VangOutEnErr.execute(VertaalPgn.class, "execute", args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 27, out.size());
+    assertEquals("Zonder parameters - helptekst", 28, out.size());
     assertEquals("Zonder parameters - fouten", 1, err.size());
     assertArrayEquals("Error mesages", verwacht, err.toArray());
   }
