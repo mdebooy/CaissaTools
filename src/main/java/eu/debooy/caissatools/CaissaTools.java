@@ -51,6 +51,8 @@ public final class CaissaTools {
   public static final String  MATRIXOPSTAND         = "matrixopstand";
   public static final String  MAXBESTANDEN          = "maxBestanden";
   public static final String  MAXVERSCHIL           = "maxVerschil";
+  public static final String  METCOMMENTAAR         = "metCommentaar";
+  public static final String  METVARIANTEN          = "metVarianten";
   public static final String  MINPARTIJEN           = "minPartijen";
   public static final String  NAARTAAL              = "naartaal";
   public static final String  PGN                   = "pgn";

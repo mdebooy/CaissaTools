@@ -56,7 +56,11 @@ public final class PgnToJson {
     String        charsetIn   = Charset.defaultCharset().name();
     String        charsetUit  = Charset.defaultCharset().name();
     List<String>  fouten      = new ArrayList<String>();
+    String        naarTaal    = Locale.getDefault().getLanguage();
+    String        naarStukken = "";
     TekstBestand  output      = null;
+    String        vanTaal     = Locale.getDefault().getLanguage();
+    String        vanStukken  = "";
 
     Banner.printBanner(resourceBundle.getString("banner.pgntojson"));
 
@@ -68,8 +72,12 @@ public final class PgnToJson {
                                           CaissaTools.INCLUDELEGE,
                                           CaissaTools.INVOERDIR,
                                           CaissaTools.JSON,
+                                          CaissaTools.METCOMMENTAAR,
+                                          CaissaTools.METVARIANTEN,
+                                          CaissaTools.NAARTAAL,
                                           CaissaTools.PGNVIEWER,
-                                          CaissaTools.UITVOERDIR});
+                                          CaissaTools.UITVOERDIR,
+                                          CaissaTools.VANTAAL});
     arguments.setVerplicht(new String[] {CaissaTools.BESTAND});
     if (!arguments.isValid()) {
       help();
@@ -84,57 +92,77 @@ public final class PgnToJson {
                                        CaissaTools.BESTAND));
     }
     if (bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
-      bestand = bestand.substring(0, bestand.length() - 4);
+      bestand       = bestand.substring(0, bestand.length() - 4);
     }
     if (arguments.hasArgument(CaissaTools.CHARDSETIN)) {
-      charsetIn   = arguments.getArgument(CaissaTools.CHARDSETIN);
+      charsetIn     = arguments.getArgument(CaissaTools.CHARDSETIN);
     }
     if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
-      charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
+      charsetUit    = arguments.getArgument(CaissaTools.CHARDSETUIT);
     }
-    String    defaultEco  = "A00";
+    String    defaultEco    = "A00";
     if (arguments.hasArgument(CaissaTools.DEFAULTECO)) {
       defaultEco  = arguments.getArgument(CaissaTools.DEFAULTECO);
     }
-    boolean   includeLege = false;
+    boolean   includeLege   = false;
     if (arguments.hasArgument(CaissaTools.INCLUDELEGE)) {
-      includeLege =
+      includeLege   =
           DoosConstants.WAAR
               .equalsIgnoreCase(arguments.getArgument(CaissaTools.INCLUDELEGE));
     }
-    String    invoerdir   = ".";
+    String    invoerdir     = ".";
     if (arguments.hasArgument(CaissaTools.INVOERDIR)) {
-      invoerdir   = arguments.getArgument(CaissaTools.INVOERDIR);
+      invoerdir     = arguments.getArgument(CaissaTools.INVOERDIR);
     }
     if (invoerdir.endsWith(File.separator)) {
-      invoerdir   = invoerdir.substring(0,
-                                        invoerdir.length()
-                                        - File.separator.length());
+      invoerdir     = invoerdir.substring(0,
+                                          invoerdir.length()
+                                          - File.separator.length());
     }
-    String    uitvoerdir  = invoerdir;
+    String    uitvoerdir    = invoerdir;
     if (arguments.hasArgument(CaissaTools.UITVOERDIR)) {
-      uitvoerdir  = arguments.getArgument(CaissaTools.UITVOERDIR);
+      uitvoerdir    = arguments.getArgument(CaissaTools.UITVOERDIR);
     }
     if (uitvoerdir.endsWith(File.separator)) {
-      uitvoerdir  = uitvoerdir.substring(0,
-                                         uitvoerdir.length()
-                                         - File.separator.length());
+      uitvoerdir    = uitvoerdir.substring(0,
+                                           uitvoerdir.length()
+                                           - File.separator.length());
     }
-    String    jsonBestand = "";
+    String    jsonBestand   = "";
     if (arguments.hasArgument(CaissaTools.JSON)) {
-      jsonBestand = arguments.getArgument(CaissaTools.JSON);
+      jsonBestand   = arguments.getArgument(CaissaTools.JSON);
     }
     if (DoosUtils.isBlankOrNull(jsonBestand)) {
-      jsonBestand = bestand;
+      jsonBestand   = bestand;
     }
     if (!jsonBestand.endsWith(CaissaTools.EXTENSIE_JSON)) {
-      jsonBestand = jsonBestand + CaissaTools.EXTENSIE_JSON;
+      jsonBestand   = jsonBestand + CaissaTools.EXTENSIE_JSON;
     }
-    boolean   pgnviewer   = false;
+    boolean   pgnviewer     = false;
     if (arguments.hasArgument(CaissaTools.PGNVIEWER)) {
-      pgnviewer   =
+      pgnviewer     =
           DoosConstants.WAAR
               .equalsIgnoreCase(arguments.getArgument(CaissaTools.PGNVIEWER));
+    }
+    boolean   metCommentaar = false;
+    if (arguments.hasArgument(CaissaTools.METCOMMENTAAR)) {
+      metCommentaar =
+          DoosConstants.WAAR
+              .equalsIgnoreCase(arguments
+                                    .getArgument(CaissaTools.METCOMMENTAAR));
+    }
+    boolean   metVarianten  = false;
+    if (arguments.hasArgument(CaissaTools.METVARIANTEN)) {
+      metVarianten  =
+          DoosConstants.WAAR
+              .equalsIgnoreCase(arguments
+                                    .getArgument(CaissaTools.METVARIANTEN));
+    }
+    if (arguments.hasArgument(CaissaTools.NAARTAAL)) {
+      naarTaal    = arguments.getArgument(CaissaTools.NAARTAAL).toLowerCase();
+    }
+    if (arguments.hasArgument(CaissaTools.VANTAAL)) {
+      vanTaal     = arguments.getArgument(CaissaTools.VANTAAL).toLowerCase();
     }
 
     if (!fouten.isEmpty() ) {
@@ -144,6 +172,12 @@ public final class PgnToJson {
       }
       return;
     }
+
+    // Haal de stukcodes op
+    naarStukken = CaissaConstants.Stukcodes.valueOf(naarTaal.toUpperCase())
+                                 .getStukcodes();
+    vanStukken  = CaissaConstants.Stukcodes.valueOf(vanTaal.toUpperCase())
+                                 .getStukcodes();
 
     ObjectMapper    mapper    = new ObjectMapper();
     List<Map<String, String>>
@@ -166,7 +200,8 @@ public final class PgnToJson {
             obj.put(CaissaConstants.PGNTAG_ECO, defaultEco);
           }
           if (pgnviewer) {
-            obj.put("_moves", partij.getZuivereZetten());
+            obj.put("_moves", vertaal(partij.getZuivereZetten(),
+                                      vanStukken, naarStukken));
           } else {
             obj.put("_moves", partij.getZetten());
           }
@@ -220,30 +255,56 @@ public final class PgnToJson {
                          + "] --bestand=<"
                          + resourceBundle.getString("label.pgnbestand") + ">");
     DoosUtils.naarScherm();
-    DoosUtils.naarScherm("  --bestand     ",
+    DoosUtils.naarScherm("  --bestand       ",
                          resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("  --charsetin   ",
+    DoosUtils.naarScherm("  --charsetin     ",
         MessageFormat.format(resourceBundle.getString("help.charsetin"),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --charsetuit  ",
+    DoosUtils.naarScherm("  --charsetuit    ",
         MessageFormat.format(resourceBundle.getString("help.charsetuit"),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --defaulteco  ",
+    DoosUtils.naarScherm("  --defaulteco    ",
                          resourceBundle.getString("help.defaulteco"), 80);
-    DoosUtils.naarScherm("  --includelege ",
+    DoosUtils.naarScherm("  --includelege   ",
                          resourceBundle.getString("help.includelege"), 80);
-    DoosUtils.naarScherm("  --invoerdir   ",
+    DoosUtils.naarScherm("  --invoerdir     ",
                          resourceBundle.getString("help.invoerdir"), 80);
-    DoosUtils.naarScherm("  --json        ",
+    DoosUtils.naarScherm("  --json          ",
                          resourceBundle.getString("help.json"), 80);
-    DoosUtils.naarScherm("  --pgnviewer   ",
+    DoosUtils.naarScherm("  --metCommentaar ",
+                         resourceBundle.getString("help.metcommentaar"), 80);
+    DoosUtils.naarScherm("  --metVarianten  ",
+                         resourceBundle.getString("help.metvarianten"), 80);
+    DoosUtils.naarScherm("  --pgnviewer     ",
                          resourceBundle.getString("help.pgnviewer"), 80);
-    DoosUtils.naarScherm("  --uitvoerdir  ",
+    DoosUtils.naarScherm("  --naartaal      ",
+        MessageFormat.format(resourceBundle.getString("help.naartaal"),
+                             Locale.getDefault().getLanguage()), 80);
+    DoosUtils.naarScherm("  --uitvoerdir    ",
                          resourceBundle.getString("help.uitvoerdir"), 80);
+    DoosUtils.naarScherm("  --vantaal       ",
+        MessageFormat.format(resourceBundle.getString("help.vantaal"),
+                             Locale.getDefault().getLanguage()), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("help.paramverplicht"),
                              CaissaTools.BESTAND), 80);
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("help.talengelijk"),
+                             CaissaTools.BESTAND), 80);
     DoosUtils.naarScherm();
+  }
+
+  private static String vertaal(String zetten,
+                                String vanStukken, String naarStukken) {
+    if (!vanStukken.equals(naarStukken)) {
+      try {
+        return CaissaUtils.vertaalStukken(zetten, vanStukken, naarStukken);
+      } catch (PgnException e) {
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+      }
+    }
+
+    return zetten;
   }
 }
