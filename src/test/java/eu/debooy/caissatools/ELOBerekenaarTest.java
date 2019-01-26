@@ -268,7 +268,6 @@ public class ELOBerekenaarTest extends BatchTest {
                                         "--invoerdir=" + TEMP};
 
     VangOutEnErr.execute(ELOBerekenaar.class, "execute", args, out, err);
-    debug();
 
     assertEquals("Met Volledig Extra - helptekst", 18, out.size());
     assertEquals("Met Volledig Extra - fouten", 0, 0);
