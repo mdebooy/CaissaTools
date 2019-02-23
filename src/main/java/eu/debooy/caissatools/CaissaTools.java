@@ -40,6 +40,7 @@ public final class CaissaTools {
   public static final String  ENKEL                 = "enkel";
   public static final String  ENKELZETTEN           = "enkelzetten";
   public static final String  EXTRAINFO             = "extraInfo";
+  public static final String  EXTRAS                = "extras";
   public static final String  GESCHIEDENISBESTAND   = "geschiedenisBestand";
   public static final String  HALVE                 = "halve";
   public static final String  INCLUDELEGE           = "includelege";
@@ -51,12 +52,9 @@ public final class CaissaTools {
   public static final String  MATRIXOPSTAND         = "matrixopstand";
   public static final String  MAXBESTANDEN          = "maxBestanden";
   public static final String  MAXVERSCHIL           = "maxVerschil";
-  public static final String  METCOMMENTAAR         = "metCommentaar";
-  public static final String  METVARIANTEN          = "metVarianten";
   public static final String  MINPARTIJEN           = "minPartijen";
   public static final String  NAARTAAL              = "naartaal";
   public static final String  PGN                   = "pgn";
-  public static final String  PGNVIEWER             = "pgnviewer";
   public static final String  SITE                  = "site";
   public static final String  SPELERBESTAND         = "spelerBestand";
   public static final String  SPELER                = "speler";

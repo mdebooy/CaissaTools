@@ -48,11 +48,6 @@ public class PgnToJsonTest extends BatchTest {
     }
 
     try {
-      Bestand.delete(TEMP + File.separator + "competitie2.json");
-    } catch (BestandException e) {
-    }
-
-    try {
       Bestand.delete(TEMP + File.separator + "competitie2.pgn");
     } catch (BestandException e) {
     }
@@ -119,42 +114,42 @@ public class PgnToJsonTest extends BatchTest {
     }
   }
 
-  @Test
-  public void testCompetitieMetPgnView() throws BestandException {
-    String[]  args      = new String[] {"--bestand=competitie2",
-                                        "--includelege=J",
-                                        "--invoerdir=" + TEMP,
-                                        "--json=competitie",
-                                        "--pgnviewer=J",
-                                        "--uitvoerdir=" + TEMP};
-
-    try {
-      Bestand.delete(TEMP + File.separator + "competitie.json");
-    } catch (BestandException e) {
-    }
-
-    VangOutEnErr.execute(PgnToJson.class, "execute", args, out, err);
-
-    assertEquals("PgnToJson - helptekst", 18, out.size());
-    assertEquals("PgnToJson - fouten", 0, 0);
-    assertEquals("PgnToJson - 14",
-                 TEMP + File.separator + "competitie2.pgn",
-                 out.get(13).split(":")[1].trim());
-    assertEquals("PgnToJson - 15", "64",
-                 out.get(14).split(":")[1].trim());
-    assertEquals("PgnToJson - 16", TEMP + File.separator + "competitie.json",
-                 out.get(15).split(":")[1].trim());
-    assertEquals("PgnToJson - 17", "64",
-                 out.get(16).split(":")[1].trim());
-    assertTrue("PgnToJson - equals",
-        Bestand.equals(
-            Bestand.openInvoerBestand(TEMP + File.separator
-                                      + "competitie.json"),
-            Bestand.openInvoerBestand(PgnToJsonTest.class.getClassLoader(),
-                                      "competitie2.json")));
-
-    Bestand.delete(TEMP + File.separator + "competitie.json");
-  }
+//  @Test
+//  public void testCompetitieMetPgnView() throws BestandException {
+//    String[]  args      = new String[] {"--bestand=competitie2",
+//                                        "--includelege=J",
+//                                        "--invoerdir=" + TEMP,
+//                                        "--json=competitie",
+//                                        "--pgnviewer=J",
+//                                        "--uitvoerdir=" + TEMP};
+//
+//    try {
+//      Bestand.delete(TEMP + File.separator + "competitie.json");
+//    } catch (BestandException e) {
+//    }
+//
+//    VangOutEnErr.execute(PgnToJson.class, "execute", args, out, err);
+//
+//    assertEquals("PgnToJson - helptekst", 18, out.size());
+//    assertEquals("PgnToJson - fouten", 0, 0);
+//    assertEquals("PgnToJson - 14",
+//                 TEMP + File.separator + "competitie2.pgn",
+//                 out.get(13).split(":")[1].trim());
+//    assertEquals("PgnToJson - 15", "64",
+//                 out.get(14).split(":")[1].trim());
+//    assertEquals("PgnToJson - 16", TEMP + File.separator + "competitie.json",
+//                 out.get(15).split(":")[1].trim());
+//    assertEquals("PgnToJson - 17", "64",
+//                 out.get(16).split(":")[1].trim());
+//    assertTrue("PgnToJson - equals",
+//        Bestand.equals(
+//            Bestand.openInvoerBestand(TEMP + File.separator
+//                                      + "competitie.json"),
+//            Bestand.openInvoerBestand(PgnToJsonTest.class.getClassLoader(),
+//                                      "competitie2.json")));
+//
+//    Bestand.delete(TEMP + File.separator + "competitie.json");
+//  }
 
   @Test
   public void testCompetitiePgnToJson() throws BestandException {
@@ -225,30 +220,30 @@ public class PgnToJsonTest extends BatchTest {
     Bestand.delete(TEMP + File.separator + "json.json");
   }
 
-  @Test
-  public void testPartijMetPgnView() throws BestandException {
-    String[]  args      = new String[] {"--bestand=partij",
-                                        "--invoerdir=" + TEMP,
-                                        "--json=partij",
-                                        "--pgnviewer=J",
-                                        "--uitvoerdir=" + TEMP};
-
-    try {
-      Bestand.delete(TEMP + File.separator + "partij.json");
-    } catch (BestandException e) {
-    }
-
-    VangOutEnErr.execute(PgnToJson.class, "execute", args, out, err);
-
-    assertTrue("PartijMetPgnView",
-        Bestand.equals(
-            Bestand.openInvoerBestand(TEMP + File.separator
-                                      + "partij.json"),
-            Bestand.openInvoerBestand(PgnToJsonTest.class.getClassLoader(),
-                                      "partijPgnviewer.json")));
-
-    Bestand.delete(TEMP + File.separator + "partij.json");
-  }
+//  @Test
+//  public void testPartijMetPgnView() throws BestandException {
+//    String[]  args      = new String[] {"--bestand=partij",
+//                                        "--invoerdir=" + TEMP,
+//                                        "--json=partij",
+//                                        "--pgnviewer=J",
+//                                        "--uitvoerdir=" + TEMP};
+//
+//    try {
+//      Bestand.delete(TEMP + File.separator + "partij.json");
+//    } catch (BestandException e) {
+//    }
+//
+//    VangOutEnErr.execute(PgnToJson.class, "execute", args, out, err);
+//
+//    assertTrue("PartijMetPgnView",
+//        Bestand.equals(
+//            Bestand.openInvoerBestand(TEMP + File.separator
+//                                      + "partij.json"),
+//            Bestand.openInvoerBestand(PgnToJsonTest.class.getClassLoader(),
+//                                      "partijPgnviewer.json")));
+//
+//    Bestand.delete(TEMP + File.separator + "partij.json");
+//  }
 
   @Test
   public void testPartijToJson() throws BestandException {
