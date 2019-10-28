@@ -87,8 +87,8 @@ public final class ELOBerekenaar {
     Banner.printBanner(resourceBundle.getString("banner.eloberekenaar"));
 
     Arguments arguments = new Arguments(args);
-    arguments.setParameters(new String[] {CaissaTools.CHARDSETIN,
-                                          CaissaTools.CHARDSETUIT, 
+    arguments.setParameters(new String[] {CaissaTools.CHARSETIN,
+                                          CaissaTools.CHARSETUIT, 
                                           CaissaTools.EINDDATUM,
                                           CaissaTools.EXTRAINFO,
                                           CaissaTools.GESCHIEDENISBESTAND,
@@ -107,11 +107,11 @@ public final class ELOBerekenaar {
       return;
     }
 
-    if (arguments.hasArgument(CaissaTools.CHARDSETIN)) {
-      charsetIn   = arguments.getArgument(CaissaTools.CHARDSETIN);
+    if (arguments.hasArgument(CaissaTools.CHARSETIN)) {
+      charsetIn   = arguments.getArgument(CaissaTools.CHARSETIN);
     }
-    if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
-      charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
+    if (arguments.hasArgument(CaissaTools.CHARSETUIT)) {
+      charsetUit  = arguments.getArgument(CaissaTools.CHARSETUIT);
     }
     if (arguments.hasArgument(CaissaTools.EXTRAINFO)) {
       extraInfo =

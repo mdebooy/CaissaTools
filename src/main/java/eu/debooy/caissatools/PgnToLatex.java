@@ -87,8 +87,8 @@ public final class PgnToLatex {
     Arguments arguments = new Arguments(args);
     arguments.setParameters(new String[] {CaissaTools.AUTEUR,
                                           CaissaTools.BESTAND,
-                                          CaissaTools.CHARDSETIN,
-                                          CaissaTools.CHARDSETUIT,
+                                          CaissaTools.CHARSETIN,
+                                          CaissaTools.CHARSETUIT,
                                           CaissaTools.DATUM,
                                           CaissaTools.ENKEL,
                                           CaissaTools.HALVE,
@@ -118,11 +118,11 @@ public final class PgnToLatex {
                                          bestand[i]));
       }
     }
-    if (arguments.hasArgument(CaissaTools.CHARDSETIN)) {
-      charsetIn   = arguments.getArgument(CaissaTools.CHARDSETIN);
+    if (arguments.hasArgument(CaissaTools.CHARSETIN)) {
+      charsetIn   = arguments.getArgument(CaissaTools.CHARSETIN);
     }
-    if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
-      charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
+    if (arguments.hasArgument(CaissaTools.CHARSETUIT)) {
+      charsetUit  = arguments.getArgument(CaissaTools.CHARSETUIT);
     }
     String    invoerdir   = ".";
     if (arguments.hasArgument(CaissaTools.INVOERDIR)) {

@@ -77,8 +77,8 @@ public final class PgnToHtml {
 
     Arguments arguments = new Arguments(args);
     arguments.setParameters(new String[] {CaissaTools.BESTAND,
-                                          CaissaTools.CHARDSETIN,
-                                          CaissaTools.CHARDSETUIT,
+                                          CaissaTools.CHARSETIN,
+                                          CaissaTools.CHARSETUIT,
                                           CaissaTools.ENKEL,
                                           CaissaTools.HALVE,
                                           CaissaTools.INVOERDIR,
@@ -97,11 +97,11 @@ public final class PgnToHtml {
               resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
                                        CaissaTools.BESTAND));
     }
-    if (arguments.hasArgument(CaissaTools.CHARDSETIN)) {
-      charsetIn   = arguments.getArgument(CaissaTools.CHARDSETIN);
+    if (arguments.hasArgument(CaissaTools.CHARSETIN)) {
+      charsetIn   = arguments.getArgument(CaissaTools.CHARSETIN);
     }
-    if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
-      charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
+    if (arguments.hasArgument(CaissaTools.CHARSETUIT)) {
+      charsetUit  = arguments.getArgument(CaissaTools.CHARSETUIT);
     }
     // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
     // 1 is default waarde.

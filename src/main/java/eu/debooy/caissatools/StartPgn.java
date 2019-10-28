@@ -51,7 +51,7 @@ public final class StartPgn {
 
     Arguments       arguments   = new Arguments(args);
     arguments.setParameters(new String[] {CaissaTools.BESTAND,
-                                          CaissaTools.CHARDSETUIT,
+                                          CaissaTools.CHARSETUIT,
                                           CaissaTools.DATE,
                                           CaissaTools.EVENT,
                                           CaissaTools.SITE,
@@ -74,8 +74,8 @@ public final class StartPgn {
               resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
                                        CaissaTools.BESTAND));
     }
-    if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
-      charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
+    if (arguments.hasArgument(CaissaTools.CHARSETUIT)) {
+      charsetUit  = arguments.getArgument(CaissaTools.CHARSETUIT);
     }
     if (!bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
       bestand = bestand + CaissaTools.EXTENSIE_PGN;

@@ -71,8 +71,8 @@ public final class ChessTheatre {
 
     Arguments       arguments   = new Arguments(args);
     arguments.setParameters(new String[] {CaissaTools.BESTAND,
-                                          CaissaTools.CHARDSETIN,
-                                          CaissaTools.CHARDSETUIT,
+                                          CaissaTools.CHARSETIN,
+                                          CaissaTools.CHARSETUIT,
                                           CaissaTools.INVOERDIR,
                                           CaissaTools.MAXBESTANDEN,
                                           CaissaTools.MINPARTIJEN,
@@ -94,11 +94,11 @@ public final class ChessTheatre {
     if (bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
       bestand = bestand.substring(0, bestand.length() - 4);
     }
-    if (arguments.hasArgument(CaissaTools.CHARDSETIN)) {
-      charsetIn   = arguments.getArgument(CaissaTools.CHARDSETIN);
+    if (arguments.hasArgument(CaissaTools.CHARSETIN)) {
+      charsetIn   = arguments.getArgument(CaissaTools.CHARSETIN);
     }
-    if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
-      charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
+    if (arguments.hasArgument(CaissaTools.CHARSETUIT)) {
+      charsetUit  = arguments.getArgument(CaissaTools.CHARSETUIT);
     }
     if (arguments.hasArgument(CaissaTools.MAXBESTANDEN)) {
       int hulp  =

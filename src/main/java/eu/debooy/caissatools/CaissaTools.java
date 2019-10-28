@@ -30,8 +30,8 @@ import java.util.ResourceBundle;
 public final class CaissaTools {
   public static final String  AUTEUR                = "auteur";
   public static final String  BESTAND               = "bestand";
-  public static final String  CHARDSETIN            = "charsetin";
-  public static final String  CHARDSETUIT           = "charsetuit";
+  public static final String  CHARSETIN             = "charsetin";
+  public static final String  CHARSETUIT            = "charsetuit";
   public static final String  DATE                  = "date";
   public static final String  DATUM                 = "datum";
   public static final String  DEFAULTECO            = "defaulteco";
@@ -40,7 +40,6 @@ public final class CaissaTools {
   public static final String  ENKEL                 = "enkel";
   public static final String  ENKELZETTEN           = "enkelzetten";
   public static final String  EXTRAINFO             = "extraInfo";
-  public static final String  EXTRAS                = "extras";
   public static final String  GESCHIEDENISBESTAND   = "geschiedenisBestand";
   public static final String  HALVE                 = "halve";
   public static final String  INCLUDELEGE           = "includelege";
@@ -52,6 +51,8 @@ public final class CaissaTools {
   public static final String  MATRIXOPSTAND         = "matrixopstand";
   public static final String  MAXBESTANDEN          = "maxBestanden";
   public static final String  MAXVERSCHIL           = "maxVerschil";
+  public static final String  METFEN                = "metFEN";
+  public static final String  METTRAJECTEN          = "metTrajecten";
   public static final String  MINPARTIJEN           = "minPartijen";
   public static final String  NAARTAAL              = "naartaal";
   public static final String  PGN                   = "pgn";
@@ -69,6 +70,7 @@ public final class CaissaTools {
   public static final String  UITVOERDIR            = "uitvoerdir";
   public static final String  VANTAAL               = "vantaal";
   public static final String  VASTEKFACTOR          = "vasteKfactor";
+  public static final String  VOORNICO              = "voorNico";
   public static final String  ZIP                   = "zip";
 
   public static final String  ERR_BESTANDENPGN      = "error.bestand.en.pgn";

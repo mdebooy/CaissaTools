@@ -52,8 +52,8 @@ public final class PgnCleaner {
 
     Arguments arguments = new Arguments(args);
     arguments.setParameters(new String[] {CaissaTools.BESTAND,
-                                          CaissaTools.CHARDSETIN,
-                                          CaissaTools.CHARDSETUIT,
+                                          CaissaTools.CHARSETIN,
+                                          CaissaTools.CHARSETUIT,
                                           CaissaTools.ENKELZETTEN,
                                           CaissaTools.INVOERDIR,
                                           CaissaTools.UITVOER,
@@ -68,11 +68,11 @@ public final class PgnCleaner {
     if (!bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
       bestand     = bestand + CaissaTools.EXTENSIE_PGN;
     }
-    if (arguments.hasArgument(CaissaTools.CHARDSETIN)) {
-      charsetIn   = arguments.getArgument(CaissaTools.CHARDSETIN);
+    if (arguments.hasArgument(CaissaTools.CHARSETIN)) {
+      charsetIn   = arguments.getArgument(CaissaTools.CHARSETIN);
     }
-    if (arguments.hasArgument(CaissaTools.CHARDSETUIT)) {
-      charsetUit  = arguments.getArgument(CaissaTools.CHARDSETUIT);
+    if (arguments.hasArgument(CaissaTools.CHARSETUIT)) {
+      charsetUit  = arguments.getArgument(CaissaTools.CHARSETUIT);
     }
     boolean   enkelZetten = false;
     if (arguments.hasArgument(CaissaTools.ENKELZETTEN)) {
