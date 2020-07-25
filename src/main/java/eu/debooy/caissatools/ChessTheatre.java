@@ -25,11 +25,11 @@ import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.caissa.exceptions.ZetException;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
+import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.ManifestInfo;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
-
 import java.io.File;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
@@ -45,7 +45,7 @@ import java.util.TreeSet;
 /**
  * @author Marco de Booij
  */
-public final class ChessTheatre {
+public final class ChessTheatre extends Batchjob {
   private static  ManifestInfo    manifestInfo    = new ManifestInfo();
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
@@ -55,106 +55,46 @@ public final class ChessTheatre {
 
   private ChessTheatre(){}
 
-  public static void execute(String[] args) throws PgnException {
-    String        charsetIn     = Charset.defaultCharset().name();
-    String        charsetUit    = Charset.defaultCharset().name();
-    List<String>  fouten        = new ArrayList<String>();
+  public static void execute(String[] args) {
     TekstBestand  gamedata      = null;
     TekstBestand  headers       = null;
     int           maxBestanden  = 50;
     int           minPartijen   = 1;
     TekstBestand  updates       = null;
     String        versie        = manifestInfo.getBuildVersion();
-    String        zip           = "";
 
-    Banner.printBanner(resourceBundle.getString("banner.chesstheatre"));
+    Banner.printMarcoBanner(resourceBundle.getString("banner.chesstheatre"));
 
-    Arguments       arguments   = new Arguments(args);
-    arguments.setParameters(new String[] {CaissaTools.BESTAND,
-                                          CaissaTools.CHARSETIN,
-                                          CaissaTools.CHARSETUIT,
-                                          CaissaTools.INVOERDIR,
-                                          CaissaTools.MAXBESTANDEN,
-                                          CaissaTools.MINPARTIJEN,
-                                          CaissaTools.UITVOERDIR,
-                                          CaissaTools.ZIP});
-    arguments.setVerplicht(new String[] {CaissaTools.BESTAND});
-    if (!arguments.isValid()) {
-      help();
+    if (!setParameters(args)) {
       return;
     }
 
-    String  bestand = arguments.getArgument(CaissaTools.BESTAND);
-    if (bestand.contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
-                                       CaissaTools.BESTAND));
-    }
-    if (bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
-      bestand = bestand.substring(0, bestand.length() - 4);
-    }
-    if (arguments.hasArgument(CaissaTools.CHARSETIN)) {
-      charsetIn   = arguments.getArgument(CaissaTools.CHARSETIN);
-    }
-    if (arguments.hasArgument(CaissaTools.CHARSETUIT)) {
-      charsetUit  = arguments.getArgument(CaissaTools.CHARSETUIT);
-    }
-    if (arguments.hasArgument(CaissaTools.MAXBESTANDEN)) {
+    if (parameters.containsKey(CaissaTools.PAR_MAXBESTANDEN)) {
       int hulp  =
-          Integer.valueOf(arguments.getArgument(CaissaTools.MAXBESTANDEN));
+          Integer.valueOf(parameters.get(CaissaTools.PAR_MAXBESTANDEN));
       if (hulp > 0) {
         maxBestanden  = hulp;
       }
     }
-    if (arguments.hasArgument(CaissaTools.MINPARTIJEN)) {
+    if (parameters.containsKey(CaissaTools.PAR_MINPARTIJEN)) {
       int hulp  =
-          Integer.valueOf(arguments.getArgument(CaissaTools.MINPARTIJEN));
+          Integer.valueOf(parameters.get(CaissaTools.PAR_MINPARTIJEN));
       if (hulp > 0) {
         minPartijen   = hulp;
       }
     }
-    String    invoerdir   = ".";
-    if (arguments.hasArgument(CaissaTools.INVOERDIR)) {
-      invoerdir   = arguments.getArgument(CaissaTools.INVOERDIR);
-    }
-    if (invoerdir.endsWith(File.separator)) {
-      invoerdir   = invoerdir.substring(0,
-                                        invoerdir.length()
-                                        - File.separator.length());
-    }
-    String    uitvoerdir  = invoerdir;
-    if (arguments.hasArgument(CaissaTools.UITVOERDIR)) {
-      uitvoerdir  = arguments.getArgument(CaissaTools.UITVOERDIR);
-    }
-    if (uitvoerdir.endsWith(File.separator)) {
-      uitvoerdir  = uitvoerdir.substring(0,
-                                         uitvoerdir.length()
-                                         - File.separator.length());
-    }
-    if (arguments.hasArgument(CaissaTools.ZIP)) {
-      zip = arguments.getArgument(CaissaTools.ZIP);
-    } else {
-      zip = bestand;
-    }
-    if (zip.endsWith(CaissaTools.EXTENSIE_ZIP)) {
-      zip = zip.substring(0, zip.length() - 4);
-    }
 
-    if (!fouten.isEmpty() ) {
-      help();
-      for (String fout : fouten) {
-        DoosUtils.foutNaarScherm(fout);
-      }
+    Collection<PGN> partijen    = new TreeSet<>(new PGN.byEventComparator());
+    try {
+      partijen.addAll(
+          CaissaUtils.laadPgnBestand(parameters.get(PAR_INVOERDIR) +
+                                     parameters.get(CaissaTools.PAR_BESTAND)
+                                     + EXT_PGN,
+                      parameters.get(PAR_CHARSETIN)));
+    } catch (PgnException e) {
+      DoosUtils.foutNaarScherm(e.getMessage());
       return;
     }
-
-    Collection<PGN>
-              partijen    = new TreeSet<PGN>(new PGN.byEventComparator());
-    partijen.addAll(CaissaUtils.laadPgnBestand(invoerdir + File.separator
-                                                 + bestand
-                                                 + CaissaTools.EXTENSIE_PGN,
-                                               charsetIn));
 
     int aantalPartijen  = partijen.size() / maxBestanden + 1;
     if (aantalPartijen < minPartijen) {
@@ -165,18 +105,19 @@ public final class ChessTheatre {
     try {
       // Maak de headers.xml file
       headers   = new TekstBestand.Builder()
-                                  .setBestand(uitvoerdir + File.separator
+                                  .setBestand(parameters.get(PAR_UITVOERDIR)
                                               + "headers.xml")
-                                  .setCharset(charsetUit)
+                                  .setCharset(parameters.get(PAR_CHARSETUIT))
                                   .setLezen(false).build();
       headers.write(CaissaTools.XML_HEADING);
       headers.write("<chessgames gamesperfile=\"" + aantalPartijen
-                    + "\"  pgnfile=\"" + zip + ".zip\">");
+                    + "\"  pgnfile=\"" + parameters.get(CaissaTools.PAR_ZIP)
+                    + ".zip\">");
       // Maak de updates.xml file
       updates   = new TekstBestand.Builder()
-                                  .setBestand(uitvoerdir + File.separator
+                                  .setBestand(parameters.get(PAR_UITVOERDIR)
                                               + "updates.xml")
-                                  .setCharset(charsetUit)
+                                  .setCharset(parameters.get(PAR_CHARSETUIT))
                                   .setLezen(false).build();
       updates.write(CaissaTools.XML_HEADING);
 
@@ -198,12 +139,12 @@ public final class ChessTheatre {
             gamedata.close();
           }
           // Maak de gamedataX.xml file
-          gamedata  = new TekstBestand.Builder()
-                                      .setBestand(uitvoerdir + File.separator
-                                                  + "gamedata" + gameFile
-                                                  + ".xml")
-                                      .setCharset(charsetUit)
-                                      .setLezen(false).build();
+          gamedata  =
+              new TekstBestand.Builder()
+                              .setBestand(parameters.get(PAR_UITVOERDIR)
+                                          + "gamedata" + gameFile + ".xml")
+                              .setCharset(parameters.get(PAR_CHARSETUIT))
+                              .setLezen(false).build();
           gamedata.write(CaissaTools.XML_HEADING);
           gamedata.write("<gamedata>");
           gameFile++;
@@ -220,7 +161,7 @@ public final class ChessTheatre {
         } else {
           if (!partij.getTag(CaissaConstants.PGNTAG_ROUND).equals(vorigRound)) {
             headers.write("    " + HTML_ROUND_EINDE);
- 
+
             vorigRound  = partij.getTag(CaissaConstants.PGNTAG_ROUND);
             headers.write("    " + HTML_ROUND_START
                           + partij.getTag(CaissaConstants.PGNTAG_ROUND)
@@ -254,7 +195,7 @@ public final class ChessTheatre {
         if (!partij.getZuivereZetten().isEmpty()) {
           try {
             lijn.append(parseZetten(fen,partij.getZuivereZetten()));
-          } catch (FenException | ZetException e) {
+          } catch (FenException | PgnException | ZetException e) {
             DoosUtils.foutNaarScherm("Error in " + partij.getTagsAsString());
             DoosUtils.foutNaarScherm(e.getMessage());
           }
@@ -303,55 +244,94 @@ public final class ChessTheatre {
     DoosUtils.naarScherm(resourceBundle.getString("label.bestanden") + " "
                          + gameFile);
     DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
-                         + uitvoerdir);
+                         + parameters.get(PAR_UITVOERDIR));
     DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
   }
 
-  /**
-   * Geeft de 'help' pagina.
-   */
-  protected static void help() {
+  public static void help() {
     DoosUtils.naarScherm("java -jar CaissaTools.jar ChessTheatre ["
-                         + resourceBundle.getString("label.optie")
+                         + getMelding(LBL_OPTIE)
                          + "] --bestand=<"
                          + resourceBundle.getString("label.pgnbestand") + ">");
     DoosUtils.naarScherm();
-    DoosUtils.naarScherm("  --bestand      ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 13),
                          resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("  --charsetin    ",
-        MessageFormat.format(resourceBundle.getString("help.charsetin"),
+    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 13),
+        MessageFormat.format(getMelding(HLP_CHARSETIN),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --charsetuit   ",
-        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
+    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 13),
+        MessageFormat.format(getMelding(HLP_CHARSETUIT),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --invoerdir    ",
-                         resourceBundle.getString("help.invoerdir"), 80);
-    DoosUtils.naarScherm("  --maxBestanden ",
+    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 13),
+                         getMelding(HLP_INVOERDIR), 80);
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_MAXBESTANDEN, 13),
                          resourceBundle.getString("help.maxbestanden"), 80);
-    DoosUtils.naarScherm("  --minPartijen  ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_MINPARTIJEN, 13),
                          resourceBundle.getString("help.minpartijen"), 80);
-    DoosUtils.naarScherm("  --uitvoerdir   ",
-                         resourceBundle.getString("help.uitvoerdir"), 80);
-    DoosUtils.naarScherm("  --zip          ",
+    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 13),
+                         getMelding(HLP_UITVOERDIR), 80);
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_ZIP, 13),
                          resourceBundle.getString("help.zip"), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("help.paramverplicht"),
-                             "bestand"), 80);
+        MessageFormat.format(getMelding(HLP_PARAMVERPLICHT),
+                             CaissaTools.PAR_BESTAND), 80);
     DoosUtils.naarScherm();
   }
 
-  /**
-   * Zet de PGN zetten om in ChessTheatre zetten.
-   * 
-   * @param zetten de partij in PGN formaat
-   * @return de partij in ChessTheatre formaat
-   * @throws FenException 
-   * @throws PgnException 
-   * @throws ZetException 
-   */
   private static String parseZetten(FEN fen, String pgnZetten)
       throws FenException, PgnException, ZetException {
     return CaissaUtils.pgnZettenToChessTheatre(fen, pgnZetten);
+  }
+
+  private static boolean setParameters(String[] args) {
+    Arguments     arguments = new Arguments(args);
+    List<String>  fouten    = new ArrayList<>();
+
+    arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
+                                          PAR_CHARSETIN,
+                                          PAR_CHARSETUIT,
+                                          PAR_INVOERDIR,
+                                          CaissaTools.PAR_MAXBESTANDEN,
+                                          CaissaTools.PAR_MINPARTIJEN,
+                                          PAR_UITVOERDIR,
+                                          CaissaTools.PAR_ZIP});
+    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND});
+    if (!arguments.isValid()) {
+      fouten.add(getMelding(ERR_INVALIDPARAMS));
+    }
+
+    setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
+    setParameter(arguments, PAR_CHARSETIN,
+                 Charset.defaultCharset().name());
+    setParameter(arguments, PAR_CHARSETUIT,
+                 Charset.defaultCharset().name());
+    setDirParameter(arguments, PAR_INVOERDIR);
+    setDirParameter(arguments, CaissaTools.PAR_MAXBESTANDEN);
+    setDirParameter(arguments, CaissaTools.PAR_MINPARTIJEN);
+    setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
+    setBestandParameter(arguments, CaissaTools.PAR_ZIP, EXT_ZIP);
+
+    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
+                 .contains(File.separator)) {
+      fouten.add(
+          MessageFormat.format(
+              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
+    }
+    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_ZIP))
+                 .contains(File.separator)) {
+      fouten.add(
+          MessageFormat.format(
+              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_ZIP));
+    }
+
+    if (fouten.isEmpty()) {
+      return true;
+    }
+
+    help();
+    printFouten(fouten);
+
+    return false;
   }
 }
