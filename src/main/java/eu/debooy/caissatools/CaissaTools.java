@@ -16,10 +16,8 @@
  */
 package eu.debooy.caissatools;
 
-import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.DoosUtils;
-
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -29,49 +27,13 @@ import java.util.ResourceBundle;
  */
 public final class CaissaTools {
   public static final String  AUTEUR                = "auteur";
-  public static final String  BESTAND               = "bestand";
-  public static final String  CHARSETIN             = "charsetin";
-  public static final String  CHARSETUIT            = "charsetuit";
-  public static final String  DATE                  = "date";
   public static final String  DATUM                 = "datum";
-  public static final String  DEFAULTECO            = "defaulteco";
-  public static final String  EVENT                 = "event";
-  public static final String  EINDDATUM             = "eindDatum";
-  public static final String  ENKEL                 = "enkel";
-  public static final String  ENKELZETTEN           = "enkelzetten";
-  public static final String  EXTRAINFO             = "extraInfo";
-  public static final String  GESCHIEDENISBESTAND   = "geschiedenisBestand";
-  public static final String  HALVE                 = "halve";
-  public static final String  INCLUDELEGE           = "includelege";
-  public static final String  INVOERDIR             = "invoerdir";
-  public static final String  JSON                  = "json";
   public static final String  KEYWORDS              = "keywords";
   public static final String  LOGO                  = "logo";
   public static final String  MATRIX                = "matrix";
-  public static final String  MATRIXOPSTAND         = "matrixopstand";
-  public static final String  MAXBESTANDEN          = "maxBestanden";
-  public static final String  MAXVERSCHIL           = "maxVerschil";
-  public static final String  METFEN                = "metFEN";
-  public static final String  METTRAJECTEN          = "metTrajecten";
-  public static final String  MINPARTIJEN           = "minPartijen";
-  public static final String  NAARTAAL              = "naartaal";
-  public static final String  PGN                   = "pgn";
-  public static final String  SITE                  = "site";
-  public static final String  SPELERBESTAND         = "spelerBestand";
-  public static final String  SPELER                = "speler";
-  public static final String  SPELERS               = "spelers";
-  public static final String  STARTDATUM            = "startDatum";
-  public static final String  STARTELO              = "startELO";
   public static final String  TAG                   = "tag";
   public static final String  TEMPLATE              = "template";
   public static final String  TITEL                 = "titel";
-  public static final String  TOERNOOIBESTAND       = "toernooiBestand";
-  public static final String  UITVOER               = "uitvoer";
-  public static final String  UITVOERDIR            = "uitvoerdir";
-  public static final String  VANTAAL               = "vantaal";
-  public static final String  VASTEKFACTOR          = "vasteKfactor";
-  public static final String  VOORNICO              = "voorNico";
-  public static final String  ZIP                   = "zip";
 
   public static final String  ERR_BESTANDENPGN      = "error.bestand.en.pgn";
   public static final String  ERR_BEVATDIRECTORY    = "error.bevatdirectory";
@@ -87,13 +49,42 @@ public final class CaissaTools {
   public static final String  ERR_TALENGELIJK       = "error.talen.gelijk";
   public static final String  ERR_TEMPLATE          = "error.template";
 
-  public static final String  EXTENSIE_CSV          = ".csv";
-  public static final String  EXTENSIE_JSON         = ".json";
-  public static final String  EXTENSIE_PGN          = ".pgn";
-  public static final String  EXTENSIE_TEX          = ".tex";
-  public static final String  EXTENSIE_ZIP          = ".zip";
+  public static final String  MSG_NIEUWBESTAND  = "message.nieuwbestand";
 
-  public static final String  MSG_NIEUWBESTAND      = "message.nieuwbestand";
+  public static final String  PAR_BESTAND             = "bestand";
+  public static final String  PAR_CHARSETIN           = "charsetin";
+  public static final String  PAR_CHARSETUIT          = "charsetuit";
+  public static final String  PAR_DATE                = "date";
+  public static final String  PAR_DEFAULTECO          = "defaulteco";
+  public static final String  PAR_EINDDATUM           = "eindDatum";
+  public static final String  PAR_ENKEL               = "enkel";
+  public static final String  PAR_ENKELZETTEN         = "enkelzetten";
+  public static final String  PAR_EVENT               = "event";
+  public static final String  PAR_EXTRAINFO           = "extraInfo";
+  public static final String  PAR_GESCHIEDENISBESTAND = "geschiedenisBestand";
+  public static final String  PAR_HALVE               = "halve";
+  public static final String  PAR_INCLUDELEGE         = "includelege";
+  public static final String  PAR_JSON                = "json";
+  public static final String  PAR_MATRIXOPSTAND       = "matrixopstand";
+  public static final String  PAR_MAXBESTANDEN        = "maxBestanden";
+  public static final String  PAR_MAXVERSCHIL         = "maxVerschil";
+  public static final String  PAR_METFEN              = "metFEN";
+  public static final String  PAR_METTRAJECTEN        = "metTrajecten";
+  public static final String  PAR_MINPARTIJEN         = "minPartijen";
+  public static final String  PAR_NAARTAAL            = "naartaal";
+  public static final String  PAR_PGN                 = "pgn";
+  public static final String  PAR_SITE                = "site";
+  public static final String  PAR_SPELER              = "speler";
+  public static final String  PAR_SPELERBESTAND       = "spelerBestand";
+  public static final String  PAR_SPELERS             = "spelers";
+  public static final String  PAR_STARTDATUM          = "startDatum";
+  public static final String  PAR_STARTELO            = "startELO";
+  public static final String  PAR_TOERNOOIBESTAND     = "toernooiBestand";
+  public static final String  PAR_UITVOER             = "uitvoer";
+  public static final String  PAR_VANTAAL             = "vantaal";
+  public static final String  PAR_VASTEKFACTOR        = "vasteKfactor";
+  public static final String  PAR_VOORNICO            = "voorNico";
+  public static final String  PAR_ZIP                 = "zip";
 
   public static final String  XML_HEADING           =
       "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>";
@@ -105,7 +96,7 @@ public final class CaissaTools {
 
   public static void main(String[] args) {
     if (args.length == 0) {
-      Banner.printBanner("Caissa Tools");
+      Banner.printMarcoBanner("Caissa Tools");
       help();
       return;
     }
@@ -115,54 +106,47 @@ public final class CaissaTools {
     String[]  commandoArgs  = new String[args.length-1];
     System.arraycopy(args, 1, commandoArgs, 0, args.length-1);
 
-    try {
-      if ("chesstheatre".equalsIgnoreCase(commando)) {
-        ChessTheatre.execute(commandoArgs);
-        return;
-      }
-      if ("eloberekenaar".equalsIgnoreCase(commando)) {
-        ELOBerekenaar.execute(commandoArgs);
-        return;
-      }
-      if ("pgncleaner".equalsIgnoreCase(commando)) {
-        PgnCleaner.execute(commandoArgs);
-        return;
-      }
-      if ("pgntohtml".equalsIgnoreCase(commando)) {
-        PgnToHtml.execute(commandoArgs);
-        return;
-      }
-      if ("pgntojson".equalsIgnoreCase(commando)) {
-        PgnToJson.execute(commandoArgs);
-        return;
-      }
-      if ("pgntolatex".equalsIgnoreCase(commando)) {
-        PgnToLatex.execute(commandoArgs);
-        return;
-      }
-      if ("startpgn".equalsIgnoreCase(commando)) {
-        StartPgn.execute(commandoArgs);
-        return;
-      }
-      if ("spelerstatistiek".equalsIgnoreCase(commando)) {
-        SpelerStatistiek.execute(commandoArgs);
-        return;
-      }
-      if ("vertaalpgn".equalsIgnoreCase(commando)) {
-        VertaalPgn.execute(commandoArgs);
-        return;
-      }
-
-      Banner.printBanner("Caissa Tools");
-      help();
-    } catch (PgnException e) {
-      DoosUtils.foutNaarScherm(e.getMessage());
+    if ("chesstheatre".equalsIgnoreCase(commando)) {
+      ChessTheatre.execute(commandoArgs);
+      return;
     }
+    if ("eloberekenaar".equalsIgnoreCase(commando)) {
+      ELOBerekenaar.execute(commandoArgs);
+      return;
+    }
+    if ("pgncleaner".equalsIgnoreCase(commando)) {
+      PgnCleaner.execute(commandoArgs);
+      return;
+    }
+    if ("pgntohtml".equalsIgnoreCase(commando)) {
+      PgnToHtml.execute(commandoArgs);
+      return;
+    }
+    if ("pgntojson".equalsIgnoreCase(commando)) {
+      PgnToJson.execute(commandoArgs);
+      return;
+    }
+    if ("pgntolatex".equalsIgnoreCase(commando)) {
+      PgnToLatex.execute(commandoArgs);
+      return;
+    }
+    if ("spelerstatistiek".equalsIgnoreCase(commando)) {
+      SpelerStatistiek.execute(commandoArgs);
+      return;
+    }
+    if ("startpgn".equalsIgnoreCase(commando)) {
+      StartPgn.execute(commandoArgs);
+      return;
+    }
+    if ("vertaalpgn".equalsIgnoreCase(commando)) {
+      VertaalPgn.execute(commandoArgs);
+      return;
+    }
+
+    Banner.printMarcoBanner("Caissa Tools");
+    help();
   }
 
-  /**
-   * Geeft de 'help' pagina.
-   */
   private static void help() {
     DoosUtils.naarScherm("  ChessTheatre      ",
                          resourceBundle.getString("help.chesstheatre"), 80);

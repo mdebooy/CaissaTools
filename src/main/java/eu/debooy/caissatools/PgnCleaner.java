@@ -21,16 +21,18 @@ import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
+import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.errorhandling.exception.FileNotFoundException;
 import eu.debooy.doosutils.exception.BestandException;
-
 import java.io.File;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -38,87 +40,58 @@ import java.util.ResourceBundle;
 /**
  * @author Marco de Booij
  */
-public final class PgnCleaner {
+public final class PgnCleaner extends Batchjob {
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
   private PgnCleaner() {}
 
-  public static void execute(String[] args) throws PgnException {
-    String        charsetIn   = Charset.defaultCharset().name();
-    String        charsetUit  = Charset.defaultCharset().name();
+  public static void execute(String[] args) {
+    Banner.printMarcoBanner(resourceBundle.getString("banner.pgncleaner"));
 
-    Banner.printBanner(resourceBundle.getString("banner.pgncleaner"));
+    if (!setParameters(args)) {
+      return;
+    }
 
     Arguments arguments = new Arguments(args);
-    arguments.setParameters(new String[] {CaissaTools.BESTAND,
-                                          CaissaTools.CHARSETIN,
-                                          CaissaTools.CHARSETUIT,
-                                          CaissaTools.ENKELZETTEN,
-                                          CaissaTools.INVOERDIR,
-                                          CaissaTools.UITVOER,
-                                          CaissaTools.UITVOERDIR});
-    arguments.setVerplicht(new String[] {CaissaTools.BESTAND});
+    arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
+                                          PAR_CHARSETIN,
+                                          PAR_CHARSETUIT,
+                                          CaissaTools.PAR_ENKELZETTEN,
+                                          PAR_INVOERDIR,
+                                          CaissaTools.PAR_UITVOER,
+                                          PAR_UITVOERDIR});
+    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND});
     if (!arguments.isValid()) {
       help();
       return;
     }
 
-    String    bestand   = arguments.getArgument(CaissaTools.BESTAND);
-    if (!bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
-      bestand     = bestand + CaissaTools.EXTENSIE_PGN;
-    }
-    if (arguments.hasArgument(CaissaTools.CHARSETIN)) {
-      charsetIn   = arguments.getArgument(CaissaTools.CHARSETIN);
-    }
-    if (arguments.hasArgument(CaissaTools.CHARSETUIT)) {
-      charsetUit  = arguments.getArgument(CaissaTools.CHARSETUIT);
-    }
     boolean   enkelZetten = false;
-    if (arguments.hasArgument(CaissaTools.ENKELZETTEN)) {
+    if (parameters.containsKey(CaissaTools.PAR_ENKELZETTEN)) {
       enkelZetten = DoosConstants.WAAR
-          .equalsIgnoreCase(arguments.getArgument(CaissaTools.ENKELZETTEN));
-    }
-    String    invoerdir   = ".";
-    if (arguments.hasArgument(CaissaTools.INVOERDIR)) {
-      invoerdir   = arguments.getArgument(CaissaTools.INVOERDIR);
-    }
-    if (invoerdir.endsWith(File.separator)) {
-      invoerdir   = invoerdir.substring(0,
-                                        invoerdir.length()
-                                        - File.separator.length());
-    }
-    String    uitvoer;
-    if (arguments.hasArgument(CaissaTools.UITVOER)) {
-      uitvoer   = arguments.getArgument(CaissaTools.UITVOER);
-      if (!uitvoer.endsWith(CaissaTools.EXTENSIE_PGN)) {
-        uitvoer = bestand + CaissaTools.EXTENSIE_PGN;
-      }
-    } else {
-      uitvoer   = bestand.replaceAll(CaissaTools.EXTENSIE_PGN + "$",
-                                     "_clean" + CaissaTools.EXTENSIE_PGN);
-    }
-    String    uitvoerdir  = invoerdir;
-    if (arguments.hasArgument(CaissaTools.UITVOERDIR)) {
-      uitvoerdir  = arguments.getArgument(CaissaTools.UITVOERDIR);
-    }
-    if (uitvoerdir.endsWith(File.separator)) {
-      uitvoerdir  = uitvoerdir.substring(0,
-                                         uitvoerdir.length()
-                                         - File.separator.length());
+          .equalsIgnoreCase(parameters.get(CaissaTools.PAR_ENKELZETTEN));
     }
 
+    String          invoer      = parameters.get(PAR_INVOERDIR)
+                                  + parameters.get(CaissaTools.PAR_BESTAND);
+    String          uitvoer     = parameters.get(PAR_UITVOERDIR)
+                                  + parameters.get(CaissaTools.PAR_UITVOER);
     int             noPartijen  = 0;
-    Collection<PGN> partijen    =
-        CaissaUtils.laadPgnBestand(invoerdir + File.separator + bestand,
-                                   charsetIn);
-    TekstBestand    output      = null;
+    Collection<PGN> partijen;
+    try {
+      partijen = CaissaUtils.laadPgnBestand(invoer,
+                                            parameters.get(PAR_CHARSETIN));
+    } catch (PgnException e) {
+      DoosUtils.foutNaarScherm(e.getMessage());
+      return;
+    }
 
+    TekstBestand    output      = null;
     try {
       output  = new TekstBestand.Builder()
-                                .setBestand(uitvoerdir
-                                            + File.separator + uitvoer)
-                                .setCharset(charsetUit)
+                                .setBestand(uitvoer)
+                                .setCharset(parameters.get(PAR_CHARSETUIT))
                                 .setLezen(false).build();
 
       for (PGN partij: partijen) {
@@ -143,44 +116,96 @@ public final class PgnCleaner {
       }
     }
 
-    DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + invoerdir + File.separator + bestand);
-    DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
-                         + partijen.size());
-    DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
-                         + uitvoerdir + File.separator + uitvoer);
-    DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
-                         + noPartijen);
-    DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.bestand"),
+                             invoer));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.partijen"),
+                             partijen.size()));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.uitvoer"),
+                             uitvoer));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.partijen"),
+                             noPartijen));
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm(getMelding(MSG_KLAAR));
+    DoosUtils.naarScherm();
   }
 
-  protected static void help() {
+  public static void help() {
     DoosUtils.naarScherm("java -jar CaissaTools.jar PgnCleaner ["
-                         + resourceBundle.getString("label.optie")
+                         + getMelding(LBL_OPTIE)
                          + "] --bestand=<"
                          + resourceBundle.getString("label.pgnbestand") + ">");
     DoosUtils.naarScherm();
-    DoosUtils.naarScherm("  --bestand     ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 12),
                          resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("  --charsetin   ",
-        MessageFormat.format(resourceBundle.getString("help.charsetin"),
+    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 12),
+        MessageFormat.format(getMelding(HLP_CHARSETIN),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --charsetuit  ",
-        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
+    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 12),
+        MessageFormat.format(getMelding(HLP_CHARSETUIT),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --enkelzetten ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_ENKELZETTEN, 12),
         MessageFormat.format(resourceBundle.getString("help.enkelzetten"),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --invoerdir   ",
-                         resourceBundle.getString("help.invoerdir"), 80);
-    DoosUtils.naarScherm("  --uitvoer     ",
+    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 12),
+                         getMelding(HLP_INVOERDIR), 80);
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_UITVOER, 12),
                          resourceBundle.getString("help.uitvoer"), 80);
-    DoosUtils.naarScherm("  --uitvoerdir  ",
-                         resourceBundle.getString("help.uitvoerdir"), 80);
+    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 12),
+                         getMelding(HLP_UITVOERDIR), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("help.paramverplicht"),
-                             CaissaTools.BESTAND), 80);
+        MessageFormat.format(getMelding(HLP_PARAMVERPLICHT),
+                             CaissaTools.PAR_BESTAND), 80);
     DoosUtils.naarScherm();
+  }
+
+  private static boolean setParameters(String[] args) {
+    Arguments     arguments = new Arguments(args);
+    List<String>  fouten    = new ArrayList<>();
+
+    arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
+                                          PAR_CHARSETIN,
+                                          PAR_CHARSETUIT,
+                                          CaissaTools.PAR_ENKELZETTEN,
+                                          PAR_INVOERDIR,
+                                          CaissaTools.PAR_UITVOER,
+                                          PAR_UITVOERDIR});
+    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND});
+    if (!arguments.isValid()) {
+      fouten.add(getMelding(ERR_INVALIDPARAMS));
+    }
+
+    setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
+    setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
+    setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
+    setDirParameter(arguments, CaissaTools.PAR_ENKELZETTEN);
+    setDirParameter(arguments, PAR_INVOERDIR);
+    if (arguments.hasArgument(CaissaTools.PAR_UITVOER)) {
+      setBestandParameter(arguments, CaissaTools.PAR_UITVOER, EXT_PGN);
+    } else {
+      setParameter(CaissaTools.PAR_UITVOER,
+                   getParameter(CaissaTools.PAR_BESTAND) + "_clean");
+    }
+    setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
+
+    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
+                 .contains(File.separator)) {
+      fouten.add(
+          MessageFormat.format(
+              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
+    }
+
+    if (fouten.isEmpty()) {
+      return true;
+    }
+
+    help();
+    printFouten(fouten);
+
+    return false;
   }
 }

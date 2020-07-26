@@ -19,10 +19,10 @@ package eu.debooy.caissatools;
 import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
+import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
-
 import java.io.File;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
@@ -36,127 +36,39 @@ import java.util.ResourceBundle;
 /**
  * @author Marco de Booij
  */
-public final class StartPgn {
+public final class StartPgn extends Batchjob {
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
   private StartPgn() {}
 
   public static void execute(String[] args) {
-    String        charsetUit  = Charset.defaultCharset().name();
-    List<String>  fouten      = new ArrayList<String>();
-    TekstBestand  output      = null;
+    Banner.printMarcoBanner(resourceBundle.getString("banner.startpgn"));
 
-    Banner.printBanner(resourceBundle.getString("banner.startpgn"));
-
-    Arguments       arguments   = new Arguments(args);
-    arguments.setParameters(new String[] {CaissaTools.BESTAND,
-                                          CaissaTools.CHARSETUIT,
-                                          CaissaTools.DATE,
-                                          CaissaTools.EVENT,
-                                          CaissaTools.SITE,
-                                          CaissaTools.SPELERS,
-                                          CaissaTools.UITVOERDIR});
-    arguments.setVerplicht(new String[] {CaissaTools.BESTAND,
-                                         CaissaTools.DATE,
-                                         CaissaTools.EVENT,
-                                         CaissaTools.SITE,
-                                         CaissaTools.SPELERS});
-    if (!arguments.isValid()) {
-      help();
+    if (!setParameters(args)) {
       return;
     }
 
-    String    bestand     = arguments.getArgument(CaissaTools.BESTAND);
-    if (bestand.contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
-                                       CaissaTools.BESTAND));
-    }
-    if (arguments.hasArgument(CaissaTools.CHARSETUIT)) {
-      charsetUit  = arguments.getArgument(CaissaTools.CHARSETUIT);
-    }
-    if (!bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
-      bestand = bestand + CaissaTools.EXTENSIE_PGN;
-    }
-    String    date        = arguments.getArgument(CaissaTools.DATE);
-    String    event       = arguments.getArgument(CaissaTools.EVENT);
-    String    site        = arguments.getArgument(CaissaTools.SITE);
-    String[]  speler      = arguments.getArgument(CaissaTools.SPELERS)
-                                     .split(";");
-    String    uitvoerdir  = ".";
-    if (arguments.hasArgument(CaissaTools.UITVOERDIR)) {
-      uitvoerdir  = arguments.getArgument(CaissaTools.UITVOERDIR);
-    }
-    if (uitvoerdir.endsWith(File.separator)) {
-      uitvoerdir  = uitvoerdir.substring(0,
-                                         uitvoerdir.length()
-                                         - File.separator.length());
-    }
-    if (uitvoerdir.endsWith(File.separator)) {
-      uitvoerdir  = uitvoerdir.substring(0,
-                                         uitvoerdir.length()
-                                         - File.separator.length());
-    }
-
-    if (!fouten.isEmpty() ) {
-      help();
-      for (String fout : fouten) {
-        DoosUtils.foutNaarScherm(fout);
-      }
-      return;
-    }
+    String    date    = parameters.get(CaissaTools.PAR_DATE);
+    String    event   = parameters.get(CaissaTools.PAR_EVENT);
+    String    site    = parameters.get(CaissaTools.PAR_SITE);
+    String[]  speler  = parameters.get(CaissaTools.PAR_SPELERS).split(";");
+    String    uitvoer = parameters.get(PAR_UITVOERDIR)
+                        + parameters.get(CaissaTools.PAR_BESTAND);
 
     Arrays.sort(speler, String.CASE_INSENSITIVE_ORDER);
     int noSpelers = speler.length;
 
+    TekstBestand  output  = null;
     try {
       output  = new TekstBestand.Builder()
-                                .setBestand(uitvoerdir + File.separator
-                                            + bestand)
-                                .setCharset(charsetUit)
+                                .setBestand(uitvoer)
+                                .setCharset(parameters.get(PAR_CHARSETUIT))
                                 .setLezen(false).build();
       for (int i = 0; i < (noSpelers -1); i++) {
         for (int j = i + 1; j < noSpelers; j++) {
-          output.write("[" + CaissaConstants.PGNTAG_EVENT
-                       + " \"" + event + "\"]");
-          output.write("[" + CaissaConstants.PGNTAG_SITE
-                                       + " \"" + site + "\"]");
-          output.write("[" + CaissaConstants.PGNTAG_DATE
-                                       + " \"" + date + "\"]");
-          output.write("[" + CaissaConstants.PGNTAG_ROUND
-                                       + " \"-\"]");
-          output.write("[" + CaissaConstants.PGNTAG_WHITE
-                                       + " \"" + speler[i] + "\"]");
-          output.write("[" + CaissaConstants.PGNTAG_BLACK
-                                       + " \"" + speler[j] + "\"]");
-          output.write("[" + CaissaConstants.PGNTAG_RESULT
-                                       + " \"*\"]");
-          output.write("[" + CaissaConstants.PGNTAG_EVENTDATE
-                                       + " \"" + date + "\"]");
-          output.write("");
-          output.write("*");
-          output.write("");
-          output.write("[" + CaissaConstants.PGNTAG_EVENT
-                                       + " \"" + event + "\"]");
-          output.write("[" + CaissaConstants.PGNTAG_SITE
-                                       + " \"" + site + "\"]");
-          output.write("[" + CaissaConstants.PGNTAG_DATE
-                                       + " \"" + date + "\"]");
-          output.write("[" + CaissaConstants.PGNTAG_ROUND
-                                       + " \"-\"]");
-          output.write("[" + CaissaConstants.PGNTAG_WHITE
-                                       + " \"" + speler[j] + "\"]");
-          output.write("[" + CaissaConstants.PGNTAG_BLACK
-                                       + " \"" + speler[i] + "\"]");
-          output.write("[" + CaissaConstants.PGNTAG_RESULT
-                                       + " \"*\"]");
-          output.write("[" + CaissaConstants.PGNTAG_EVENTDATE
-                                       + " \"" + date + "\"]");
-          output.write("");
-          output.write("*");
-          output.write("");
+          schrijfPartij(output, event, site, date, speler[i], speler[j]);
+          schrijfPartij(output, event, site, date, speler[j], speler[i]);
         }
       }
     } catch (BestandException e) {
@@ -171,17 +83,15 @@ public final class StartPgn {
       }
     }
 
-    DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + uitvoerdir + File.separator + bestand);
-    DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
-                         + uitvoerdir);
-    DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.bestand"),
+                             uitvoer));
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm(getMelding(MSG_KLAAR));
+    DoosUtils.naarScherm();
   }
 
-  /**
-   * Geeft de 'help' pagina.
-   */
-  protected static void help() {
+  public static void help() {
     DoosUtils.naarScherm("java -jar CaissaTools.jar StartPgn --bestand=<"
                          + resourceBundle.getString("label.pgnbestand") + ">");
     DoosUtils.naarScherm("    --date=<"
@@ -199,26 +109,92 @@ public final class StartPgn {
     DoosUtils.naarScherm("    [--uitvoerdir=<"
                          + resourceBundle.getString("label.uitvoerdir") + ">]");
     DoosUtils.naarScherm();
-    DoosUtils.naarScherm("  --bestand    ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 11),
                          resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("  --charsetuit ",
-        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
+    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 11),
+        MessageFormat.format(getMelding(HLP_CHARSETUIT),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --date       ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_DATE, 11),
                          resourceBundle.getString("help.date"), 80);
-    DoosUtils.naarScherm("  --event      ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_EVENT, 11),
                          resourceBundle.getString("help.event"), 80);
-    DoosUtils.naarScherm("  --site       ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SITE, 11),
                          resourceBundle.getString("help.site"), 80);
-    DoosUtils.naarScherm("  --spelers    ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SPELERS, 11),
                          resourceBundle.getString("help.spelers"), 80);
-    DoosUtils.naarScherm("  --uitvoerdir ",
-                         resourceBundle.getString("help.uitvoerdir"), 80);
+    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 11),
+                         getMelding(HLP_UITVOERDIR), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
         MessageFormat.format(
             resourceBundle.getString("help.paramverplichtbehalve"),
-                             CaissaTools.UITVOERDIR), 80);
+            PAR_UITVOERDIR), 80);
     DoosUtils.naarScherm();
+  }
+
+  private static void schrijfPartij(TekstBestand output, String event,
+                                    String site, String date, String witspeler,
+                                    String zwartspeler)
+      throws BestandException {
+    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
+                                      CaissaConstants.PGNTAG_EVENT, event));
+    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
+                                      CaissaConstants.PGNTAG_SITE, site));
+    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
+                                      CaissaConstants.PGNTAG_DATE, date));
+    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
+                                      CaissaConstants.PGNTAG_ROUND, "-"));
+    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
+                                      CaissaConstants.PGNTAG_WHITE, witspeler));
+    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
+                                      CaissaConstants.PGNTAG_BLACK,
+                                      zwartspeler));
+    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
+                                      CaissaConstants.PGNTAG_RESULT, "*"));
+    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
+                                      CaissaConstants.PGNTAG_EVENTDATE, date));
+    output.write("");
+    output.write("*");
+    output.write("");
+  }
+
+  private static boolean setParameters(String[] args) {
+    Arguments     arguments = new Arguments(args);
+    List<String>  fouten    = new ArrayList<>();
+
+    arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
+                                          PAR_CHARSETUIT,
+                                          CaissaTools.PAR_DATE,
+                                          CaissaTools.PAR_EVENT,
+                                          CaissaTools.PAR_SITE,
+                                          CaissaTools.PAR_SPELERS,
+                                          PAR_UITVOERDIR});
+    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND,
+                                         CaissaTools.PAR_DATE,
+                                         CaissaTools.PAR_EVENT,
+                                         CaissaTools.PAR_SITE,
+                                         CaissaTools.PAR_SPELERS});
+    if (!arguments.isValid()) {
+      fouten.add(getMelding(ERR_INVALIDPARAMS));
+    }
+
+    setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
+    setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
+
+    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
+                 .contains(File.separator)) {
+      fouten.add(
+          MessageFormat.format(
+              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
+    }
+
+    if (fouten.isEmpty()) {
+      return true;
+    }
+
+    help();
+    printFouten(fouten);
+
+    return false;
   }
 }

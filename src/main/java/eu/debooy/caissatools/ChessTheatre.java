@@ -239,13 +239,18 @@ public final class ChessTheatre extends Batchjob {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
-    DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
-                         + partijen.size());
-    DoosUtils.naarScherm(resourceBundle.getString("label.bestanden") + " "
-                         + gameFile);
-    DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
-                         + parameters.get(PAR_UITVOERDIR));
-    DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.partijen"),
+                             partijen.size()));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.bestanden"),
+                             gameFile));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.uitvoer"),
+                             parameters.get(PAR_UITVOERDIR)));
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm(getMelding(MSG_KLAAR));
+    DoosUtils.naarScherm();
   }
 
   public static void help() {
@@ -276,7 +281,6 @@ public final class ChessTheatre extends Batchjob {
     DoosUtils.naarScherm(
         MessageFormat.format(getMelding(HLP_PARAMVERPLICHT),
                              CaissaTools.PAR_BESTAND), 80);
-    DoosUtils.naarScherm();
   }
 
   private static String parseZetten(FEN fen, String pgnZetten)
@@ -302,10 +306,8 @@ public final class ChessTheatre extends Batchjob {
     }
 
     setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
-    setParameter(arguments, PAR_CHARSETIN,
-                 Charset.defaultCharset().name());
-    setParameter(arguments, PAR_CHARSETUIT,
-                 Charset.defaultCharset().name());
+    setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
+    setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
     setDirParameter(arguments, PAR_INVOERDIR);
     setDirParameter(arguments, CaissaTools.PAR_MAXBESTANDEN);
     setDirParameter(arguments, CaissaTools.PAR_MINPARTIJEN);

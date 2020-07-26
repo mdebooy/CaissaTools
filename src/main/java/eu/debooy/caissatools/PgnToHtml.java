@@ -23,12 +23,12 @@ import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
+import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
-import eu.debooy.doosutils.html.Utilities;
-
+import eu.debooy.doosutils.latex.Utilities;
 import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
@@ -48,7 +48,7 @@ import java.util.Set;
 /**
  * @author Marco de Booij
  */
-public final class PgnToHtml {
+public final class PgnToHtml extends Batchjob {
   public static final String  HTML_TABLE_COLGROUP       = "table.colgroup.";
   public static final String  HTML_TABLE_COLGROUP_BEGIN =
       "table.colgroup.begin.";
@@ -67,118 +67,63 @@ public final class PgnToHtml {
 
   private PgnToHtml() {}
 
-  public static void execute(String[] args) throws PgnException {
-    String        charsetIn   = Charset.defaultCharset().name();
-    String        charsetUit  = Charset.defaultCharset().name();
-    List<String>  fouten      = new ArrayList<String>();
-    Set<String>   spelers     = new HashSet<String>();
+  public static void execute(String[] args) {
+    Set<String>   spelers     = new HashSet<>();
 
-    Banner.printBanner(resourceBundle.getString("banner.pgntohtml"));
+    Banner.printMarcoBanner(resourceBundle.getString("banner.pgntohtml"));
 
-    Arguments arguments = new Arguments(args);
-    arguments.setParameters(new String[] {CaissaTools.BESTAND,
-                                          CaissaTools.CHARSETIN,
-                                          CaissaTools.CHARSETUIT,
-                                          CaissaTools.ENKEL,
-                                          CaissaTools.HALVE,
-                                          CaissaTools.INVOERDIR,
-                                          CaissaTools.MATRIXOPSTAND,
-                                          CaissaTools.UITVOERDIR});
-    arguments.setVerplicht(new String[] {CaissaTools.BESTAND});
-    if (!arguments.isValid()) {
-      help();
+    if (!setParameters(args)) {
       return;
     }
 
-    String    bestand       = arguments.getArgument(CaissaTools.BESTAND);
-    if (bestand.contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
-                                       CaissaTools.BESTAND));
-    }
-    if (arguments.hasArgument(CaissaTools.CHARSETIN)) {
-      charsetIn   = arguments.getArgument(CaissaTools.CHARSETIN);
-    }
-    if (arguments.hasArgument(CaissaTools.CHARSETUIT)) {
-      charsetUit  = arguments.getArgument(CaissaTools.CHARSETUIT);
-    }
     // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
     // 1 is default waarde.
-    int       enkel         = 1;
-    if (arguments.hasArgument(CaissaTools.ENKEL)) {
-      switch (arguments.getArgument(CaissaTools.ENKEL)) {
-      case DoosConstants.WAAR:
-        enkel = 1;
-        break;
-      case DoosConstants.ONWAAR:
-        enkel = 2;
-        break;
-      default:
-        enkel = 0;
-        break;
-      }
+    int enkel;
+    switch (parameters.get(CaissaTools.PAR_ENKEL)) {
+    case DoosConstants.WAAR:
+      enkel = CaissaConstants.TOERNOOI_ENKEL;
+      break;
+    case DoosConstants.ONWAAR:
+      enkel = CaissaConstants.TOERNOOI_DUBBEL;
+      break;
+    default:
+      enkel = CaissaConstants.TOERNOOI_MATCH;
+      break;
     }
-    String[]  halve     =
-      DoosUtils.nullToEmpty(arguments.getArgument(CaissaTools.HALVE))
-               .split(";");
-    boolean   matrixOpStand = false;
-    if (arguments.hasArgument(CaissaTools.MATRIXOPSTAND)) {
-      matrixOpStand =
-          DoosConstants.WAAR.equalsIgnoreCase(
-              arguments.getArgument(CaissaTools.MATRIXOPSTAND));
-    }
-    String    invoerdir   = ".";
-    if (arguments.hasArgument(CaissaTools.INVOERDIR)) {
-      invoerdir   = arguments.getArgument(CaissaTools.INVOERDIR);
-    }
-    if (invoerdir.endsWith(File.separator)) {
-      invoerdir   = invoerdir.substring(0,
-                                        invoerdir.length()
-                                        - File.separator.length());
-    }
-    String    uitvoerdir  = invoerdir;
-    if (arguments.hasArgument(CaissaTools.UITVOERDIR)) {
-      uitvoerdir  = arguments.getArgument(CaissaTools.UITVOERDIR);
-    }
-    if (uitvoerdir.endsWith(File.separator)) {
-      uitvoerdir  = uitvoerdir.substring(0,
-                                         uitvoerdir.length()
-                                         - File.separator.length());
-    }
+    String[]  halve         =
+      DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_HALVE)).split(";");
+    String    invoer        = parameters.get(PAR_INVOERDIR)
+                              + parameters.get(CaissaTools.PAR_BESTAND)
+                              + EXT_PGN;
+    boolean   matrixOpStand =
+        DoosConstants.WAAR.equalsIgnoreCase(
+            parameters.get(CaissaTools.PAR_MATRIXOPSTAND));
+    String    uitvoerdir    = parameters.get(PAR_UITVOERDIR);
 
     Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
 
-    if (uitvoerdir.endsWith(File.separator)) {
-      uitvoerdir  = uitvoerdir.substring(0, uitvoerdir.length()
-                                            - File.separator.length());
-    }
-
-    if (!fouten.isEmpty() ) {
-      help();
-      for (String fout : fouten) {
-        DoosUtils.foutNaarScherm(fout);
-      }
+    Collection<PGN> partijen;
+    try {
+      partijen = CaissaUtils.laadPgnBestand(invoer,
+                                            parameters.get(PAR_CHARSETIN));
+    } catch (PgnException e) {
+      DoosUtils.foutNaarScherm(e.getMessage());
       return;
     }
 
-    Collection<PGN> partijen  =
-        CaissaUtils.laadPgnBestand(invoerdir + File.separator + bestand
-                                     + CaissaTools.EXTENSIE_PGN, charsetIn);
-
-    for (PGN partij: partijen) {
+    partijen.forEach(partij -> {
       // Verwerk de spelers
       String  wit   = partij.getTag(CaissaConstants.PGNTAG_WHITE);
       String  zwart = partij.getTag(CaissaConstants.PGNTAG_BLACK);
       if (!"bye".equalsIgnoreCase(wit)
-          && DoosUtils.isNotBlankOrNull(wit)) {
+              && DoosUtils.isNotBlankOrNull(wit)) {
         spelers.add(wit);
       }
       if (!"bye".equalsIgnoreCase(zwart)
-          && DoosUtils.isNotBlankOrNull(zwart)) {
+              && DoosUtils.isNotBlankOrNull(zwart)) {
         spelers.add(zwart);
       }
-    }
+    });
 
     // Maak de Matrix.
     int           noSpelers = spelers.size();
@@ -200,66 +145,66 @@ public final class PgnToHtml {
       punten[i].setNaam(namen[i]);
     }
 
-
     // Bepaal de score en SB score.
     CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix, enkel,
                                   matrixOpStand, CaissaConstants.TIEBREAK_SB);
 
     // Maak het matrix.html bestand.
-    maakMatrix(punten, uitvoerdir + File.separator + "matrix.html",
-               charsetUit, matrix, enkel, noSpelers, kolommen);
+    maakMatrix(punten, uitvoerdir + "matrix.html",
+               parameters.get(PAR_CHARSETUIT), matrix, enkel, noSpelers,
+               kolommen);
 
     // Maak de index.html file
-    maakIndex(punten, uitvoerdir + File.separator + "index.html", charsetUit,
-              matrix, enkel, noSpelers);
+    maakIndex(punten, uitvoerdir + "index.html", parameters.get(PAR_CHARSETUIT),
+              noSpelers);
 
-    DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + uitvoerdir + File.separator + bestand
-                         + CaissaTools.EXTENSIE_PGN);
-    DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
-                         + partijen.size());
-    DoosUtils.naarScherm(resourceBundle.getString("label.uitvoer") + " "
-                         + uitvoerdir);
-    DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.bestand"),
+                             invoer));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.partijen"),
+                             partijen.size()));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.uitvoer"),
+                             uitvoerdir));
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm(getMelding(MSG_KLAAR));
+    DoosUtils.naarScherm();
   }
 
-  /**
-   * Geeft de 'help' pagina.
-   */
-  protected static void help() {
+  public static void help() {
     DoosUtils.naarScherm("java -jar CaissaTools.jar PgnToHtml ["
-                         + resourceBundle.getString("label.optie")
+                         + getMelding(LBL_OPTIE)
                          + "] --bestand=<"
                          + resourceBundle.getString("label.pgnbestand") + ">");
     DoosUtils.naarScherm();
-    DoosUtils.naarScherm("  --bestand       ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 14),
                          resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("  --charsetin     ",
-        MessageFormat.format(resourceBundle.getString("help.charsetin"),
+    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 14),
+        MessageFormat.format(getMelding(HLP_CHARSETIN),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --charsetuit    ",
-        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
+    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 14),
+        MessageFormat.format(getMelding(HLP_CHARSETUIT),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --enkel         ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_ENKEL, 14),
                          resourceBundle.getString("help.enkel"), 80);
-    DoosUtils.naarScherm("  --halve         ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_HALVE, 14),
                          resourceBundle.getString("help.halve"), 80);
-    DoosUtils.naarScherm("  --invoerdir     ",
-                         resourceBundle.getString("help.invoerdir"), 80);
-    DoosUtils.naarScherm("  --matrixopstand ",
+    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 14),
+                         getMelding(HLP_INVOERDIR), 80);
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_MATRIXOPSTAND, 14),
                          resourceBundle.getString("help.matrixopstand"), 80);
-    DoosUtils.naarScherm("  --uitvoerdir    ",
-                         resourceBundle.getString("help.uitvoerdir"), 80);
+    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 14),
+                         getMelding(HLP_UITVOERDIR), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("help.paramverplicht"),
-                             "bestand"), 80);
+        MessageFormat.format(getMelding(HLP_PARAMVERPLICHT),
+                             CaissaTools.PAR_BESTAND), 80);
     DoosUtils.naarScherm();
   }
 
-  public static void maakIndex(Spelerinfo[] punten, String bestand,
-                               String charsetUit, double[][] matrix,
-                               int enkel, int noSpelers) {
+  private static void maakIndex(Spelerinfo[] punten, String bestand,
+                                String charsetUit, int noSpelers) {
     Arrays.sort(punten);
     TekstBestand  output    = null;
     Properties    props     = new Properties();
@@ -270,14 +215,14 @@ public final class PgnToHtml {
                                             .setLezen(false).build();
       props.load(PgnToHtml.class.getClassLoader()
                           .getResourceAsStream("index.properties"));
-  
+
       if (props.containsKey(PROP_INDENT)) {
         int indent = Integer.valueOf(props.getProperty(PROP_INDENT));
         while (prefix.length() < indent) {
           prefix.append(" ");
         }
       }
-  
+
       // Start de tabel
       output.write(prefix + props.getProperty("table.begin"));
       // De colgroup
@@ -333,13 +278,13 @@ public final class PgnToHtml {
     }
   }
 
-  public static void maakIndexBody(TekstBestand output, String prefix,
-                                   Properties props, Spelerinfo speler,
-                                   int plaats) throws BestandException {
+  private static void maakIndexBody(TekstBestand output, String prefix,
+                                    Properties props, Spelerinfo speler,
+                                    int plaats) throws BestandException {
     output.write(prefix + props.getProperty("table.body.start"));
     output.write(prefix
         + MessageFormat.format(props.getProperty("table.body.nr"), (plaats)));
-    output.write(prefix 
+    output.write(prefix
         + MessageFormat.format(props.getProperty("table.body.naam"),
                                swapNaam(speler.getNaam())));
     int     pntn  = speler.getPunten().intValue();
@@ -360,9 +305,9 @@ public final class PgnToHtml {
     output.write(prefix + props.getProperty("table.body.stop"));
   }
 
-  public static void maakMatrix(Spelerinfo[]  punten, String bestand,
-                                String charsetUit, double[][] matrix,
-                                int enkel, int noSpelers, int kolommen) {
+  private static void maakMatrix(Spelerinfo[]  punten, String bestand,
+                                 String charsetUit, double[][] matrix,
+                                 int enkel, int noSpelers, int kolommen) {
     TekstBestand  output    = null;
     Properties    props     = new Properties();
     StringBuilder prefix    = new StringBuilder();
@@ -372,14 +317,14 @@ public final class PgnToHtml {
                                           .setLezen(false).build();
       props.load(PgnToHtml.class.getClassLoader()
                           .getResourceAsStream("matrix.properties"));
-  
+
       if (props.containsKey(PROP_INDENT)) {
         int indent = Integer.valueOf(props.getProperty(PROP_INDENT));
         while (prefix.length() < indent) {
           prefix.append(" ");
         }
       }
-  
+
       // Start de tabel
       output.write(prefix + props.getProperty("table.begin"));
       // De colgroup
@@ -472,10 +417,10 @@ public final class PgnToHtml {
     }
   }
 
-  public static void maakMatrixBody(TekstBestand output, String prefix,
-                                    Properties props, Spelerinfo speler,
-                                    int i, int enkel, int kolommen,
-                                    double[][] matrix)
+  private static void maakMatrixBody(TekstBestand output, String prefix,
+                                     Properties props, Spelerinfo speler,
+                                     int i, int enkel, int kolommen,
+                                     double[][] matrix)
       throws BestandException {
     output.write(prefix + props.getProperty("table.body.start"));
     output.write(prefix
@@ -530,12 +475,56 @@ public final class PgnToHtml {
     output.write(prefix + props.getProperty("table.body.stop"));
   }
 
+  private static boolean setParameters(String[] args) {
+    Arguments     arguments = new Arguments(args);
+    List<String>  fouten    = new ArrayList<>();
+
+    arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
+                                          PAR_CHARSETIN,
+                                          PAR_CHARSETUIT,
+                                          CaissaTools.PAR_ENKEL,
+                                          CaissaTools.PAR_HALVE,
+                                          PAR_INVOERDIR,
+                                          CaissaTools.PAR_MATRIXOPSTAND,
+                                          PAR_UITVOERDIR});
+    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND});
+    if (!arguments.isValid()) {
+      fouten.add(getMelding(ERR_INVALIDPARAMS));
+    }
+
+    setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
+    setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
+    setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
+    setParameter(arguments, CaissaTools.PAR_ENKEL, DoosConstants.WAAR);
+    setParameter(arguments, CaissaTools.PAR_HALVE);
+    setDirParameter(arguments, PAR_INVOERDIR);
+    setParameter(arguments, CaissaTools.PAR_MATRIXOPSTAND,
+                 DoosConstants.ONWAAR);
+    setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
+
+    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
+                 .contains(File.separator)) {
+      fouten.add(
+          MessageFormat.format(
+              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
+    }
+
+    if (fouten.isEmpty()) {
+      return true;
+    }
+
+    help();
+    printFouten(fouten);
+
+    return false;
+  }
+
   private static String swapNaam(String naam) {
     String[]  deel  = naam.split(",");
     if (deel.length == 1) {
       return naam;
     }
-    
+
     return deel[1].trim() + " " + deel[0].trim();
   }
 }
