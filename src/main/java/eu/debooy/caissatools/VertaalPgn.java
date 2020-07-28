@@ -75,7 +75,7 @@ public final class VertaalPgn extends Batchjob {
         DoosUtils.naarScherm(CaissaUtils.vertaalStukken(partij.getZetten(),
                 vanStukken, naarStukken));
       } catch (PgnException e) {
-        DoosUtils.foutNaarScherm(e.getMessage());
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
       return;
     }
@@ -94,7 +94,7 @@ public final class VertaalPgn extends Batchjob {
       partijen = CaissaUtils.laadPgnBestand(invoer,
                                             parameters.get(PAR_CHARSETIN));
     } catch (PgnException e) {
-      DoosUtils.foutNaarScherm(e.getMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
 
@@ -178,6 +178,7 @@ public final class VertaalPgn extends Batchjob {
       fouten.add(getMelding(ERR_INVALIDPARAMS));
     }
 
+    parameters.clear();
     setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
     setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
     setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());

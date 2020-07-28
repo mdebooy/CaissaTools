@@ -26,15 +26,6 @@ import java.util.ResourceBundle;
  * @author Marco de Booij
  */
 public final class CaissaTools {
-  public static final String  AUTEUR                = "auteur";
-  public static final String  DATUM                 = "datum";
-  public static final String  KEYWORDS              = "keywords";
-  public static final String  LOGO                  = "logo";
-  public static final String  MATRIX                = "matrix";
-  public static final String  TAG                   = "tag";
-  public static final String  TEMPLATE              = "template";
-  public static final String  TITEL                 = "titel";
-
   public static final String  ERR_BESTANDENPGN      = "error.bestand.en.pgn";
   public static final String  ERR_BEVATDIRECTORY    = "error.bevatdirectory";
   public static final String  ERR_BIJBESTAND        =
@@ -51,10 +42,12 @@ public final class CaissaTools {
 
   public static final String  MSG_NIEUWBESTAND  = "message.nieuwbestand";
 
+  public static final String  PAR_AUTEUR              = "auteur";
   public static final String  PAR_BESTAND             = "bestand";
   public static final String  PAR_CHARSETIN           = "charsetin";
   public static final String  PAR_CHARSETUIT          = "charsetuit";
   public static final String  PAR_DATE                = "date";
+  public static final String  PAR_DATUM               = "datum";
   public static final String  PAR_DEFAULTECO          = "defaulteco";
   public static final String  PAR_EINDDATUM           = "eindDatum";
   public static final String  PAR_ENKEL               = "enkel";
@@ -65,6 +58,9 @@ public final class CaissaTools {
   public static final String  PAR_HALVE               = "halve";
   public static final String  PAR_INCLUDELEGE         = "includelege";
   public static final String  PAR_JSON                = "json";
+  public static final String  PAR_KEYWORDS            = "keywords";
+  public static final String  PAR_LOGO                = "logo";
+  public static final String  PAR_MATRIX              = "matrix";
   public static final String  PAR_MATRIXOPSTAND       = "matrixopstand";
   public static final String  PAR_MAXBESTANDEN        = "maxBestanden";
   public static final String  PAR_MAXVERSCHIL         = "maxVerschil";
@@ -79,6 +75,9 @@ public final class CaissaTools {
   public static final String  PAR_SPELERS             = "spelers";
   public static final String  PAR_STARTDATUM          = "startDatum";
   public static final String  PAR_STARTELO            = "startELO";
+  public static final String  PAR_TAG                 = "tag";
+  public static final String  PAR_TEMPLATE            = "template";
+  public static final String  PAR_TITEL               = "titel";
   public static final String  PAR_TOERNOOIBESTAND     = "toernooiBestand";
   public static final String  PAR_UITVOER             = "uitvoer";
   public static final String  PAR_VANTAAL             = "vantaal";
@@ -148,23 +147,23 @@ public final class CaissaTools {
   }
 
   private static void help() {
-    DoosUtils.naarScherm("  ChessTheatre      ",
+    DoosUtils.naarScherm("  ChessTheatre     ",
                          resourceBundle.getString("help.chesstheatre"), 80);
-    DoosUtils.naarScherm("  ELOBerekenaar     ",
+    DoosUtils.naarScherm("  ELOBerekenaar    ",
                          resourceBundle.getString("help.eloberekenaar"), 80);
-    DoosUtils.naarScherm("  PgnCleaner        ",
+    DoosUtils.naarScherm("  PgnCleaner       ",
                          resourceBundle.getString("help.pgncleaner"), 80);
-    DoosUtils.naarScherm("  PgnToHtml         ",
+    DoosUtils.naarScherm("  PgnToHtml        ",
                          resourceBundle.getString("help.pgntohtml"), 80);
-    DoosUtils.naarScherm("  PgnToJson         ",
+    DoosUtils.naarScherm("  PgnToJson        ",
                          resourceBundle.getString("help.pgntojson"), 80);
-    DoosUtils.naarScherm("  PgnToLatex        ",
+    DoosUtils.naarScherm("  PgnToLatex       ",
                          resourceBundle.getString("help.pgntolatex"), 80);
-    DoosUtils.naarScherm("  StartPgn          ",
+    DoosUtils.naarScherm("  StartPgn         ",
                          resourceBundle.getString("help.startpgn"), 80);
-    DoosUtils.naarScherm("  SpelerStatistiek  ",
+    DoosUtils.naarScherm("  SpelerStatistiek ",
                          resourceBundle.getString("help.spelerstatistiek"), 80);
-    DoosUtils.naarScherm("  VertaalPgn        ",
+    DoosUtils.naarScherm("  VertaalPgn       ",
                          resourceBundle.getString("help.vertaalpgn"), 80);
     DoosUtils.naarScherm("");
     ChessTheatre.help();

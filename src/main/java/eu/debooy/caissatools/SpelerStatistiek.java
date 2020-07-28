@@ -22,14 +22,15 @@ import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
+import eu.debooy.doosutils.Batchjob;
+import static eu.debooy.doosutils.Batchjob.setBestandParameter;
+import static eu.debooy.doosutils.Batchjob.setDirParameter;
 import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
-
 import java.io.File;
-import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
@@ -48,7 +49,7 @@ import java.util.TreeMap;
 /**
  * @author Marco de Booij
  */
-public final class SpelerStatistiek {
+public final class SpelerStatistiek extends Batchjob {
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
@@ -58,97 +59,64 @@ public final class SpelerStatistiek {
 
   private SpelerStatistiek() {}
 
-  public static void execute(String[] args) throws PgnException {
+  protected static String datumInTitel(String startDatum, String eindDatum) {
+    StringBuilder titelDatum  = new StringBuilder();
+    Date          datum;
+    try {
+      datum = Datum.toDate(startDatum, CaissaConstants.PGN_DATUM_FORMAAT);
+      titelDatum.append(Datum.fromDate(datum));
+    } catch (ParseException e) {
+      DoosUtils.foutNaarScherm(resourceBundle.getString("label.startdatum")
+                               + " " + e.getLocalizedMessage() + " ["
+                               + startDatum + "]");
+    }
+
+    if (!startDatum.equals(eindDatum)) {
+      try {
+        datum = Datum.toDate(eindDatum, CaissaConstants.PGN_DATUM_FORMAAT);
+        titelDatum.append(" - ").append(Datum.fromDate(datum));
+      } catch (ParseException e) {
+        DoosUtils.foutNaarScherm(resourceBundle.getString("label.einddatum")
+                                 + " " + e.getLocalizedMessage() + " ["
+                                 + eindDatum + "]");
+      }
+    }
+
+    return titelDatum.toString();
+  }
+
+  public static void execute(String[] args) {
     TekstBestand  output      = null;
     int           verwerkt    = 0;
-    String        charsetIn   = Charset.defaultCharset().name();
-    String        charsetUit  = Charset.defaultCharset().name();
     String        eindDatum   = "0000.00.00";
-    List<String>  fouten      = new ArrayList<String>();
-    String        hulpDatum   = "";
-    String        sleutel     = "";
+    String        hulpDatum;
+    String        sleutel;
     String        startDatum  = "9999.99.99";
     String[]      uitslagen   = new String[] {"1-0", "1/2-1/2", "0-1"};
     Map<String, int[]>
-                  items       = new TreeMap<String, int[]>( );
+                  items       = new TreeMap<>( );
 
-    Banner.printBanner(resourceBundle.getString("banner.spelerstatistiek"));
+    Banner
+        .printMarcoBanner(resourceBundle.getString("banner.spelerstatistiek"));
 
-    Arguments arguments = new Arguments(args);
-    arguments.setParameters(new String[] {CaissaTools.BESTAND,
-                                          CaissaTools.CHARSETIN,
-                                          CaissaTools.CHARSETUIT,
-                                          CaissaTools.INVOERDIR,
-                                          CaissaTools.LOGO,
-                                          CaissaTools.SPELER,
-                                          CaissaTools.TAG,
-                                          CaissaTools.UITVOERDIR});
-    arguments.setVerplicht(new String[] {CaissaTools.BESTAND,
-                                         CaissaTools.SPELER});
-    if (!arguments.isValid()) {
-      help();
+    if (!setParameters(args)) {
       return;
     }
 
-    String  bestand = arguments.getArgument(CaissaTools.BESTAND);
-    if (bestand.contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
-                                       CaissaTools.BESTAND));
-    }
-    if (bestand.endsWith(CaissaTools.EXTENSIE_PGN)) {
-      bestand = bestand.substring(0, bestand.length() - 4);
-    }
-    if (arguments.hasArgument(CaissaTools.CHARSETIN)) {
-      charsetIn   = arguments.getArgument(CaissaTools.CHARSETIN);
-    }
-    if (arguments.hasArgument(CaissaTools.CHARSETUIT)) {
-      charsetUit  = arguments.getArgument(CaissaTools.CHARSETUIT);
-    }
-    String    invoerdir   = ".";
-    if (arguments.hasArgument(CaissaTools.INVOERDIR)) {
-      invoerdir   = arguments.getArgument(CaissaTools.INVOERDIR);
-    }
-    if (invoerdir.endsWith(File.separator)) {
-      invoerdir   = invoerdir.substring(0,
-                                        invoerdir.length()
-                                        - File.separator.length());
-    }
-    String    uitvoerdir  = invoerdir;
-    if (arguments.hasArgument(CaissaTools.UITVOERDIR)) {
-      uitvoerdir  = arguments.getArgument(CaissaTools.UITVOERDIR);
-    }
-    if (uitvoerdir.endsWith(File.separator)) {
-      uitvoerdir  = uitvoerdir.substring(0,
-                                         uitvoerdir.length()
-                                         - File.separator.length());
-    }
-    String  logo          = arguments.getArgument(CaissaTools.LOGO);
-    String  speler        = arguments.getArgument(CaissaTools.SPELER);
-    String  statistiekTag = arguments.getArgument(CaissaTools.TAG);
+    String  bestand       = parameters.get(CaissaTools.PAR_BESTAND);
+    String  logo          = parameters.get(CaissaTools.PAR_LOGO);
+    String  speler        = parameters.get(CaissaTools.PAR_SPELER);
+    String  statistiekTag = parameters.get(CaissaTools.PAR_TAG);
 
-    String  datum         = "";
-    if (DoosUtils.isBlankOrNull(datum)) {
-      try {
-        datum = Datum.fromDate(new Date(), "dd/MM/yyyy HH:mm:ss");
-      } catch (ParseException e) {
-        fouten.add(e.getLocalizedMessage());
-      }
-    }
-
-    if (!fouten.isEmpty() ) {
-      help();
-      for (String fout : fouten) {
-        DoosUtils.foutNaarScherm(fout);
-      }
+    Collection<PGN> partijen;
+    try {
+      partijen = CaissaUtils.laadPgnBestand(parameters.get(PAR_INVOERDIR)
+                                            + bestand + EXT_PGN,
+                                            parameters.get(PAR_CHARSETIN));
+    } catch (PgnException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
-
-    Collection<PGN> partijen  =
-        CaissaUtils.laadPgnBestand(invoerdir + File.separator + bestand
-                                     + CaissaTools.EXTENSIE_PGN,
-                                   charsetIn);
 
     for (PGN partij: partijen) {
       String  uitslag = partij.getTag(CaissaConstants.PGNTAG_RESULT);
@@ -193,7 +161,7 @@ public final class SpelerStatistiek {
             } else {
               sleutel = hulpDatum.substring(0, punt);
             }
-          } else { 
+          } else {
             sleutel = DoosUtils.nullToEmpty(partij.getTag(statistiekTag));
           }
         } else {
@@ -215,12 +183,12 @@ public final class SpelerStatistiek {
 
     // Maak de .tex file
     try {
-      output  = new TekstBestand.Builder()
-                                .setBestand(uitvoerdir + File.separator
-                                            + bestand
-                                            + CaissaTools.EXTENSIE_TEX)
-                                .setCharset(charsetUit)
-                                .setLezen(false).build();
+      output  =
+          new TekstBestand.Builder()
+                          .setBestand(parameters.get(PAR_UITVOERDIR)
+                                      + bestand + EXT_TEX)
+                          .setCharset(parameters.get(PAR_CHARSETUIT))
+                          .setLezen(false).build();
       output.write("\\documentclass[dutch,a4paper,10pt]{report}");
       output.write("");
       output.write("\\usepackage{babel}");
@@ -313,46 +281,18 @@ public final class SpelerStatistiek {
       }
     }
 
-    DoosUtils.naarScherm(resourceBundle.getString("label.bestand") + " "
-                         + bestand + ".tex");
-    DoosUtils.naarScherm(resourceBundle.getString("label.partijen") + " "
-                         + partijen.size());
-    DoosUtils.naarScherm(resourceBundle.getString("label.verwerkt") + " "
-                         + verwerkt);
-    DoosUtils.naarScherm(resourceBundle.getString("label.klaar"));
-  }
-
-  /**
-   * Maakt de datum informatie voor de titel pagina.
-   * 
-   * @param startDatum
-   * @param eindDatum
-   * @return
-   */
-  protected static String datumInTitel(String startDatum, String eindDatum) {
-    StringBuilder titelDatum  = new StringBuilder();
-    Date          datum       = null;
-    try {
-      datum = Datum.toDate(startDatum, CaissaConstants.PGN_DATUM_FORMAAT);
-      titelDatum.append(Datum.fromDate(datum));
-    } catch (ParseException e) {
-      DoosUtils.foutNaarScherm(resourceBundle.getString("label.startdatum")
-                               + " " + e.getLocalizedMessage() + " ["
-                               + startDatum + "]");
-    }
-
-    if (!startDatum.equals(eindDatum)) {
-      try {
-        datum = Datum.toDate(eindDatum, CaissaConstants.PGN_DATUM_FORMAAT);
-        titelDatum.append(" - ").append(Datum.fromDate(datum));
-      } catch (ParseException e) {
-        DoosUtils.foutNaarScherm(resourceBundle.getString("label.einddatum")
-                                 + " " + e.getLocalizedMessage() + " ["
-                                 + eindDatum + "]");
-      }
-    }
-
-    return titelDatum.toString();
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.bestand"),
+                             bestand + EXT_TEX));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.partijen"),
+                             partijen.size()));
+    DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString("label.verwerkt"),
+                             verwerkt));
+    DoosUtils.naarScherm();
+    DoosUtils.naarScherm(getMelding(MSG_KLAAR));
+    DoosUtils.naarScherm();
   }
 
   /**
@@ -360,7 +300,7 @@ public final class SpelerStatistiek {
    *  wit-wint, remise, zwart-wint, wit-wint, remise, zwart-wint
    * De eerste 3 elementen zijn voor gespeeld met wit en de laatste 3 voor
    * gespeeld met zwart.
-   * 
+   *
    * @param sleutel
    * @param tabel
    * @return
@@ -374,12 +314,9 @@ public final class SpelerStatistiek {
     return new int[] {0,0,0,0,0,0};
   }
 
-  /**
-   * Geeft de 'help' pagina.
-   */
-  protected static void help() {
+  public static void help() {
     DoosUtils.naarScherm("java -jar CaissaTools.jar SpelerStatistiek ["
-                         + resourceBundle.getString("label.optie")
+                         + getMelding(LBL_OPTIE)
                          + "] \\");
     DoosUtils.naarScherm("    --bestand=<"
                          + resourceBundle.getString("label.pgnbestand")
@@ -387,39 +324,31 @@ public final class SpelerStatistiek {
                          + resourceBundle.getString("label.spelernaam")
                          + ">");
     DoosUtils.naarScherm();
-    DoosUtils.naarScherm("  --bestand    ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 11),
                          resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("  --charsetin  ",
-        MessageFormat.format(resourceBundle.getString("help.charsetin"),
+    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 11),
+        MessageFormat.format(getMelding(HLP_CHARSETIN),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --charsetuit ",
-        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
+    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 11),
+        MessageFormat.format(getMelding(HLP_CHARSETUIT),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --invoerdir  ",
-                         resourceBundle.getString("help.invoerdir"), 80);
-    DoosUtils.naarScherm("  --logo       ",
+    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 11),
+                         getMelding(HLP_INVOERDIR), 80);
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_LOGO, 11),
                          resourceBundle.getString("help.logo"), 80);
-    DoosUtils.naarScherm("  --speler     ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SPELER, 11),
                          resourceBundle.getString("help.statistiekspeler"), 80);
-    DoosUtils.naarScherm("  --tag        ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_TAG, 11),
                          resourceBundle.getString("help.tag"), 80);
-    DoosUtils.naarScherm("  --uitvoerdir ",
-                         resourceBundle.getString("help.uitvoerdir"), 80);
+    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 11),
+                         getMelding(HLP_UITVOERDIR), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("help.paramsverplicht"),
+        MessageFormat.format(getMelding(HLP_PARAMSVERPLICHT),
                              "bestand", "speler"), 80);
     DoosUtils.naarScherm();
   }
 
-  /**
-   * Print de statistieken per groep.
-   * 
-   * @param sleutel
-   * @param statistiek
-   * @param output
-   * @throws IOException
-   */
   private static void printStatistiek(String sleutel, int[] statistiek,
                                       TekstBestand output)
       throws BestandException {
@@ -443,15 +372,6 @@ public final class SpelerStatistiek {
     output.write("      " + LATEX_HLINE);
   }
 
-  /**
-   * Print een gedeelte van de statistieken per groep.
-   * 
-   * @param winst
-   * @param remise
-   * @param verlies
-   * @param output
-   * @throws IOException
-   */
   private static String printStatistiekDeel(int winst, int remise, int verlies,
                                             String prefix, TekstBestand output)
       throws BestandException {
@@ -477,19 +397,57 @@ public final class SpelerStatistiek {
     return lijn.toString();
   }
 
-  /**
-   * Zet de naam in de juiste volgorde. Eerst de voornaam (van achter de komma)
-   * en dan de achternaam (van voor de komma).
-   * 
-   * @param naam
-   * @return
-   */
+  private static boolean setParameters(String[] args) {
+    Arguments     arguments = new Arguments(args);
+    List<String>  fouten    = new ArrayList<>();
+
+    arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
+                                          PAR_CHARSETIN,
+                                          PAR_CHARSETUIT,
+                                          PAR_INVOERDIR,
+                                          CaissaTools.PAR_LOGO,
+                                          CaissaTools.PAR_SPELER,
+                                          CaissaTools.PAR_TAG,
+                                          PAR_UITVOERDIR});
+    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND,
+                                         CaissaTools.PAR_SPELER});
+    if (!arguments.isValid()) {
+      fouten.add(getMelding(ERR_INVALIDPARAMS));
+    }
+
+    parameters.clear();
+    setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
+    setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
+    setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
+    setDirParameter(arguments, PAR_INVOERDIR);
+    setDirParameter(arguments, CaissaTools.PAR_LOGO);
+    setDirParameter(arguments, CaissaTools.PAR_SPELER);
+    setDirParameter(arguments, CaissaTools.PAR_TAG);
+    setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
+
+    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
+                 .contains(File.separator)) {
+      fouten.add(
+          MessageFormat.format(
+              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
+    }
+
+    if (fouten.isEmpty()) {
+      return true;
+    }
+
+    help();
+    printFouten(fouten);
+
+    return false;
+  }
+
   private static String swapNaam(String naam) {
     String[]  deel  = naam.split(",");
     if (deel.length == 1) {
       return naam;
     }
-    
+
     return deel[1].trim() + " " + deel[0].trim();
   }
 }

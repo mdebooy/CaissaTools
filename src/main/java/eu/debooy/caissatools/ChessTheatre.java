@@ -92,7 +92,7 @@ public final class ChessTheatre extends Batchjob {
                                      + EXT_PGN,
                       parameters.get(PAR_CHARSETIN)));
     } catch (PgnException e) {
-      DoosUtils.foutNaarScherm(e.getMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
 
@@ -197,7 +197,7 @@ public final class ChessTheatre extends Batchjob {
             lijn.append(parseZetten(fen,partij.getZuivereZetten()));
           } catch (FenException | PgnException | ZetException e) {
             DoosUtils.foutNaarScherm("Error in " + partij.getTagsAsString());
-            DoosUtils.foutNaarScherm(e.getMessage());
+            DoosUtils.foutNaarScherm(e.getLocalizedMessage());
           }
         }
         lijn.append("</plies>");
@@ -305,6 +305,7 @@ public final class ChessTheatre extends Batchjob {
       fouten.add(getMelding(ERR_INVALIDPARAMS));
     }
 
+    parameters.clear();
     setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
     setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
     setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());

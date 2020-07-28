@@ -16,20 +16,17 @@
  */
 package eu.debooy.caissatools;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
 import eu.debooy.doosutils.test.VangOutEnErr;
-
 import java.io.File;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -76,8 +73,8 @@ public class StartPgnTest extends BatchTest {
 
     VangOutEnErr.execute(StartPgn.class, "execute", args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 28, out.size());
-    assertEquals("Zonder parameters - fouten", 0, 0);
+    assertEquals("Zonder parameters - helptekst", 29, out.size());
+    assertEquals("Zonder parameters - fouten", 1, err.size());
   }
 
   @Test
@@ -86,7 +83,7 @@ public class StartPgnTest extends BatchTest {
                                         "--date=1999.10.01",
                                         "--event=\"Testing 97/98\"",
                                         "--site=\"Caissa Tools\"",
-                                        "--spelers=\"Speler, 01;Speler, 02;"+
+                                        "--spelers=\"Speler, 01;Speler, 02;" +
                                           "Speler, 03;Speler, 04\"",
                                         "--uitvoerdir=" + TEMP};
 
@@ -97,13 +94,11 @@ public class StartPgnTest extends BatchTest {
 
     VangOutEnErr.execute(StartPgn.class, "execute", args, out, err);
 
-    assertEquals("StartPgn - helptekst", 16, out.size());
-    assertEquals("StartPgn - fouten", 0, 0);
+    assertEquals("StartPgn - helptekst", 17, out.size());
+    assertEquals("StartPgn - fouten", 0, err.size());
     assertEquals("StartPgn - 14",
                  TEMP + File.separator + "start.pgn",
                  out.get(13).split(":")[1].trim());
-    assertEquals("StartPgn - 15", TEMP,
-                 out.get(14).split(":")[1].trim());
     assertTrue("StartPgn - equals",
         Bestand.equals(
             Bestand.openInvoerBestand(StartPgnTest.class.getClassLoader(),

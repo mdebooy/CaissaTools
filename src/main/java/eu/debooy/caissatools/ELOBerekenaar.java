@@ -26,6 +26,7 @@ import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.Datum;
+import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.access.CsvBestand;
 import eu.debooy.doosutils.exception.BestandException;
@@ -71,7 +72,6 @@ public final class ELOBerekenaar extends Batchjob {
 
   public static void execute(String[] args) {
     String            eindDatum   = "9999.99.99";
-    boolean           extraInfo   = false;
     List<Spelerinfo>  spelerinfos = new ArrayList<>();
     Map<String, Integer>
                       spelers     = new TreeMap<>();
@@ -104,12 +104,14 @@ public final class ELOBerekenaar extends Batchjob {
           Integer.parseInt(parameters.get(CaissaTools.PAR_MAXVERSCHIL));
     }
 
+    boolean extraInfo           =
+        parameters.get(CaissaTools.PAR_EXTRAINFO).equals(DoosConstants.WAAR);
     String  geschiedenisbestand =
         parameters.get(PAR_UITVOERDIR)
         + parameters.get(CaissaTools.PAR_GESCHIEDENISBESTAND) + EXT_CSV;
     String  toernooibestand     =
         parameters.get(PAR_INVOERDIR)
-        + parameters.get(CaissaTools.PAR_TOERNOOIBESTAND) + EXT_CSV;
+        + parameters.get(CaissaTools.PAR_TOERNOOIBESTAND) + EXT_PGN;
     String  spelerbestand       =
         parameters.get(PAR_UITVOERDIR)
         + parameters.get(CaissaTools.PAR_SPELERBESTAND) + EXT_CSV;
@@ -199,7 +201,8 @@ public final class ELOBerekenaar extends Batchjob {
                              CaissaTools.PAR_SPELERBESTAND,
                              CaissaTools.PAR_TOERNOOIBESTAND), 80);
     DoosUtils.naarScherm();
-    DoosUtils.naarScherm(resourceBundle.getString("help.eloberekenaar.extra"));
+    DoosUtils.naarScherm(resourceBundle.getString("help.eloberekenaar.extra"),
+                         80);
     DoosUtils.naarScherm();
   }
 
@@ -247,7 +250,7 @@ public final class ELOBerekenaar extends Batchjob {
         }
       }
     } catch (BestandException e) {
-      DoosUtils.foutNaarScherm(
+      DoosUtils.naarScherm(
           MessageFormat.format(
               resourceBundle.getString("message.nieuwbestand"), spelerBestand));
     } catch (ParseException e) {
@@ -380,10 +383,11 @@ public final class ELOBerekenaar extends Batchjob {
       fouten.add(getMelding(ERR_INVALIDPARAMS));
     }
 
+    parameters.clear();
     setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
     setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
     setParameter(arguments, CaissaTools.PAR_EINDDATUM);
-    setParameter(arguments, CaissaTools.PAR_EXTRAINFO);
+    setParameter(arguments, CaissaTools.PAR_EXTRAINFO, DoosConstants.ONWAAR);
     setDirParameter(arguments, PAR_INVOERDIR);
     setParameter(arguments, CaissaTools.PAR_MAXVERSCHIL);
     setBestandParameter(arguments, CaissaTools.PAR_SPELERBESTAND, EXT_CSV);
@@ -460,7 +464,6 @@ public final class ELOBerekenaar extends Batchjob {
       Collection<PGN>
           partijen  = new TreeSet<>(new PGN.defaultComparator());
       partijen.addAll(CaissaUtils.laadPgnBestand(toernooibestand, charsetIn));
-
       for (PGN  partij : partijen) {
         if (!partij.isBye()
             && partij.isRated()) {
@@ -550,7 +553,7 @@ public final class ELOBerekenaar extends Batchjob {
     spelerinfo.setEerstePartij(eloDatum);
     spelerinfo.setElo(startElo);
     spelerinfo.setNaam(speler);
-    spelerinfo.setPartijen(Integer.valueOf(0));
+    spelerinfo.setPartijen(0);
     spelerinfo.setSpelerId(spelerId);
     spelerinfos.add(spelerId, spelerinfo);
   }

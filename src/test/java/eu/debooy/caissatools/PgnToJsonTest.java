@@ -16,20 +16,17 @@
  */
 package eu.debooy.caissatools;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
 import eu.debooy.doosutils.test.VangOutEnErr;
-
 import java.io.File;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -42,35 +39,10 @@ public class PgnToJsonTest extends BatchTest {
 
   @AfterClass
   public static void afterClass() {
-    try {
-      Bestand.delete(TEMP + File.separator + "competitie.json");
-    } catch (BestandException e) {
-    }
-
-    try {
-      Bestand.delete(TEMP + File.separator + "competitie2.pgn");
-    } catch (BestandException e) {
-    }
-
-    try {
-      Bestand.delete(TEMP + File.separator + "json.json");
-    } catch (BestandException e) {
-    }
-
-    try {
-      Bestand.delete(TEMP + File.separator + "json.pgn");
-    } catch (BestandException e) {
-    }
-
-    try {
-      Bestand.delete(TEMP + File.separator + "partij.json");
-    } catch (BestandException e) {
-    }
-
-    try {
-      Bestand.delete(TEMP + File.separator + "partij.pgn");
-    } catch (BestandException e) {
-    }
+    verwijderBestanden(TEMP + File.separator,
+                       new String[] {"competitie.json", "competitie2.pgn",
+                                     "json.json", "json.pgn", "partij.json",
+                                     "partij.pgn"});
   }
 
   @BeforeClass
@@ -166,8 +138,8 @@ public class PgnToJsonTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToJson.class, "execute", args, out, err);
 
-    assertEquals("PgnToJson - helptekst", 18, out.size());
-    assertEquals("PgnToJson - fouten", 0, 0);
+    assertEquals("PgnToJson - helptekst", 20, out.size());
+    assertEquals("PgnToJson - fouten", 0, err.size());
     assertEquals("PgnToJson - 14",
                  TEMP + File.separator + "competitie2.pgn",
                  out.get(13).split(":")[1].trim());
@@ -193,8 +165,8 @@ public class PgnToJsonTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToJson.class, "execute", args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 33, out.size());
-    assertEquals("Zonder parameters - fouten", 0, 0);
+    assertEquals("Zonder parameters - helptekst", 36, out.size());
+    assertEquals("Zonder parameters - fouten", 1, err.size());
   }
 
   @Test
@@ -212,8 +184,10 @@ public class PgnToJsonTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToJson.class, "execute", args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 18, out.size());
-    assertEquals("Zonder parameters - fouten", 0, 0);
+    assertEquals("Zonder parameters - helptekst", 20, out.size());
+    assertEquals("Zonder parameters - fouten", 0, err.size());
+    assertEquals("PgnToJson - 15", "2",
+                 out.get(14).split(":")[1].trim());
     assertEquals("PgnToJson - 17", "2",
                  out.get(16).split(":")[1].trim());
 
@@ -249,7 +223,7 @@ public class PgnToJsonTest extends BatchTest {
   public void testPartijToJson() throws BestandException {
     String[]  args      = new String[] {"--bestand=partij",
                                         "--invoerdir=" + TEMP,
-                                        "--json=partij", 
+                                        "--json=partij",
                                         "--uitvoerdir=" + TEMP};
 
     try {
@@ -283,8 +257,10 @@ public class PgnToJsonTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToJson.class, "execute", args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 18, out.size());
-    assertEquals("Zonder parameters - fouten", 0, 0);
+    assertEquals("Zonder parameters - helptekst", 20, out.size());
+    assertEquals("Zonder parameters - fouten", 0, err.size());
+    assertEquals("PgnToJson - 15", "2",
+                 out.get(14).split(":")[1].trim());
     assertEquals("PgnToJson - 17", "1",
                  out.get(16).split(":")[1].trim());
 

@@ -44,6 +44,7 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
+import java.util.Objects;
 import java.util.ResourceBundle;
 import java.util.TreeMap;
 import org.codehaus.jackson.map.ObjectMapper;
@@ -56,9 +57,9 @@ public final class PgnToJson extends Batchjob {
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
-  private static final Integer  EXTRA     = Integer.valueOf(-2);
-  private static final Integer  OUT       = Integer.valueOf(-1);
-  private static final Integer  PROMOTIE  = Integer.valueOf(-3);
+  private static final Integer  EXTRA     = -2;
+  private static final Integer  OUT       = -1;
+  private static final Integer  PROMOTIE  = -3;
 
   private static boolean  voorNico  = false;
 
@@ -130,7 +131,7 @@ public final class PgnToJson extends Batchjob {
                                           .toUpperCase())
                        .getStukcodes();
 
-    FEN             fen       = new FEN();
+    FEN             fen;
     String          invoer    = parameters.get(PAR_INVOERDIR)
                                 + parameters.get(CaissaTools.PAR_BESTAND)
                                 + EXT_PGN;
@@ -143,9 +144,10 @@ public final class PgnToJson extends Batchjob {
 
     Collection<PGN> partijen;
     try {
-      partijen = CaissaUtils.laadPgnBestand(invoer, parameters.get(PAR_CHARSETIN));
+      partijen = CaissaUtils.laadPgnBestand(invoer,
+                                            parameters.get(PAR_CHARSETIN));
     } catch (PgnException e) {
-      DoosUtils.foutNaarScherm(e.getMessage());
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
 
@@ -281,36 +283,36 @@ public final class PgnToJson extends Batchjob {
 
   public static void help() {
     DoosUtils.naarScherm("java -jar CaissaTools.jar PgnToJson ["
-                         + resourceBundle.getString("label.optie")
+                         + getMelding(LBL_OPTIE)
                          + "] --bestand=<"
                          + resourceBundle.getString("label.pgnbestand") + ">");
     DoosUtils.naarScherm();
-    DoosUtils.naarScherm("  --bestand       ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 13),
                          resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("  --charsetin     ",
-        MessageFormat.format(resourceBundle.getString("help.charsetin"),
+    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 13),
+        MessageFormat.format(getMelding(HLP_CHARSETIN),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --charsetuit    ",
-        MessageFormat.format(resourceBundle.getString("help.charsetuit"),
+    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 13),
+        MessageFormat.format(getMelding(HLP_CHARSETUIT),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm("  --defaulteco    ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_DEFAULTECO, 13),
                          resourceBundle.getString("help.defaulteco"), 80);
-    DoosUtils.naarScherm("  --includelege   ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_INCLUDELEGE, 13),
                          resourceBundle.getString("help.includelege"), 80);
-    DoosUtils.naarScherm("  --invoerdir     ",
-                         resourceBundle.getString("help.invoerdir"), 80);
-    DoosUtils.naarScherm("  --json          ",
+    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 13),
+                         getMelding(HLP_INVOERDIR), 80);
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_JSON, 13),
                          resourceBundle.getString("help.json"), 80);
-    DoosUtils.naarScherm("  --metFEN        ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_METFEN, 13),
                          resourceBundle.getString("help.metfen"), 80);
-    DoosUtils.naarScherm("  --metTrajecten  ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_METTRAJECTEN, 13),
                          resourceBundle.getString("help.mettrajecten"), 80);
-    DoosUtils.naarScherm("  --naartaal      ",
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_NAARTAAL, 13),
         MessageFormat.format(resourceBundle.getString("help.naartaal"),
                              Locale.getDefault().getLanguage()), 80);
-    DoosUtils.naarScherm("  --uitvoerdir    ",
-                         resourceBundle.getString("help.uitvoerdir"), 80);
-    DoosUtils.naarScherm("  --vantaal       ",
+    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 13),
+                         getMelding(HLP_UITVOERDIR), 80);
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_VANTAAL, 13),
         MessageFormat.format(resourceBundle.getString("help.vantaal"),
                              Locale.getDefault().getLanguage()), 80);
     DoosUtils.naarScherm();
@@ -345,6 +347,7 @@ public final class PgnToJson extends Batchjob {
       fouten.add(getMelding(ERR_INVALIDPARAMS));
     }
 
+    parameters.clear();
     setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
     setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
     setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
@@ -411,10 +414,10 @@ public final class PgnToJson extends Batchjob {
   private static void wijzigTrajecten(FEN fen, Map<String, Integer> ids,
                                       Map<String, List<Integer>> trajecten) {
     int[]               bord        = fen.getBord();
-    Map<String, String> verplaatst  = new HashMap<String, String>();
-    for (Entry<String, Integer> id : ids.entrySet()) {
+    Map<String, String> verplaatst  = new HashMap<>();
+    ids.entrySet().forEach(id -> {
       if (id.getValue() >= 0
-          && id.getValue() < 100) {
+              && id.getValue() < 100) {
         Integer positie = getPositie(id.getValue()%100);
         int stuk  = CaissaUtils.zoekStuk(id.getKey().charAt(0));
         if (bord[positie] != stuk) {
@@ -424,7 +427,7 @@ public final class PgnToJson extends Batchjob {
           ids.put(id.getKey(), OUT);
         }
       } else {
-        if (id.getValue() == PROMOTIE
+        if (Objects.equals(id.getValue(), PROMOTIE)
             || (id.getValue() >= 100 && id.getValue() < 200)) {
           ids.put(id.getKey(), OUT);
         }
@@ -432,7 +435,7 @@ public final class PgnToJson extends Batchjob {
           ids.put(id.getKey(), id.getValue() - 200);
         }
       }
-    }
+    });
 
     for (int i = 9; i > 1; i--) {
       for (int j = 1; j < 9; j++) {
@@ -477,8 +480,8 @@ public final class PgnToJson extends Batchjob {
       }
     }
 
-    for (String stuk : trajecten.keySet()) {
+    trajecten.keySet().forEach(stuk -> {
       trajecten.get(stuk).add(ids.get(stuk));
-    }
+    });
   }
 }

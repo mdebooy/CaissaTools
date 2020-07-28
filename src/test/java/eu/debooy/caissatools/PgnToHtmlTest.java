@@ -16,20 +16,17 @@
  */
 package eu.debooy.caissatools;
 
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
 import eu.debooy.doosutils.test.VangOutEnErr;
-
 import java.io.File;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
 import org.junit.AfterClass;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -42,8 +39,9 @@ public class PgnToHtmlTest extends BatchTest {
       PgnToHtmlTest.class.getClassLoader();
 
   @AfterClass
-  public static void afterClass() throws BestandException {
-    Bestand.delete(TEMP + File.separator + "competitie1.pgn");
+  public static void afterClass() {
+    verwijderBestanden(TEMP + File.separator,
+                       new String[] {"competitie1.pgn"});
   }
 
   @BeforeClass
@@ -77,8 +75,8 @@ public class PgnToHtmlTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToHtml.class, "execute", args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 29, out.size());
-    assertEquals("Zonder parameters - fouten", 0, 0);
+    assertEquals("Zonder parameters - helptekst", 30, out.size());
+    assertEquals("Zonder parameters - fouten", 1, err.size());
   }
 
   @Test
@@ -96,14 +94,14 @@ public class PgnToHtmlTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToHtml.class, "execute", args, out, err);
 
-    assertEquals("PgnToHtml - helptekst", 17, out.size());
-    assertEquals("PgnToHtml - fouten", 0, 0);
+    assertEquals("PgnToHtml - helptekst", 19, out.size());
+    assertEquals("PgnToHtml - fouten", 0, err.size());
     assertEquals("PgnToHtml - 14",
                  TEMP + File.separator + "competitie1.pgn",
                  out.get(13).split(":")[1].trim());
     assertEquals("PgnToHtml - 15", "150",
                  out.get(14).split(":")[1].trim());
-    assertEquals("PgnToHtml - 16", TEMP,
+    assertEquals("PgnToHtml - 16", TEMP + File.separator,
                  out.get(15).split(":")[1].trim());
     assertTrue("PgnToHtml - equals I",
         Bestand.equals(
@@ -136,14 +134,14 @@ public class PgnToHtmlTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToHtml.class, "execute", args, out, err);
 
-    assertEquals("Op Stand - helptekst", 17, out.size());
-    assertEquals("Op Stand - fouten", 0, 0);
+    assertEquals("Op Stand - helptekst", 19, out.size());
+    assertEquals("Op Stand - fouten", 0, err.size());
     assertEquals("PgnToHtml - 14",
                  TEMP + File.separator + "competitie1.pgn",
                  out.get(13).split(":")[1].trim());
     assertEquals("PgnToHtml - 15", "150",
                  out.get(14).split(":")[1].trim());
-    assertEquals("PgnToHtml - 16", TEMP,
+    assertEquals("PgnToHtml - 16", TEMP + File.separator,
                  out.get(15).split(":")[1].trim());
     assertTrue("Op Stand - equals I",
         Bestand.equals(

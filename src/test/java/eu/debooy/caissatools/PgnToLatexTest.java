@@ -16,22 +16,19 @@
  */
 package eu.debooy.caissatools;
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
 import eu.debooy.doosutils.test.VangOutEnErr;
-
 import java.io.File;
 import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
-
 import org.junit.AfterClass;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
@@ -43,9 +40,10 @@ public class PgnToLatexTest extends BatchTest {
       PgnToLatexTest.class.getClassLoader();
 
   @AfterClass
-  public static void afterClass() throws BestandException {
-    Bestand.delete(TEMP + File.separator + "competitie1.pgn");
-    Bestand.delete(TEMP + File.separator + "competitie2.pgn");
+  public static void afterClass() {
+    verwijderBestanden(TEMP + File.separator,
+                       new String[] {"competitie1.pgn", "competitie2.pgn",
+                                     "competitie1.tex"});
   }
 
   @BeforeClass
@@ -87,8 +85,8 @@ public class PgnToLatexTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToLatex.class, "execute", args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 38, out.size());
-    assertEquals("Zonder parameters - fouten", 0, 0);
+    assertEquals("Zonder parameters - helptekst", 39, out.size());
+    assertEquals("Zonder parameters - fouten", 1, err.size());
   }
 
   @Test
@@ -96,19 +94,15 @@ public class PgnToLatexTest extends BatchTest {
     String[]  args      = new String[] {"--bestand=/tmp/competitie1;/tmp/competitie2;competitie3",
                                         "--halve=Speler, 01;Speler, 02"};
     String[]  verwacht  = new String[] {
-        MessageFormat.format(
-            resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
-                                     "/tmp/competitie1"),
-        MessageFormat.format(
-            resourceBundle.getString(CaissaTools.ERR_BEVATDIRECTORY),
-                                     "/tmp/competitie2"),
+        MessageFormat.format("Het bestand {0} bevat een directory.",
+                                     "bestand"),
         resourceBundle.getString(CaissaTools.ERR_HALVE),
         resourceBundle.getString(CaissaTools.ERR_BIJBESTAND)};
 
     VangOutEnErr.execute(PgnToLatex.class, "execute", args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 38, out.size());
-    assertEquals("Zonder parameters - fouten", 4, err.size());
+    assertEquals("Zonder parameters - helptekst", 39, out.size());
+    assertEquals("Zonder parameters - fouten", 3, err.size());
     assertArrayEquals("Error mesages", verwacht, err.toArray());
   }
 
@@ -126,8 +120,8 @@ public class PgnToLatexTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToLatex.class, "execute", args, out, err);
 
-    assertEquals("PgnToLatex - helptekst", 16, out.size());
-    assertEquals("PgnToLatex - fouten", 0, 0);
+    assertEquals("PgnToLatex - helptekst", 18, out.size());
+    assertEquals("PgnToLatex - fouten", 0, err.size());
     assertEquals("PgnToLatex - 14",
                  TEMP + File.separator + "competitie1.tex",
                  out.get(13).split(":")[1].trim());
@@ -159,8 +153,8 @@ public class PgnToLatexTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToLatex.class, "execute", args, out, err);
 
-    assertEquals("PgnToLatex 2 - helptekst", 17, out.size());
-    assertEquals("PgnToLatex 2 - fouten", 0, 0);
+    assertEquals("PgnToLatex 2 - helptekst", 19, out.size());
+    assertEquals("PgnToLatex 2 - fouten", 0, err.size());
     assertEquals("PgnToLatex 2 - 14",
                  TEMP + File.separator + "competitie1.tex",
                  out.get(13).split(":")[1].trim());
@@ -194,8 +188,8 @@ public class PgnToLatexTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToLatex.class, "execute", args, out, err);
 
-    assertEquals("Op Stand - helptekst", 16, out.size());
-    assertEquals("Op Stand - fouten", 0, 0);
+    assertEquals("Op Stand - helptekst", 18, out.size());
+    assertEquals("Op Stand - fouten", 0, err.size());
     assertEquals("Op Stand - 14",
                  TEMP + File.separator + "competitie1.tex",
                  out.get(13).split(":")[1].trim());
@@ -226,8 +220,8 @@ public class PgnToLatexTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToLatex.class, "execute", args, out, err);
 
-    assertEquals("Zonder Matrix - helptekst", 16, out.size());
-    assertEquals("Zonder Matrix - fouten", 0, 0);
+    assertEquals("Zonder Matrix - helptekst", 18, out.size());
+    assertEquals("Zonder Matrix - fouten", 0, err.size());
     assertEquals("Zonder Matrix - 14",
                  TEMP + File.separator + "competitie1.tex",
                  out.get(13).split(":")[1].trim());
@@ -260,8 +254,8 @@ public class PgnToLatexTest extends BatchTest {
 
     VangOutEnErr.execute(PgnToLatex.class, "execute", args, out, err);
 
-    assertEquals("Zonder Matrix 2 - helptekst", 17, out.size());
-    assertEquals("Zonder Matrix 2 - fouten", 0, 0);
+    assertEquals("Zonder Matrix 2 - helptekst", 19, out.size());
+    assertEquals("Zonder Matrix 2 - fouten", 0, err.size());
     assertEquals("Zonder Matrix 2 - 14",
                  TEMP + File.separator + "competitie1.tex",
                  out.get(13).split(":")[1].trim());

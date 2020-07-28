@@ -54,7 +54,7 @@ public final class StartPgn extends Batchjob {
     String    site    = parameters.get(CaissaTools.PAR_SITE);
     String[]  speler  = parameters.get(CaissaTools.PAR_SPELERS).split(";");
     String    uitvoer = parameters.get(PAR_UITVOERDIR)
-                        + parameters.get(CaissaTools.PAR_BESTAND);
+                        + parameters.get(CaissaTools.PAR_BESTAND) + EXT_PGN;
 
     Arrays.sort(speler, String.CASE_INSENSITIVE_ORDER);
     int noSpelers = speler.length;
@@ -178,8 +178,14 @@ public final class StartPgn extends Batchjob {
       fouten.add(getMelding(ERR_INVALIDPARAMS));
     }
 
+    parameters.clear();
     setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
     setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
+    setParameter(arguments, CaissaTools.PAR_DATE);
+    setParameter(arguments, CaissaTools.PAR_EVENT);
+    setParameter(arguments, CaissaTools.PAR_SITE);
+    setParameter(arguments, CaissaTools.PAR_SPELERS);
+    setDirParameter(arguments, PAR_UITVOERDIR);
 
     if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
                  .contains(File.separator)) {
