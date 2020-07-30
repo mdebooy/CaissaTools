@@ -22,7 +22,6 @@ import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.FenException;
 import eu.debooy.caissa.exceptions.PgnException;
-import eu.debooy.caissa.exceptions.ZetException;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
@@ -195,7 +194,7 @@ public final class ChessTheatre extends Batchjob {
         if (!partij.getZuivereZetten().isEmpty()) {
           try {
             lijn.append(parseZetten(fen,partij.getZuivereZetten()));
-          } catch (FenException | PgnException | ZetException e) {
+          } catch (FenException | PgnException e) {
             DoosUtils.foutNaarScherm("Error in " + partij.getTagsAsString());
             DoosUtils.foutNaarScherm(e.getLocalizedMessage());
           }
@@ -284,7 +283,7 @@ public final class ChessTheatre extends Batchjob {
   }
 
   private static String parseZetten(FEN fen, String pgnZetten)
-      throws FenException, PgnException, ZetException {
+      throws FenException, PgnException {
     return CaissaUtils.pgnZettenToChessTheatre(fen, pgnZetten);
   }
 

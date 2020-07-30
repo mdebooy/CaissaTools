@@ -56,6 +56,7 @@ public final class SpelerStatistiek extends Batchjob {
   private static final  String  LATEX_HLINE   = "\\hline";
   private static final  String  LATEX_MCOLUMN = " & \\multicolumn{5}{c|}{ ";
   private static final  String  LATEX_NEWLINE = " \\\\";
+  private static final  String  SPACES6       = "      ";
 
   private SpelerStatistiek() {}
 
@@ -239,7 +240,7 @@ public final class SpelerStatistiek extends Batchjob {
       int[] totaal  = new int[] {0,0,0,0,0,0};
 
       output.write("    \\begin{longtable} { | l | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | }");
-      output.write("      " + LATEX_HLINE);
+      output.write(SPACES6 + LATEX_HLINE);
       output.write(LATEX_MCOLUMN
                    + resourceBundle.getString("tekst.wit") + " } "
                    + LATEX_MCOLUMN
@@ -255,7 +256,7 @@ public final class SpelerStatistiek extends Batchjob {
                           + resourceBundle.getString("tag.totaal") + " & "
                           + resourceBundle.getString("tag.procent");
       output.write(hoofding + hoofding + hoofding + LATEX_NEWLINE);
-      output.write("      " + LATEX_HLINE);
+      output.write(SPACES6 + LATEX_HLINE);
       output.write("      \\endhead");
       for (Entry<String, int[]> item : items.entrySet()) {
         int[] statistiek  = item.getValue();
@@ -369,7 +370,7 @@ public final class SpelerStatistiek extends Batchjob {
                                                   lijn.toString(), output));
     lijn.append(LATEX_NEWLINE);
     output.write(lijn.toString());
-    output.write("      " + LATEX_HLINE);
+    output.write(SPACES6 + LATEX_HLINE);
   }
 
   private static String printStatistiekDeel(int winst, int remise, int verlies,

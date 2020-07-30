@@ -1,0 +1,37 @@
+/**
+ * Copyright 2020 Marco de Booij
+ *
+ * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by
+ * the European Commission - subsequent versions of the EUPL (the "Licence");
+ * you may not use this work except in compliance with the Licence. You may
+ * obtain a copy of the Licence at:
+ *
+ * https://joinup.ec.europa.eu/software/page/eupl
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the Licence is distributed on an "AS IS" BASIS, WITHOUT
+ * WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the Licence for the specific language governing permissions and
+ * limitations under the Licence.
+ */
+package eu.debooy.caissatools;
+
+
+/**
+ *
+ * @author Marco de Booij
+ */
+public final class TestConstants {
+  public static final String  BST_COMPETITIE1_PGN = "competitie1.pgn";
+  public static final String  BST_COMPETITIE2_PGN = "competitie2.pgn";
+  public static final String  BST_COMPETITIE_CSV  = "competitie.csv";
+  public static final String  BST_COMPETITIEH_CSV = "competitieH.csv";
+  public static final String  BST_INDEX_HTML      = "index.html";
+  public static final String  BST_MATRIX_HTML     = "matrix.html";
+
+  public static final String  PAR_INVOERDIR         = "--invoerdir=";
+  public static final String  PAR_SPELERBESTAND     =
+      "--spelerBestand=competitie";
+  public static final String  PAR_TOERNOOIBESTAND1  =
+      "--toernooiBestand=competitie1";
+}

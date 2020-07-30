@@ -415,7 +415,7 @@ public final class PgnToJson extends Batchjob {
                                       Map<String, List<Integer>> trajecten) {
     int[]               bord        = fen.getBord();
     Map<String, String> verplaatst  = new HashMap<>();
-    ids.entrySet().forEach(id -> {
+    for (Entry<String, Integer> id : ids.entrySet()) {
       if (id.getValue() >= 0
               && id.getValue() < 100) {
         Integer positie = getPositie(id.getValue()%100);
@@ -435,7 +435,7 @@ public final class PgnToJson extends Batchjob {
           ids.put(id.getKey(), id.getValue() - 200);
         }
       }
-    });
+    }
 
     for (int i = 9; i > 1; i--) {
       for (int j = 1; j < 9; j++) {
@@ -463,7 +463,7 @@ public final class PgnToJson extends Batchjob {
                 ids.put(promotie, PROMOTIE);
               }
               String        id      = stuk + promotie.substring(1);
-              List<Integer> traject = new ArrayList<Integer>();
+              List<Integer> traject = new ArrayList<>();
               while (plies > 0) {
                 traject.add(EXTRA);
                 plies--;

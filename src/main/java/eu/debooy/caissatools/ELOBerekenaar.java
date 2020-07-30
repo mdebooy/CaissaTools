@@ -71,11 +71,11 @@ public final class ELOBerekenaar extends Batchjob {
   private ELOBerekenaar() {}
 
   public static void execute(String[] args) {
-    String            eindDatum   = "9999.99.99";
+    String            eindDatum   = CaissaConstants.DEF_EINDDATUM;
     List<Spelerinfo>  spelerinfos = new ArrayList<>();
     Map<String, Integer>
                       spelers     = new TreeMap<>();
-    String            startDatum  = "0000.00.00";
+    String            startDatum  = CaissaConstants.DEF_STARTDATUM;
     int               startElo    = START_ELO;
 
     Banner.printMarcoBanner(resourceBundle.getString("banner.eloberekenaar"));
@@ -132,7 +132,7 @@ public final class ELOBerekenaar extends Batchjob {
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.startdatum"),
                              startDatum));
-    if (!"9999.99.99".equals(eindDatum)) {
+    if (!CaissaConstants.DEF_EINDDATUM.equals(eindDatum)) {
       DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.einddatum"),
                              eindDatum));
@@ -418,8 +418,8 @@ public final class ELOBerekenaar extends Batchjob {
       fouten.add(resourceBundle.getString(CaissaTools.ERR_MAXVERSCHIL));
     }
 
-    String  eindDatum   = "9999.99.99";
-    String  startDatum  = "0000.00.00";
+    String  eindDatum   = CaissaConstants.DEF_EINDDATUM;
+    String  startDatum  = CaissaConstants.DEF_STARTDATUM;
     if (parameters.containsKey(CaissaTools.PAR_STARTDATUM)) {
       startDatum  = parameters.get(CaissaTools.PAR_STARTDATUM);
     }
