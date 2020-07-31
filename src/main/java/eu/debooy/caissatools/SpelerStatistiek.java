@@ -53,33 +53,39 @@ public final class SpelerStatistiek extends Batchjob {
   private static  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
-  private static final  String  LATEX_HLINE   = "\\hline";
-  private static final  String  LATEX_MCOLUMN = " & \\multicolumn{5}{c|}{ ";
-  private static final  String  LATEX_NEWLINE = " \\\\";
-  private static final  String  SPACES6       = "      ";
+  private static final  String    LATEX_HLINE   = "\\hline";
+  private static final  String    LATEX_MCOLUMN = " & \\multicolumn{5}{c|}{ ";
+  private static final  String    LATEX_NEWLINE = " \\\\";
+  private static final  String    SPACES6       = "      ";
+  private static final  String[]  UITSLAGEN   =
+      new String[] {"1-0", "1/2-1/2", "0-1"};
+
+  private static  String  einddatum   = "0000.00.00";
+  private static  String  startdatum  = "9999.99.99";
+  private static  int     verwerkt    = 0;
 
   private SpelerStatistiek() {}
 
-  protected static String datumInTitel(String startDatum, String eindDatum) {
+  protected static String datumInTitel(String startdatum, String einddatum) {
     StringBuilder titelDatum  = new StringBuilder();
     Date          datum;
     try {
-      datum = Datum.toDate(startDatum, CaissaConstants.PGN_DATUM_FORMAAT);
+      datum = Datum.toDate(startdatum, CaissaConstants.PGN_DATUM_FORMAAT);
       titelDatum.append(Datum.fromDate(datum));
     } catch (ParseException e) {
       DoosUtils.foutNaarScherm(resourceBundle.getString("label.startdatum")
                                + " " + e.getLocalizedMessage() + " ["
-                               + startDatum + "]");
+                               + startdatum + "]");
     }
 
-    if (!startDatum.equals(eindDatum)) {
+    if (!startdatum.equals(einddatum)) {
       try {
-        datum = Datum.toDate(eindDatum, CaissaConstants.PGN_DATUM_FORMAAT);
+        datum = Datum.toDate(einddatum, CaissaConstants.PGN_DATUM_FORMAAT);
         titelDatum.append(" - ").append(Datum.fromDate(datum));
       } catch (ParseException e) {
         DoosUtils.foutNaarScherm(resourceBundle.getString("label.einddatum")
                                  + " " + e.getLocalizedMessage() + " ["
-                                 + eindDatum + "]");
+                                 + einddatum + "]");
       }
     }
 
@@ -87,16 +93,6 @@ public final class SpelerStatistiek extends Batchjob {
   }
 
   public static void execute(String[] args) {
-    TekstBestand  output      = null;
-    int           verwerkt    = 0;
-    String        eindDatum   = "0000.00.00";
-    String        hulpDatum;
-    String        sleutel;
-    String        startDatum  = "9999.99.99";
-    String[]      uitslagen   = new String[] {"1-0", "1/2-1/2", "0-1"};
-    Map<String, int[]>
-                  items       = new TreeMap<>( );
-
     Banner
         .printMarcoBanner(resourceBundle.getString("banner.spelerstatistiek"));
 
@@ -105,9 +101,10 @@ public final class SpelerStatistiek extends Batchjob {
     }
 
     String  bestand       = parameters.get(CaissaTools.PAR_BESTAND);
-    String  logo          = parameters.get(CaissaTools.PAR_LOGO);
+    Map<String, int[]>
+            items         = new TreeMap<>( );
     String  speler        = parameters.get(CaissaTools.PAR_SPELER);
-    String  statistiekTag = parameters.get(CaissaTools.PAR_TAG);
+    String  statistiektag = parameters.get(CaissaTools.PAR_TAG);
 
     Collection<PGN> partijen;
     try {
@@ -119,168 +116,11 @@ public final class SpelerStatistiek extends Batchjob {
       return;
     }
 
-    for (PGN partij: partijen) {
-      String  uitslag = partij.getTag(CaissaConstants.PGNTAG_RESULT);
-      String  wit     = partij.getTag(CaissaConstants.PGNTAG_WHITE);
-      String  zwart   = partij.getTag(CaissaConstants.PGNTAG_BLACK);
-      int i = 0;
-      for (String s: uitslagen) {
-        if (s.equals(uitslag)) {
-          break;
-        }
-        i++;
-      }
+    partijen.forEach(partij -> {
+      verwerkPartij(partij, items, speler, statistiektag);
+    });
 
-      if (speler.equals(wit) || speler.equals(zwart)) {
-        verwerkt++;
-        // Verwerk de 'datums'
-        hulpDatum = partij.getTag(CaissaConstants.PGNTAG_EVENTDATE);
-        if (DoosUtils.isNotBlankOrNull(hulpDatum)
-            && hulpDatum.indexOf('?') < 0) {
-          if (hulpDatum.compareTo(startDatum) < 0 ) {
-            startDatum  = hulpDatum;
-          }
-          if (hulpDatum.compareTo(eindDatum) > 0 ) {
-            eindDatum   = hulpDatum;
-          }
-        }
-        hulpDatum = partij.getTag(CaissaConstants.PGNTAG_DATE);
-        if (DoosUtils.isNotBlankOrNull(hulpDatum)
-            && hulpDatum.indexOf('?') < 0) {
-          if (hulpDatum.compareTo(startDatum) < 0 ) {
-            startDatum  = hulpDatum;
-          }
-          if (hulpDatum.compareTo(eindDatum) > 0 ) {
-            eindDatum   = hulpDatum;
-          }
-        }
-        if (DoosUtils.isNotBlankOrNull(statistiekTag)) {
-          if ("Date".equals(statistiekTag)) {
-            int punt  = hulpDatum.indexOf('.');
-            if (punt < 1) {
-              sleutel = "????";
-            } else {
-              sleutel = hulpDatum.substring(0, punt);
-            }
-          } else {
-            sleutel = DoosUtils.nullToEmpty(partij.getTag(statistiekTag));
-          }
-        } else {
-          if (speler.equals(wit)) {
-            sleutel = zwart;
-          } else {
-            sleutel = wit;
-          }
-        }
-        int[] statistiek  = getStatistiek(sleutel, items);
-        if (speler.equals(wit)) {
-          statistiek[i]++;
-        } else {
-          statistiek[5 - i]++;
-        }
-        items.put(sleutel, statistiek);
-      }
-    }
-
-    // Maak de .tex file
-    try {
-      output  =
-          new TekstBestand.Builder()
-                          .setBestand(parameters.get(PAR_UITVOERDIR)
-                                      + bestand + EXT_TEX)
-                          .setCharset(parameters.get(PAR_CHARSETUIT))
-                          .setLezen(false).build();
-      output.write("\\documentclass[dutch,a4paper,10pt]{report}");
-      output.write("");
-      output.write("\\usepackage{babel}");
-      output.write("\\usepackage{color}");
-      output.write("\\usepackage{colortbl}");
-      output.write("\\usepackage{longtable}");
-      output.write("\\usepackage[T1]{fontenc}");
-      output.write("\\usepackage{textcomp}");
-      output.write("\\usepackage[pdftex]{graphicx}");
-      output.write("\\usepackage{pdflscape}");
-      output.write("");
-      output.write("\\topmargin =0.mm");
-      output.write("\\oddsidemargin =0.mm");
-      output.write("\\evensidemargin =0.mm");
-      output.write("\\headheight =0.mm");
-      output.write("\\headsep =0.mm");
-      output.write("\\textheight =265.mm");
-      output.write("\\textwidth =165.mm");
-      output.write("\\parindent =0.mm");
-      output.write("");
-      output.write("\\title{" + resourceBundle.getString("label.statistieken")
-                   + "}");
-      output.write("\\author{" + speler + "}");
-      output.write("\\date{\\today{}}");
-      output.write("");
-      output.write("\\begin{document}");
-      if (DoosUtils.isNotBlankOrNull(logo)) {
-        output.write("\\DeclareGraphicsExtensions{.pdf,.png,.gif,.jpg}");
-      }
-      output.write("\\begin{titlepage}");
-      output.write("  \\begin{center}");
-      output.write("    \\huge "
-                   + resourceBundle.getString("label.statistiekenvan")
-                   + LATEX_NEWLINE);
-      output.write("    \\vspace{1in}");
-      output.write("    \\huge " + swapNaam(speler) + LATEX_NEWLINE);
-      if (DoosUtils.isNotBlankOrNull(logo)) {
-        output.write("    \\vspace{2in}");
-        output.write("    \\includegraphics[width=6cm]{"+ logo + "} \\\\");
-      }
-      output.write("    \\vspace{1in}");
-      output.write("    \\large " + datumInTitel(startDatum, eindDatum)
-                   + LATEX_NEWLINE);
-      output.write("  \\end{center}");
-      output.write("\\end{titlepage}");
-      output.write("\\begin{landscape}");
-      output.write("  \\begin{center}");
-      int[] totaal  = new int[] {0,0,0,0,0,0};
-
-      output.write("    \\begin{longtable} { | l | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | }");
-      output.write(SPACES6 + LATEX_HLINE);
-      output.write(LATEX_MCOLUMN
-                   + resourceBundle.getString("tekst.wit") + " } "
-                   + LATEX_MCOLUMN
-                   + resourceBundle.getString("tekst.zwart") + " } "
-                   + LATEX_MCOLUMN
-                   + resourceBundle.getString("tekst.totaal")
-                   + " } \\\\");
-      output.write("      \\cline{2-16}");
-      String  hoofding  = " & "
-                          + resourceBundle.getString("tag.winst") + " & "
-                          + resourceBundle.getString("tag.remise") + " & "
-                          + resourceBundle.getString("tag.verlies") + " & "
-                          + resourceBundle.getString("tag.totaal") + " & "
-                          + resourceBundle.getString("tag.procent");
-      output.write(hoofding + hoofding + hoofding + LATEX_NEWLINE);
-      output.write(SPACES6 + LATEX_HLINE);
-      output.write("      \\endhead");
-      for (Entry<String, int[]> item : items.entrySet()) {
-        int[] statistiek  = item.getValue();
-        for (int i = 0; i < 6; i++) {
-          totaal[i] += statistiek[i];
-        }
-        printStatistiek(item.getKey(), statistiek, output);
-      }
-      printStatistiek("Totaal", totaal, output);
-      output.write("    \\end{longtable}");
-      output.write("  \\end{center}");
-      output.write("\\end{landscape}");
-      output.write("\\end{document}");
-    } catch (BestandException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    } finally {
-      try {
-        if (output != null) {
-          output.close();
-        }
-      } catch (BestandException ex) {
-        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
-      }
-    }
+    schrijfLatex(bestand, items, speler);
 
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.bestand"),
@@ -350,21 +190,141 @@ public final class SpelerStatistiek extends Batchjob {
     DoosUtils.naarScherm();
   }
 
-  private static void printStatistiek(String sleutel, int[] statistiek,
-                                      TekstBestand output)
+  private static void schrijfLatex(String bestand, Map<String, int[]> items,
+                                   String speler) {
+    TekstBestand  output  = null;
+    try {
+      output  =
+          new TekstBestand.Builder()
+                          .setBestand(parameters.get(PAR_UITVOERDIR)
+                                      + bestand + EXT_TEX)
+                          .setCharset(parameters.get(PAR_CHARSETUIT))
+                          .setLezen(false).build();
+
+      schrijfLatexHeader(output, speler);
+
+      int[] totaal  = new int[] {0,0,0,0,0,0};
+      for (Entry<String, int[]> item : items.entrySet()) {
+        int[] statistiek  = item.getValue();
+        for (int i = 0; i < 6; i++) {
+          totaal[i] += statistiek[i];
+        }
+        schrijfStatistiek(item.getKey(), statistiek, output);
+      }
+      schrijfStatistiek("Totaal", totaal, output);
+
+      schrijfLatexFooter(output);
+
+    } catch (BestandException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+    } finally {
+      try {
+        if (output != null) {
+          output.close();
+        }
+      } catch (BestandException ex) {
+        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
+      }
+    }
+  }
+
+  private static void schrijfLatexFooter(TekstBestand output)
+      throws BestandException {
+    output.write("    \\end{longtable}");
+    output.write("  \\end{center}");
+    output.write("\\end{landscape}");
+    output.write("\\end{document}");
+  }
+
+  private static void schrijfLatexHeader(TekstBestand output, String speler)
+      throws BestandException {
+    output.write("\\documentclass[dutch,a4paper,10pt]{report}");
+    output.write("");
+    output.write("\\usepackage{babel}");
+    output.write("\\usepackage{color}");
+    output.write("\\usepackage{colortbl}");
+    output.write("\\usepackage{longtable}");
+    output.write("\\usepackage[T1]{fontenc}");
+    output.write("\\usepackage{textcomp}");
+    output.write("\\usepackage[pdftex]{graphicx}");
+    output.write("\\usepackage{pdflscape}");
+    output.write("");
+    output.write("\\topmargin =0.mm");
+    output.write("\\oddsidemargin =0.mm");
+    output.write("\\evensidemargin =0.mm");
+    output.write("\\headheight =0.mm");
+    output.write("\\headsep =0.mm");
+    output.write("\\textheight =265.mm");
+    output.write("\\textwidth =165.mm");
+    output.write("\\parindent =0.mm");
+    output.write("");
+    output.write("\\title{" + resourceBundle.getString("label.statistieken")
+                 + "}");
+    output.write("\\author{" + speler + "}");
+    output.write("\\date{\\today{}}");
+    output.write("");
+    output.write("\\begin{document}");
+    if (DoosUtils
+            .isNotBlankOrNull(parameters.containsKey(CaissaTools.PAR_LOGO))) {
+      output.write("\\DeclareGraphicsExtensions{.pdf,.png,.gif,.jpg}");
+    }
+    output.write("\\begin{titlepage}");
+    output.write("  \\begin{center}");
+    output.write("    \\huge "
+                 + resourceBundle.getString("label.statistiekenvan")
+                 + LATEX_NEWLINE);
+    output.write("    \\vspace{1in}");
+    output.write("    \\huge " + swapNaam(speler) + LATEX_NEWLINE);
+    if (DoosUtils
+            .isNotBlankOrNull(parameters.containsKey(CaissaTools.PAR_LOGO))) {
+      output.write("    \\vspace{2in}");
+      output.write("    \\includegraphics[width=6cm]{"
+                   + parameters.get(CaissaTools.PAR_LOGO) + "} \\\\");
+    }
+    output.write("    \\vspace{1in}");
+    output.write("    \\large " + datumInTitel(startdatum, einddatum)
+                 + LATEX_NEWLINE);
+    output.write("  \\end{center}");
+    output.write("\\end{titlepage}");
+    output.write("\\begin{landscape}");
+    output.write("  \\begin{center}");
+
+    output.write("    \\begin{longtable} { | l | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | }");
+    output.write(SPACES6 + LATEX_HLINE);
+    output.write(LATEX_MCOLUMN
+                 + resourceBundle.getString("tekst.wit") + " } "
+                 + LATEX_MCOLUMN
+                 + resourceBundle.getString("tekst.zwart") + " } "
+                 + LATEX_MCOLUMN
+                 + resourceBundle.getString("tekst.totaal")
+                 + " } \\\\");
+    output.write("      \\cline{2-16}");
+    String  hoofding  = " & "
+                        + resourceBundle.getString("tag.winst") + " & "
+                        + resourceBundle.getString("tag.remise") + " & "
+                        + resourceBundle.getString("tag.verlies") + " & "
+                        + resourceBundle.getString("tag.totaal") + " & "
+                        + resourceBundle.getString("tag.procent");
+    output.write(hoofding + hoofding + hoofding + LATEX_NEWLINE);
+    output.write(SPACES6 + LATEX_HLINE);
+    output.write("      \\endhead");
+  }
+
+  private static void schrijfStatistiek(String sleutel, int[] statistiek,
+                                        TekstBestand output)
       throws BestandException {
     StringBuilder lijn  = new StringBuilder();
     lijn.append(swapNaam(sleutel));
     // Als witspeler
-    lijn  = new StringBuilder(printStatistiekDeel(statistiek[0], statistiek[1],
+    lijn  = new StringBuilder(schrijfStatistiekDeel(statistiek[0], statistiek[1],
                                                   statistiek[2],
                                                   lijn.toString(), output));
     // Als zwartspeler
-    lijn  = new StringBuilder(printStatistiekDeel(statistiek[3], statistiek[4],
+    lijn  = new StringBuilder(schrijfStatistiekDeel(statistiek[3], statistiek[4],
                                                   statistiek[5],
                                                   lijn.toString(), output));
     // Totaal
-    lijn  = new StringBuilder(printStatistiekDeel(statistiek[0] + statistiek[3],
+    lijn  = new StringBuilder(schrijfStatistiekDeel(statistiek[0] + statistiek[3],
                                                   statistiek[1] + statistiek[4],
                                                   statistiek[2] + statistiek[5],
                                                   lijn.toString(), output));
@@ -373,8 +333,9 @@ public final class SpelerStatistiek extends Batchjob {
     output.write(SPACES6 + LATEX_HLINE);
   }
 
-  private static String printStatistiekDeel(int winst, int remise, int verlies,
-                                            String prefix, TekstBestand output)
+  private static String schrijfStatistiekDeel(int winst, int remise,
+                                              int verlies, String prefix,
+                                              TekstBestand output)
       throws BestandException {
     DecimalFormat format    = new DecimalFormat("0.00");
     Double        punten    = Double.valueOf(winst)
@@ -450,5 +411,71 @@ public final class SpelerStatistiek extends Batchjob {
     }
 
     return deel[1].trim() + " " + deel[0].trim();
+  }
+
+  private static void verwerkPartij(PGN partij, Map<String, int[]> items,
+                                    String speler, String statistiektag) {
+    String  hulpdatum;
+    String  sleutel;
+    String  uitslag   = partij.getTag(CaissaConstants.PGNTAG_RESULT);
+    String  wit       = partij.getTag(CaissaConstants.PGNTAG_WHITE);
+    String  zwart     = partij.getTag(CaissaConstants.PGNTAG_BLACK);
+    int i = 0;
+    for (String s: UITSLAGEN) {
+      if (s.equals(uitslag)) {
+        break;
+      }
+      i++;
+    }
+
+    if (speler.equals(wit) || speler.equals(zwart)) {
+      verwerkt++;
+      // Verwerk de 'datums'
+      hulpdatum = partij.getTag(CaissaConstants.PGNTAG_EVENTDATE);
+      if (DoosUtils.isNotBlankOrNull(hulpdatum)
+          && hulpdatum.indexOf('?') < 0) {
+        if (hulpdatum.compareTo(startdatum) < 0 ) {
+          startdatum  = hulpdatum;
+        }
+        if (hulpdatum.compareTo(einddatum) > 0 ) {
+          einddatum   = hulpdatum;
+        }
+      }
+      hulpdatum = partij.getTag(CaissaConstants.PGNTAG_DATE);
+      if (DoosUtils.isNotBlankOrNull(hulpdatum)
+          && hulpdatum.indexOf('?') < 0) {
+        if (hulpdatum.compareTo(startdatum) < 0 ) {
+          startdatum  = hulpdatum;
+        }
+        if (hulpdatum.compareTo(einddatum) > 0 ) {
+          einddatum   = hulpdatum;
+        }
+      }
+      if (DoosUtils.isNotBlankOrNull(statistiektag)) {
+        if ("Date".equals(statistiektag)) {
+          int punt  = hulpdatum.indexOf('.');
+          if (punt < 1) {
+            sleutel = "????";
+          } else {
+            sleutel = hulpdatum.substring(0, punt);
+          }
+        } else {
+          sleutel = DoosUtils.nullToEmpty(partij.getTag(statistiektag));
+        }
+      } else {
+        if (speler.equals(wit)) {
+          sleutel = zwart;
+        } else {
+          sleutel = wit;
+        }
+      }
+      int[] statistiek  = getStatistiek(sleutel, items);
+      if (speler.equals(wit)) {
+        statistiek[i]++;
+      } else {
+        statistiek[5 - i]++;
+      }
+      items.put(sleutel, statistiek);
+    }
   }
 }

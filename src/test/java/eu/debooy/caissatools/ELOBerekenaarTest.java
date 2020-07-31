@@ -18,12 +18,12 @@ package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.doosutils.access.Bestand;
-import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
 import eu.debooy.doosutils.test.DoosUtilsTestConstants;
 import eu.debooy.doosutils.test.VangOutEnErr;
 import java.io.File;
+import java.io.IOException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import org.junit.AfterClass;
@@ -41,15 +41,11 @@ public class ELOBerekenaarTest extends BatchTest {
   protected static final  ClassLoader CLASSLOADER =
       ELOBerekenaarTest.class.getClassLoader();
 
-
-  private static String AANTAL150 = "150";
-
-  private static String DATUM1  = "1997.12.20";
-  private static String DATUM2  = "1997.12.31";
-  private static String DATUM3  = "1998.06.13";
-
-  public static final String  BST_COMP_TOT_CSV  = "competitie.totaal.csv";
-  public static final String  BST_COMPH_TOT_CSV = "competitieH.totaal.csv";
+  private static final  String  BST_COMP_TOT_CSV  = "competitie.totaal.csv";
+  private static final  String  BST_COMPH_TOT_CSV = "competitieH.totaal.csv";
+  private static final  String  DATUM1            = "1997.12.20";
+  private static final  String  DATUM2            = "1997.12.31";
+  private static final  String  DATUM3            = "1998.06.13";
 
   @Before
   public void before() {
@@ -73,37 +69,16 @@ public class ELOBerekenaarTest extends BatchTest {
 
   @BeforeClass
   public static void beforeClass() throws BestandException {
-    Locale.setDefault(new Locale("nl"));
+    Locale.setDefault(new Locale(TestConstants.TST_TAAL));
     resourceBundle  = ResourceBundle.getBundle("ApplicatieResources",
                                                Locale.getDefault());
 
-    TekstBestand  bron  = null;
-    TekstBestand  doel  = null;
-    try {
-      bron  = new TekstBestand.Builder().setClassLoader(CLASSLOADER)
-                              .setBestand(TestConstants.BST_COMPETITIE1_PGN)
-                              .build();
-      doel  = new TekstBestand.Builder()
-                              .setBestand(TEMP + File.separator
-                                          + TestConstants.BST_COMPETITIE1_PGN)
-                              .setLezen(false).build();
-      doel.add(bron);
-      bron.close();
-      doel.close();
-      bron  = new TekstBestand.Builder().setClassLoader(CLASSLOADER)
-                              .setBestand(TestConstants.BST_COMPETITIE2_PGN)
-                              .build();
-      doel  = new TekstBestand.Builder()
-                              .setBestand(TEMP + File.separator
-                                          + TestConstants.BST_COMPETITIE2_PGN)
-                              .setLezen(false).build();
-      doel.add(bron);
-    } finally {
-      if (null != bron) {
-        bron.close();
-      }
-      if (null != doel) {
-        doel.close();
+    for (String bestand : new String[] {TestConstants.BST_COMPETITIE1_PGN,
+                                        TestConstants.BST_COMPETITIE2_PGN}) {
+      try {
+        kopieerBestand(CLASSLOADER, bestand, TEMP + File.separator + bestand);
+      } catch (IOException e) {
+        throw new BestandException(e);
       }
     }
   }
@@ -138,7 +113,7 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(15).split(":")[1].trim());
     assertEquals("Met Einddatum 1 - 17", DATUM2,
                  out.get(16).split(":")[1].trim());
-    assertEquals("Met Einddatum 1 - 18", AANTAL150,
+    assertEquals("Met Einddatum 1 - 18", TestConstants.TOT_PARTIJEN,
                  out.get(17).split(":")[1].trim());
     assertEquals("Met Einddatum 1 - 19", "52",
                  out.get(18).split(":")[1].trim());
@@ -168,7 +143,7 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(14).split(":")[1].trim());
     assertEquals("Met Einddatum 2 - 16", DATUM2,
                  out.get(15).split(":")[1].trim());
-    assertEquals("Met Einddatum 2 - 17", AANTAL150,
+    assertEquals("Met Einddatum 2 - 17", TestConstants.TOT_PARTIJEN,
                  out.get(16).split(":")[1].trim());
     assertEquals("Met Einddatum 2 - 18", "0",
                  out.get(17).split(":")[1].trim());
@@ -200,7 +175,7 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(13).split(":")[1].trim());
     assertEquals("Met Einddatum 3 - 15", DATUM1,
                  out.get(14).split(":")[1].trim());
-    assertEquals("Met Einddatum 3 - 16", AANTAL150,
+    assertEquals("Met Einddatum 3 - 16", TestConstants.TOT_PARTIJEN,
                  out.get(15).split(":")[1].trim());
     assertEquals("Met Einddatum 3 - 17", "98",
                  out.get(16).split(":")[1].trim());
@@ -234,9 +209,9 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(14).split(":")[1].trim());
     assertEquals("Met Volledig 1 - 16", CaissaConstants.DEF_STARTDATUM,
                  out.get(15).split(":")[1].trim());
-    assertEquals("Volledig 1 - 17", AANTAL150,
+    assertEquals("Volledig 1 - 17", TestConstants.TOT_PARTIJEN,
                  out.get(16).split(":")[1].trim());
-    assertEquals("Volledig 1 - 18", AANTAL150,
+    assertEquals("Volledig 1 - 18", TestConstants.TOT_PARTIJEN,
                  out.get(17).split(":")[1].trim());
     assertTrue("Volledig 1 - equals",
         Bestand.equals(
@@ -263,7 +238,7 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(13).split(":")[1].trim());
     assertEquals("Volledig 2 - 15", DATUM3,
                  out.get(14).split(":")[1].trim());
-    assertEquals("Volledig 2 - 16", AANTAL150,
+    assertEquals("Volledig 2 - 16", TestConstants.TOT_PARTIJEN,
                  out.get(15).split(":")[1].trim());
     assertEquals("Volledig 2 - 17", "0",
                  out.get(16).split(":")[1].trim());
@@ -302,9 +277,9 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(14).split(":")[1].trim());
     assertEquals("Met Volledig Extra - 16", CaissaConstants.DEF_STARTDATUM,
                  out.get(15).split(":")[1].trim());
-    assertEquals("Volledig Extra - 17", AANTAL150,
+    assertEquals("Volledig Extra - 17", TestConstants.TOT_PARTIJEN,
                  out.get(16).split(":")[1].trim());
-    assertEquals("Volledig Extra - 18", AANTAL150,
+    assertEquals("Volledig Extra - 18", TestConstants.TOT_PARTIJEN,
                  out.get(17).split(":")[1].trim());
     assertTrue("Volledig Extra - equals",
         Bestand.equals(
@@ -336,9 +311,9 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(14).split(":")[1].trim());
     assertEquals("Twee Bestanden 1 - 16", CaissaConstants.DEF_STARTDATUM,
                  out.get(15).split(":")[1].trim());
-    assertEquals("Twee Bestanden 1 - 17", AANTAL150,
+    assertEquals("Twee Bestanden 1 - 17", TestConstants.TOT_PARTIJEN,
                  out.get(16).split(":")[1].trim());
-    assertEquals("Twee Bestanden 1 - 18", AANTAL150,
+    assertEquals("Twee Bestanden 1 - 18", TestConstants.TOT_PARTIJEN,
                  out.get(17).split(":")[1].trim());
     assertTrue("Twee Bestanden 1 - equals",
         Bestand.equals(

@@ -28,10 +28,28 @@ public final class TestConstants {
   public static final String  BST_COMPETITIEH_CSV = "competitieH.csv";
   public static final String  BST_INDEX_HTML      = "index.html";
   public static final String  BST_MATRIX_HTML     = "matrix.html";
+  public static final String  BST_PARTIJ_PGN      = "partij.pgn";
+
+  public static final String  MSG_ERROR_MESSAGES  = "Error mesages";
+
+  public static final String  PAR_BESTAND1          =
+      "--bestand=competitie1";
+  public static final String  PAR_BESTAND2          =
+      "--bestand=competitie2";
+  public static final String  PAR_BESTAND3          =
+      "--bestand=partij.pgn";
+  public static final String  PAR_ENKEL             = "--enkel=N";
 
   public static final String  PAR_INVOERDIR         = "--invoerdir=";
+  public static final String  PAR_MATRIX_OP_STAND   =
+      "--matrixopstand=J";
   public static final String  PAR_SPELERBESTAND     =
       "--spelerBestand=competitie";
   public static final String  PAR_TOERNOOIBESTAND1  =
       "--toernooiBestand=competitie1";
+  public static final String  PAR_UITVOERDIR        = "--uitvoerdir=";
+
+  public static final String  TOT_PARTIJEN  = "150";
+
+  public static final String  TST_TAAL  = "nl";
 }

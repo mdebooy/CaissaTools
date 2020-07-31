@@ -418,14 +418,12 @@ public final class ELOBerekenaar extends Batchjob {
       fouten.add(resourceBundle.getString(CaissaTools.ERR_MAXVERSCHIL));
     }
 
-    String  eindDatum   = CaissaConstants.DEF_EINDDATUM;
-    String  startDatum  = CaissaConstants.DEF_STARTDATUM;
-    if (parameters.containsKey(CaissaTools.PAR_STARTDATUM)) {
-      startDatum  = parameters.get(CaissaTools.PAR_STARTDATUM);
-    }
-    if (parameters.containsKey(CaissaTools.PAR_EINDDATUM)) {
-      eindDatum   = parameters.get(CaissaTools.PAR_EINDDATUM);
-    }
+    String  eindDatum   =
+        DoosUtils.nullToValue(parameters.get(CaissaTools.PAR_EINDDATUM),
+                              CaissaConstants.DEF_EINDDATUM);
+    String  startDatum  =
+        DoosUtils.nullToValue(parameters.get(CaissaTools.PAR_STARTDATUM),
+                              CaissaConstants.DEF_STARTDATUM);
     if (eindDatum.compareTo(startDatum) < 0) {
       fouten.add(
           MessageFormat.format(
