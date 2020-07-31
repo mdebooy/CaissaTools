@@ -43,9 +43,17 @@ public class ELOBerekenaarTest extends BatchTest {
 
   private static final  String  BST_COMP_TOT_CSV  = "competitie.totaal.csv";
   private static final  String  BST_COMPH_TOT_CSV = "competitieH.totaal.csv";
+  private static final  String  BST_COMP_CSV      = "competitie.1997.12.31.csv";
+  private static final  String  BST_COMPH_CSV     =
+      "competitieH.1997.12.31.csv";
+  private static final  String  BST_COMPD_CSV     = "competitie.dubbel.csv";
+  private static final  String  BST_COMPHD_CSV    = "competitieH.dubbel.csv";
   private static final  String  DATUM1            = "1997.12.20";
   private static final  String  DATUM2            = "1997.12.31";
   private static final  String  DATUM3            = "1998.06.13";
+
+  private static final  String  PAR_EINDDATUM = "--eindDatum=1997.12.31";
+  private static final  String  PAR_EXTRAINFO = "--extraInfo=J";
 
   @Before
   public void before() {
@@ -99,7 +107,7 @@ public class ELOBerekenaarTest extends BatchTest {
     String[]  args      = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
                                         TestConstants.PAR_SPELERBESTAND,
                                         TestConstants.PAR_INVOERDIR + TEMP,
-                                        "--eindDatum=1997.12.31"};
+                                        PAR_EINDDATUM};
 
     VangOutEnErr.execute(ELOBerekenaar.class,
                          DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
@@ -120,13 +128,13 @@ public class ELOBerekenaarTest extends BatchTest {
     assertTrue("Met Einddatum 1 - equals",
         Bestand.equals(
             Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      "competitie.1997.12.31.csv"),
+                                      BST_COMP_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
     assertTrue("Met Einddatum 1 - H equals",
         Bestand.equals(
             Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      "competitieH.1997.12.31.csv"),
+                                      BST_COMPH_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIEH_CSV)));
 
@@ -150,7 +158,7 @@ public class ELOBerekenaarTest extends BatchTest {
     assertTrue("Met Einddatum 2 - equals",
         Bestand.equals(
             Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      "competitie.1997.12.31.csv"),
+                                      BST_COMP_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
     assertTrue("Met Einddatum 2 - H equals",
@@ -158,7 +166,7 @@ public class ELOBerekenaarTest extends BatchTest {
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIEH_CSV),
             Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      "competitieH.1997.12.31.csv")));
+                                      BST_COMPH_CSV)));
 
     after();
 
@@ -258,7 +266,7 @@ public class ELOBerekenaarTest extends BatchTest {
 
   @Test
   public void testVolledigBestandExtra() throws BestandException {
-    String[]  args      = new String[] {"--extraInfo=J",
+    String[]  args      = new String[] {PAR_EXTRAINFO,
                                         TestConstants.PAR_TOERNOOIBESTAND1,
                                         TestConstants.PAR_SPELERBESTAND,
                                         TestConstants.PAR_INVOERDIR + TEMP};
@@ -330,7 +338,7 @@ public class ELOBerekenaarTest extends BatchTest {
 
     after();
 
-    args      = new String[] {"--toernooiBestand=competitie2",
+    args      = new String[] {TestConstants.PAR_TOERNOOIBESTAND2,
                               TestConstants.PAR_SPELERBESTAND,
                               TestConstants.PAR_INVOERDIR + TEMP};
 
@@ -353,12 +361,12 @@ public class ELOBerekenaarTest extends BatchTest {
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV),
             Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      "competitie.dubbel.csv")));
+                                      BST_COMPD_CSV)));
     assertTrue("Volledig 2 - H equals",
         Bestand.equals(
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIEH_CSV),
             Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      "competitieH.dubbel.csv")));
+                                      BST_COMPHD_CSV)));
   }
 }

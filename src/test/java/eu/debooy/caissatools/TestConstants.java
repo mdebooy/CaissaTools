@@ -47,6 +47,8 @@ public final class TestConstants {
       "--spelerBestand=competitie";
   public static final String  PAR_TOERNOOIBESTAND1  =
       "--toernooiBestand=competitie1";
+  public static final String  PAR_TOERNOOIBESTAND2  =
+      "--toernooiBestand=competitie2";
   public static final String  PAR_UITVOERDIR        = "--uitvoerdir=";
 
   public static final String  TOT_PARTIJEN  = "150";
