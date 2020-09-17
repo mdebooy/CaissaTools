@@ -1,5 +1,5 @@
 /**
- * Copyright 2012 Marco de Booij
+ * Copyright (c) 2012 Marco de Booij
  *
  * Licensed under the EUPL, Version 1.1 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
@@ -468,7 +468,6 @@ public final class ELOBerekenaar extends Batchjob {
           String  datum       = partij.getTag(CaissaConstants.PGNTAG_DATE);
           if (startDatum.compareTo(datum) <= 0
               && eindDatum.compareTo(datum) >= 0) {
-            verwerkt++;
             String  wit       = partij.getTag(CaissaConstants.PGNTAG_WHITE);
             String  zwart     = partij.getTag(CaissaConstants.PGNTAG_BLACK);
             String  resultaat = partij.getTag(CaissaConstants.PGNTAG_RESULT);
@@ -484,6 +483,7 @@ public final class ELOBerekenaar extends Batchjob {
               eloDatum  = null;
             }
             if (uitslag < 3) {
+              verwerkt++;
               if (!spelers.containsKey(wit)) {
                 voegSpelerToe(wit, spelers, spelerinfos, eloDatum, startElo);
               }
@@ -498,18 +498,20 @@ public final class ELOBerekenaar extends Batchjob {
               pasSpelerAan(zwartId, spelerinfos, eloDatum, witElo, 2 - uitslag);
               if (null != geschiedenis) {
                 if (extraInfo) {
-                geschiedenis.write(wit, datum,
-                                  spelerinfos.get(witId).getElo(),
-                                  spelerinfos.get(witId).getPartijen(),
-                                  spelerinfos.get(witId).getElo() - witElo,
-                                  zwart,
-                                  partij.getTag(CaissaConstants.PGNTAG_EVENT));
-                geschiedenis.write(zwart, datum,
-                                   spelerinfos.get(zwartId).getElo(),
-                                   spelerinfos.get(zwartId).getPartijen(),
-                                   spelerinfos.get(zwartId)
-                                              .getElo() - zwartElo, wit,
-                                   partij.getTag(CaissaConstants.PGNTAG_EVENT));
+                  geschiedenis.write(wit, datum,
+                                     spelerinfos.get(witId).getElo(),
+                                     spelerinfos.get(witId).getPartijen(),
+                                     spelerinfos.get(witId).getElo() - witElo,
+                                     zwart,
+                                     partij
+                                        .getTag(CaissaConstants.PGNTAG_EVENT));
+                  geschiedenis.write(zwart, datum,
+                                     spelerinfos.get(zwartId).getElo(),
+                                     spelerinfos.get(zwartId).getPartijen(),
+                                     spelerinfos.get(zwartId)
+                                                .getElo() - zwartElo, wit,
+                                     partij
+                                        .getTag(CaissaConstants.PGNTAG_EVENT));
                 } else {
                   geschiedenis.write(wit, datum,
                                      spelerinfos.get(witId).getElo(),
