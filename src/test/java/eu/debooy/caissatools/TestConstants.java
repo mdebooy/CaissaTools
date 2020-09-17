@@ -1,5 +1,5 @@
 /**
- * Copyright 2020 Marco de Booij
+ * Copyright (c) 2020 Marco de Booij
  *
  * Licensed under the EUPL, Version 1.2 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
@@ -18,7 +18,6 @@ package eu.debooy.caissatools;
 
 
 /**
- *
  * @author Marco de Booij
  */
 public final class TestConstants {
@@ -54,4 +53,8 @@ public final class TestConstants {
   public static final String  TOT_PARTIJEN  = "150";
 
   public static final String  TST_TAAL  = "nl";
+
+  private TestConstants() {
+    throw new IllegalStateException("Utility class");
+  }
 }
