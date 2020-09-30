@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 Marco de Booij
+ * Copyright (c) 2018 Marco de Booij
  *
  * Licensed under the EUPL, Version 1.1 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
@@ -76,7 +76,8 @@ public final class PgnCleaner extends Batchjob {
     String          invoer      = parameters.get(PAR_INVOERDIR)
                                   + parameters.get(CaissaTools.PAR_BESTAND);
     String          uitvoer     = parameters.get(PAR_UITVOERDIR)
-                                  + parameters.get(CaissaTools.PAR_UITVOER);
+                                  + parameters.get(CaissaTools.PAR_UITVOER)
+                                  + EXT_PGN;
     int             noPartijen  = 0;
     Collection<PGN> partijen;
     try {
