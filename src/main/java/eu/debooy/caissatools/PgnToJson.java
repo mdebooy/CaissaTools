@@ -1,5 +1,5 @@
 /**
- * Copyright 2017 Marco de Booij
+ * Copyright (c) 2017 Marco de Booij
  *
  * Licensed under the EUPL, Version 1.1 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
@@ -116,6 +116,8 @@ public final class PgnToJson extends Batchjob {
         parameters.get(CaissaTools.PAR_METFEN).equals(DoosConstants.WAAR);
     boolean   metTrajecten  =
         parameters.get(CaissaTools.PAR_METTRAJECTEN).equals(DoosConstants.WAAR);
+    boolean   metPgnviewer  =
+        parameters.get(CaissaTools.PAR_METPGNVIEWER).equals(DoosConstants.WAAR);
     voorNico                =
         parameters.get(CaissaTools.PAR_VOORNICO).equals(DoosConstants.WAAR);
 
@@ -194,6 +196,11 @@ public final class PgnToJson extends Batchjob {
           partij.put("_gamekey", "" + partijnr);
           for (Map.Entry<String, String> tag : pgn.getTags().entrySet()) {
             partij.put(tag.getKey(), tag.getValue());
+          }
+          partij.put("_moves", pgn.getZetten());
+          if (metPgnviewer) {
+            partij.put("_pgnviewer",
+                       CaissaUtils.pgnZettenToChessTheatre(pgn.getZetten()));
           }
           String zuivereZetten  = pgn.getZuivereZetten();
           if (DoosUtils.isNotBlankOrNull(zuivereZetten)) {
@@ -305,6 +312,8 @@ public final class PgnToJson extends Batchjob {
                          resourceBundle.getString("help.json"), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_METFEN, 13),
                          resourceBundle.getString("help.metfen"), 80);
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_METPGNVIEWER, 13),
+                         resourceBundle.getString("help.metpgnviewer"), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_METTRAJECTEN, 13),
                          resourceBundle.getString("help.mettrajecten"), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_NAARTAAL, 13),
@@ -337,6 +346,7 @@ public final class PgnToJson extends Batchjob {
                                           PAR_INVOERDIR,
                                           CaissaTools.PAR_JSON,
                                           CaissaTools.PAR_METFEN,
+                                          CaissaTools.PAR_METPGNVIEWER,
                                           CaissaTools.PAR_METTRAJECTEN,
                                           CaissaTools.PAR_NAARTAAL,
                                           PAR_UITVOERDIR,
@@ -362,6 +372,9 @@ public final class PgnToJson extends Batchjob {
     }
     setParameter(CaissaTools.PAR_METFEN,
                  arguments.hasArgument(CaissaTools.PAR_METFEN)
+                     ? DoosConstants.WAAR : DoosConstants.ONWAAR);
+    setParameter(CaissaTools.PAR_METPGNVIEWER,
+                 arguments.hasArgument(CaissaTools.PAR_METPGNVIEWER)
                      ? DoosConstants.WAAR : DoosConstants.ONWAAR);
     setParameter(CaissaTools.PAR_METTRAJECTEN,
                  arguments.hasArgument(CaissaTools.PAR_METTRAJECTEN)

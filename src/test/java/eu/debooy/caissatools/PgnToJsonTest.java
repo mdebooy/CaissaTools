@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 Marco de Booij
+ * Copyright (c) 2018 Marco de Booij
  *
  * Licensed under the EUPL, Version 1.1 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
@@ -158,7 +158,7 @@ public class PgnToJsonTest extends BatchTest {
     VangOutEnErr.execute(PgnToJson.class,
                          DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 36, out.size());
+    assertEquals("Zonder parameters - helptekst", 37, out.size());
     assertEquals("Zonder parameters - fouten", 1, err.size());
   }
 
