@@ -41,6 +41,8 @@ import java.util.Locale;
 import java.util.Map;
 import java.util.Properties;
 import java.util.ResourceBundle;
+import java.util.Set;
+import java.util.TreeSet;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Transport;
@@ -64,6 +66,7 @@ public class StartCorrespondentie extends Batchjob {
     }
 
     String            date          = parameters.get(CaissaTools.PAR_DATE);
+    String            datum         = getDatum(date);
     String            event         = parameters.get(CaissaTools.PAR_EVENT);
     String            invoer        = parameters.get(PAR_INVOERDIR)
                                       + parameters.get(CaissaTools.PAR_BESTAND)
@@ -73,62 +76,22 @@ public class StartCorrespondentie extends Batchjob {
     List<String>      nieuwespelers = new ArrayList<>();
     String            site          = parameters.get(CaissaTools.PAR_SITE);
     List<Spelerinfo>  spelers       = new ArrayList<>();
-    String            subject       = "Start " + event;
-    String datum;
-    try {
-      datum  = Datum.fromDate(Datum.toDate(date,
-                                           CaissaConstants.PGN_DATUM_FORMAAT),
-                              DoosConstants.DATUM);
-    } catch (ParseException e) {
-      datum = date;
-    }
+    String            subject       = leesBericht(email);
+
+    initEmailparams(emailparams, 10);
+
     emailparams.add(0, event);
     emailparams.add(1, site);
     emailparams.add(2, datum);
-    for (int i = 3; i < 11; i++) {
-      emailparams.add(i, "");
-    }
-    if (parameters.containsKey(CaissaTools.PAR_BERICHT)) {
-      String  bericht = parameters.get(CaissaTools.PAR_BERICHT);
-      if (!bericht.contains(File.separator)) {
-        bericht = parameters.get(PAR_UITVOERDIR) + bericht;
-      }
-      TekstBestand  message = null;
-      try {
-        message  = new TekstBestand.Builder()
-                                .setBestand(bericht)
-                                .setCharset(parameters.get(PAR_CHARSETIN))
-                                .build();
-        if (message.hasNext()) {
-          subject = message.next();
-        }
-        while (message.hasNext()) {
-          email.add(message.next());
-        }
-      } catch (BestandException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-        subject = "Start " + event;
-        email.add(resourceBundle.getString(CaissaTools.MSG_STARTTOERNOOI));
-      } finally {
-        try {
-          if (message != null) {
-            message.close();
-          }
-        } catch (BestandException e) {
-          DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-        }
-      }
-    } else {
-      email.add(resourceBundle.getString(CaissaTools.MSG_STARTTOERNOOI));
-    }
+
     if (parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)) {
       nieuwespelers.addAll(
-              Arrays.asList(parameters.get(CaissaTools.PAR_NIEUWESPELERS)
-                                      .split(";")));
+          Arrays.asList(parameters.get(CaissaTools.PAR_NIEUWESPELERS)
+                                  .split(";")));
     }
-    String            uitvoer = parameters.get(PAR_UITVOERDIR)
-                                + parameters.get(CaissaTools.PAR_BESTAND)
-                                + EXT_PGN;
+
+    String  uitvoer = parameters.get(PAR_UITVOERDIR)
+                      + parameters.get(CaissaTools.PAR_BESTAND) + EXT_PGN;
 
     leesSpelers(invoer, spelers);
     int       noSpelers = spelers.size();
@@ -138,28 +101,13 @@ public class StartCorrespondentie extends Batchjob {
     if (parameters.containsKey(CaissaTools.PAR_SMTPSERVER)) {
       if (parameters.get(CaissaTools.PAR_PERPARTIJ)
                     .equals(DoosConstants.WAAR)) {
-        for (String ronde : rondes) {
-          String[]  partijen  = ronde.split(" ");
-          for (String partij : partijen) {
-            String[] speler = partij.split("-");
-            int wit   = Integer.valueOf(speler[0])-1;
-            int zwart = Integer.valueOf(speler[1])-1;
-            if (wit < noSpelers
-                && zwart < noSpelers) {
-              Spelerinfo  witspeler   = spelers.get(wit);
-              Spelerinfo  zwartspeler = spelers.get(zwart);
-              if ((!parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)
-                  || nieuwespelers.contains(witspeler.getNaam())
-                  || nieuwespelers.contains(zwartspeler.getNaam()))) {
-                stuurEmail(witspeler, zwartspeler, spelers, rondes, subject,
-                           email, emailparams, getSession());
-            }
-            }
-          }
-        }
+        stuurPerPartij(spelers, rondes, nieuwespelers,
+                       subject, email, emailparams);
       } else {
-        stuurEmail(spelers, rondes, subject, email, emailparams, getSession());
+        stuurPerSpeler(spelers, rondes, nieuwespelers,
+                       subject, email, emailparams);
       }
+      DoosUtils.naarScherm();
     }
 
     DoosUtils.naarScherm(
@@ -184,6 +132,19 @@ public class StartCorrespondentie extends Batchjob {
 
   private static String formatLijn(String lijn, List<String> params) {
     return MessageFormat.format(lijn, params.toArray());
+  }
+
+  private static String getDatum(String date) {
+    String  datum;
+    try {
+      datum  = Datum.fromDate(Datum.toDate(date,
+                                           CaissaConstants.PGN_DATUM_FORMAAT),
+                              DoosConstants.DATUM);
+    } catch (ParseException e) {
+      datum = date;
+    }
+
+    return datum;
   }
 
   private static Session getSession() {
@@ -256,6 +217,51 @@ public class StartCorrespondentie extends Batchjob {
             CaissaTools.PAR_EVENT, CaissaTools.PAR_SITE),
             80);
     DoosUtils.naarScherm();
+  }
+
+  private static void initEmailparams(List<String> emailparams, int params) {
+    for (int i = 0; i < params; i++) {
+      emailparams.add(i, "");
+    }
+  }
+
+  private static String leesBericht(List<String> email) {
+    String  subject = "Start " + parameters.get(CaissaTools.PAR_EVENT);
+    if (parameters.containsKey(CaissaTools.PAR_BERICHT)) {
+      String  bericht = parameters.get(CaissaTools.PAR_BERICHT);
+      if (!bericht.contains(File.separator)) {
+        bericht = parameters.get(PAR_UITVOERDIR) + bericht;
+      }
+      TekstBestand  message = null;
+      try {
+        message  = new TekstBestand.Builder()
+                                .setBestand(bericht)
+                                .setCharset(parameters.get(PAR_CHARSETIN))
+                                .build();
+        if (message.hasNext()) {
+          subject = message.next();
+        }
+        while (message.hasNext()) {
+          email.add(message.next());
+        }
+      } catch (BestandException e) {
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+        subject = "Start " + parameters.get(CaissaTools.PAR_EVENT);
+        email.add(resourceBundle.getString(CaissaTools.MSG_STARTTOERNOOI));
+      } finally {
+        try {
+          if (message != null) {
+            message.close();
+          }
+        } catch (BestandException e) {
+          DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+        }
+      }
+    } else {
+      email.add(resourceBundle.getString(CaissaTools.MSG_STARTTOERNOOI));
+    }
+
+    return subject;
   }
 
   private static void leesSpelers(String invoer, List<Spelerinfo> spelers) {
@@ -457,14 +463,18 @@ public class StartCorrespondentie extends Batchjob {
   private static String maakMessageSpelers(String template,
                                            List<Spelerinfo> spelers,
                                            List<String> emailparams) {
-    StringBuilder resultaat = new StringBuilder();
+    StringBuilder   resultaat   = new StringBuilder();
+
+    Set<Spelerinfo> gesorteerd  =
+        new TreeSet<>(new Spelerinfo.byNaamComparator());
+    gesorteerd.addAll(spelers);
 
     emailparams.set(7,  "");
     emailparams.set(8,  "");
     emailparams.set(9,  "");
     emailparams.set(10, "");
 
-    for (Spelerinfo speler : spelers) {
+    for (Spelerinfo speler : gesorteerd) {
       emailparams.set(3,  speler.getVoornaam());
       emailparams.set(4,  speler.getNaam());
       emailparams.set(5,  speler.getAlias());
@@ -655,10 +665,56 @@ public class StartCorrespondentie extends Batchjob {
     return false;
   }
 
-  private static void stuurEmail(List<Spelerinfo> spelers, String[] rondes,
-                                 String subject, List<String> email,
-                                 List<String> emailparams, Session session ) {
-    for (Spelerinfo speler : spelers) {
+  private static void stuurPerPartij(List<Spelerinfo> spelers, String[] rondes,
+                                     List<String> nieuwespelers, String subject,
+                                     List<String> email,
+                                     List<String> emailparams) {
+    int     noSpelers = spelers.size();
+    Session session   = getSession();
+    for (String ronde : rondes) {
+      String[]  partijen  = ronde.split(" ");
+      for (String partij : partijen) {
+        String[] speler = partij.split("-");
+        int wit   = Integer.valueOf(speler[0])-1;
+        int zwart = Integer.valueOf(speler[1])-1;
+        if (wit < noSpelers
+            && zwart < noSpelers) {
+          Spelerinfo  witspeler   = spelers.get(wit);
+          Spelerinfo  zwartspeler = spelers.get(zwart);
+          if ((!parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)
+              || nieuwespelers.contains(witspeler.getNaam())
+              || nieuwespelers.contains(zwartspeler.getNaam()))) {
+            MailData  maildata  = new MailData();
+            maildata.addTo(zwartspeler.getEmail());
+            maildata.addCc(witspeler.getEmail());
+            maildata.setFrom(parameters.get(CaissaTools.PAR_TSEMAIL));
+            maildata.setSubject(formatLijn(subject, emailparams));
+            emailparams.set(3,  zwartspeler.getVoornaam());
+            emailparams.set(4,  zwartspeler.getNaam());
+            emailparams.set(5,  zwartspeler.getAlias());
+            emailparams.set(6,  zwartspeler.getEmail());
+            emailparams.set(7,  witspeler.getVoornaam());
+            emailparams.set(8,  witspeler.getNaam());
+            emailparams.set(9,  witspeler.getAlias());
+            emailparams.set(10, witspeler.getEmail());
+            maildata.setMessage(maakMessage(email, emailparams, spelers, rondes));
+            System.out.println(
+                MessageFormat.format(resourceBundle.getString("label.email"),
+                                     zwartspeler.getNaam(),
+                                     witspeler.getNaam()));
+            sendEmail(maildata, session);
+          }
+        }
+      }
+    }
+  }
+
+  private static void stuurPerSpeler(List<Spelerinfo> spelers, String[] rondes,
+                                     List<String> nieuwespelers, String subject,
+                                     List<String> email,
+                                     List<String> emailparams) {
+    Session session = getSession();
+    spelers.forEach(speler -> {
       MailData  maildata  = new MailData();
       maildata.addTo(speler.getEmail());
       maildata.setFrom(parameters.get(CaissaTools.PAR_TSEMAIL));
@@ -673,33 +729,9 @@ public class StartCorrespondentie extends Batchjob {
       emailparams.set(10, "");
       maildata.setMessage(maakMessage(email, emailparams, spelers, rondes));
       System.out.println(
-          MessageFormat.format(resourceBundle.getString("label.email"),
-                               speler.getNaam(), "-"));
+              MessageFormat.format(resourceBundle.getString("label.email"),
+                      speler.getNaam(), "-"));
       sendEmail(maildata, session);
-    }
-  }
-
-  private static void stuurEmail(Spelerinfo wit, Spelerinfo zwart,
-                                 List<Spelerinfo> spelers, String[] rondes,
-                                 String subject, List<String> email,
-                                 List<String> emailparams, Session session ) {
-    MailData  maildata  = new MailData();
-    maildata.addTo(zwart.getEmail());
-    maildata.addCc(wit.getEmail());
-    maildata.setFrom(parameters.get(CaissaTools.PAR_TSEMAIL));
-    maildata.setSubject(formatLijn(subject, emailparams));
-    emailparams.set(3,  zwart.getVoornaam());
-    emailparams.set(4,  zwart.getNaam());
-    emailparams.set(5,  zwart.getAlias());
-    emailparams.set(6,  zwart.getEmail());
-    emailparams.set(7,  wit.getVoornaam());
-    emailparams.set(8,  wit.getNaam());
-    emailparams.set(9,  wit.getAlias());
-    emailparams.set(10, wit.getEmail());
-    maildata.setMessage(maakMessage(email, emailparams, spelers, rondes));
-    System.out.println(
-        MessageFormat.format(resourceBundle.getString("label.email"),
-                             zwart.getNaam(), wit.getNaam()));
-    sendEmail(maildata, session);
+    });
   }
 }
