@@ -39,10 +39,13 @@ public final class CaissaTools {
   public static final String  ERR_MAXVERSCHIL       = "error.maxverschil";
   public static final String  ERR_TALENGELIJK       = "error.talen.gelijk";
   public static final String  ERR_TEMPLATE          = "error.template";
+  public static final String  ERR_TSEMAIL           = "error.tsemail";
 
   public static final String  MSG_NIEUWBESTAND  = "message.nieuwbestand";
+  public static final String  MSG_STARTTOERNOOI = "message.starttoernooi";
 
   public static final String  PAR_AUTEUR              = "auteur";
+  public static final String  PAR_BERICHT             = "bericht";
   public static final String  PAR_BESTAND             = "bestand";
   public static final String  PAR_CHARSETIN           = "charsetin";
   public static final String  PAR_CHARSETUIT          = "charsetuit";
@@ -69,8 +72,12 @@ public final class CaissaTools {
   public static final String  PAR_METTRAJECTEN        = "metTrajecten";
   public static final String  PAR_MINPARTIJEN         = "minPartijen";
   public static final String  PAR_NAARTAAL            = "naartaal";
+  public static final String  PAR_NIEUWESPELERS       = "nieuweSpelers";
+  public static final String  PAR_PERPARTIJ           = "perPartij";
   public static final String  PAR_PGN                 = "pgn";
   public static final String  PAR_SITE                = "site";
+  public static final String  PAR_SMTPPOORT           = "smtppoort";
+  public static final String  PAR_SMTPSERVER          = "smtpserver";
   public static final String  PAR_SPELER              = "speler";
   public static final String  PAR_SPELERBESTAND       = "spelerBestand";
   public static final String  PAR_SPELERS             = "spelers";
@@ -80,6 +87,7 @@ public final class CaissaTools {
   public static final String  PAR_TEMPLATE            = "template";
   public static final String  PAR_TITEL               = "titel";
   public static final String  PAR_TOERNOOIBESTAND     = "toernooiBestand";
+  public static final String  PAR_TSEMAIL             = "tsemail";
   public static final String  PAR_UITVOER             = "uitvoer";
   public static final String  PAR_VANTAAL             = "vantaal";
   public static final String  PAR_VASTEKFACTOR        = "vasteKfactor";
@@ -134,6 +142,10 @@ public final class CaissaTools {
       SpelerStatistiek.execute(commandoArgs);
       return;
     }
+    if ("startcorrespondentie".equalsIgnoreCase(commando)) {
+      StartCorrespondentie.execute(commandoArgs);
+      return;
+    }
     if ("startpgn".equalsIgnoreCase(commando)) {
       StartPgn.execute(commandoArgs);
       return;
@@ -148,23 +160,26 @@ public final class CaissaTools {
   }
 
   private static void help() {
-    DoosUtils.naarScherm("  ChessTheatre     ",
+    DoosUtils.naarScherm("  ChessTheatre         ",
                          resourceBundle.getString("help.chesstheatre"), 80);
-    DoosUtils.naarScherm("  ELOBerekenaar    ",
+    DoosUtils.naarScherm("  ELOBerekenaar        ",
                          resourceBundle.getString("help.eloberekenaar"), 80);
-    DoosUtils.naarScherm("  PgnCleaner       ",
+    DoosUtils.naarScherm("  PgnCleaner           ",
                          resourceBundle.getString("help.pgncleaner"), 80);
-    DoosUtils.naarScherm("  PgnToHtml        ",
+    DoosUtils.naarScherm("  PgnToHtml            ",
                          resourceBundle.getString("help.pgntohtml"), 80);
-    DoosUtils.naarScherm("  PgnToJson        ",
+    DoosUtils.naarScherm("  PgnToJson            ",
                          resourceBundle.getString("help.pgntojson"), 80);
-    DoosUtils.naarScherm("  PgnToLatex       ",
+    DoosUtils.naarScherm("  PgnToLatex           ",
                          resourceBundle.getString("help.pgntolatex"), 80);
-    DoosUtils.naarScherm("  StartPgn         ",
+    DoosUtils.naarScherm("  StartCorrespondentie ",
+                         resourceBundle.getString("help.startcorrespondentie"),
+                         80);
+    DoosUtils.naarScherm("  StartPgn             ",
                          resourceBundle.getString("help.startpgn"), 80);
-    DoosUtils.naarScherm("  SpelerStatistiek ",
+    DoosUtils.naarScherm("  SpelerStatistiek     ",
                          resourceBundle.getString("help.spelerstatistiek"), 80);
-    DoosUtils.naarScherm("  VertaalPgn       ",
+    DoosUtils.naarScherm("  VertaalPgn           ",
                          resourceBundle.getString("help.vertaalpgn"), 80);
     DoosUtils.naarScherm("");
     ChessTheatre.help();
@@ -178,6 +193,8 @@ public final class CaissaTools {
     PgnToJson.help();
     DoosUtils.naarScherm("");
     PgnToLatex.help();
+    DoosUtils.naarScherm("");
+    StartCorrespondentie.help();
     DoosUtils.naarScherm("");
     StartPgn.help();
     DoosUtils.naarScherm("");
