@@ -1,5 +1,5 @@
 /**
- * Copyright 2008 Marco de Booij
+ * Copyright (c) 2008 Marco de Booij
  *
  * Licensed under the EUPL, Version 1.0 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
@@ -49,23 +49,75 @@ import java.util.Set;
  * @author Marco de Booij
  */
 public final class PgnToHtml extends Batchjob {
-  public static final String  HTML_TABLE_COLGROUP       = "table.colgroup.";
-  public static final String  HTML_TABLE_COLGROUP_BEGIN =
+  public static final String  HTML_LEGENDA                = "table.legenda.";
+  public static final String  HTML_TABLE_BEGIN            = "table.begin.";
+  public static final String  HTML_TABLE_BODY             = "table.body.";
+  public static final String  HTML_TABLE_BODY_BEGIN       = "table.body.begin.";
+  public static final String  HTML_TABLE_BODY_EIND        = "table.body.eind.";
+  public static final String  HTML_TABLE_BODY_FOOTER      =
+      "table.body.footer.";
+  public static final String  HTML_TABLE_COLGROUP         = "table.colgroup.";
+  public static final String  HTML_TABLE_COLGROUP_BEGIN   =
       "table.colgroup.begin.";
-  public static final String  HTML_TABLE_COLGROUP_EIND  =
+  public static final String  HTML_TABLE_COLGROUP_DUBBEL  =
+      "table.colgroup.dubbel.";
+  public static final String  HTML_TABLE_COLGROUP_EIND    =
       "table.colgroup.eind.";
-  public static final String  HTML_TABLE_HEAD_BEGIN     = "table.head.begin.";
-  public static final String  HTML_TABLE_HEAD_EIND      = "table.head.eind.";
-  public static final String  HTML_TABLE_HEAD_PUNTEN    = "table.head.punten";
-  public static final String  HTML_TABLE_HEAD_PARTIJEN  = "table.head.partijen";
-  public static final String  HTML_TABLE_HEAD_SB        = "table.head.sb";
+  public static final String  HTML_TABLE_COLGROUP_ENKEL   =
+      "table.colgroup.enkel.";
+  public static final String  HTML_TABLE_EIND             = "table.eind.";
+  public static final String  HTML_TABLE_HEAD             = "table.head.";
+  public static final String  HTML_TABLE_HEAD_BEGIN       = "table.head.begin.";
+  public static final String  HTML_TABLE_HEAD_BEGIN_M     = "table.head.begin";
+  public static final String  HTML_TABLE_HEAD_DUBBEL      = "table.head.dubbel";
+  public static final String  HTML_TABLE_HEAD_DUBBEL2     =
+      "table.head.dubbel2";
+  public static final String  HTML_TABLE_HEAD_EIND        = "table.head.eind.";
+  public static final String  HTML_TABLE_HEAD_ENKEL       = "table.head.enkel";
+  public static final String  HTML_TABLE_HEAD_NAAM        = "table.head.naam";
+  public static final String  HTML_TABLE_HEAD_NR          = "table.head.nr";
+  public static final String  HTML_TABLE_HEAD_PARTIJEN    =
+      "table.head.partijen";
+  public static final String  HTML_TABLE_HEAD_PUNTEN      = "table.head.punten";
+  public static final String  HTML_TABLE_HEAD_SB          = "table.head.sb";
+  public static final String  HTML_TABLE_ROW_BEGIN        = "table.row.begin";
+  public static final String  HTML_TABLE_ROW_EIND         = "table.row.eind";
+  public static final String  HTML_TABLE_ROW_NAAM         = "table.row.naam";
+  public static final String  HTML_TABLE_ROW_NR           = "table.row.nr";
+  public static final String  HTML_TABLE_ROW_PARTIJEN     =
+      "table.row.partijen";
+  public static final String  HTML_TABLE_ROW_PUNTEN       = "table.row.punten";
+  public static final String  HTML_TABLE_ROW_SB           = "table.row.sb";
+  public static final String  HTML_TABLE_ROW_WIT          = "table.row.wit";
+  public static final String  HTML_TABLE_ROW_ZELF         = "table.row.zelf";
+  public static final String  HTML_TABLE_ROW_ZWART        = "table.row.zwart";
 
-  public static final String  PROP_INDENT               = "indent";
+  public static final String  TAG_NAAM      = "tag.naam";
+  public static final String  TAG_NUMMER    = "tag.nummer";
+  public static final String  TAG_PARTIJEN  = "tag.partijen";
+  public static final String  TAG_PUNTEN    = "tag.punten";
+  public static final String  TAG_SB        = "tag.sb";
+  public static final String  TAG_WIT       = "tag.wit";
+  public static final String  TAG_ZWART     = "tag.zwart";
 
-  private static  ResourceBundle  resourceBundle  =
+  public static final String  PROP_INDENT = "indent";
+
+  private static  final ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
+  private static  TekstBestand  output;
+  private static  String        prefix  = "";
+  private static  Properties    skelet;
+
   private PgnToHtml() {}
+
+  public static void  main(String[] args) {
+    String[]  params  = new String[] {"--bestand=partijen.pgn",
+                                      "--enkel=N",
+                                      "--invoerdir=/homes/booymar/Schaken/Clubs en Organisaties/De Brug/Seizoen 2017-2018",
+                                      "--uitvoerdir=/homes/booymar/Downloads"};
+    execute(params);
+  }
 
   public static void execute(String[] args) {
     Set<String>   spelers     = new HashSet<>();
@@ -150,13 +202,10 @@ public final class PgnToHtml extends Batchjob {
                                   matrixOpStand, CaissaConstants.TIEBREAK_SB);
 
     // Maak het matrix.html bestand.
-    maakMatrix(punten, uitvoerdir + "matrix.html",
-               parameters.get(PAR_CHARSETUIT), matrix, enkel, noSpelers,
-               kolommen);
+    maakMatrix(punten, matrix, enkel, noSpelers, kolommen);
 
     // Maak de index.html file
-    maakIndex(punten, uitvoerdir + "index.html", parameters.get(PAR_CHARSETUIT),
-              noSpelers);
+    maakIndex(punten, noSpelers);
 
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.bestand"),
@@ -203,68 +252,54 @@ public final class PgnToHtml extends Batchjob {
     DoosUtils.naarScherm();
   }
 
-  private static void maakIndex(Spelerinfo[] punten, String bestand,
-                                String charsetUit, int noSpelers) {
+  private static void maakIndex(Spelerinfo[] punten, int noSpelers) {
     Arrays.sort(punten);
-    TekstBestand  output    = null;
-    Properties    props     = new Properties();
-    StringBuilder prefix    = new StringBuilder();
     try {
-      output    = new TekstBestand.Builder().setBestand(bestand)
-                                            .setCharset(charsetUit)
-                                            .setLezen(false).build();
-      props.load(PgnToHtml.class.getClassLoader()
-                          .getResourceAsStream("index.properties"));
+      output    = new TekstBestand.Builder()
+                                  .setBestand(parameters.get(PAR_UITVOERDIR)
+                                              + "index.html")
+                                  .setCharset(parameters.get(PAR_CHARSETUIT))
+                                  .setLezen(false).build();
+      skelet.load(PgnToHtml.class.getClassLoader()
+                           .getResourceAsStream("index.properties"));
 
-      if (props.containsKey(PROP_INDENT)) {
-        int indent = Integer.valueOf(props.getProperty(PROP_INDENT));
-        while (prefix.length() < indent) {
-          prefix.append(" ");
-        }
+      if (skelet.containsKey(PROP_INDENT)) {
+        prefix  = DoosUtils.stringMetLengte("",
+            Integer.valueOf(skelet.getProperty(PROP_INDENT)));
+      } else {
+        prefix  = "";
       }
 
       // Start de tabel
-      output.write(prefix + props.getProperty("table.begin"));
+      schrijfUitvoer(HTML_TABLE_BEGIN);
       // De colgroup
-      int k = 1;
-      while (props.containsKey(HTML_TABLE_COLGROUP + k)) {
-        output.write(prefix + props.getProperty(HTML_TABLE_COLGROUP + k));
-        k++;
-      }
+      schrijfUitvoer(HTML_TABLE_COLGROUP);
       // De thead
-      k = 1;
-      while (props.containsKey(HTML_TABLE_HEAD_BEGIN + k)) {
-        output.write(prefix + props.getProperty(HTML_TABLE_HEAD_BEGIN + k));
-        k++;
-      }
+      schrijfUitvoer(HTML_TABLE_HEAD_BEGIN);
       output.write(prefix
-          + MessageFormat.format(props.getProperty("table.head.nr"),
-                                 resourceBundle.getString("tag.nummer")));
+          + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_NR),
+                                 resourceBundle.getString(TAG_NUMMER)));
       output.write(prefix
-          + MessageFormat.format(props.getProperty("table.head.naam"),
-                                 resourceBundle.getString("tag.naam")));
+          + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_NAAM),
+                                 resourceBundle.getString(TAG_NAAM)));
       output.write(prefix
-          + MessageFormat.format(props.getProperty(HTML_TABLE_HEAD_PUNTEN),
-                                 resourceBundle.getString("tag.punten")));
+          + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_PUNTEN),
+                                 resourceBundle.getString(TAG_PUNTEN)));
       output.write(prefix
-          + MessageFormat.format(props.getProperty(HTML_TABLE_HEAD_PARTIJEN),
-                                 resourceBundle.getString("tag.partijen")));
+          + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_PARTIJEN),
+                                 resourceBundle.getString(TAG_PARTIJEN)));
       output.write(prefix
-          + MessageFormat.format(props.getProperty(HTML_TABLE_HEAD_SB),
-                                 resourceBundle.getString("tag.sb")));
-      k = 1;
-      while (props.containsKey(HTML_TABLE_HEAD_EIND + k)) {
-        output.write(prefix + props.getProperty(HTML_TABLE_HEAD_EIND + k));
-        k++;
-      }
+          + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_SB),
+                                 resourceBundle.getString(TAG_SB)));
+      schrijfUitvoer(HTML_TABLE_HEAD_EIND);
       // De tbody
-      output.write(prefix + props.getProperty("table.body.begin"));
+      schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
       for (int i = 0; i < noSpelers; i++) {
-        maakIndexBody(output, prefix.toString(), props, punten[i], i + 1);
+        maakIndexBody(punten[i], i + 1);
       }
       // Alles netjes afsluiten
-      output.write(prefix + props.getProperty("table.body.eind"));
-      output.write(prefix + props.getProperty("table.eind"));
+      schrijfUitvoer(HTML_TABLE_BODY_EIND);
+      schrijfUitvoer(HTML_TABLE_EIND);
     } catch (BestandException | IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
@@ -278,132 +313,114 @@ public final class PgnToHtml extends Batchjob {
     }
   }
 
-  private static void maakIndexBody(TekstBestand output, String prefix,
-                                    Properties props, Spelerinfo speler,
-                                    int plaats) throws BestandException {
-    output.write(prefix + props.getProperty("table.body.start"));
+  private static void maakIndexBody(Spelerinfo speler, int plaats)
+      throws BestandException {
+    output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_BEGIN));
     output.write(prefix
-        + MessageFormat.format(props.getProperty("table.body.nr"), (plaats)));
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_NR), plaats));
     output.write(prefix
-        + MessageFormat.format(props.getProperty("table.body.naam"),
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_NAAM),
                                swapNaam(speler.getNaam())));
     int     pntn  = speler.getPunten().intValue();
     String  decim = Utilities.kwart(speler.getPunten());
     output.write(prefix
-        + MessageFormat.format(props.getProperty("table.body.punten"),
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_PUNTEN),
             ((pntn == 0 && "".equals(decim)) || pntn >= 1 ? pntn : decim),
             (pntn == 0 && "".equals(decim)) || pntn >= 1 ? decim : ""));
     output.write(prefix
-        + MessageFormat.format(props.getProperty("table.body.partijen"),
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_PARTIJEN),
                                speler.getPartijen()));
     int     wpntn   = speler.getTieBreakScore().intValue();
     String  wdecim  = Utilities.kwart(speler.getTieBreakScore());
     output.write(prefix
-        + MessageFormat.format(props.getProperty("table.body.sb"),
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_SB),
             ((wpntn == 0 && "".equals(wdecim)) || wpntn >= 1 ? wpntn : wdecim),
             (wpntn == 0 && "".equals(wdecim)) || wpntn >= 1 ? wdecim : ""));
-    output.write(prefix + props.getProperty("table.body.stop"));
+    output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_EIND));
   }
 
-  private static void maakMatrix(Spelerinfo[]  punten, String bestand,
-                                 String charsetUit, double[][] matrix,
+  private static void maakMatrix(Spelerinfo[]  punten, double[][] matrix,
                                  int enkel, int noSpelers, int kolommen) {
-    TekstBestand  output    = null;
-    Properties    props     = new Properties();
-    StringBuilder prefix    = new StringBuilder();
+    skelet  = new Properties();
     try {
-      output  = new TekstBestand.Builder().setBestand(bestand)
-                                          .setCharset(charsetUit)
-                                          .setLezen(false).build();
-      props.load(PgnToHtml.class.getClassLoader()
-                          .getResourceAsStream("matrix.properties"));
+      output  = new TekstBestand.Builder()
+                                .setBestand(parameters.get(PAR_UITVOERDIR)
+                                            + "matrix.html")
+                                .setCharset(parameters.get(PAR_CHARSETUIT))
+                                .setLezen(false).build();
+      skelet.load(PgnToHtml.class.getClassLoader()
+                           .getResourceAsStream("matrix.properties"));
 
-      if (props.containsKey(PROP_INDENT)) {
-        int indent = Integer.valueOf(props.getProperty(PROP_INDENT));
-        while (prefix.length() < indent) {
-          prefix.append(" ");
-        }
+      if (skelet.containsKey(PROP_INDENT)) {
+        prefix  = DoosUtils.stringMetLengte("",
+            Integer.valueOf(skelet.getProperty(PROP_INDENT)));
+      } else {
+        prefix  = "";
       }
 
       // Start de tabel
-      output.write(prefix + props.getProperty("table.begin"));
+      schrijfUitvoer(HTML_TABLE_BEGIN);
       // De colgroup
-      int k = 1;
-      while (props.containsKey(HTML_TABLE_COLGROUP_BEGIN + k)) {
-        output.write(prefix
-                     + props.getProperty(HTML_TABLE_COLGROUP_BEGIN + k));
-        k++;
-      }
+      schrijfUitvoer(HTML_TABLE_COLGROUP_BEGIN);
       for (int i = 0; i < noSpelers; i++) {
         if (enkel == 1) {
-          output.write(prefix + props.getProperty("table.colgroup.enkel"));
+          schrijfUitvoer(HTML_TABLE_COLGROUP_ENKEL);
         } else {
-          output.write(prefix + props.getProperty("table.colgroup.dubbel"));
+          schrijfUitvoer(HTML_TABLE_COLGROUP_DUBBEL);
         }
       }
-      k = 1;
-      while (props.containsKey(HTML_TABLE_COLGROUP_EIND + k)) {
-        output.write(prefix
-                     + props.getProperty(HTML_TABLE_COLGROUP_EIND + k));
-        k++;
-      }
+      schrijfUitvoer(HTML_TABLE_COLGROUP_EIND);
       // De thead
-      k = 1;
-      while (props.containsKey(HTML_TABLE_HEAD_BEGIN + k)) {
-        output.write(prefix + props.getProperty(HTML_TABLE_HEAD_BEGIN + k));
-        k++;
-      }
+      schrijfUitvoer(HTML_TABLE_HEAD_BEGIN);
+      output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN_M));
       for (int i = 0; i < noSpelers; i++) {
         if (enkel == 1) {
-          output.write(prefix + MessageFormat
-                .format(props.getProperty("table.head.enkel"), (i + 1)));
-        } else {
-          output.write(prefix + MessageFormat
-                .format(props.getProperty("table.head.dubbel"), (i + 1)));
-        }
-      }
-      output.write(prefix
-          + MessageFormat.format(props.getProperty(HTML_TABLE_HEAD_PUNTEN),
-                                 resourceBundle.getString("tag.punten")));
-      output.write(prefix
-          + MessageFormat.format(props.getProperty(HTML_TABLE_HEAD_PARTIJEN),
-                                 resourceBundle.getString("tag.partijen")));
-      output.write(prefix
-          + MessageFormat.format(props.getProperty(HTML_TABLE_HEAD_SB),
-                                 resourceBundle.getString("tag.sb")));
-      if (enkel == 2) {
-        output.write(prefix + props.getProperty(HTML_TABLE_HEAD_EIND + "1"));
-        output.write(prefix + props.getProperty(HTML_TABLE_HEAD_BEGIN + "2"));
-        output.write(prefix + props.getProperty(HTML_TABLE_HEAD_BEGIN + "3"));
-        for (int i = 0; i < noSpelers; i++) {
           output.write(prefix
-              + MessageFormat.format(props.getProperty("table.head.dubbel2"),
-                                     resourceBundle.getString("tag.wit"),
-                                     resourceBundle.getString("tag.zwart")));
+              + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_ENKEL),
+                                     (i + 1)));
+        } else {
+          output.write(prefix
+              + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_DUBBEL),
+                                     (i + 1)));
+        }
+      }
+      output.write(prefix
+          + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_PUNTEN),
+                                 resourceBundle.getString(TAG_PUNTEN)));
+      output.write(prefix
+          + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_PARTIJEN),
+                                 resourceBundle.getString(TAG_PARTIJEN)));
+      output.write(prefix
+          + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_SB),
+                                 resourceBundle.getString(TAG_SB)));
+      if (enkel == 2) {
+        output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_EIND + 1));
+        output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN + 2));
+        output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN_M));
+        for (int i = 0; i < noSpelers; i++) {
+          output.write(prefix + MessageFormat.format(
+                                    skelet.getProperty(HTML_TABLE_HEAD_DUBBEL2),
+                                    resourceBundle.getString(TAG_WIT),
+                                    resourceBundle.getString(TAG_ZWART)));
         }
         output.write(prefix
-            + MessageFormat.format(props.getProperty(HTML_TABLE_HEAD_PUNTEN),
+            + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_PUNTEN),
                                    ""));
         output.write(prefix
-            + MessageFormat.format(props.getProperty(HTML_TABLE_HEAD_PARTIJEN),
+            + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_PARTIJEN),
                                    ""));
         output.write(prefix
-            + MessageFormat.format(props.getProperty(HTML_TABLE_HEAD_SB), ""));
+            + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_SB), ""));
       }
-      k = 1;
-      while (props.containsKey(HTML_TABLE_HEAD_EIND + k)) {
-        output.write(prefix + props.getProperty(HTML_TABLE_HEAD_EIND + k));
-        k++;
-      }
+      schrijfUitvoer(HTML_TABLE_HEAD_EIND);
       // De tbody
-      output.write(prefix + props.getProperty("table.body.begin"));
+      schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
       for (int i = 0; i < noSpelers; i++) {
-        maakMatrixBody(output, prefix.toString(), props, punten[i], i,
-                       enkel, kolommen, matrix);
+        maakMatrixBody(punten[i], i, enkel, kolommen, matrix);
       }
       // Alles netjes afsluiten
-      output.write(prefix + props.getProperty("table.body.eind"));
-      output.write(prefix + props.getProperty("table.eind"));
+      schrijfUitvoer(HTML_TABLE_BODY_EIND);
+      schrijfUitvoer(HTML_TABLE_EIND);
     } catch (BestandException | IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
@@ -417,36 +434,35 @@ public final class PgnToHtml extends Batchjob {
     }
   }
 
-  private static void maakMatrixBody(TekstBestand output, String prefix,
-                                     Properties props, Spelerinfo speler,
-                                     int i, int enkel, int kolommen,
-                                     double[][] matrix)
+  private static void maakMatrixBody(Spelerinfo speler, int i, int enkel,
+                                     int kolommen, double[][] matrix)
       throws BestandException {
-    output.write(prefix + props.getProperty("table.body.start"));
+    output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_BEGIN));
     output.write(prefix
-        + MessageFormat.format(props.getProperty("table.body.nr"), (i + 1)));
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_NR),
+                               (i + 1)));
     output.write(prefix
-        + MessageFormat.format(props.getProperty("table.body.naam"),
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_NAAM),
                                swapNaam(speler.getNaam())));
     StringBuilder lijn  = new StringBuilder();
     for (int j = 0; j < kolommen; j++) {
       if ((j / enkel) * enkel == j) {
-        lijn.append(prefix + "      ");
+        lijn.append(prefix).append("      ");
       }
       if (i == j / enkel) {
-        lijn.append(props.getProperty("table.body.zelf"));
+        lijn.append(skelet.getProperty(HTML_TABLE_ROW_ZELF));
       } else {
         // -1 is een niet gespeelde partij.
         if ((j / enkel) * enkel == j) {
           lijn.append(
-              MessageFormat.format(props.getProperty("table.body.wit"),
+              MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_WIT),
                   (matrix[i][j] < 0.0 ? ""
                       : (matrix[i][j] == 0.5 ? Utilities.kwart(matrix[i][j])
                           : "" + ((Double) matrix[i][j]).intValue()
                               + Utilities.kwart(matrix[i][j])))));
         } else {
           lijn.append(
-              MessageFormat.format(props.getProperty("table.body.zwart"),
+              MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_ZWART),
                   (matrix[i][j] < 0.0 ? ""
                       : (matrix[i][j] == 0.5 ? Utilities.kwart(matrix[i][j])
                           : "" + ((Double) matrix[i][j]).intValue()
@@ -461,18 +477,38 @@ public final class PgnToHtml extends Batchjob {
     int     pntn  = speler.getPunten().intValue();
     String  decim = Utilities.kwart(speler.getPunten());
     output.write(prefix
-        + MessageFormat.format(props.getProperty("table.body.punten"),
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_PUNTEN),
             ((pntn == 0 && "".equals(decim)) || pntn >= 1 ? pntn : decim),
             (pntn == 0 && "".equals(decim)) || pntn >= 1 ? decim : ""));
     output.write(prefix + MessageFormat.format(
-        props.getProperty("table.body.partijen"), speler.getPartijen()));
+        skelet.getProperty(HTML_TABLE_ROW_PARTIJEN), speler.getPartijen()));
     int     wpntn   = speler.getTieBreakScore().intValue();
     String  wdecim  = Utilities.kwart(speler.getTieBreakScore());
     output.write(prefix
-        + MessageFormat.format(props.getProperty("table.body.sb"),
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_SB),
             ((wpntn == 0 && "".equals(wdecim)) || wpntn >= 1 ? wpntn : wdecim),
             (wpntn == 0 && "".equals(wdecim)) || wpntn >= 1 ? wdecim : ""));
-    output.write(prefix + props.getProperty("table.body.stop"));
+    output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_EIND));
+  }
+
+  private static void schrijfUitvoer(String parameter)
+      throws BestandException {
+    int k = 1;
+    while (skelet.containsKey(parameter + k)) {
+      output.write(prefix + skelet.getProperty(parameter + k));
+      k++;
+    }
+  }
+
+  private static void schrijfUitvoer(String parameter, Object... params)
+      throws BestandException {
+    int k = 1;
+    while (skelet.containsKey(parameter + k)) {
+      output.write(
+          MessageFormat.format(prefix + skelet.getProperty(parameter + k),
+          params));
+      k++;
+    }
   }
 
   private static boolean setParameters(String[] args) {
