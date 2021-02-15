@@ -19,6 +19,7 @@ package eu.debooy.caissatools;
 import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.PGN;
+import eu.debooy.caissa.Partij;
 import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Arguments;
@@ -26,6 +27,7 @@ import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.html.Utilities;
@@ -36,13 +38,14 @@ import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 
 /**
@@ -111,16 +114,8 @@ public final class PgnToHtml extends Batchjob {
 
   private PgnToHtml() {}
 
-  public static void  main(String[] args) {
-    String[]  params  = new String[] {"--bestand=partijen.pgn",
-                                      "--enkel=N",
-                                      "--invoerdir=/homes/booymar/Schaken/Clubs en Organisaties/De Brug/Seizoen 2017-2018",
-                                      "--uitvoerdir=/homes/booymar/Downloads"};
-    execute(params);
-  }
-
   public static void execute(String[] args) {
-    Set<String>   spelers     = new HashSet<>();
+    List<Spelerinfo>  spelers = new ArrayList<>();
 
     Banner.printMarcoBanner(resourceBundle.getString("banner.pgntohtml"));
 
@@ -128,22 +123,6 @@ public final class PgnToHtml extends Batchjob {
       return;
     }
 
-    // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
-    // 1 is default waarde.
-    int enkel;
-    switch (parameters.get(CaissaTools.PAR_ENKEL)) {
-    case DoosConstants.WAAR:
-      enkel = CaissaConstants.TOERNOOI_ENKEL;
-      break;
-    case DoosConstants.ONWAAR:
-      enkel = CaissaConstants.TOERNOOI_DUBBEL;
-      break;
-    default:
-      enkel = CaissaConstants.TOERNOOI_MATCH;
-      break;
-    }
-    String[]  halve         =
-      DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_HALVE)).split(";");
     String    invoer        = parameters.get(PAR_INVOERDIR)
                               + parameters.get(CaissaTools.PAR_BESTAND)
                               + EXT_PGN;
@@ -151,8 +130,6 @@ public final class PgnToHtml extends Batchjob {
         DoosConstants.WAAR.equalsIgnoreCase(
             parameters.get(CaissaTools.PAR_MATRIXOPSTAND));
     String    uitvoerdir    = parameters.get(PAR_UITVOERDIR);
-
-    Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
 
     Collection<PGN> partijen;
     try {
@@ -163,19 +140,54 @@ public final class PgnToHtml extends Batchjob {
       return;
     }
 
-    partijen.forEach(partij -> {
-      // Verwerk de spelers
-      String  wit   = partij.getTag(CaissaConstants.PGNTAG_WHITE);
-      String  zwart = partij.getTag(CaissaConstants.PGNTAG_BLACK);
-      if (!"bye".equalsIgnoreCase(wit)
-              && DoosUtils.isNotBlankOrNull(wit)) {
-        spelers.add(wit);
+    JsonBestand competitie;
+    try {
+      competitie  =
+          new JsonBestand.Builder()
+                         .setBestand(parameters.get(PAR_INVOERDIR)
+                                     + parameters.get(CaissaTools.PAR_SCHEMA)
+                                     + EXT_JSON)
+                         .setCharset(parameters.get(PAR_CHARSETIN))
+                         .build();
+    } catch (BestandException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+      return;
+    }
+
+    JSONObject  json      = competitie.read();
+    JSONArray   jsonArray = (JSONArray) json.get("spelers");
+    int         spelerId  = 1;
+    for (Object naam : jsonArray.toArray()) {
+      Spelerinfo  speler  = new Spelerinfo();
+      speler.setSpelerId(spelerId);
+      speler.setNaam(naam.toString());
+      spelers.add(speler);
+      spelerId++;
+    }
+
+    String[]  halve;
+    if (json.containsKey("halvespelers")) {
+      jsonArray = (JSONArray) json.get("halvespelers");
+      halve     = new String[jsonArray.size()];
+      for (int i = 0; i < jsonArray.size(); i++) {
+        halve[i]  = jsonArray.get(i).toString();
       }
-      if (!"bye".equalsIgnoreCase(zwart)
-              && DoosUtils.isNotBlankOrNull(zwart)) {
-        spelers.add(zwart);
+      Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
+    } else {
+      halve = new String[0];
+    }
+
+    // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
+    int enkel;
+    if (json.containsKey("enkelrondig")) {
+      if ((boolean) json.get("enkelrondig")) {
+        enkel = CaissaConstants.TOERNOOI_ENKEL;
+      } else {
+        enkel = CaissaConstants.TOERNOOI_DUBBEL;
       }
-    });
+    } else {
+      enkel = CaissaConstants.TOERNOOI_MATCH;
+    }
 
     // Maak de Matrix.
     int           noSpelers = spelers.size();
@@ -183,10 +195,10 @@ public final class PgnToHtml extends Batchjob {
     Spelerinfo[]  punten    = new Spelerinfo[noSpelers];
     String[]      namen     = new String[noSpelers];
     double[][]    matrix    = new double[noSpelers][noSpelers * enkel];
-    Iterator<String>
+    Iterator<Spelerinfo>
                 speler    = spelers.iterator();
     for (int i = 0; i < noSpelers; i++) {
-      namen[i]  = speler.next();
+      namen[i]  = speler.next().getNaam();
       for (int j = 0; j < kolommen; j++) {
         matrix[i][j] = -1.0;
       }
@@ -204,8 +216,20 @@ public final class PgnToHtml extends Batchjob {
     // Maak het matrix.html bestand.
     maakMatrix(punten, matrix, enkel, noSpelers, kolommen);
 
-    // Maak de index.html file
+    // Maak het index.html bestand.
     maakIndex(punten, noSpelers);
+
+    // Maak het uitslagen.html bestand.
+    if (enkel != CaissaConstants.TOERNOOI_MATCH) {
+      boolean     enkelrondig = (enkel == CaissaConstants.TOERNOOI_ENKEL);
+      Set<Partij> schema      =
+          CaissaUtils.genereerSpeelschema(spelers, enkelrondig, partijen);
+      if (!schema.isEmpty()) {
+        String[]    data      = vulKalender(spelers.size(), enkel,
+                                            (JSONArray) json.get("kalender"));
+        maakUitslagen(schema, data);
+      }
+    }
 
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.bestand"),
@@ -221,11 +245,83 @@ public final class PgnToHtml extends Batchjob {
     DoosUtils.naarScherm();
   }
 
+  private static void genereerLegenda()
+      throws BestandException {
+    String  forfait   = resourceBundle.getString("message.forfait");
+    String  notRanked = resourceBundle.getString("message.notranked");
+    genereerTabelheading();
+    schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
+    schrijfUitvoer(HTML_LEGENDA, notRanked, forfait);
+    schrijfUitvoer(HTML_TABLE_BODY_EIND);
+    schrijfUitvoer(HTML_TABLE_EIND);
+  }
+
+  private static void genereerRondefooting()
+      throws BestandException {
+    int k = 1;
+    schrijfUitvoer(HTML_TABLE_BODY_FOOTER);
+    schrijfUitvoer(HTML_TABLE_BODY_EIND);
+    schrijfUitvoer(HTML_TABLE_EIND);
+  }
+
+  private static void genereerRondeheading(int ronde, String datum)
+      throws BestandException {
+    genereerTabelheading();
+    schrijfUitvoer(HTML_TABLE_HEAD, resourceBundle.getString("label.ronde"),
+                   ronde, datum);
+    schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
+  }
+
+  private static void genereerTabelheading()
+      throws BestandException {
+    schrijfUitvoer(HTML_TABLE_BEGIN);
+    schrijfUitvoer(HTML_TABLE_COLGROUP);
+  }
+
+  private static void genereerUitslagtabel(Set<Partij> schema, String[] data)
+      throws BestandException {
+    Iterator<Partij>  iter    = schema.iterator();
+    Partij            partij  = iter.next();
+    int               vorige  = Integer.valueOf(partij.getRonde()
+                                                      .getRound()
+                                                      .split("\\.")[0]);
+    genereerRondeheading(vorige, data[vorige]);
+
+    do {
+      int ronde = Integer.valueOf(partij.getRonde().getRound().split("\\.")[0]);
+      if (ronde != vorige) {
+        genereerRondefooting();
+        genereerRondeheading(ronde, data[ronde]);
+        vorige  = ronde;
+      }
+
+      String  klasse  =
+          (partij.isRanked() && !partij.isBye()) ? "" : " class=\"btncmp\"";
+      String  uitslag = partij.getUitslag().replaceAll("1/2", "&frac12;")
+                              .replace('-', (partij.isForfait() ? 'F' : '-'))
+                              .replace('*', '-');
+      String  wit     = partij.getWitspeler().getVolledigenaam();
+      String  zwart   = partij.getZwartspeler().getVolledigenaam();
+      schrijfUitvoer(HTML_TABLE_BODY, klasse, wit, zwart, uitslag);
+      if (iter.hasNext()) {
+        partij  = iter.next();
+      } else {
+        partij  = null;
+      }
+    } while (null != partij);
+
+    genereerRondefooting();
+    genereerLegenda();
+  }
+
   public static void help() {
     DoosUtils.naarScherm("java -jar CaissaTools.jar PgnToHtml ["
                          + getMelding(LBL_OPTIE)
                          + "] --bestand=<"
-                         + resourceBundle.getString("label.pgnbestand") + ">");
+                         + resourceBundle.getString("label.pgnbestand") + ">"
+                         + " --schema=<"
+                         + resourceBundle.getString("label.competitieschema")
+                         + ">");
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 14),
                          resourceBundle.getString("help.bestand"), 80);
@@ -235,24 +331,24 @@ public final class PgnToHtml extends Batchjob {
     DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 14),
         MessageFormat.format(getMelding(HLP_CHARSETUIT),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_ENKEL, 14),
-                         resourceBundle.getString("help.enkel"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_HALVE, 14),
-                         resourceBundle.getString("help.halve"), 80);
     DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 14),
                          getMelding(HLP_INVOERDIR), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_MATRIXOPSTAND, 14),
                          resourceBundle.getString("help.matrixopstand"), 80);
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SCHEMA, 14),
+                         resourceBundle.getString("help.competitieschema"), 80);
     DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 14),
                          getMelding(HLP_UITVOERDIR), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
-        MessageFormat.format(getMelding(HLP_PARAMVERPLICHT),
-                             CaissaTools.PAR_BESTAND), 80);
+        MessageFormat.format(getMelding(HLP_PARAMSVERPLICHT),
+                             CaissaTools.PAR_BESTAND, CaissaTools.PAR_SCHEMA),
+                             80);
     DoosUtils.naarScherm();
   }
 
   private static void maakIndex(Spelerinfo[] punten, int noSpelers) {
+    skelet  = new Properties();
     Arrays.sort(punten);
     try {
       output    = new TekstBestand.Builder()
@@ -428,8 +524,8 @@ public final class PgnToHtml extends Batchjob {
         if (output != null) {
           output.close();
         }
-      } catch (BestandException ex) {
-        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
+      } catch (BestandException e) {
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
   }
@@ -491,6 +587,38 @@ public final class PgnToHtml extends Batchjob {
     output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_EIND));
   }
 
+  private static void maakUitslagen(Set<Partij> schema, String[] data) {
+    skelet  = new Properties();
+    try {
+      output  = new TekstBestand.Builder()
+                                .setBestand(parameters.get(PAR_UITVOERDIR)
+                                            + "uitslagen.html")
+                                .setCharset(parameters.get(PAR_CHARSETUIT))
+                                .setLezen(false).build();
+      skelet.load(PgnToHtml.class.getClassLoader()
+                           .getResourceAsStream("uitslagen.properties"));
+
+      if (skelet.containsKey(PROP_INDENT)) {
+        prefix  = DoosUtils.stringMetLengte("",
+            Integer.valueOf(skelet.getProperty(PROP_INDENT)));
+      } else {
+        prefix  = "";
+      }
+
+      genereerUitslagtabel(schema, data);
+    } catch (BestandException | IOException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+    } finally {
+      try {
+        if (output != null) {
+          output.close();
+        }
+      } catch (BestandException e) {
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+      }
+    }
+  }
+
   private static void schrijfUitvoer(String parameter)
       throws BestandException {
     int k = 1;
@@ -518,12 +646,12 @@ public final class PgnToHtml extends Batchjob {
     arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
                                           PAR_CHARSETIN,
                                           PAR_CHARSETUIT,
-                                          CaissaTools.PAR_ENKEL,
-                                          CaissaTools.PAR_HALVE,
                                           PAR_INVOERDIR,
                                           CaissaTools.PAR_MATRIXOPSTAND,
+                                          CaissaTools.PAR_SCHEMA,
                                           PAR_UITVOERDIR});
-    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND});
+    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND,
+                                         CaissaTools.PAR_SCHEMA});
     if (!arguments.isValid()) {
       fouten.add(getMelding(ERR_INVALIDPARAMS));
     }
@@ -532,11 +660,10 @@ public final class PgnToHtml extends Batchjob {
     setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
     setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
     setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
-    setParameter(arguments, CaissaTools.PAR_ENKEL, DoosConstants.WAAR);
-    setParameter(arguments, CaissaTools.PAR_HALVE);
     setDirParameter(arguments, PAR_INVOERDIR);
     setParameter(arguments, CaissaTools.PAR_MATRIXOPSTAND,
                  DoosConstants.ONWAAR);
+    setBestandParameter(arguments, CaissaTools.PAR_SCHEMA, EXT_JSON);
     setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
 
     if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
@@ -544,6 +671,12 @@ public final class PgnToHtml extends Batchjob {
       fouten.add(
           MessageFormat.format(
               getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
+    }
+    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_SCHEMA))
+                 .contains(File.separator)) {
+      fouten.add(
+          MessageFormat.format(
+              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_SCHEMA));
     }
 
     if (fouten.isEmpty()) {
@@ -563,5 +696,19 @@ public final class PgnToHtml extends Batchjob {
     }
 
     return deel[1].trim() + " " + deel[0].trim();
+  }
+
+  private static String[] vulKalender(int aantalSpelers, int enkel,
+                                      JSONArray kalender) {
+    String[]  data  = new String[((aantalSpelers-1)*enkel)+1];
+    for (int i = 0; i < kalender.size(); i++) {
+      JSONObject  item  = (JSONObject) kalender.get(i);
+      if (item.containsKey("ronde")) {
+        int ronde = Integer.valueOf(item.get("ronde").toString());
+        data[ronde] = item.get("datum").toString();
+      }
+    }
+
+    return data;
   }
 }

@@ -75,6 +75,7 @@ public final class CaissaTools {
   public static final String  PAR_NIEUWESPELERS       = "nieuweSpelers";
   public static final String  PAR_PERPARTIJ           = "perPartij";
   public static final String  PAR_PGN                 = "pgn";
+  public static final String  PAR_SCHEMA              = "schema";
   public static final String  PAR_SITE                = "site";
   public static final String  PAR_SMTPPOORT           = "smtppoort";
   public static final String  PAR_SMTPSERVER          = "smtpserver";
