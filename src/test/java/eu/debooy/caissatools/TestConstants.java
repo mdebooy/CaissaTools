@@ -28,6 +28,7 @@ public final class TestConstants {
   public static final String  BST_INDEX_HTML      = "index.html";
   public static final String  BST_MATRIX_HTML     = "matrix.html";
   public static final String  BST_PARTIJ_PGN      = "partij.pgn";
+  public static final String  BST_SCHEMA1_JSON    = "schema1.json";
 
   public static final String  MSG_ERROR_MESSAGES  = "Error mesages";
 
@@ -42,6 +43,8 @@ public final class TestConstants {
   public static final String  PAR_INVOERDIR         = "--invoerdir=";
   public static final String  PAR_MATRIX_OP_STAND   =
       "--matrixopstand=J";
+  public static final String  PAR_SCHEMA1           =
+      "--schema=schema1";
   public static final String  PAR_SPELERBESTAND     =
       "--spelerBestand=competitie";
   public static final String  PAR_TOERNOOIBESTAND1  =

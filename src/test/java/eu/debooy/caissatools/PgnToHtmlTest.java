@@ -1,5 +1,5 @@
 /**
- * Copyright 2018 Marco de Booij
+ * Copyright (c) 2018 Marco de Booij
  *
  * Licensed under the EUPL, Version 1.1 or - as soon they will be approved by
  * the European Commission - subsequent versions of the EUPL (the "Licence");
@@ -49,7 +49,8 @@ public class PgnToHtmlTest extends BatchTest {
                        new String[] {TestConstants.BST_COMPETITIE1_PGN,
                                      TestConstants.BST_INDEX_HTML,
                                      TestConstants.BST_MATRIX_HTML,
-                                     BST_MATRIX1, BST_MATRIX2});
+                                     BST_MATRIX1, BST_MATRIX2,
+                                     TestConstants.BST_COMPETITIE1_PGN});
   }
 
   @Before
@@ -70,6 +71,9 @@ public class PgnToHtmlTest extends BatchTest {
       kopieerBestand(CLASSLOADER,
                      TestConstants.BST_COMPETITIE1_PGN,
                      TEMP + File.separator + TestConstants.BST_COMPETITIE1_PGN);
+      kopieerBestand(CLASSLOADER,
+                     TestConstants.BST_SCHEMA1_JSON,
+                     TEMP + File.separator + TestConstants.BST_SCHEMA1_JSON);
     } catch (IOException e) {
       System.out.println(e.getLocalizedMessage());
       throw new BestandException(e);
@@ -83,15 +87,15 @@ public class PgnToHtmlTest extends BatchTest {
     VangOutEnErr.execute(PgnToHtml.class,
                          DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 30, out.size());
+    assertEquals("Zonder parameters - helptekst", 27, out.size());
     assertEquals("Zonder parameters - fouten", 1, err.size());
   }
 
   @Test
   public void testPgnToHtml() throws BestandException {
     String[]  args      = new String[] {TestConstants.PAR_BESTAND1,
-                                        TestConstants.PAR_ENKEL,
                                         TestConstants.PAR_INVOERDIR + TEMP,
+                                        TestConstants.PAR_SCHEMA1,
                                         TestConstants.PAR_UITVOERDIR + TEMP};
 
     VangOutEnErr.execute(PgnToHtml.class,
@@ -123,9 +127,9 @@ public class PgnToHtmlTest extends BatchTest {
   @Test
   public void testOpStand() throws BestandException {
     String[]  args      = new String[] {TestConstants.PAR_BESTAND1,
-                                        TestConstants.PAR_ENKEL,
                                         TestConstants.PAR_INVOERDIR + TEMP,
                                         TestConstants.PAR_MATRIX_OP_STAND,
+                                        TestConstants.PAR_SCHEMA1,
                                         TestConstants.PAR_UITVOERDIR + TEMP};
 
     VangOutEnErr.execute(PgnToHtml.class,
