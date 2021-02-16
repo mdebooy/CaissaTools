@@ -154,8 +154,7 @@ public final class PgnToHtml extends Batchjob {
       return;
     }
 
-    JSONObject  json      = competitie.read();
-    JSONArray   jsonArray = (JSONArray) json.get("spelers");
+    JSONArray   jsonArray = competitie.getArray("spelers");
     int         spelerId  = 1;
     for (Object naam : jsonArray.toArray()) {
       Spelerinfo  speler  = new Spelerinfo();
@@ -166,8 +165,8 @@ public final class PgnToHtml extends Batchjob {
     }
 
     String[]  halve;
-    if (json.containsKey("halvespelers")) {
-      jsonArray = (JSONArray) json.get("halvespelers");
+    if (competitie.containsKey("halvespelers")) {
+      jsonArray = competitie.getArray("halvespelers");
       halve     = new String[jsonArray.size()];
       for (int i = 0; i < jsonArray.size(); i++) {
         halve[i]  = jsonArray.get(i).toString();
@@ -179,8 +178,8 @@ public final class PgnToHtml extends Batchjob {
 
     // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
     int enkel;
-    if (json.containsKey("enkelrondig")) {
-      if ((boolean) json.get("enkelrondig")) {
+    if (competitie.containsKey("enkelrondig")) {
+      if ((boolean) competitie.get("enkelrondig")) {
         enkel = CaissaConstants.TOERNOOI_ENKEL;
       } else {
         enkel = CaissaConstants.TOERNOOI_DUBBEL;
@@ -226,7 +225,7 @@ public final class PgnToHtml extends Batchjob {
           CaissaUtils.genereerSpeelschema(spelers, enkelrondig, partijen);
       if (!schema.isEmpty()) {
         String[]    data      = vulKalender(spelers.size(), enkel,
-                                            (JSONArray) json.get("kalender"));
+                                            competitie.getArray("kalender"));
         maakUitslagen(schema, data);
       }
     }
