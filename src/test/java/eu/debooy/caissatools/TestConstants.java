@@ -29,6 +29,7 @@ public final class TestConstants {
   public static final String  BST_MATRIX_HTML     = "matrix.html";
   public static final String  BST_PARTIJ_PGN      = "partij.pgn";
   public static final String  BST_SCHEMA1_JSON    = "schema1.json";
+  public static final String  BST_UITSLAGEN_HTML  = "uitslagen.html";
 
   public static final String  MSG_ERROR_MESSAGES  = "Error mesages";
 

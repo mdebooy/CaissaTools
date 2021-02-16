@@ -50,7 +50,9 @@ public class PgnToHtmlTest extends BatchTest {
                                      TestConstants.BST_INDEX_HTML,
                                      TestConstants.BST_MATRIX_HTML,
                                      BST_MATRIX1, BST_MATRIX2,
-                                     TestConstants.BST_COMPETITIE1_PGN});
+                                     TestConstants.BST_COMPETITIE1_PGN,
+                                     TestConstants.BST_SCHEMA1_JSON,
+                                     TestConstants.BST_UITSLAGEN_HTML});
   }
 
   @Before
@@ -156,5 +158,11 @@ public class PgnToHtmlTest extends BatchTest {
                                       + TestConstants.BST_MATRIX_HTML),
             Bestand.openInvoerBestand(PgnToHtmlTest.class.getClassLoader(),
                                       BST_MATRIX2)));
+    assertTrue("PgnToHtml - equals U",
+        Bestand.equals(
+            Bestand.openInvoerBestand(TEMP + File.separator
+                                      + TestConstants.BST_UITSLAGEN_HTML),
+            Bestand.openInvoerBestand(PgnToHtmlTest.class.getClassLoader(),
+                                      TestConstants.BST_UITSLAGEN_HTML)));
   }
 }
