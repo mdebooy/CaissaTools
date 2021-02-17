@@ -3,7 +3,21 @@
     "Site": "Caissa Tools",
     "EventDate": "1997.10.03",
     "enkelrondig": false,
-    "spelers": ["Speler, 01", "Speler, 02", "Speler, 03", "Speler, 04", "Speler, 05", "Speler, 06", "Speler, 07", "Speler, 08", "Speler, 09", "Speler, 10", "Speler, 11", "Speler, 12", "Speler, 13"],
+    "spelers": [
+      {"naam": "Speler, 01"},
+      {"naam": "Speler, 02"},
+      {"naam": "Speler, 03"},
+      {"naam": "Speler, 04"},
+      {"naam": "Speler, 05"},
+      {"naam": "Speler, 06"},
+      {"naam": "Speler, 07"},
+      {"naam": "Speler, 08"},
+      {"naam": "Speler, 09"},
+      {"naam": "Speler, 10"},
+      {"naam": "Speler, 11"},
+      {"naam": "Speler, 12"},
+      {"naam": "Speler, 13"}
+    ],
     "kalender": [
       { "datum": "10/09/1997", "ronde": 1},
       { "datum": "17/09/1997", "ronde": 2},

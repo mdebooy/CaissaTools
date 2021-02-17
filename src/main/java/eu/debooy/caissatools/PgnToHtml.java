@@ -159,7 +159,7 @@ public final class PgnToHtml extends Batchjob {
     for (Object naam : jsonArray.toArray()) {
       Spelerinfo  speler  = new Spelerinfo();
       speler.setSpelerId(spelerId);
-      speler.setNaam(naam.toString());
+      speler.setNaam(((JSONObject) naam).get("naam").toString());
       spelers.add(speler);
       spelerId++;
     }
