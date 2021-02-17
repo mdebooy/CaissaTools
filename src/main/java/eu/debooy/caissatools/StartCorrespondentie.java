@@ -26,7 +26,7 @@ import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MailData;
-import eu.debooy.doosutils.access.CsvBestand;
+import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import java.io.File;
@@ -49,6 +49,8 @@ import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 /**
   @author Marco de Booij
@@ -65,24 +67,10 @@ public class StartCorrespondentie extends Batchjob {
       return;
     }
 
-    String            date          = parameters.get(CaissaTools.PAR_DATE);
-    String            datum         = getDatum(date);
-    String            event         = parameters.get(CaissaTools.PAR_EVENT);
-    String            invoer        = parameters.get(PAR_INVOERDIR)
-                                      + parameters.get(CaissaTools.PAR_BESTAND)
-                                      + EXT_CSV;
     List<String>      email         = new ArrayList<>();
-    List<String>      emailparams   = new ArrayList<>();
     List<String>      nieuwespelers = new ArrayList<>();
-    String            site          = parameters.get(CaissaTools.PAR_SITE);
     List<Spelerinfo>  spelers       = new ArrayList<>();
     String            subject       = leesBericht(email);
-
-    initEmailparams(emailparams, 10);
-
-    emailparams.add(0, event);
-    emailparams.add(1, site);
-    emailparams.add(2, datum);
 
     if (parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)) {
       nieuwespelers.addAll(
@@ -90,13 +78,53 @@ public class StartCorrespondentie extends Batchjob {
                                   .split(";")));
     }
 
-    String  uitvoer = parameters.get(PAR_UITVOERDIR)
-                      + parameters.get(CaissaTools.PAR_BESTAND) + EXT_PGN;
+    JsonBestand competitie;
+    try {
+      competitie  =
+          new JsonBestand.Builder()
+                         .setBestand(parameters.get(PAR_INVOERDIR)
+                                     + parameters.get(CaissaTools.PAR_SCHEMA)
+                                     + EXT_JSON)
+                         .setCharset(parameters.get(PAR_CHARSETIN))
+                         .build();
+    } catch (BestandException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+      return;
+    }
 
-    leesSpelers(invoer, spelers);
+    String            date          = competitie.get("EventDate").toString();
+    String            datum         = getDatum(date);
+    boolean           enkel         = true;
+    if (competitie.containsKey("enkelrondig")) {
+      enkel = (boolean) competitie.get("enkelrondig");
+    }
+    String            event         = competitie.get("Event").toString();
+    String            site          = competitie.get("Site").toString();
+
+    List<String>      emailparams   = new ArrayList<>();
+    initEmailparams(emailparams, 10);
+    emailparams.add(0, event);
+    emailparams.add(1, site);
+    emailparams.add(2, datum);
+
+    JSONArray   jsonArray = competitie.getArray("spelers");
+    int         spelerId  = 1;
+    for (Object naam : jsonArray.toArray()) {
+      Spelerinfo  speler  = new Spelerinfo();
+      speler.setSpelerId(spelerId);
+      speler.setAlias(((JSONObject) naam).get("alias").toString());
+      speler.setEmail(((JSONObject) naam).get("email").toString());
+      speler.setNaam(((JSONObject) naam).get("naam").toString());
+      speler.setSpelerId(spelerId);
+      spelers.add(speler);
+      spelerId++;
+    }
+
+    String  uitvoer = parameters.get(PAR_UITVOERDIR) + event + EXT_PGN;
+
     int       noSpelers = spelers.size();
     String[]  rondes    = CaissaUtils.bergertabel(noSpelers);
-    maakToernooi(spelers, rondes, event, site, date, uitvoer);
+    maakToernooi(spelers, rondes, event, site, date, enkel, uitvoer);
 
     if (parameters.containsKey(CaissaTools.PAR_SMTPSERVER)) {
       if (parameters.get(CaissaTools.PAR_PERPARTIJ)
@@ -167,40 +195,26 @@ public class StartCorrespondentie extends Batchjob {
 
   public static void help() {
     DoosUtils.naarScherm("java -jar CaissaTools.jar StartCorrespondentie "
-                         + " --bestand=<"
-                         + resourceBundle.getString("label.csvbestand") + ">");
-    DoosUtils.naarScherm("    --date=<"
-                         + resourceBundle.getString("label.date")
-                         + "> --event=<"
-                         + resourceBundle.getString("label.event")
-                         + "> --site=<"
-                         + resourceBundle.getString("label.site")
+                         + " --schema=<"
+                         + resourceBundle.getString("label.competitieschema")
                          + ">");
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BERICHT, 14),
                          resourceBundle.getString("help.bericht"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 14),
-                         resourceBundle.getString("help.spelers.csv"), 80);
     DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 14),
         MessageFormat.format(getMelding(HLP_CHARSETIN),
                              Charset.defaultCharset().name()), 80);
     DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 14),
         MessageFormat.format(getMelding(HLP_CHARSETUIT),
                              Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_DATE, 14),
-                         resourceBundle.getString("help.date"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_ENKEL, 14),
-                         resourceBundle.getString("help.enkel.simpel"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_EVENT, 14),
-                         resourceBundle.getString("help.event"), 80);
     DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 14),
                          getMelding(HLP_INVOERDIR), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_NIEUWESPELERS, 14),
                          resourceBundle.getString("help.nieuwespelers"), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_PERPARTIJ, 14),
                          resourceBundle.getString("help.perpartij"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SITE, 14),
-                         resourceBundle.getString("help.site"), 80);
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SCHEMA, 14),
+                         resourceBundle.getString("help.competitieschema"), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SMTPPOORT, 14),
                          resourceBundle.getString("help.smtppoort"), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SMTPSERVER, 14),
@@ -211,11 +225,8 @@ public class StartCorrespondentie extends Batchjob {
                          getMelding(HLP_UITVOERDIR), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
-        MessageFormat.format(
-            getMelding(HLP_PARAMSVERPLICHT),
-            CaissaTools.PAR_BESTAND, CaissaTools.PAR_DATE,
-            CaissaTools.PAR_EVENT, CaissaTools.PAR_SITE),
-            80);
+        MessageFormat.format(getMelding(HLP_PARAMVERPLICHT),
+                             CaissaTools.PAR_SCHEMA), 80);
     DoosUtils.naarScherm();
   }
 
@@ -262,40 +273,6 @@ public class StartCorrespondentie extends Batchjob {
     }
 
     return subject;
-  }
-
-  private static void leesSpelers(String invoer, List<Spelerinfo> spelers) {
-    CsvBestand  csv = null;
-    try {
-      csv = new CsvBestand.Builder()
-                          .setBestand(invoer)
-                          .setHeader(true)
-                          .setCharset(parameters.get(PAR_CHARSETIN))
-                          .build();
-
-      int spelerid  = 1;
-      while (csv.hasNext()) {
-        String[]    velden  = csv.next();
-        Spelerinfo  speler  = new Spelerinfo();
-        speler.setAlias(velden[2]);
-        speler.setEmail(velden[1]);
-        speler.setNaam(velden[0]);
-        speler.setSpelerId(spelerid);
-        spelers.add(speler);
-        spelerid++;
-      }
-
-    } catch (BestandException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    } finally {
-      if (null != csv) {
-        try {
-          csv.close();
-        } catch (BestandException e) {
-          DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-        }
-      }
-    }
   }
 
   private static String maakMessage(List<String> email,
@@ -487,7 +464,7 @@ public class StartCorrespondentie extends Batchjob {
 
   private static void maakToernooi(List<Spelerinfo> spelers, String[] rondes,
                                    String event, String site, String date,
-                                   String uitvoer) {
+                                   boolean enkel, String uitvoer) {
     int       noSpelers = spelers.size();
 
     TekstBestand  output  = null;
@@ -506,8 +483,7 @@ public class StartCorrespondentie extends Batchjob {
             String    witspeler   = spelers.get(wit).getNaam();
             String    zwartspeler = spelers.get(zwart).getNaam();
             schrijfPartij(output, event, site, date, witspeler, zwartspeler);
-            if (parameters.get(CaissaTools.PAR_ENKEL)
-                          .equals(DoosConstants.ONWAAR)) {
+            if (!enkel) {
               schrijfPartij(output, event, site, date, zwartspeler, witspeler);
             }
           }
@@ -596,59 +572,39 @@ public class StartCorrespondentie extends Batchjob {
     List<String>  fouten    = new ArrayList<>();
 
     arguments.setParameters(new String[] {CaissaTools.PAR_BERICHT,
-                                          CaissaTools.PAR_BESTAND,
                                           PAR_CHARSETIN,
                                           PAR_CHARSETUIT,
-                                          CaissaTools.PAR_DATE,
-                                          CaissaTools.PAR_ENKEL,
-                                          CaissaTools.PAR_EVENT,
                                           PAR_INVOERDIR,
                                           CaissaTools.PAR_NIEUWESPELERS,
                                           CaissaTools.PAR_PERPARTIJ,
-                                          CaissaTools.PAR_SITE,
+                                          CaissaTools.PAR_SCHEMA,
                                           CaissaTools.PAR_SMTPPOORT,
                                           CaissaTools.PAR_SMTPSERVER,
-                                          CaissaTools.PAR_SPELERS,
                                           CaissaTools.PAR_TSEMAIL,
                                           PAR_UITVOERDIR});
-    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND,
-                                         CaissaTools.PAR_DATE,
-                                         CaissaTools.PAR_EVENT,
-                                         CaissaTools.PAR_SITE});
+    arguments.setVerplicht(new String[] {CaissaTools.PAR_SCHEMA});
     if (!arguments.isValid()) {
       fouten.add(getMelding(ERR_INVALIDPARAMS));
     }
 
     parameters.clear();
     setParameter(arguments, CaissaTools.PAR_BERICHT);
-    setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
     setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
     setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
-    setParameter(arguments, CaissaTools.PAR_DATE);
-    setParameter(arguments, CaissaTools.PAR_ENKEL, DoosConstants.WAAR);
-    setParameter(arguments, CaissaTools.PAR_ENKEL);
-    setParameter(arguments, CaissaTools.PAR_EVENT);
     setDirParameter(arguments, PAR_INVOERDIR);
     setParameter(arguments, CaissaTools.PAR_NIEUWESPELERS);
     setParameter(arguments, CaissaTools.PAR_PERPARTIJ, DoosConstants.ONWAAR);
+    setBestandParameter(arguments, CaissaTools.PAR_SCHEMA, EXT_JSON);
     setParameter(arguments, CaissaTools.PAR_SMTPPOORT);
     setParameter(arguments, CaissaTools.PAR_SMTPSERVER);
-    setParameter(arguments, CaissaTools.PAR_SITE);
-    setParameter(arguments, CaissaTools.PAR_SPELERS);
     setParameter(arguments, CaissaTools.PAR_TSEMAIL);
     setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
 
-    String enkel  = parameters.get(CaissaTools.PAR_ENKEL);
-    if (!enkel.equals(DoosConstants.WAAR)
-        && !enkel.equals(DoosConstants.ONWAAR)) {
-      setParameter(CaissaTools.PAR_ENKEL, DoosConstants.WAAR);
-    }
-
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
+    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_SCHEMA))
                  .contains(File.separator)) {
       fouten.add(
           MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
+              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_SCHEMA));
     }
     if (parameters.containsKey(CaissaTools.PAR_SMTPSERVER)
         && !parameters.containsKey(CaissaTools.PAR_TSEMAIL)) {
