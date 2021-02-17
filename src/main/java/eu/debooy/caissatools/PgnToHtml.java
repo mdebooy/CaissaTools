@@ -284,13 +284,13 @@ public final class PgnToHtml extends Batchjob {
     int               vorige  = Integer.valueOf(partij.getRonde()
                                                       .getRound()
                                                       .split("\\.")[0]);
-    genereerRondeheading(vorige, data[vorige]);
+    genereerRondeheading(vorige, DoosUtils.nullToEmpty(data[vorige]));
 
     do {
       int ronde = Integer.valueOf(partij.getRonde().getRound().split("\\.")[0]);
       if (ronde != vorige) {
         genereerRondefooting();
-        genereerRondeheading(ronde, data[ronde]);
+        genereerRondeheading(ronde, DoosUtils.nullToEmpty(data[ronde]));
         vorige  = ronde;
       }
 
@@ -702,7 +702,8 @@ public final class PgnToHtml extends Batchjob {
     String[]  data  = new String[((aantalSpelers-1)*enkel)+1];
     for (int i = 0; i < kalender.size(); i++) {
       JSONObject  item  = (JSONObject) kalender.get(i);
-      if (item.containsKey("ronde")) {
+      if (item.containsKey("ronde")
+          && item.containsKey("datum")) {
         int ronde = Integer.valueOf(item.get("ronde").toString());
         data[ronde] = item.get("datum").toString();
       }
