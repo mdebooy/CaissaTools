@@ -59,6 +59,13 @@ public class StartCorrespondentie extends Batchjob {
   private static final  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
+    private static final  List<String>      email         = new ArrayList<>();
+    private static final  List<String>      emailparams   = new ArrayList<>();
+    private static final  List<String>      nieuwespelers = new ArrayList<>();
+    private static final  List<Spelerinfo>  spelers       = new ArrayList<>();
+
+    private static  String[]  rondes;
+
     public static void execute(String[] args) {
     Banner.printMarcoBanner(
         resourceBundle.getString("banner.startcorrespondentie"));
@@ -67,10 +74,7 @@ public class StartCorrespondentie extends Batchjob {
       return;
     }
 
-    List<String>      email         = new ArrayList<>();
-    List<String>      nieuwespelers = new ArrayList<>();
-    List<Spelerinfo>  spelers       = new ArrayList<>();
-    String            subject       = leesBericht(email);
+    String  subject = leesBericht();
 
     if (parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)) {
       nieuwespelers.addAll(
@@ -101,8 +105,7 @@ public class StartCorrespondentie extends Batchjob {
     String            event         = competitie.get("Event").toString();
     String            site          = competitie.get("Site").toString();
 
-    List<String>      emailparams   = new ArrayList<>();
-    initEmailparams(emailparams, 10);
+    initEmailparams(13);
     emailparams.add(0, event);
     emailparams.add(1, site);
     emailparams.add(2, datum);
@@ -119,21 +122,19 @@ public class StartCorrespondentie extends Batchjob {
       spelers.add(speler);
       spelerId++;
     }
+    int noSpelers = spelers.size();
 
     String  uitvoer = parameters.get(PAR_UITVOERDIR) + event + EXT_PGN;
 
-    int       noSpelers = spelers.size();
-    String[]  rondes    = CaissaUtils.bergertabel(noSpelers);
-    maakToernooi(spelers, rondes, event, site, date, enkel, uitvoer);
+    rondes  = CaissaUtils.bergertabel(noSpelers);
+    maakToernooi(event, site, date, enkel, uitvoer);
 
     if (parameters.containsKey(CaissaTools.PAR_SMTPSERVER)) {
       if (parameters.get(CaissaTools.PAR_PERPARTIJ)
                     .equals(DoosConstants.WAAR)) {
-        stuurPerPartij(spelers, rondes, nieuwespelers,
-                       subject, email, emailparams);
+        stuurPerPartij(subject);
       } else {
-        stuurPerSpeler(spelers, rondes, nieuwespelers,
-                       subject, email, emailparams);
+        stuurPerSpeler(subject);
       }
       DoosUtils.naarScherm();
     }
@@ -158,8 +159,15 @@ public class StartCorrespondentie extends Batchjob {
     return result;
   }
 
-  private static String formatLijn(String lijn, List<String> params) {
-    return MessageFormat.format(lijn, params.toArray());
+  private static String formatSpelerlijst(String lijst) {
+    return lijst.replaceAll(" , $", "")
+                .replaceFirst("(?s),(?!.*?,)",
+                              resourceBundle.getString("label.en"))
+                .replaceAll(" ,", ",");
+  }
+
+  private static String formatLijn(String lijn) {
+    return MessageFormat.format(lijn, emailparams.toArray());
   }
 
   private static String getDatum(String date) {
@@ -191,6 +199,37 @@ public class StartCorrespondentie extends Batchjob {
     }
 
     return session;
+  }
+
+  private static String getTekst(String lijn) {
+    if (lijn.startsWith("#")) {
+      if (DoosUtils.telTeken(lijn, '#') == 2) {
+        String  parameter = lijn.substring(1).split("#")[0];
+        switch (parameter) {
+          case "geennieuwespelers":
+            if (!parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)) {
+              return lijn.substring(19);
+            }
+            break;
+          case "metzwart":
+            if (Integer.valueOf(emailparams.get(12)) > 0) {
+              return lijn.substring(10);
+            }
+            break;
+          case "nieuwespelers":
+            if (parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)) {
+              return lijn.substring(15);
+            }
+            break;
+          default:
+            return "";
+        }
+      }
+
+      return "";
+    }
+
+    return lijn;
   }
 
   public static void help() {
@@ -230,19 +269,23 @@ public class StartCorrespondentie extends Batchjob {
     DoosUtils.naarScherm();
   }
 
-  private static void initEmailparams(List<String> emailparams, int params) {
+  private static void initEmailparams(int params) {
     for (int i = 0; i < params; i++) {
       emailparams.add(i, "");
     }
   }
 
-  private static String leesBericht(List<String> email) {
+  private static boolean isUitdaging(String wit, String zwart) {
+    return nieuwespelers.isEmpty()
+            || nieuwespelers.contains(wit)
+            || nieuwespelers.contains(zwart);
+  }
+
+  private static String leesBericht() {
     String  subject = "Start " + parameters.get(CaissaTools.PAR_EVENT);
     if (parameters.containsKey(CaissaTools.PAR_BERICHT)) {
-      String  bericht = parameters.get(CaissaTools.PAR_BERICHT);
-      if (!bericht.contains(File.separator)) {
-        bericht = parameters.get(PAR_UITVOERDIR) + bericht;
-      }
+      String  bericht = parameters.get(PAR_INVOERDIR)
+                         + parameters.get(CaissaTools.PAR_BERICHT);
       TekstBestand  message = null;
       try {
         message  = new TekstBestand.Builder()
@@ -275,62 +318,75 @@ public class StartCorrespondentie extends Batchjob {
     return subject;
   }
 
-  private static String maakMessage(List<String> email,
-                                    List<String> emailparams,
-                                    List<Spelerinfo> spelers, String[] rondes) {
+  private static String maakLijstNieuweSpelers() {
+    if (nieuwespelers.isEmpty()) {
+      return "";
+    }
+
+    StringBuilder resultaat = new StringBuilder();
+    String        lijn;
+
+    if (nieuwespelers.size() == 1) {
+      lijn  = resourceBundle.getString("message.nieuwespeler");
+    } else {
+      lijn  = resourceBundle.getString("message.nieuwespelers");
+    }
+    nieuwespelers.forEach(speler ->
+            resultaat.append(speler.split(",")[1].trim()).append(" , "));
+
+    return MessageFormat.format(lijn, formatSpelerlijst(resultaat.toString()));
+  }
+
+  private static String maakMessage() {
     String        speler  = emailparams.get(4);
     StringBuilder message = new StringBuilder();
 
     for (String lijn : email) {
-      if (DoosUtils.telTeken(lijn, '@') > 1) {
-        StringBuilder _lijn = new StringBuilder();
-        while (DoosUtils.telTeken(lijn, '@') > 1) {
-          int at  = lijn.indexOf('@');
-          _lijn.append(lijn.substring(0, at));
-          lijn    = lijn.substring(at+1);
-          at      = lijn.indexOf('@');
-          String  sublijn = lijn.substring(0, at);
-          if (sublijn.contains("_")) {
-            String[]  delen = sublijn.split("_");
-            switch (delen[0].toLowerCase()) {
-              case "metwit":
-                _lijn.append(maakMessageMetwit(speler, delen[1], rondes,
-                                               spelers, emailparams));
-                break;
-              case "metzwart":
-                _lijn.append(maakMessageMetzwart(speler, delen[1], rondes,
-                                                 spelers, emailparams));
-                break;
-              case "partijen":
-                _lijn.append(maakMessagePartijen(delen[1], rondes, spelers,
-                                                 emailparams));
-                break;
-              case "spelers":
-                _lijn.append(maakMessageSpelers(delen[1], spelers,
-                                                emailparams));
-                break;
-              default:
-                break;
+      lijn  = getTekst(lijn);
+      if (DoosUtils.isNotBlankOrNull(lijn)) {
+        if (DoosUtils.telTeken(lijn, '@') > 1) {
+          StringBuilder _lijn = new StringBuilder();
+          while (DoosUtils.telTeken(lijn, '@') > 1) {
+            int at  = lijn.indexOf('@');
+            _lijn.append(lijn.substring(0, at));
+            lijn    = lijn.substring(at+1);
+            at      = lijn.indexOf('@');
+            String  sublijn = lijn.substring(0, at);
+            if (sublijn.contains("_")) {
+              String[]  delen = sublijn.split("_");
+              switch (delen[0].toLowerCase()) {
+                case "metwit":
+                  _lijn.append(maakMessageMetwit(speler, delen[1]));
+                  break;
+                case "metzwart":
+                  _lijn.append(maakMessageMetzwart(speler, delen[1]));
+                  break;
+                case "partijen":
+                  _lijn.append(maakMessagePartijen(delen[1]));
+                  break;
+                case "spelers":
+                  _lijn.append(maakMessageSpelers(delen[1]));
+                  break;
+                default:
+                  break;
+              }
+            } else {
+              _lijn.append(formatLijn(sublijn));
             }
-          } else {
-            _lijn.append(formatLijn(sublijn, emailparams));
+            message.append(formatLijn(_lijn.toString()));
+            lijn  = lijn.substring(at+1);
           }
-          message.append(formatLijn(_lijn.toString(), emailparams));
-          lijn  = lijn.substring(at+1);
+          message.append(lijn);
+        } else {
+          message.append(formatLijn(lijn));
         }
-        message.append(lijn);
-      } else {
-        message.append(formatLijn(lijn, emailparams));
       }
     }
 
     return message.toString();
   }
 
-  private static String maakMessageMetwit(String to, String template,
-                                          String[] rondes,
-                                          List<Spelerinfo> spelers,
-                                          List<String> emailparams) {
+  private static String maakMessageMetwit(String to, String template) {
     int           noSpelers = spelers.size();
     StringBuilder resultaat = new StringBuilder();
 
@@ -344,7 +400,8 @@ public class StartCorrespondentie extends Batchjob {
             && zwart < noSpelers) {
           Spelerinfo  witspeler   = spelers.get(wit);
           Spelerinfo  zwartspeler = spelers.get(zwart);
-          if (witspeler.getNaam().equals(to)) {
+          if (witspeler.getNaam().equals(to)
+              && isUitdaging(witspeler.getNaam(), zwartspeler.getNaam())) {
             emailparams.set(3,  zwartspeler.getVoornaam());
             emailparams.set(4,  zwartspeler.getNaam());
             emailparams.set(5,  zwartspeler.getAlias());
@@ -353,23 +410,18 @@ public class StartCorrespondentie extends Batchjob {
             emailparams.set(8,  witspeler.getNaam());
             emailparams.set(9,  witspeler.getAlias());
             emailparams.set(10, witspeler.getEmail());
-            resultaat.append(formatLijn(template, emailparams)).append(" , ");
+            emailparams.set(11, "");
+            emailparams.set(12, "");
+            resultaat.append(formatLijn(template)).append(" , ");
           }
         }
       }
     }
 
-    return resultaat.toString()
-                    .replaceAll(" , $", "")
-                    .replaceFirst("(?s),(?!.*?,)",
-                                  resourceBundle.getString("label.en"))
-                    .replaceAll(" ,", ",");
+    return formatSpelerlijst(resultaat.toString());
   }
 
-  private static String maakMessageMetzwart(String to, String template,
-                                            String[] rondes,
-                                            List<Spelerinfo> spelers,
-                                            List<String> emailparams) {
+  private static String maakMessageMetzwart(String to, String template) {
     int           noSpelers = spelers.size();
     StringBuilder resultaat = new StringBuilder();
 
@@ -383,7 +435,8 @@ public class StartCorrespondentie extends Batchjob {
             && zwart < noSpelers) {
           Spelerinfo  witspeler   = spelers.get(wit);
           Spelerinfo  zwartspeler = spelers.get(zwart);
-          if (zwartspeler.getNaam().equals(to)) {
+          if (zwartspeler.getNaam().equals(to)
+              && isUitdaging(witspeler.getNaam(), zwartspeler.getNaam())) {
             emailparams.set(3,  zwartspeler.getVoornaam());
             emailparams.set(4,  zwartspeler.getNaam());
             emailparams.set(5,  zwartspeler.getAlias());
@@ -392,22 +445,18 @@ public class StartCorrespondentie extends Batchjob {
             emailparams.set(8,  witspeler.getNaam());
             emailparams.set(9,  witspeler.getAlias());
             emailparams.set(10, witspeler.getEmail());
-            resultaat.append(formatLijn(template, emailparams)).append(" , ");
+            emailparams.set(11, "");
+            emailparams.set(12, "");
+            resultaat.append(formatLijn(template)).append(" , ");
           }
         }
       }
     }
 
-    return resultaat.toString()
-                    .replaceAll(" , $", "")
-                    .replaceFirst("(?s),(?!.*?,)",
-                                  resourceBundle.getString("label.en"))
-                    .replaceAll(" ,", ",");
+    return formatSpelerlijst(resultaat.toString());
   }
 
-  private static String maakMessagePartijen(String template, String[] rondes,
-                                            List<Spelerinfo> spelers,
-                                            List<String> emailparams) {
+  private static String maakMessagePartijen(String template) {
     int           noSpelers = spelers.size();
     StringBuilder resultaat = new StringBuilder();
 
@@ -429,7 +478,9 @@ public class StartCorrespondentie extends Batchjob {
           emailparams.set(8,  witspeler.getNaam());
           emailparams.set(9,  witspeler.getAlias());
           emailparams.set(10, witspeler.getEmail());
-          resultaat.append(formatLijn(template, emailparams));
+          emailparams.set(11, "");
+          emailparams.set(12, "");
+          resultaat.append(formatLijn(template));
         }
       }
     }
@@ -437,9 +488,7 @@ public class StartCorrespondentie extends Batchjob {
     return resultaat.toString();
   }
 
-  private static String maakMessageSpelers(String template,
-                                           List<Spelerinfo> spelers,
-                                           List<String> emailparams) {
+  private static String maakMessageSpelers(String template) {
     StringBuilder   resultaat   = new StringBuilder();
 
     Set<Spelerinfo> gesorteerd  =
@@ -450,24 +499,25 @@ public class StartCorrespondentie extends Batchjob {
     emailparams.set(8,  "");
     emailparams.set(9,  "");
     emailparams.set(10, "");
+    emailparams.set(11, "");
+    emailparams.set(12, "");
 
-    for (Spelerinfo speler : gesorteerd) {
+    gesorteerd.forEach(speler -> {
       emailparams.set(3,  speler.getVoornaam());
       emailparams.set(4,  speler.getNaam());
       emailparams.set(5,  speler.getAlias());
       emailparams.set(6,  speler.getEmail());
-      resultaat.append(formatLijn(template, emailparams));
-    }
+      resultaat.append(formatLijn(template));
+    });
 
     return resultaat.toString();
   }
 
-  private static void maakToernooi(List<Spelerinfo> spelers, String[] rondes,
-                                   String event, String site, String date,
+  private static void maakToernooi(String event, String site, String date,
                                    boolean enkel, String uitvoer) {
-    int       noSpelers = spelers.size();
+    int           noSpelers = spelers.size();
+    TekstBestand  output    = null;
 
-    TekstBestand  output  = null;
     try {
       output  = new TekstBestand.Builder()
                                 .setBestand(uitvoer)
@@ -600,6 +650,12 @@ public class StartCorrespondentie extends Batchjob {
     setParameter(arguments, CaissaTools.PAR_TSEMAIL);
     setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
 
+    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BERICHT))
+                 .contains(File.separator)) {
+      fouten.add(
+          MessageFormat.format(
+              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BERICHT));
+    }
     if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_SCHEMA))
                  .contains(File.separator)) {
       fouten.add(
@@ -621,10 +677,7 @@ public class StartCorrespondentie extends Batchjob {
     return false;
   }
 
-  private static void stuurPerPartij(List<Spelerinfo> spelers, String[] rondes,
-                                     List<String> nieuwespelers, String subject,
-                                     List<String> email,
-                                     List<String> emailparams) {
+  private static void stuurPerPartij(String subject) {
     int     noSpelers = spelers.size();
     Session session   = getSession();
     for (String ronde : rondes) {
@@ -644,7 +697,7 @@ public class StartCorrespondentie extends Batchjob {
             maildata.addTo(zwartspeler.getEmail());
             maildata.addCc(witspeler.getEmail());
             maildata.setFrom(parameters.get(CaissaTools.PAR_TSEMAIL));
-            maildata.setSubject(formatLijn(subject, emailparams));
+            maildata.setSubject(formatLijn(subject));
             emailparams.set(3,  zwartspeler.getVoornaam());
             emailparams.set(4,  zwartspeler.getNaam());
             emailparams.set(5,  zwartspeler.getAlias());
@@ -653,8 +706,10 @@ public class StartCorrespondentie extends Batchjob {
             emailparams.set(8,  witspeler.getNaam());
             emailparams.set(9,  witspeler.getAlias());
             emailparams.set(10, witspeler.getEmail());
-            maildata.setMessage(maakMessage(email, emailparams, spelers, rondes));
-            System.out.println(
+            emailparams.set(11, "");
+            emailparams.set(12, "");
+            maildata.setMessage(maakMessage());
+            DoosUtils.naarScherm(
                 MessageFormat.format(resourceBundle.getString("label.email"),
                                      zwartspeler.getNaam(),
                                      witspeler.getNaam()));
@@ -665,16 +720,14 @@ public class StartCorrespondentie extends Batchjob {
     }
   }
 
-  private static void stuurPerSpeler(List<Spelerinfo> spelers, String[] rondes,
-                                     List<String> nieuwespelers, String subject,
-                                     List<String> email,
-                                     List<String> emailparams) {
+  private static void stuurPerSpeler(String subject) {
     Session session = getSession();
+
     spelers.forEach(speler -> {
       MailData  maildata  = new MailData();
       maildata.addTo(speler.getEmail());
       maildata.setFrom(parameters.get(CaissaTools.PAR_TSEMAIL));
-      maildata.setSubject(formatLijn(subject, emailparams));
+      maildata.setSubject(formatLijn(subject));
       emailparams.set(3,  speler.getVoornaam());
       emailparams.set(4,  speler.getNaam());
       emailparams.set(5,  speler.getAlias());
@@ -683,11 +736,41 @@ public class StartCorrespondentie extends Batchjob {
       emailparams.set(8,  "");
       emailparams.set(9,  "");
       emailparams.set(10, "");
-      maildata.setMessage(maakMessage(email, emailparams, spelers, rondes));
-      System.out.println(
+      if (nieuwespelers.contains(speler.getNaam())) {
+        emailparams.set(11, MessageFormat.format(
+                resourceBundle.getString("message.nieuwespeler"),
+                resourceBundle.getString("label.jij")));
+      } else {
+        emailparams.set(11, maakLijstNieuweSpelers());
+      }
+      emailparams.set(12, telPartijenMetZwart(speler).toString());
+      maildata.setMessage(maakMessage());
+      DoosUtils.naarScherm(
               MessageFormat.format(resourceBundle.getString("label.email"),
                       speler.getNaam(), "-"));
       sendEmail(maildata, session);
     });
+  }
+
+  private static Integer telPartijenMetZwart(Spelerinfo zwartspeler) {
+    Integer aantalPartijen  = 0;
+    int     noSpelers       = spelers.size();
+    String  zwartspelerId   = "-" + zwartspeler.getSpelerId().toString();
+
+    for (String ronde : rondes) {
+      String[]  partijen  = ronde.split(" ");
+      for (String partij : partijen) {
+        if (partij.endsWith(zwartspelerId)) {
+          Integer witspelerId = Integer.valueOf(partij.split("-")[0]) - 1;
+          if (witspelerId < noSpelers
+              && isUitdaging(spelers.get(witspelerId).getNaam(),
+                             zwartspeler.getNaam())) {
+            aantalPartijen++;
+          }
+        }
+      }
+    }
+
+    return aantalPartijen;
   }
 }
