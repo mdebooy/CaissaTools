@@ -142,7 +142,7 @@ public class ELOBerekenaarTest extends BatchTest {
     VangOutEnErr.execute(ELOBerekenaar.class,
                          DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
 
-    assertEquals("Met Einddatum 2 - helptekst", 21, out.size());
+    assertEquals("Met Einddatum 2 - helptekst", 20, out.size());
     assertEquals("Met Einddatum 2 - fouten", 0, err.size());
     assertEquals("Met Einddatum 2 - 14",
                  TEMP + File.separator + TestConstants.BST_COMPETITIE_CSV,
@@ -153,8 +153,6 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(15).split(":")[1].trim());
     assertEquals("Met Einddatum 2 - 17", TestConstants.TOT_PARTIJEN,
                  out.get(16).split(":")[1].trim());
-    assertEquals("Met Einddatum 2 - 18", "0",
-                 out.get(17).split(":")[1].trim());
     assertTrue("Met Einddatum 2 - equals",
         Bestand.equals(
             Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
@@ -239,7 +237,7 @@ public class ELOBerekenaarTest extends BatchTest {
     VangOutEnErr.execute(ELOBerekenaar.class,
                          DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
 
-    assertEquals("Volledig 2 - helptekst", 20, out.size());
+    assertEquals("Volledig 2 - helptekst", 19, out.size());
     assertEquals("Volledig 2 - fouten", 0, err.size());
     assertEquals("Volledig 2 - 14",
                  TEMP + File.separator + TestConstants.BST_COMPETITIE_CSV,
@@ -248,8 +246,6 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(14).split(":")[1].trim());
     assertEquals("Volledig 2 - 16", TestConstants.TOT_PARTIJEN,
                  out.get(15).split(":")[1].trim());
-    assertEquals("Volledig 2 - 17", "0",
-                 out.get(16).split(":")[1].trim());
     assertTrue("Volledig 2 - equals",
         Bestand.equals(
             Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
