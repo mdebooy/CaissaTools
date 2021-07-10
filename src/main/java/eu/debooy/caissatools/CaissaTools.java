@@ -26,6 +26,9 @@ import java.util.ResourceBundle;
  * @author Marco de Booij
  */
 public final class CaissaTools {
+  private static final  ResourceBundle  resourceBundle  =
+      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+
   public static final String  ERR_BESTANDENPGN      = "error.bestand.en.pgn";
   public static final String  ERR_BEVATDIRECTORY    = "error.bevatdirectory";
   public static final String  ERR_BIJBESTAND        =
@@ -95,17 +98,16 @@ public final class CaissaTools {
   public static final String  PAR_VOORNICO            = "voorNico";
   public static final String  PAR_ZIP                 = "zip";
 
-  public static final String  XML_HEADING           =
-      "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>";
+  public static final String  TXT_BANNER  = "Caissa Tools";
 
-  private static  ResourceBundle  resourceBundle  =
-      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+  public static final String  XML_HEADING =
+      "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>";
 
   private CaissaTools() {}
 
   public static void main(String[] args) {
     if (args.length == 0) {
-      Banner.printMarcoBanner("Caissa Tools");
+      Banner.printMarcoBanner(TXT_BANNER);
       help();
       return;
     }
@@ -115,49 +117,42 @@ public final class CaissaTools {
     String[]  commandoArgs  = new String[args.length-1];
     System.arraycopy(args, 1, commandoArgs, 0, args.length-1);
 
-    if ("chesstheatre".equalsIgnoreCase(commando)) {
-      ChessTheatre.execute(commandoArgs);
-      return;
+    switch (commando.toLowerCase()) {
+      case "chesstheatre":
+        ChessTheatre.execute(commandoArgs);
+        break;
+      case "eloberekenaar":
+        ELOBerekenaar.execute(commandoArgs);
+        break;
+      case "pgncleaner":
+        PgnCleaner.execute(commandoArgs);
+        break;
+      case "pgntohtml":
+        PgnToHtml.execute(commandoArgs);
+        break;
+      case "pgntojson":
+        PgnToJson.execute(commandoArgs);
+        break;
+      case "pgntolatex":
+        PgnToLatex.execute(commandoArgs);
+        break;
+      case "spelerstatistiek":
+        SpelerStatistiek.execute(commandoArgs);
+        break;
+      case "startcorrespondentie":
+        StartCorrespondentie.execute(commandoArgs);
+        break;
+      case "startpgn":
+        StartPgn.execute(commandoArgs);
+        break;
+      case "vertaalpgn":
+        VertaalPgn.execute(commandoArgs);
+        break;
+      default:
+        Banner.printMarcoBanner(TXT_BANNER);
+        help();
+        break;
     }
-    if ("eloberekenaar".equalsIgnoreCase(commando)) {
-      ELOBerekenaar.execute(commandoArgs);
-      return;
-    }
-    if ("pgncleaner".equalsIgnoreCase(commando)) {
-      PgnCleaner.execute(commandoArgs);
-      return;
-    }
-    if ("pgntohtml".equalsIgnoreCase(commando)) {
-      PgnToHtml.execute(commandoArgs);
-      return;
-    }
-    if ("pgntojson".equalsIgnoreCase(commando)) {
-      PgnToJson.execute(commandoArgs);
-      return;
-    }
-    if ("pgntolatex".equalsIgnoreCase(commando)) {
-      PgnToLatex.execute(commandoArgs);
-      return;
-    }
-    if ("spelerstatistiek".equalsIgnoreCase(commando)) {
-      SpelerStatistiek.execute(commandoArgs);
-      return;
-    }
-    if ("startcorrespondentie".equalsIgnoreCase(commando)) {
-      StartCorrespondentie.execute(commandoArgs);
-      return;
-    }
-    if ("startpgn".equalsIgnoreCase(commando)) {
-      StartPgn.execute(commandoArgs);
-      return;
-    }
-    if ("vertaalpgn".equalsIgnoreCase(commando)) {
-      VertaalPgn.execute(commandoArgs);
-      return;
-    }
-
-    Banner.printMarcoBanner("Caissa Tools");
-    help();
   }
 
   private static void help() {

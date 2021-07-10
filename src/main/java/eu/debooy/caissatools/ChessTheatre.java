@@ -70,14 +70,14 @@ public final class ChessTheatre extends Batchjob {
 
     if (parameters.containsKey(CaissaTools.PAR_MAXBESTANDEN)) {
       int hulp  =
-          Integer.valueOf(parameters.get(CaissaTools.PAR_MAXBESTANDEN));
+          Integer.parseInt(parameters.get(CaissaTools.PAR_MAXBESTANDEN));
       if (hulp > 0) {
         maxBestanden  = hulp;
       }
     }
     if (parameters.containsKey(CaissaTools.PAR_MINPARTIJEN)) {
       int hulp  =
-          Integer.valueOf(parameters.get(CaissaTools.PAR_MINPARTIJEN));
+          Integer.parseInt(parameters.get(CaissaTools.PAR_MINPARTIJEN));
       if (hulp > 0) {
         minPartijen   = hulp;
       }

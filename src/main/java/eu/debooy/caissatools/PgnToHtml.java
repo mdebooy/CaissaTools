@@ -244,8 +244,7 @@ public final class PgnToHtml extends Batchjob {
     DoosUtils.naarScherm();
   }
 
-  private static void genereerLegenda()
-      throws BestandException {
+  private static void genereerLegenda() throws BestandException {
     String  forfait   = resourceBundle.getString("message.forfait");
     String  notRanked = resourceBundle.getString("message.notranked");
     genereerTabelheading();
@@ -255,9 +254,7 @@ public final class PgnToHtml extends Batchjob {
     schrijfUitvoer(HTML_TABLE_EIND);
   }
 
-  private static void genereerRondefooting()
-      throws BestandException {
-    int k = 1;
+  private static void genereerRondefooting() throws BestandException {
     schrijfUitvoer(HTML_TABLE_BODY_FOOTER);
     schrijfUitvoer(HTML_TABLE_BODY_EIND);
     schrijfUitvoer(HTML_TABLE_EIND);
@@ -271,8 +268,7 @@ public final class PgnToHtml extends Batchjob {
     schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
   }
 
-  private static void genereerTabelheading()
-      throws BestandException {
+  private static void genereerTabelheading() throws BestandException {
     schrijfUitvoer(HTML_TABLE_BEGIN);
     schrijfUitvoer(HTML_TABLE_COLGROUP);
   }
@@ -281,13 +277,14 @@ public final class PgnToHtml extends Batchjob {
       throws BestandException {
     Iterator<Partij>  iter    = schema.iterator();
     Partij            partij  = iter.next();
-    int               vorige  = Integer.valueOf(partij.getRonde()
-                                                      .getRound()
-                                                      .split("\\.")[0]);
+    int               vorige  = Integer.parseInt(partij.getRonde()
+                                                       .getRound()
+                                                       .split("\\.")[0]);
     genereerRondeheading(vorige, DoosUtils.nullToEmpty(data[vorige]));
 
     do {
-      int ronde = Integer.valueOf(partij.getRonde().getRound().split("\\.")[0]);
+      int ronde = Integer.parseInt(partij.getRonde().getRound()
+                                         .split("\\.")[0]);
       if (ronde != vorige) {
         genereerRondefooting();
         genereerRondeheading(ronde, DoosUtils.nullToEmpty(data[ronde]));
@@ -704,7 +701,7 @@ public final class PgnToHtml extends Batchjob {
       JSONObject  item  = (JSONObject) kalender.get(i);
       if (item.containsKey("ronde")
           && item.containsKey("datum")) {
-        int ronde = Integer.valueOf(item.get("ronde").toString());
+        int ronde = Integer.parseInt(item.get("ronde").toString());
         data[ronde] = item.get("datum").toString();
       }
     }

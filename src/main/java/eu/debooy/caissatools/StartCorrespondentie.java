@@ -149,8 +149,8 @@ public class StartCorrespondentie extends Batchjob {
 
   private static InternetAddress[] fillAddresses(Collection<String> addresses)
       throws AddressException {
-    int             index     = 0;
-    InternetAddress result[]  = new InternetAddress[addresses.size()];
+    int               index   = 0;
+    InternetAddress[] result  = new InternetAddress[addresses.size()];
     for (String address : addresses) {
       result[index]  = new InternetAddress(address);
       index++;
@@ -163,7 +163,7 @@ public class StartCorrespondentie extends Batchjob {
     return lijst.replaceAll(" , $", "")
                 .replaceFirst("(?s),(?!.*?,)",
                               resourceBundle.getString("label.en"))
-                .replaceAll(" ,", ",");
+                .replace(" ,", ",");
   }
 
   private static String formatLijn(String lijn) {
@@ -345,10 +345,10 @@ public class StartCorrespondentie extends Batchjob {
       lijn  = getTekst(lijn);
       if (DoosUtils.isNotBlankOrNull(lijn)) {
         if (DoosUtils.telTeken(lijn, '@') > 1) {
-          StringBuilder _lijn = new StringBuilder();
+          StringBuilder hulplijn = new StringBuilder();
           while (DoosUtils.telTeken(lijn, '@') > 1) {
             int at  = lijn.indexOf('@');
-            _lijn.append(lijn.substring(0, at));
+            hulplijn.append(lijn.substring(0, at));
             lijn    = lijn.substring(at+1);
             at      = lijn.indexOf('@');
             String  sublijn = lijn.substring(0, at);
@@ -356,24 +356,24 @@ public class StartCorrespondentie extends Batchjob {
               String[]  delen = sublijn.split("_");
               switch (delen[0].toLowerCase()) {
                 case "metwit":
-                  _lijn.append(maakMessageMetwit(speler, delen[1]));
+                  hulplijn.append(maakMessageMetwit(speler, delen[1]));
                   break;
                 case "metzwart":
-                  _lijn.append(maakMessageMetzwart(speler, delen[1]));
+                  hulplijn.append(maakMessageMetzwart(speler, delen[1]));
                   break;
                 case "partijen":
-                  _lijn.append(maakMessagePartijen(delen[1]));
+                  hulplijn.append(maakMessagePartijen(delen[1]));
                   break;
                 case "spelers":
-                  _lijn.append(maakMessageSpelers(delen[1]));
+                  hulplijn.append(maakMessageSpelers(delen[1]));
                   break;
                 default:
                   break;
               }
             } else {
-              _lijn.append(formatLijn(sublijn));
+              hulplijn.append(formatLijn(sublijn));
             }
-            message.append(formatLijn(_lijn.toString()));
+            message.append(formatLijn(hulplijn.toString()));
             lijn  = lijn.substring(at+1);
           }
           message.append(lijn);

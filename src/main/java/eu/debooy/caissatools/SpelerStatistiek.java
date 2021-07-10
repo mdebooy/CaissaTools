@@ -116,9 +116,8 @@ public final class SpelerStatistiek extends Batchjob {
       return;
     }
 
-    partijen.forEach(partij -> {
-      verwerkPartij(partij, items, speler, statistiektag);
-    });
+    partijen.forEach(partij -> verwerkPartij(partij, items, speler,
+                                             statistiektag));
 
     schrijfLatex(bestand, items, speler);
 

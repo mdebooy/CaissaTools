@@ -493,8 +493,6 @@ public final class PgnToJson extends Batchjob {
       }
     }
 
-    trajecten.keySet().forEach(stuk -> {
-      trajecten.get(stuk).add(ids.get(stuk));
-    });
+    trajecten.keySet().forEach(stuk -> trajecten.get(stuk).add(ids.get(stuk)));
   }
 }
