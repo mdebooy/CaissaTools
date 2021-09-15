@@ -29,20 +29,29 @@ public final class CaissaTools {
   private static final  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
-  public static final String  ERR_BESTANDENPGN      = "error.bestand.en.pgn";
-  public static final String  ERR_BEVATDIRECTORY    = "error.bevatdirectory";
-  public static final String  ERR_BIJBESTAND        =
-      "error.verplichtbijbestand";
-  public static final String  ERR_EINDVOORSTART     = "error.eind.voor.start";
-  public static final String  ERR_FOUTEDATUM        = "error.foutedatum";
-  public static final String  ERR_FOUTEDATUMIN      = "error.foutedatumin";
-  public static final String  ERR_GEENINVOER        = "error.geen.invoer";
-  public static final String  ERR_HALVE             = "error.halve.verboden";
+  public static final String  ERR_BESTANDENPGN    = "error.bestand.en.pgn";
+  public static final String  ERR_BEVATDIRECTORY  = "error.bevatdirectory";
+  public static final String  ERR_BIJBESTAND      = "error.verplichtbijbestand";
+  public static final String  ERR_EINDVOORSTART   = "error.eind.voor.start";
+  public static final String  ERR_FOUTEDATUM      = "error.foutedatum";
+  public static final String  ERR_FOUTEDATUMIN    = "error.foutedatumin";
+  public static final String  ERR_GEENINVOER      = "error.geen.invoer";
+  public static final String  ERR_HALVE           = "error.halve.verboden";
+  public static final String  ERR_KALENDER        = "error.kalender";
+
   public static final String  ERR_MAAKNIEUWBESTAND  = "error.maaknieuwbestand";
   public static final String  ERR_MAXVERSCHIL       = "error.maxverschil";
   public static final String  ERR_TALENGELIJK       = "error.talen.gelijk";
   public static final String  ERR_TEMPLATE          = "error.template";
   public static final String  ERR_TSEMAIL           = "error.tsemail";
+
+  public static final String  HLP_BESTAND       = "help.bestand";
+  public static final String  HLP_MATRIXOPSTAND = "help.matrixopstand";
+  public static final String  HLP_SCHEMA        = "help.competitieschema";
+
+  public static final String  LBL_BESTAND     = "label.bestand";
+  public static final String  LBL_PGNBESTAND  = "label.pgnbestand";
+  public static final String  LBL_SCHEMA      = "label.competitieschema";
 
   public static final String  MSG_NIEUWBESTAND  = "message.nieuwbestand";
   public static final String  MSG_STARTTOERNOOI = "message.starttoernooi";
@@ -57,6 +66,7 @@ public final class CaissaTools {
   public static final String  PAR_DEFAULTECO          = "defaulteco";
   public static final String  PAR_EINDDATUM           = "eindDatum";
   public static final String  PAR_ENKEL               = "enkel";
+  public static final String  PAR_ENKELRONDIG         = "enkelrondig";
   public static final String  PAR_ENKELZETTEN         = "enkelzetten";
   public static final String  PAR_EVENT               = "event";
   public static final String  PAR_EXTRAINFO           = "extraInfo";

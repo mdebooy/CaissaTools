@@ -314,13 +314,14 @@ public final class PgnToHtml extends Batchjob {
     DoosUtils.naarScherm("java -jar CaissaTools.jar PgnToHtml ["
                          + getMelding(LBL_OPTIE)
                          + "] --bestand=<"
-                         + resourceBundle.getString("label.pgnbestand") + ">"
+                         + resourceBundle.getString(CaissaTools.LBL_PGNBESTAND)
+                         + ">"
                          + " --schema=<"
-                         + resourceBundle.getString("label.competitieschema")
+                         + resourceBundle.getString(CaissaTools.LBL_SCHEMA)
                          + ">");
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 14),
-                         resourceBundle.getString("help.bestand"), 80);
+                         resourceBundle.getString(CaissaTools.HLP_BESTAND), 80);
     DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 14),
         MessageFormat.format(getMelding(HLP_CHARSETIN),
                              Charset.defaultCharset().name()), 80);
@@ -330,9 +331,10 @@ public final class PgnToHtml extends Batchjob {
     DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 14),
                          getMelding(HLP_INVOERDIR), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_MATRIXOPSTAND, 14),
-                         resourceBundle.getString("help.matrixopstand"), 80);
+                         resourceBundle.getString(
+                             CaissaTools.HLP_MATRIXOPSTAND), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SCHEMA, 14),
-                         resourceBundle.getString("help.competitieschema"), 80);
+                         resourceBundle.getString(CaissaTools.HLP_SCHEMA), 80);
     DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 14),
                          getMelding(HLP_UITVOERDIR), 80);
     DoosUtils.naarScherm();

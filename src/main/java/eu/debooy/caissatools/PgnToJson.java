@@ -54,7 +54,7 @@ import org.codehaus.jackson.map.ObjectMapper;
  * @author Marco de Booij
  */
 public final class PgnToJson extends Batchjob {
-  private static  ResourceBundle  resourceBundle  =
+  private static final  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
   private static final Integer  EXTRA     = -2;
@@ -88,6 +88,7 @@ public final class PgnToJson extends Batchjob {
           }
         };
 
+    @Override
     public int compare(String id1, String id2) {
       String string1 = STUKKEN.get(id1.substring(0, 1)) + id1.substring(2)
                        + id1.substring(1, 2);
@@ -140,7 +141,7 @@ public final class PgnToJson extends Batchjob {
     ObjectMapper    mapper    = new ObjectMapper();
     List<Map<String, Object>>
                     lijst     = new ArrayList<>();
-    String          uitvoer   = parameters.get(PAR_INVOERDIR)
+    String          uitvoer   = parameters.get(PAR_UITVOERDIR)
                                 + parameters.get(CaissaTools.PAR_JSON)
                                 + EXT_JSON;
 

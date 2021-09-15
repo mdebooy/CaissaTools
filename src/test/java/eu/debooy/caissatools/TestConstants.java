@@ -21,14 +21,17 @@ package eu.debooy.caissatools;
  * @author Marco de Booij
  */
 public final class TestConstants {
+  public static final String  BST_COMPETITIE_CSV  = "competitie.csv";
+  public static final String  BST_COMPETITIE_JSON = "competitie.json";
   public static final String  BST_COMPETITIE1_PGN = "competitie1.pgn";
   public static final String  BST_COMPETITIE2_PGN = "competitie2.pgn";
-  public static final String  BST_COMPETITIE_CSV  = "competitie.csv";
   public static final String  BST_COMPETITIEH_CSV = "competitieH.csv";
   public static final String  BST_INDEX_HTML      = "index.html";
   public static final String  BST_MATRIX_HTML     = "matrix.html";
   public static final String  BST_PARTIJ_PGN      = "partij.pgn";
   public static final String  BST_SCHEMA1_JSON    = "schema1.json";
+  public static final String  BST_TEKORT_JSON     = "tekort.json";
+  public static final String  BST_TELANG_JSON     = "telang.json";
   public static final String  BST_UITSLAGEN_HTML  = "uitslagen.html";
 
   public static final String  MSG_ERROR_MESSAGES  = "Error mesages";

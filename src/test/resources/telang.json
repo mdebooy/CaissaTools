@@ -1,0 +1,30 @@
+  {
+    "Event": "Testing 97/98",
+    "Site": "Caissa Tools",
+    "EventDate": "1999.10.01",
+    "enkelrondig": false,
+    "spelers": [
+      {"naam": "Speler, 01"},
+      {"naam": "Speler, 02"},
+      {"naam": "Speler, 03"},
+      {"naam": "Speler, 04"},
+      {"naam": "Speler, 05"}
+    ],
+    "kalender": [
+      { "datum": "01/10/1999", "ronde": 1},
+      { "datum": "08/10/1999", "ronde": 2},
+      { "datum": "15/10/1999", "ronde": 3},
+      { "datum": "22/10/1999", "extra": "Inhaalwedstrijd"},
+      { "datum": "29/10/1999", "ronde": 4},
+      { "datum": "05/11/1999", "ronde": 5},
+      { "datum": "12/11/1999", "ronde": 6},
+      { "datum": "19/11/1999", "extra": "Inhaalwedstrijd"},
+      { "datum": "26/11/1999", "ronde": 7},
+      { "datum": "03/12/1999", "ronde": 8},
+      { "datum": "10/11/1999", "ronde": 9},
+      { "datum": "17/12/1999", "ronde": 10},
+      { "datum": "24/12/1999", "ronde": 11},
+      { "datum": "31/12/1999", "extra": "Inhaalwedstrijd"},
+      { "datum": "07/01/2000", "extra": "Inhaalwedstrijd"}
+    ]
+  }
