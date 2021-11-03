@@ -57,11 +57,19 @@ public final class PgnToJson extends Batchjob {
   private static final  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
-  private static final Integer  EXTRA     = -2;
-  private static final Integer  OUT       = -1;
-  private static final Integer  PROMOTIE  = -3;
+  private static final String   DEFSTUKKEN  =
+      CaissaConstants.Stukcodes.valueOf("EN").getStukcodes();
+  private static final Integer  EXTRA       = -2;
+  private static final Integer  OUT         = -1;
+  private static final Integer  PROMOTIE    = -3;
 
-  private static boolean  voorNico  = false;
+  private static  String  defaultEco;
+  private static  boolean metFen        = false;
+  private static  boolean metTrajecten  = false;
+  private static  boolean metPgnviewer  = false;
+  private static  String  naarStukken;
+  private static  String  vanStukken;
+  private static  boolean voorNico      = false;
 
   private PgnToJson() {}
 
@@ -100,8 +108,6 @@ public final class PgnToJson extends Batchjob {
   }
 
   public static void execute(String[] args) {
-    String        defStukken  = CaissaConstants.Stukcodes.valueOf("EN")
-                                               .getStukcodes();
     TekstBestand  output      = null;
 
     Banner.printMarcoBanner(resourceBundle.getString("banner.pgntojson"));
@@ -110,31 +116,31 @@ public final class PgnToJson extends Batchjob {
       return;
     }
 
-    String    defaultEco    = parameters.get(CaissaTools.PAR_DEFAULTECO);
-    boolean   includeLege   =
-        parameters.get(CaissaTools.PAR_INCLUDELEGE).equals(DoosConstants.WAAR);
-    boolean   metFen        =
-        parameters.get(CaissaTools.PAR_METFEN).equals(DoosConstants.WAAR);
-    boolean   metTrajecten  =
-        parameters.get(CaissaTools.PAR_METTRAJECTEN).equals(DoosConstants.WAAR);
-    boolean   metPgnviewer  =
-        parameters.get(CaissaTools.PAR_METPGNVIEWER).equals(DoosConstants.WAAR);
-    voorNico                =
-        parameters.get(CaissaTools.PAR_VOORNICO).equals(DoosConstants.WAAR);
+    boolean includeLege   = parameters.get(CaissaTools.PAR_INCLUDELEGE)
+                                      .equals(DoosConstants.WAAR);
+
+    defaultEco    = parameters.get(CaissaTools.PAR_DEFAULTECO);
+    metFen        = parameters.get(CaissaTools.PAR_METFEN)
+                              .equals(DoosConstants.WAAR);
+    metTrajecten  = parameters.get(CaissaTools.PAR_METTRAJECTEN)
+                              .equals(DoosConstants.WAAR);
+    metPgnviewer  = parameters.get(CaissaTools.PAR_METPGNVIEWER)
+                              .equals(DoosConstants.WAAR);
+    voorNico      = parameters.get(CaissaTools.PAR_VOORNICO)
+                              .equals(DoosConstants.WAAR);
 
     // Haal de stukcodes op
-    String  naarStukken =
+    naarStukken =
         CaissaConstants.Stukcodes
                        .valueOf(parameters.get(CaissaTools.PAR_NAARTAAL)
                                           .toUpperCase())
                        .getStukcodes();
-    String  vanStukken  =
+    vanStukken  =
         CaissaConstants.Stukcodes
                        .valueOf(parameters.get(CaissaTools.PAR_VANTAAL)
                                           .toUpperCase())
                        .getStukcodes();
 
-    FEN             fen;
     String          invoer    = parameters.get(PAR_INVOERDIR)
                                 + parameters.get(CaissaTools.PAR_BESTAND)
                                 + EXT_PGN;
@@ -159,80 +165,7 @@ public final class PgnToJson extends Batchjob {
       for (PGN pgn: partijen) {
         if (includeLege
             || DoosUtils.isNotBlankOrNull(pgn.getZuivereZetten())) {
-          Map<String, Integer>        ids       =
-              new TreeMap<>(new IdComparator());
-          Map<String, Object>         partij    =
-              new LinkedHashMap<>();
-          Map<String, List<Integer>>  trajecten =
-              new LinkedHashMap<>();
-          if (pgn.hasTag(CaissaConstants.PGNTAG_FEN)) {
-            fen = new FEN(pgn.getTag(CaissaConstants.PGNTAG_FEN));
-          } else {
-            fen = new FEN();
-          }
-
-          if (!pgn.hasTag(CaissaConstants.PGNTAG_ECO)
-              && DoosUtils.isNotBlankOrNull(defaultEco)) {
-            pgn.addTag(CaissaConstants.PGNTAG_ECO, defaultEco);
-          }
-
-          int[] bord  = fen.getBord();
-          for (int i = 9; i > 1; i--) {
-            for (int j = 1; j < 9; j++) {
-              Integer positie = i*10+j;
-              if (bord[positie] != 0) {
-                String  id  = "" + CaissaUtils.getStuk(bord[positie])
-                                + CaissaUtils.internToExtern(positie);
-                ids.put(id, getCoordinaat(positie));
-              }
-            }
-          }
-
-          for (Entry<String, Integer> id : ids.entrySet()) {
-            List<Integer> traject = new ArrayList<>();
-            traject.add(id.getValue());
-            trajecten.put(id.getKey(), traject);
-          }
-
-          partij.put("_gamekey", "" + partijnr);
-          for (Map.Entry<String, String> tag : pgn.getTags().entrySet()) {
-            partij.put(tag.getKey(), tag.getValue());
-          }
-          partij.put("_moves", pgn.getZetten());
-          if (metPgnviewer) {
-            partij.put("_pgnviewer",
-                       CaissaUtils.pgnZettenToChessTheatre(pgn.getZetten()));
-          }
-          String zuivereZetten  = pgn.getZuivereZetten();
-          if (DoosUtils.isNotBlankOrNull(zuivereZetten)) {
-            String[]  zetten        =
-                vertaal(zuivereZetten,
-                        vanStukken, naarStukken).split(" ");
-            Map<String, Object> jsonZetten  = new LinkedHashMap<>();
-            for (int i = 0; i < zetten.length; i++) {
-              Map<String, String> jsonZet = new LinkedHashMap<>();
-              String              pgnZet  = zetten[i].replaceAll("^[0-9]*\\.",
-                                                                 "");
-              jsonZet.put("notatie", pgnZet);
-              if (metFen || metTrajecten) {
-                Zet zet = CaissaUtils.vindZet(fen, vertaal(pgnZet, naarStukken,
-                                              defStukken));
-                fen.doeZet(zet);
-              }
-              if (metFen) {
-                jsonZet.put("fen", fen.getFen());
-              }
-              if (metTrajecten) {
-                wijzigTrajecten(fen, ids, trajecten);
-              }
-              jsonZetten.put(Integer.toString(i), jsonZet);
-            }
-            if (metTrajecten) {
-              partij.put("trajecten", trajecten);
-            }
-            partij.put("moves", jsonZetten);
-          }
-          lijst.add(partij);
+          lijst.add(verwerkPartij(pgn, partijnr));
           partijnr++;
         }
       }
@@ -335,6 +268,19 @@ public final class PgnToJson extends Batchjob {
     DoosUtils.naarScherm();
   }
 
+  private static void setFenbord(int[] bord, Map<String, Integer> ids) {
+    for (int i = 9; i > 1; i--) {
+      for (int j = 1; j < 9; j++) {
+        Integer positie = i*10+j;
+        if (bord[positie] != 0) {
+          String  id  = "" + CaissaUtils.getStuk(bord[positie])
+                          + CaissaUtils.internToExtern(positie);
+          ids.put(id, getCoordinaat(positie));
+        }
+      }
+    }
+  }
+
   private static boolean setParameters(String[] args) {
     Arguments     arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
@@ -425,32 +371,9 @@ public final class PgnToJson extends Batchjob {
     return zetten;
   }
 
-  private static void wijzigTrajecten(FEN fen, Map<String, Integer> ids,
-                                      Map<String, List<Integer>> trajecten) {
-    int[]               bord        = fen.getBord();
-    Map<String, String> verplaatst  = new HashMap<>();
-    for (Entry<String, Integer> id : ids.entrySet()) {
-      if (id.getValue() >= 0
-              && id.getValue() < 100) {
-        Integer positie = getPositie(id.getValue()%100);
-        int stuk  = CaissaUtils.zoekStuk(id.getKey().charAt(0));
-        if (bord[positie] != stuk) {
-          if (bord[positie] == 0) {
-            verplaatst.put(id.getKey().substring(0, 1), id.getKey());
-          }
-          ids.put(id.getKey(), OUT);
-        }
-      } else {
-        if (Objects.equals(id.getValue(), PROMOTIE)
-            || (id.getValue() >= 100 && id.getValue() < 200)) {
-          ids.put(id.getKey(), OUT);
-        }
-        if (id.getValue() >= 200) {
-          ids.put(id.getKey(), id.getValue() - 200);
-        }
-      }
-    }
-
+  private static void verwerkBord(int[] bord, Map<String, Integer> ids,
+                                 Map<String, String> verplaatst,
+                                 Map<String, List<Integer>> trajecten) {
     for (int i = 9; i > 1; i--) {
       for (int j = 1; j < 9; j++) {
         Integer positie = i*10+j;
@@ -462,9 +385,9 @@ public final class PgnToJson extends Batchjob {
                 ids.put(verplaatst.get(stuk), getCoordinaat(positie));
               }
             } else {
-              int           plies     = trajecten.values().iterator().next()
+              int     plies     = trajecten.values().iterator().next()
                                                  .size();
-              String        promotie  = "";
+              String  promotie  = "";
               if (verplaatst.containsKey("P")) {
                 promotie  = verplaatst.get("P");
               }
@@ -493,6 +416,119 @@ public final class PgnToJson extends Batchjob {
         }
       }
     }
+  }
+
+  private static void verwerkIds(int[] bord, Map<String, Integer> ids,
+                                 Map<String, String> verplaatst) {
+    ids.entrySet().forEach(id -> {
+      if (id.getValue() >= 0
+          && id.getValue() < 100) {
+        Integer positie = getPositie(id.getValue()%100);
+        int stuk  = CaissaUtils.zoekStuk(id.getKey().charAt(0));
+        if (bord[positie] != stuk) {
+          if (bord[positie] == 0) {
+            verplaatst.put(id.getKey().substring(0, 1), id.getKey());
+          }
+          ids.put(id.getKey(), OUT);
+        }
+      } else {
+        if (Objects.equals(id.getValue(), PROMOTIE)
+            || (id.getValue() >= 100 && id.getValue() < 200)) {
+          ids.put(id.getKey(), OUT);
+        }
+        if (id.getValue() >= 200) {
+          ids.put(id.getKey(), id.getValue() - 200);
+        }
+      }
+    });
+  }
+
+  private static Map<String, Object> verwerkPartij(PGN pgn, int partijnr)
+      throws FenException, PgnException {
+    FEN fen;
+
+    Map<String, Integer>        ids       =
+        new TreeMap<>(new IdComparator());
+    Map<String, Object>         partij    =
+        new LinkedHashMap<>();
+    Map<String, List<Integer>>  trajecten =
+        new LinkedHashMap<>();
+    if (pgn.hasTag(CaissaConstants.PGNTAG_FEN)) {
+      fen = new FEN(pgn.getTag(CaissaConstants.PGNTAG_FEN));
+    } else {
+      fen = new FEN();
+    }
+
+    if (!pgn.hasTag(CaissaConstants.PGNTAG_ECO)
+        && DoosUtils.isNotBlankOrNull(defaultEco)) {
+      pgn.addTag(CaissaConstants.PGNTAG_ECO, defaultEco);
+    }
+
+    int[] bord  = fen.getBord();
+    setFenbord(bord, ids);
+
+    ids.entrySet().forEach(id -> {
+      List<Integer> traject = new ArrayList<>();
+      traject.add(id.getValue());
+      trajecten.put(id.getKey(), traject);
+    });
+
+    partij.put("_gamekey", "" + partijnr);
+    pgn.getTags().entrySet().forEach(tag -> partij.put(tag.getKey(),
+                                                       tag.getValue()));
+    partij.put("_moves", pgn.getZetten());
+    String zuivereZetten  = pgn.getZuivereZetten();
+    if (metPgnviewer) {
+      partij.put("_pgnviewer",
+                 CaissaUtils.pgnZettenToChessTheatre(zuivereZetten));
+    }
+
+    if (DoosUtils.isNotBlankOrNull(zuivereZetten)) {
+      verwerkZuivereZetten(partij, zuivereZetten, fen, ids, trajecten);
+    }
+
+    return partij;
+  }
+
+  private static void verwerkZuivereZetten(Map<String, Object> partij,
+                                           String zuivereZetten, FEN fen,
+                                           Map<String, Integer> ids,
+                                           Map<String, List<Integer>> trajecten)
+      throws PgnException, FenException {
+    String[]  zetten        =
+        vertaal(zuivereZetten, vanStukken, naarStukken).split(" ");
+    Map<String, Object> jsonZetten  = new LinkedHashMap<>();
+    for (int i = 0; i < zetten.length; i++) {
+      Map<String, String> jsonZet = new LinkedHashMap<>();
+      String              pgnZet  = zetten[i].replaceAll("^[0-9]*\\.",
+                                                         "");
+      jsonZet.put("notatie", pgnZet);
+      if (metFen || metTrajecten) {
+        Zet zet = CaissaUtils.vindZet(fen, vertaal(pgnZet, naarStukken,
+                                      DEFSTUKKEN));
+        fen.doeZet(zet);
+      }
+      if (metFen) {
+        jsonZet.put("fen", fen.getFen());
+      }
+      if (metTrajecten) {
+        wijzigTrajecten(fen, ids, trajecten);
+      }
+      jsonZetten.put(Integer.toString(i), jsonZet);
+    }
+    if (metTrajecten) {
+      partij.put("trajecten", trajecten);
+    }
+    partij.put("moves", jsonZetten);
+  }
+
+  private static void wijzigTrajecten(FEN fen, Map<String, Integer> ids,
+                                      Map<String, List<Integer>> trajecten) {
+    int[]               bord        = fen.getBord();
+    Map<String, String> verplaatst  = new HashMap<>();
+
+    verwerkIds(bord, ids, verplaatst);
+    verwerkBord(bord, ids, verplaatst, trajecten);
 
     trajecten.keySet().forEach(stuk -> trajecten.get(stuk).add(ids.get(stuk)));
   }
