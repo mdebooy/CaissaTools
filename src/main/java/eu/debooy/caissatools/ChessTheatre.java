@@ -83,7 +83,7 @@ public final class ChessTheatre extends Batchjob {
       }
     }
 
-    Collection<PGN> partijen    = new TreeSet<>(new PGN.byEventComparator());
+    Collection<PGN> partijen    = new TreeSet<>(new PGN.ByEventComparator());
     try {
       partijen.addAll(
           CaissaUtils.laadPgnBestand(parameters.get(PAR_INVOERDIR) +

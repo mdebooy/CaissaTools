@@ -520,7 +520,7 @@ public final class ELOBerekenaar extends Batchjob {
                                               .setAppend(true)
                                               .build();
       Collection<PGN>
-          partijen  = new TreeSet<>(new PGN.defaultComparator());
+          partijen  = new TreeSet<>(new PGN.DefaultComparator());
       partijen.addAll(
           CaissaUtils.laadPgnBestand(toernooibestand,
                                      parameters.get(PAR_CHARSETIN)));

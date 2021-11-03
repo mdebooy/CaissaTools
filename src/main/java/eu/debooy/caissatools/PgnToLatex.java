@@ -188,7 +188,7 @@ public final class PgnToLatex extends Batchjob {
     Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
 
     for (int i = 0; i < bestand.length; i++) {
-      partijen  = new TreeSet<>(new PGN.byEventComparator());
+      partijen  = new TreeSet<>(new PGN.ByEventComparator());
       Map<String, String> texPartij = new HashMap<>();
       spelers   = new HashSet<>();
 
