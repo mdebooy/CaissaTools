@@ -127,14 +127,12 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(18).split(":")[1].trim());
     assertTrue("Met Einddatum 1 - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMP_CSV),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
     assertTrue("Met Einddatum 1 - H equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMPH_CSV),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPH_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIEH_CSV)));
 
@@ -155,16 +153,14 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(16).split(":")[1].trim());
     assertTrue("Met Einddatum 2 - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMP_CSV),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
     assertTrue("Met Einddatum 2 - H equals",
         Bestand.equals(
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPH_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
-                                      + TestConstants.BST_COMPETITIEH_CSV),
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMPH_CSV)));
+                                      + TestConstants.BST_COMPETITIEH_CSV)));
 
     after();
 
@@ -187,14 +183,12 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(16).split(":")[1].trim());
     assertTrue("Met Einddatum 3 - equals",
         Bestand.equals(
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
-                                      + TestConstants.BST_COMPETITIE_CSV),
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMP_TOT_CSV)));
+                                      + TestConstants.BST_COMPETITIE_CSV)));
     assertTrue("Met Einddatum 3 - H equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMPH_TOT_CSV),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPH_TOT_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIEH_CSV)));
   }
@@ -221,14 +215,12 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(17).split(":")[1].trim());
     assertTrue("Volledig 1 - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMP_TOT_CSV),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
     assertTrue("Volledig 1 - H equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMPH_TOT_CSV),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPH_TOT_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIEH_CSV)));
 
@@ -248,16 +240,14 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(15).split(":")[1].trim());
     assertTrue("Volledig 2 - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMP_TOT_CSV),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
     assertTrue("Volledig 2 - H equals",
         Bestand.equals(
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPH_TOT_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
-                                      + TestConstants.BST_COMPETITIEH_CSV),
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMPH_TOT_CSV)));
+                                      + TestConstants.BST_COMPETITIEH_CSV)));
   }
 
   @Test
@@ -287,14 +277,12 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(17).split(":")[1].trim());
     assertTrue("Volledig Extra - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(ELOBerekenaar.class.getClassLoader(),
-                                      BST_COMP_TOT_CSV),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
     assertTrue("Volledig Extra - H equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(ELOBerekenaar.class.getClassLoader(),
-                "competitieH.extra.csv"),
+            Bestand.openInvoerBestand(CLASSLOADER, "competitieH.extra.csv"),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIEH_CSV)));
   }
@@ -321,14 +309,12 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(17).split(":")[1].trim());
     assertTrue("Twee Bestanden 1 - equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMP_TOT_CSV),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
     assertTrue("Twee Bestanden 1 - H equals",
         Bestand.equals(
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMPH_TOT_CSV),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPH_TOT_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_COMPETITIEH_CSV)));
 
@@ -354,15 +340,13 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(16).split(":")[1].trim());
     assertTrue("Twee Bestanden 2 - equals",
         Bestand.equals(
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPD_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
-                                      + TestConstants.BST_COMPETITIE_CSV),
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMPD_CSV)));
+                                      + TestConstants.BST_COMPETITIE_CSV)));
     assertTrue("Volledig 2 - H equals",
         Bestand.equals(
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPHD_CSV),
             Bestand.openInvoerBestand(TEMP + File.separator
-                                      + TestConstants.BST_COMPETITIEH_CSV),
-            Bestand.openInvoerBestand(VertaalPgnTest.class.getClassLoader(),
-                                      BST_COMPHD_CSV)));
+                                      + TestConstants.BST_COMPETITIEH_CSV)));
   }
 }

@@ -492,7 +492,7 @@ public class StartCorrespondentie extends Batchjob {
     StringBuilder   resultaat   = new StringBuilder();
 
     Set<Spelerinfo> gesorteerd  =
-        new TreeSet<>(new Spelerinfo.byNaamComparator());
+        new TreeSet<>(new Spelerinfo.ByNaamComparator());
     gesorteerd.addAll(spelers);
 
     emailparams.set(7,  "");

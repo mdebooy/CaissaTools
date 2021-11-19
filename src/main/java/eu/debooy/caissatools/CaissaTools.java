@@ -88,6 +88,7 @@ public final class CaissaTools {
   public static final String  PAR_NIEUWESPELERS       = "nieuweSpelers";
   public static final String  PAR_PERPARTIJ           = "perPartij";
   public static final String  PAR_PGN                 = "pgn";
+  public static final String  PAR_SCHAAKNOTATIE       = "schaaknotatie.csv";
   public static final String  PAR_SCHEMA              = "schema";
   public static final String  PAR_SITE                = "site";
   public static final String  PAR_SMTPPOORT           = "smtppoort";
@@ -128,6 +129,9 @@ public final class CaissaTools {
     System.arraycopy(args, 1, commandoArgs, 0, args.length-1);
 
     switch (commando.toLowerCase()) {
+      case "analysetolatex":
+        AnalyseToLatex.execute(commandoArgs);
+        break;
       case "chesstheatre":
         ChessTheatre.execute(commandoArgs);
         break;
@@ -166,6 +170,8 @@ public final class CaissaTools {
   }
 
   private static void help() {
+    DoosUtils.naarScherm("  AnalyseToLatex       ",
+                         resourceBundle.getString("help.analysetolatex"), 80);
     DoosUtils.naarScherm("  ChessTheatre         ",
                          resourceBundle.getString("help.chesstheatre"), 80);
     DoosUtils.naarScherm("  ELOBerekenaar        ",
@@ -187,6 +193,8 @@ public final class CaissaTools {
                          resourceBundle.getString("help.spelerstatistiek"), 80);
     DoosUtils.naarScherm("  VertaalPgn           ",
                          resourceBundle.getString("help.vertaalpgn"), 80);
+    DoosUtils.naarScherm("");
+    AnalyseToLatex.help();
     DoosUtils.naarScherm("");
     ChessTheatre.help();
     DoosUtils.naarScherm("");

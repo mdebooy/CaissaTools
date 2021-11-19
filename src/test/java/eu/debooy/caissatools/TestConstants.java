@@ -21,6 +21,7 @@ package eu.debooy.caissatools;
  * @author Marco de Booij
  */
 public final class TestConstants {
+  public static final String  BST_ANALYSE_PGN     = "analyse.pgn";
   public static final String  BST_COMPETITIE_CSV  = "competitie.csv";
   public static final String  BST_COMPETITIE_JSON = "competitie.json";
   public static final String  BST_COMPETITIE1_PGN = "competitie1.pgn";
@@ -36,12 +37,16 @@ public final class TestConstants {
 
   public static final String  MSG_ERROR_MESSAGES  = "Error mesages";
 
+  public static final String  PAR_AUTEUR            =
+      "--auteur=NetBeans";
   public static final String  PAR_BESTAND1          =
       "--bestand=competitie1";
   public static final String  PAR_BESTAND2          =
       "--bestand=competitie2";
   public static final String  PAR_BESTAND3          =
       "--bestand=partij.pgn";
+  public static final String  PAR_BESTAND4          =
+      "--bestand=analyse.pgn";
   public static final String  PAR_ENKEL             = "--enkel=N";
 
   public static final String  PAR_INVOERDIR         = "--invoerdir=";
@@ -61,7 +66,5 @@ public final class TestConstants {
 
   public static final String  TST_TAAL  = "nl";
 
-  private TestConstants() {
-    throw new IllegalStateException("Utility class");
-  }
+  private TestConstants() {}
 }

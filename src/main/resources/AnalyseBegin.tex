@@ -1,0 +1,52 @@
+\documentclass[twocolumn,a4paper,10pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[skaknew]{chessfss}
+\usepackage{texmate}
+\usepackage{chessboard}
+\usepackage[dutch]{babel}
+\usepackage[T1]{fontenc}
+\usepackage{ragged2e}
+\usepackage{pslatex}
+\usepackage{enumitem}
+\usepackage{titlepic}
+\usepackage{epsfig}
+\usepackage[dvips,colorlinks]{hyperref}
+
+\topmargin =-15.mm
+\oddsidemargin =0.mm
+\evensidemargin =0.mm
+\headheight =0.mm
+\headsep =0.mm
+\textheight =265.mm
+\textwidth =165.mm
+\parindent =0.mm
+\parskip =0.mm
+
+\setlist{noitemsep}
+
+\setchessboard{
+  boardfontsize=14pt
+}
+
+\setboardfontsize{14pt}
+
+\renewcommand\checksign{$\dagger$}
+\renewcommand\iiclose{\leavevmode\unskip) }
+\renewcommand\iiopen{ (}
+\renewcommand\iiiclose{\leavevmode\unskip) }
+\renewcommand\iiiopen{ (}
+\renewcommand\ivclose{\leavevmode\unskip) }
+\renewcommand\ivopen{ (}
+
+\hypersetup{
+pdfauthor={@Auteur@},
+pdftitle={@Titel@},
+pdfsubject={Analyse}}
+
+\title{@Titel@}
+\author{@Auteur@}
+\date{\today{}}
+
+\begin{document}
+\maketitle

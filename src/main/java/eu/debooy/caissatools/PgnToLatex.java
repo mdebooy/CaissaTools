@@ -21,7 +21,6 @@ import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Spelerinfo;
-import eu.debooy.caissa.exceptions.FenException;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
@@ -227,8 +226,7 @@ public final class PgnToLatex extends Batchjob {
 
           // Bepaal de score en weerstandspunten.
           matrix  = new double[noSpelers][kolommen];
-          CaissaUtils.vulToernooiMatrix(partijen, punten, halve, matrix,
-                                        toernooitype,
+          CaissaUtils.vulToernooiMatrix(partijen, punten, matrix, toernooitype,
                                         parameters
                                           .get(CaissaTools.PAR_MATRIXOPSTAND)
                                           .equals(DoosConstants.WAAR),
@@ -660,14 +658,8 @@ public final class PgnToLatex extends Batchjob {
                                   .replaceAll("1/2", "\\\\textonehalf");
         String  zetten    = partij.getZuivereZetten().replaceAll("#", "\\\\#");
         if (partij.hasTag("FEN")) {
-            // Partij met andere beginstelling.
-            try {
-              fen = new FEN(partij.getTag("FEN"));
-            } catch (FenException e) {
-              DoosUtils.foutNaarScherm(partij.toString() + " - "
-                                       + e.getLocalizedMessage());
-              fen = new FEN();
-            }
+          // Partij met andere beginstelling.
+          fen = new FEN(partij.getTag("FEN"));
         } else {
             fen = new FEN();
         }
