@@ -17,6 +17,10 @@
 package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
+import static eu.debooy.caissa.CaissaConstants.JSON_TAG_KALENDER;
+import static eu.debooy.caissa.CaissaConstants.JSON_TAG_KALENDER_DATUM;
+import static eu.debooy.caissa.CaissaConstants.JSON_TAG_KALENDER_RONDE;
+import static eu.debooy.caissa.CaissaConstants.JSON_TAG_SPELERS;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.doosutils.Arguments;
@@ -86,14 +90,16 @@ public final class StartPgn extends Batchjob {
     }
     event     = schema.get(CaissaConstants.PGNTAG_EVENT).toString();
     site      = schema.get(CaissaConstants.PGNTAG_SITE).toString();
+    speeldata = new ArrayList<>();
+    spelers   = new ArrayList<>();
 
     try {
-      vulSpeeldata(schema.getArray("kalender"));
+      vulSpeeldata(schema.getArray(JSON_TAG_KALENDER));
     } catch (ParseException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
-    vulSpelers(schema.getArray("spelers"));
+    CaissaUtils.vulSpelers(spelers, schema.getArray(JSON_TAG_SPELERS));
 
     noSpelers = spelers.size();
     rondes    = CaissaUtils.bergertabel(spelers.size());
@@ -105,8 +111,8 @@ public final class StartPgn extends Batchjob {
       return;
     }
 
-    String  uitvoer = parameters.get(PAR_UITVOERDIR)
-                      + parameters.get(CaissaTools.PAR_BESTAND) + EXT_PGN;
+    var uitvoer = parameters.get(PAR_UITVOERDIR)
+                   + parameters.get(CaissaTools.PAR_BESTAND) + EXT_PGN;
 
     try {
       output  = new TekstBestand.Builder()
@@ -190,8 +196,8 @@ public final class StartPgn extends Batchjob {
         return;
       }
 
-    String    witspeler   = spelers.get(wit).getNaam();
-    String    zwartspeler = spelers.get(zwart).getNaam();
+    var witspeler   = spelers.get(wit).getNaam();
+    var zwartspeler = spelers.get(zwart).getNaam();
 
     output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
                                       CaissaConstants.PGNTAG_EVENT, event));
@@ -218,7 +224,7 @@ public final class StartPgn extends Batchjob {
   }
 
   private static boolean setParameters(String[] args) {
-    Arguments     arguments = new Arguments(args);
+    var           arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
 
     arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
@@ -267,10 +273,10 @@ public final class StartPgn extends Batchjob {
 
   private static void verwerkRondes(Integer round, int wit, int zwart)
       throws BestandException {
-    for (String ronde : rondes) {
+    for (var ronde : rondes) {
       round++;
-      for (String partij : ronde.split(" ")) {
-        String[]  paring  = partij.split("-");
+      for (var partij : ronde.split(" ")) {
+        var paring  = partij.split("-");
         schrijfPartij(speeldata.get(round - 1), round.toString(),
                       Integer.valueOf(paring[wit]) - 1,
                       Integer.valueOf(paring[zwart]) - 1);
@@ -279,28 +285,14 @@ public final class StartPgn extends Batchjob {
   }
 
   private static void vulSpeeldata(JSONArray kalender) throws ParseException {
-    speeldata = new ArrayList<>();
-
-    for (int i = 0; i < kalender.size(); i++) {
-      JSONObject  item  = (JSONObject) kalender.get(i);
-      if (item.containsKey("ronde")
-          && item.containsKey("datum")) {
-        speeldata.add(Datum.fromDate(Datum.toDate(item.get("datum").toString()),
+     for (var i = 0; i < kalender.size(); i++) {
+      var item  = (JSONObject) kalender.get(i);
+      if (item.containsKey(JSON_TAG_KALENDER_RONDE)
+          && item.containsKey(JSON_TAG_KALENDER_DATUM)) {
+        speeldata.add(Datum.fromDate(
+                Datum.toDate(item.get(JSON_TAG_KALENDER_DATUM).toString()),
                       CaissaConstants.PGN_DATUM_FORMAAT));
       }
-    }
-  }
-
-  private static void vulSpelers(JSONArray jsonArray) {
-    int spelerId  = 1;
-    spelers       = new ArrayList<>();
-
-    for (Object naam : jsonArray.toArray()) {
-      Spelerinfo  speler  = new Spelerinfo();
-      speler.setSpelerId(spelerId);
-      speler.setNaam(((JSONObject) naam).get("naam").toString());
-      spelers.add(speler);
-      spelerId++;
     }
   }
 }

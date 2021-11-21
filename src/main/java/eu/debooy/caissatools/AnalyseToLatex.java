@@ -62,8 +62,8 @@ public class AnalyseToLatex extends Batchjob {
   AnalyseToLatex(){}
 
   public static void execute(String[] args) {
-    String              charsetIn     = Charset.defaultCharset().name();
-    String              charsetUit    = "UTF-8";
+    var                 charsetIn     = Charset.defaultCharset().name();
+    var                 charsetUit    = "UTF-8";
     CsvBestand          schaaknotatie = null;
 
     Banner.printMarcoBanner(resourceBundle.getString("banner.analysetolatex"));
@@ -104,7 +104,7 @@ public class AnalyseToLatex extends Batchjob {
                         .setClassLoader(AnalyseToLatex.class.getClassLoader())
                         .build();
       while (schaaknotatie.hasNext()) {
-        String[]  notatie = schaaknotatie.next();
+        var notatie = schaaknotatie.next();
         if (notatie.length == 2) {
           notaties.put(notatie[0], notatie[1]);
         }
@@ -116,8 +116,7 @@ public class AnalyseToLatex extends Batchjob {
                           parameters.get(PAR_INVOERDIR)
                           + parameters.get(CaissaTools.PAR_BESTAND),
                       charsetIn));
-
-      for (PGN partij: partijen) {
+      for (var partij: partijen) {
         verwerkPartij(partij);
       }
 

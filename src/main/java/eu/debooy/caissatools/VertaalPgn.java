@@ -56,12 +56,12 @@ public final class VertaalPgn extends Batchjob {
     }
 
     // Haal de stukcodes op
-    String  naarStukken =
+    var naarStukken =
         CaissaConstants.Stukcodes
                        .valueOf(parameters.get(CaissaTools.PAR_NAARTAAL)
                                           .toUpperCase())
                        .getStukcodes();
-    String  vanStukken  =
+    var vanStukken  =
         CaissaConstants.Stukcodes
                        .valueOf(parameters.get(CaissaTools.PAR_VANTAAL)
                                           .toUpperCase())
@@ -69,7 +69,7 @@ public final class VertaalPgn extends Batchjob {
 
     // Verwerk command line invoer en stop.
     if (parameters.containsKey(CaissaTools.PAR_PGN)) {
-      PGN partij  = new PGN();
+      var partij  = new PGN();
       partij.setZetten(parameters.get(CaissaTools.PAR_PGN));
       try {
         DoosUtils.naarScherm(CaissaUtils.vertaalStukken(partij.getZetten(),
@@ -80,14 +80,14 @@ public final class VertaalPgn extends Batchjob {
       return;
     }
 
-    String          invoer    = parameters.get(PAR_INVOERDIR)
-                                + parameters.get(CaissaTools.PAR_BESTAND)
-                                + EXT_PGN;
+    var             invoer    = parameters.get(PAR_INVOERDIR)
+                                 + parameters.get(CaissaTools.PAR_BESTAND)
+                                 + EXT_PGN;
     TekstBestand    output    = null;
-    String          uitvoer   = parameters.get(PAR_UITVOERDIR)
-                                + parameters.get(CaissaTools.PAR_BESTAND) + "_"
-                                + parameters.get(CaissaTools.PAR_NAARTAAL)
-                                + EXT_PGN;
+    var             uitvoer   = parameters.get(PAR_UITVOERDIR)
+                                 + parameters.get(CaissaTools.PAR_BESTAND) + "_"
+                                 + parameters.get(CaissaTools.PAR_NAARTAAL)
+                                 + EXT_PGN;
 
     Collection<PGN> partijen;
     try {
@@ -104,8 +104,8 @@ public final class VertaalPgn extends Batchjob {
                                 .setCharset(parameters.get(PAR_CHARSETUIT))
                                 .setLezen(false).build();
 
-      for (PGN partij: partijen) {
-        String  zetten  = partij.getZetten();
+      for (var partij: partijen) {
+        var zetten  = partij.getZetten();
         partij.setZetten(CaissaUtils.vertaalStukken(zetten,
                                                     vanStukken, naarStukken));
         output.write(partij.toString());
@@ -163,7 +163,7 @@ public final class VertaalPgn extends Batchjob {
   }
 
   private static boolean setParameters(String[] args) {
-    Arguments     arguments = new Arguments(args);
+    var           arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
 
     arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,

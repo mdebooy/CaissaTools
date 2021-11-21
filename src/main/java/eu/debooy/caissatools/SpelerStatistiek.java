@@ -67,8 +67,8 @@ public final class SpelerStatistiek extends Batchjob {
   private SpelerStatistiek() {}
 
   protected static String datumInTitel(String startdatum, String einddatum) {
-    StringBuilder titelDatum  = new StringBuilder();
-    Date          datum;
+    var   titelDatum  = new StringBuilder();
+    Date  datum;
     try {
       datum = Datum.toDate(startdatum, CaissaConstants.PGN_DATUM_FORMAAT);
       titelDatum.append(Datum.fromDate(datum));
@@ -100,11 +100,11 @@ public final class SpelerStatistiek extends Batchjob {
       return;
     }
 
-    String  bestand       = parameters.get(CaissaTools.PAR_BESTAND);
+    var     bestand       = parameters.get(CaissaTools.PAR_BESTAND);
     Map<String, int[]>
             items         = new TreeMap<>( );
-    String  speler        = parameters.get(CaissaTools.PAR_SPELER);
-    String  statistiektag = parameters.get(CaissaTools.PAR_TAG);
+    var     speler        = parameters.get(CaissaTools.PAR_SPELER);
+    var     statistiektag = parameters.get(CaissaTools.PAR_TAG);
 
     Collection<PGN> partijen;
     try {
@@ -202,10 +202,10 @@ public final class SpelerStatistiek extends Batchjob {
 
       schrijfLatexHeader(output, speler);
 
-      int[] totaal  = new int[] {0,0,0,0,0,0};
+      var totaal  = new int[] {0,0,0,0,0,0};
       for (Entry<String, int[]> item : items.entrySet()) {
-        int[] statistiek  = item.getValue();
-        for (int i = 0; i < 6; i++) {
+        var statistiek  = item.getValue();
+        for (var i = 0; i < 6; i++) {
           totaal[i] += statistiek[i];
         }
         schrijfStatistiek(item.getKey(), statistiek, output);
@@ -312,7 +312,7 @@ public final class SpelerStatistiek extends Batchjob {
   private static void schrijfStatistiek(String sleutel, int[] statistiek,
                                         TekstBestand output)
       throws BestandException {
-    StringBuilder lijn  = new StringBuilder();
+    var lijn  = new StringBuilder();
     lijn.append(swapNaam(sleutel));
     // Als witspeler
     lijn  = new StringBuilder(schrijfStatistiekDeel(statistiek[0], statistiek[1],
@@ -336,30 +336,31 @@ public final class SpelerStatistiek extends Batchjob {
                                               int verlies, String prefix,
                                               TekstBestand output)
       throws BestandException {
-    DecimalFormat format    = new DecimalFormat("0.00");
-    Double        punten    = Double.valueOf(winst)
-                              + Double.valueOf(remise) / 2;
-    int           gespeeld  = winst + remise + verlies;
-    StringBuilder lijn      = new StringBuilder(prefix);
+    var format    = new DecimalFormat("0.00");
+    Double punten = Double.valueOf(winst) + Double.valueOf(remise) / 2;
+    var gespeeld  = winst + remise + verlies;
+    var lijn      = new StringBuilder(prefix);
 
     if (gespeeld == 0) {
       lijn.append(" & & & & &");
     } else {
-      lijn.append(" & " + winst + " & " + remise + " & " + verlies + " & ");
+      lijn.append(" & ").append(winst)
+          .append(" & ").append(remise)
+          .append(" & ").append(verlies).append(" & ");
       if (punten != 0.5) {
         lijn.append(punten.intValue());
         output.write(lijn.toString());
         lijn  = new StringBuilder();
       }
-      lijn.append(Utilities.kwart(punten) + " & ");
-      lijn.append(format.format((punten / gespeeld) * 100) + "\\%");
+      lijn.append(Utilities.kwart(punten)).append(" & ");
+      lijn.append(format.format((punten / gespeeld) * 100)).append("\\%");
     }
 
     return lijn.toString();
   }
 
   private static boolean setParameters(String[] args) {
-    Arguments     arguments = new Arguments(args);
+    var           arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
 
     arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
@@ -416,11 +417,11 @@ public final class SpelerStatistiek extends Batchjob {
                                     String speler, String statistiektag) {
     String  hulpdatum;
     String  sleutel;
-    String  uitslag   = partij.getTag(CaissaConstants.PGNTAG_RESULT);
-    String  wit       = partij.getTag(CaissaConstants.PGNTAG_WHITE);
-    String  zwart     = partij.getTag(CaissaConstants.PGNTAG_BLACK);
-    int i = 0;
-    for (String s: UITSLAGEN) {
+    var     uitslag   = partij.getTag(CaissaConstants.PGNTAG_RESULT);
+    var     wit       = partij.getTag(CaissaConstants.PGNTAG_WHITE);
+    var     zwart     = partij.getTag(CaissaConstants.PGNTAG_BLACK);
+    var     i         = 0;
+    for (var s: UITSLAGEN) {
       if (s.equals(uitslag)) {
         break;
       }
@@ -452,7 +453,7 @@ public final class SpelerStatistiek extends Batchjob {
       }
       if (DoosUtils.isNotBlankOrNull(statistiektag)) {
         if ("Date".equals(statistiektag)) {
-          int punt  = hulpdatum.indexOf('.');
+          var punt  = hulpdatum.indexOf('.');
           if (punt < 1) {
             sleutel = "????";
           } else {

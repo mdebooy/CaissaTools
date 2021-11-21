@@ -99,18 +99,18 @@ public final class ELOBerekenaar extends Batchjob {
 
     extraInfo = parameters.get(CaissaTools.PAR_EXTRAINFO)
                           .equals(DoosConstants.WAAR);
-    String  geschiedenisbestand =
+    var geschiedenisbestand =
         parameters.get(PAR_UITVOERDIR)
         + parameters.get(CaissaTools.PAR_GESCHIEDENISBESTAND) + EXT_CSV;
-    String  toernooibestand     =
+    var toernooibestand     =
         parameters.get(PAR_INVOERDIR)
         + parameters.get(CaissaTools.PAR_TOERNOOIBESTAND) + EXT_PGN;
-    String  spelerbestand       =
+    var spelerbestand       =
         parameters.get(PAR_UITVOERDIR)
         + parameters.get(CaissaTools.PAR_SPELERBESTAND) + EXT_CSV;
 
     startDatum  = leesSpelers(spelerbestand);
-    int aantalPartijen  = verwerkToernooi(toernooibestand, geschiedenisbestand);
+    var aantalPartijen  = verwerkToernooi(toernooibestand, geschiedenisbestand);
 
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.bestand"),
@@ -211,18 +211,18 @@ public final class ELOBerekenaar extends Batchjob {
   }
 
   private static String leesSpelers(String spelerBestand) {
-    String      laatsteDatum  = startDatum;
+    var         laatsteDatum  = startDatum;
     CsvBestand  invoer        = null;
     try {
-      Calendar  calendar  = Calendar.getInstance();
+      var calendar  = Calendar.getInstance();
       // Is eigenlijk een uitvoer.
       invoer  = new CsvBestand.Builder()
                               .setBestand(spelerBestand)
                               .setCharset(parameters.get(PAR_CHARSETUIT))
                               .build();
       while (invoer.hasNext()) {
-        String[]    veld        = invoer.next();
-        int         spelerId    = spelers.size();
+        var veld      = invoer.next();
+        var spelerId  = spelers.size();
         spelers.put(veld[0], spelerId);
         Spelerinfo  spelerinfo  = new Spelerinfo();
         spelerinfo.setNaam(veld[0]);
@@ -277,8 +277,8 @@ public final class ELOBerekenaar extends Batchjob {
   private static void pasSpelerAan(int id, List<Spelerinfo> spelerinfos,
                                    Date eloDatum, Integer andereElo,
                                    int uitslag) {
-    Integer vorigeElo = spelerinfos.get(id).getElo();
-    int     aantal    = spelerinfos.get(id).getPartijen();
+    var     vorigeElo = spelerinfos.get(id).getElo();
+    var     aantal    = spelerinfos.get(id).getPartijen();
     Integer elo;
     if (null == kFactor) {
       elo     = ELO.berekenELO(spelerinfos.get(id).getElo(), uitslag, andereElo,
@@ -322,7 +322,7 @@ public final class ELOBerekenaar extends Batchjob {
                                             .setKolomNamen(KOLOMMEN)
                                             .build();
 
-      Object[]  velden  = new Object[KOLOMMEN.length];
+      var velden  = new Object[KOLOMMEN.length];
       for (Integer spelerId  : spelers.values()) {
         velden[0] = spelerinfos.get(spelerId).getNaam();
         velden[1] = spelerinfos.get(spelerId).getElo();
@@ -364,7 +364,7 @@ public final class ELOBerekenaar extends Batchjob {
   }
 
   private static boolean setParameters(String[] args) {
-    Arguments     arguments = new Arguments(args);
+    var           arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
 
     arguments.setParameters(new String[] {PAR_CHARSETIN,
@@ -407,9 +407,9 @@ public final class ELOBerekenaar extends Batchjob {
                    parameters.get(CaissaTools.PAR_SPELERBESTAND) + "H");
     }
 
-    for (String parameter : new String[] {CaissaTools.PAR_GESCHIEDENISBESTAND,
-                                          CaissaTools.PAR_SPELERBESTAND,
-                                          CaissaTools.PAR_TOERNOOIBESTAND}) {
+    for (var parameter : new String[] {CaissaTools.PAR_GESCHIEDENISBESTAND,
+                                       CaissaTools.PAR_SPELERBESTAND,
+                                       CaissaTools.PAR_TOERNOOIBESTAND}) {
       if (DoosUtils.nullToEmpty(parameters.get(parameter))
                    .contains(File.separator)) {
         fouten.add(
@@ -446,18 +446,18 @@ public final class ELOBerekenaar extends Batchjob {
 
   private static int verwerkPartij(PGN partij)
       throws BestandException {
-    String  datum     = partij.getTag(CaissaConstants.PGNTAG_DATE);
-    Date    eloDatum;
+    var   datum     = partij.getTag(CaissaConstants.PGNTAG_DATE);
+    Date  eloDatum;
 
     if (startDatum.compareTo(datum) > 0
         || eindDatum.compareTo(datum) < 0) {
       return 0;
     }
 
-    String  wit       = partij.getTag(CaissaConstants.PGNTAG_WHITE);
-    String  zwart     = partij.getTag(CaissaConstants.PGNTAG_BLACK);
-    String  resultaat = partij.getTag(CaissaConstants.PGNTAG_RESULT);
-    int     uitslag   = UITSLAGEN.indexOf(resultaat);
+    var wit       = partij.getTag(CaissaConstants.PGNTAG_WHITE);
+    var zwart     = partij.getTag(CaissaConstants.PGNTAG_BLACK);
+    var resultaat = partij.getTag(CaissaConstants.PGNTAG_RESULT);
+    var uitslag   = UITSLAGEN.indexOf(resultaat);
     try {
       eloDatum  =
           Datum.toDate(datum, CaissaConstants.PGN_DATUM_FORMAAT);
@@ -476,10 +476,10 @@ public final class ELOBerekenaar extends Batchjob {
     voegSpelerToe(wit, eloDatum);
     voegSpelerToe(zwart, eloDatum);
 
-    int     witId     = spelers.get(wit);
-    int     zwartId   = spelers.get(zwart);
-    Integer witElo    = spelerinfos.get(witId).getElo();
-    Integer zwartElo  = spelerinfos.get(zwartId).getElo();
+    var witId     = spelers.get(wit);
+    var zwartId   = spelers.get(zwart);
+    var witElo    = spelerinfos.get(witId).getElo();
+    var zwartElo  = spelerinfos.get(zwartId).getElo();
     pasSpelerAan(witId,   spelerinfos, eloDatum, zwartElo, uitslag);
     pasSpelerAan(zwartId, spelerinfos, eloDatum, witElo, 2 - uitslag);
     if (null != geschiedenis) {
@@ -511,7 +511,7 @@ public final class ELOBerekenaar extends Batchjob {
 
   private static int verwerkToernooi(String toernooibestand,
                                      String geschiedenisbestand) {
-    int aantalPartijen  = 0;
+    var aantalPartijen  = 0;
 
     try {
       geschiedenis  = new CsvBestand.Builder().setBestand(geschiedenisbestand)
@@ -524,7 +524,7 @@ public final class ELOBerekenaar extends Batchjob {
       partijen.addAll(
           CaissaUtils.laadPgnBestand(toernooibestand,
                                      parameters.get(PAR_CHARSETIN)));
-      for (PGN partij : partijen) {
+      for (var partij : partijen) {
         if (!partij.isBye()
             && partij.isRated()) {
           verwerkt  += verwerkPartij(partij);
@@ -551,7 +551,7 @@ public final class ELOBerekenaar extends Batchjob {
       return;
     }
 
-    int spelerId  = spelers.size();
+    var spelerId  = spelers.size();
     spelers.put(speler, spelerId);
     Spelerinfo  spelerinfo  = new Spelerinfo();
     spelerinfo.setEerstePartij(eloDatum);

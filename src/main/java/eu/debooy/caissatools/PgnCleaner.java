@@ -53,7 +53,7 @@ public final class PgnCleaner extends Batchjob {
       return;
     }
 
-    Arguments arguments = new Arguments(args);
+    var arguments = new Arguments(args);
     arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
                                           PAR_CHARSETIN,
                                           PAR_CHARSETUIT,
@@ -67,18 +67,18 @@ public final class PgnCleaner extends Batchjob {
       return;
     }
 
-    boolean   enkelZetten = false;
+    var enkelZetten = false;
     if (parameters.containsKey(CaissaTools.PAR_ENKELZETTEN)) {
       enkelZetten = DoosConstants.WAAR
           .equalsIgnoreCase(parameters.get(CaissaTools.PAR_ENKELZETTEN));
     }
 
-    String          invoer      = parameters.get(PAR_INVOERDIR)
+    var             invoer      = parameters.get(PAR_INVOERDIR)
                                   + parameters.get(CaissaTools.PAR_BESTAND);
-    String          uitvoer     = parameters.get(PAR_UITVOERDIR)
+    var             uitvoer     = parameters.get(PAR_UITVOERDIR)
                                   + parameters.get(CaissaTools.PAR_UITVOER)
                                   + EXT_PGN;
-    int             noPartijen  = 0;
+    var             noPartijen  = 0;
     Collection<PGN> partijen;
     try {
       partijen = CaissaUtils.laadPgnBestand(invoer,
@@ -95,7 +95,7 @@ public final class PgnCleaner extends Batchjob {
                                 .setCharset(parameters.get(PAR_CHARSETUIT))
                                 .setLezen(false).build();
 
-      for (PGN partij: partijen) {
+      for (var partij: partijen) {
         if (enkelZetten) {
           partij.setZetten(partij.getZuivereZetten());
         }
@@ -165,7 +165,7 @@ public final class PgnCleaner extends Batchjob {
   }
 
   private static boolean setParameters(String[] args) {
-    Arguments     arguments = new Arguments(args);
+    var           arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
 
     arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,

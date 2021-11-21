@@ -123,9 +123,9 @@ public final class CaissaTools {
       return;
     }
 
-    String    commando      = args[0];
+    var commando      = args[0];
 
-    String[]  commandoArgs  = new String[args.length-1];
+    var commandoArgs  = new String[args.length-1];
     System.arraycopy(args, 1, commandoArgs, 0, args.length-1);
 
     switch (commando.toLowerCase()) {

@@ -34,7 +34,6 @@ import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -57,10 +56,10 @@ public final class ChessTheatre extends Batchjob {
   public static void execute(String[] args) {
     TekstBestand  gamedata      = null;
     TekstBestand  headers       = null;
-    int           maxBestanden  = 50;
-    int           minPartijen   = 1;
+    var           maxBestanden  = 50;
+    var           minPartijen   = 1;
     TekstBestand  updates       = null;
-    String        versie        = manifestInfo.getBuildVersion();
+    var           versie        = manifestInfo.getBuildVersion();
 
     Banner.printMarcoBanner(resourceBundle.getString("banner.chesstheatre"));
 
@@ -69,14 +68,14 @@ public final class ChessTheatre extends Batchjob {
     }
 
     if (parameters.containsKey(CaissaTools.PAR_MAXBESTANDEN)) {
-      int hulp  =
+      var hulp  =
           Integer.parseInt(parameters.get(CaissaTools.PAR_MAXBESTANDEN));
       if (hulp > 0) {
         maxBestanden  = hulp;
       }
     }
     if (parameters.containsKey(CaissaTools.PAR_MINPARTIJEN)) {
-      int hulp  =
+      var hulp  =
           Integer.parseInt(parameters.get(CaissaTools.PAR_MINPARTIJEN));
       if (hulp > 0) {
         minPartijen   = hulp;
@@ -95,7 +94,7 @@ public final class ChessTheatre extends Batchjob {
       return;
     }
 
-    int aantalPartijen  = partijen.size() / maxBestanden + 1;
+    var aantalPartijen  = partijen.size() / maxBestanden + 1;
     if (aantalPartijen < minPartijen) {
       aantalPartijen  = minPartijen;
     }
@@ -120,11 +119,11 @@ public final class ChessTheatre extends Batchjob {
                                   .setLezen(false).build();
       updates.write(CaissaTools.XML_HEADING);
 
-      int           partijNummer  = 0;
-      Iterator<PGN> iter          = partijen.iterator();
-      PGN           partij        = iter.next();
-      String        vorigEvent    = partij.getTag(CaissaConstants.PGNTAG_EVENT);
-      String        vorigRound    = partij.getTag(CaissaConstants.PGNTAG_ROUND);
+      var partijNummer  = 0;
+      var iter          = partijen.iterator();
+      var partij        = iter.next();
+      var vorigEvent    = partij.getTag(CaissaConstants.PGNTAG_EVENT);
+      var vorigRound    = partij.getTag(CaissaConstants.PGNTAG_ROUND);
 
       headers.write("  <tourney event=\"" + vorigEvent + "\">");
       headers.write("    " + HTML_ROUND_START + vorigRound + "\">");
@@ -168,7 +167,7 @@ public final class ChessTheatre extends Batchjob {
           }
         }
 
-        FEN fen = new FEN();
+        var fen = new FEN();
         if (partij.hasTag(CaissaConstants.PGNTAG_FEN)) {
           fen.setFen(partij.getTag(CaissaConstants.PGNTAG_FEN));
         }
@@ -190,11 +189,11 @@ public final class ChessTheatre extends Batchjob {
         gamedata.write(
             "    <comment>" + partij.getTagsAsString());
         gamedata.write("    </comment>");
-        StringBuilder lijn  = new StringBuilder("    <plies type=\"ffenu\">");
+        var lijn  = new StringBuilder("    <plies type=\"ffenu\">");
         if (!partij.getZuivereZetten().isEmpty()) {
           try {
             lijn.append(parseZetten(fen,partij.getZuivereZetten()));
-          } catch (FenException | PgnException e) {
+          } catch (PgnException e) {
             DoosUtils.foutNaarScherm("Error in " + partij.getTagsAsString());
             DoosUtils.foutNaarScherm(e.getLocalizedMessage());
           }
@@ -283,12 +282,12 @@ public final class ChessTheatre extends Batchjob {
   }
 
   private static String parseZetten(FEN fen, String pgnZetten)
-      throws FenException, PgnException {
+      throws PgnException {
     return CaissaUtils.pgnZettenToChessTheatre(fen, pgnZetten);
   }
 
   private static boolean setParameters(String[] args) {
-    Arguments     arguments = new Arguments(args);
+    var           arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
 
     arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,

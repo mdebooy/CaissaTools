@@ -17,6 +17,8 @@
 package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
+import static eu.debooy.caissa.CaissaConstants.JSON_TAG_EVENTDATE;
+import static eu.debooy.caissa.CaissaConstants.JSON_TAG_SPELERS;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.doosutils.Arguments;
@@ -38,19 +40,18 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
-import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeSet;
+import static javax.mail.Message.RecipientType.BCC;
+import static javax.mail.Message.RecipientType.CC;
+import static javax.mail.Message.RecipientType.TO;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.Transport;
 import javax.mail.internet.AddressException;
 import javax.mail.internet.InternetAddress;
 import javax.mail.internet.MimeMessage;
-import org.json.simple.JSONArray;
-import org.json.simple.JSONObject;
 
 /**
   @author Marco de Booij
@@ -74,7 +75,7 @@ public class StartCorrespondentie extends Batchjob {
       return;
     }
 
-    String  subject = leesBericht();
+    var subject = leesBericht();
 
     if (parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)) {
       nieuwespelers.addAll(
@@ -96,35 +97,24 @@ public class StartCorrespondentie extends Batchjob {
       return;
     }
 
-    String            date          = competitie.get("EventDate").toString();
-    String            datum         = getDatum(date);
-    boolean           enkel         = true;
+    var date    = competitie.get(JSON_TAG_EVENTDATE).toString();
+    var datum   = getDatum(date);
+    var enkel   = true;
     if (competitie.containsKey("enkelrondig")) {
       enkel = (boolean) competitie.get("enkelrondig");
     }
-    String            event         = competitie.get("Event").toString();
-    String            site          = competitie.get("Site").toString();
+    var event   = competitie.get("Event").toString();
+    var site    = competitie.get("Site").toString();
 
     initEmailparams(13);
     emailparams.add(0, event);
     emailparams.add(1, site);
     emailparams.add(2, datum);
 
-    JSONArray   jsonArray = competitie.getArray("spelers");
-    int         spelerId  = 1;
-    for (Object naam : jsonArray.toArray()) {
-      Spelerinfo  speler  = new Spelerinfo();
-      speler.setSpelerId(spelerId);
-      speler.setAlias(((JSONObject) naam).get("alias").toString());
-      speler.setEmail(((JSONObject) naam).get("email").toString());
-      speler.setNaam(((JSONObject) naam).get("naam").toString());
-      speler.setSpelerId(spelerId);
-      spelers.add(speler);
-      spelerId++;
-    }
-    int noSpelers = spelers.size();
+    CaissaUtils.vulSpelers(spelers, competitie.getArray(JSON_TAG_SPELERS));
+    var noSpelers = spelers.size();
 
-    String  uitvoer = parameters.get(PAR_UITVOERDIR) + event + EXT_PGN;
+    var uitvoer   = parameters.get(PAR_UITVOERDIR) + event + EXT_PGN;
 
     rondes  = CaissaUtils.bergertabel(noSpelers);
     maakToernooi(event, site, date, enkel, uitvoer);
@@ -184,7 +174,7 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static Session getSession() {
-    Properties properties = System.getProperties();
+    var properties  = System.getProperties();
     properties.setProperty("mail.smtp.host",
                            parameters.get(CaissaTools.PAR_SMTPSERVER));
     if (parameters.containsKey(CaissaTools.PAR_SMTPPOORT)) {
@@ -192,7 +182,7 @@ public class StartCorrespondentie extends Batchjob {
                              parameters.get(CaissaTools.PAR_SMTPPOORT));
     }
 
-    Session session = Session.getInstance(properties);
+    var session     = Session.getInstance(properties);
     if (null == session) {
       DoosUtils.foutNaarScherm(resourceBundle.getString("warn.session"));
       parameters.remove(CaissaTools.PAR_SMTPSERVER);
@@ -204,7 +194,7 @@ public class StartCorrespondentie extends Batchjob {
   private static String getTekst(String lijn) {
     if (lijn.startsWith("#")) {
       if (DoosUtils.telTeken(lijn, '#') == 2) {
-        String  parameter = lijn.substring(1).split("#")[0];
+        var parameter = lijn.substring(1).split("#")[0];
         switch (parameter) {
           case "geennieuwespelers":
             if (!parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)) {
@@ -270,7 +260,7 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static void initEmailparams(int params) {
-    for (int i = 0; i < params; i++) {
+    for (var i = 0; i < params; i++) {
       emailparams.add(i, "");
     }
   }
@@ -282,10 +272,10 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static String leesBericht() {
-    String  subject = "Start " + parameters.get(CaissaTools.PAR_EVENT);
+    var subject = "Start " + parameters.get(CaissaTools.PAR_EVENT);
     if (parameters.containsKey(CaissaTools.PAR_BERICHT)) {
-      String  bericht = parameters.get(PAR_INVOERDIR)
-                         + parameters.get(CaissaTools.PAR_BERICHT);
+      var bericht = parameters.get(PAR_INVOERDIR)
+                        + parameters.get(CaissaTools.PAR_BERICHT);
       TekstBestand  message = null;
       try {
         message  = new TekstBestand.Builder()
@@ -323,8 +313,8 @@ public class StartCorrespondentie extends Batchjob {
       return "";
     }
 
-    StringBuilder resultaat = new StringBuilder();
-    String        lijn;
+    var     resultaat = new StringBuilder();
+    String  lijn;
 
     if (nieuwespelers.size() == 1) {
       lijn  = resourceBundle.getString("message.nieuwespeler");
@@ -338,22 +328,22 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static String maakMessage() {
-    String        speler  = emailparams.get(4);
-    StringBuilder message = new StringBuilder();
+    var speler  = emailparams.get(4);
+    var message = new StringBuilder();
 
-    for (String lijn : email) {
+    for (var lijn : email) {
       lijn  = getTekst(lijn);
       if (DoosUtils.isNotBlankOrNull(lijn)) {
         if (DoosUtils.telTeken(lijn, '@') > 1) {
           StringBuilder hulplijn = new StringBuilder();
           while (DoosUtils.telTeken(lijn, '@') > 1) {
-            int at  = lijn.indexOf('@');
+            var at      = lijn.indexOf('@');
             hulplijn.append(lijn.substring(0, at));
-            lijn    = lijn.substring(at+1);
-            at      = lijn.indexOf('@');
-            String  sublijn = lijn.substring(0, at);
+            lijn        = lijn.substring(at+1);
+            at          = lijn.indexOf('@');
+            var sublijn = lijn.substring(0, at);
             if (sublijn.contains("_")) {
-              String[]  delen = sublijn.split("_");
+              var delen = sublijn.split("_");
               switch (delen[0].toLowerCase()) {
                 case "metwit":
                   hulplijn.append(maakMessageMetwit(speler, delen[1]));
@@ -387,19 +377,19 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static String maakMessageMetwit(String to, String template) {
-    int           noSpelers = spelers.size();
-    StringBuilder resultaat = new StringBuilder();
+    var noSpelers = spelers.size();
+    var resultaat = new StringBuilder();
 
-    for (String ronde : rondes) {
-      String[]  partijen  = ronde.split(" ");
+    for (var ronde : rondes) {
+      var partijen  = ronde.split(" ");
       for (String partij : partijen) {
         String[] speler = partij.split("-");
-        int wit   = Integer.valueOf(speler[0])-1;
-        int zwart = Integer.valueOf(speler[1])-1;
+        var wit   = Integer.valueOf(speler[0])-1;
+        var zwart = Integer.valueOf(speler[1])-1;
         if (wit < noSpelers
             && zwart < noSpelers) {
-          Spelerinfo  witspeler   = spelers.get(wit);
-          Spelerinfo  zwartspeler = spelers.get(zwart);
+          var witspeler   = spelers.get(wit);
+          var zwartspeler = spelers.get(zwart);
           if (witspeler.getNaam().equals(to)
               && isUitdaging(witspeler.getNaam(), zwartspeler.getNaam())) {
             emailparams.set(3,  zwartspeler.getVoornaam());
@@ -422,19 +412,19 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static String maakMessageMetzwart(String to, String template) {
-    int           noSpelers = spelers.size();
-    StringBuilder resultaat = new StringBuilder();
+    var noSpelers = spelers.size();
+    var resultaat = new StringBuilder();
 
-    for (String ronde : rondes) {
-      String[]  partijen  = ronde.split(" ");
+    for (var ronde : rondes) {
+      var partijen  = ronde.split(" ");
       for (String partij : partijen) {
-        String[] speler = partij.split("-");
-        int wit   = Integer.valueOf(speler[0])-1;
-        int zwart = Integer.valueOf(speler[1])-1;
+        var speler  = partij.split("-");
+        var wit     = Integer.valueOf(speler[0])-1;
+        var zwart   = Integer.valueOf(speler[1])-1;
         if (wit < noSpelers
             && zwart < noSpelers) {
-          Spelerinfo  witspeler   = spelers.get(wit);
-          Spelerinfo  zwartspeler = spelers.get(zwart);
+          var witspeler   = spelers.get(wit);
+          var zwartspeler = spelers.get(zwart);
           if (zwartspeler.getNaam().equals(to)
               && isUitdaging(witspeler.getNaam(), zwartspeler.getNaam())) {
             emailparams.set(3,  zwartspeler.getVoornaam());
@@ -457,19 +447,19 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static String maakMessagePartijen(String template) {
-    int           noSpelers = spelers.size();
-    StringBuilder resultaat = new StringBuilder();
+    var noSpelers = spelers.size();
+    var resultaat = new StringBuilder();
 
-    for (String ronde : rondes) {
-      String[]  partijen  = ronde.split(" ");
-      for (String partij : partijen) {
-        String[] speler = partij.split("-");
-        int wit   = Integer.valueOf(speler[0])-1;
-        int zwart = Integer.valueOf(speler[1])-1;
+    for (var ronde : rondes) {
+      var partijen  = ronde.split(" ");
+      for (var partij : partijen) {
+        var speler = partij.split("-");
+        var wit     = Integer.valueOf(speler[0])-1;
+        var zwart   = Integer.valueOf(speler[1])-1;
         if (wit < noSpelers
             && zwart < noSpelers) {
-          Spelerinfo  witspeler   = spelers.get(wit);
-          Spelerinfo  zwartspeler = spelers.get(zwart);
+          var witspeler   = spelers.get(wit);
+          var zwartspeler = spelers.get(zwart);
           emailparams.set(3,  zwartspeler.getVoornaam());
           emailparams.set(4,  zwartspeler.getNaam());
           emailparams.set(5,  zwartspeler.getAlias());
@@ -489,7 +479,7 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static String maakMessageSpelers(String template) {
-    StringBuilder   resultaat   = new StringBuilder();
+    var             resultaat   = new StringBuilder();
 
     Set<Spelerinfo> gesorteerd  =
         new TreeSet<>(new Spelerinfo.ByNaamComparator());
@@ -515,7 +505,7 @@ public class StartCorrespondentie extends Batchjob {
 
   private static void maakToernooi(String event, String site, String date,
                                    boolean enkel, String uitvoer) {
-    int           noSpelers = spelers.size();
+    var           noSpelers = spelers.size();
     TekstBestand  output    = null;
 
     try {
@@ -523,15 +513,15 @@ public class StartCorrespondentie extends Batchjob {
                                 .setBestand(uitvoer)
                                 .setCharset(parameters.get(PAR_CHARSETUIT))
                                 .setLezen(false).build();
-      for (String ronde : rondes) {
-        for (String partij : ronde.split(" ")) {
-          String[]  paring  = partij.split("-");
-          int       wit     = Integer.valueOf(paring[0]) - 1;
-          int       zwart   = Integer.valueOf(paring[1]) - 1;
+      for (var ronde : rondes) {
+        for (var partij : ronde.split(" ")) {
+          var paring  = partij.split("-");
+          var wit     = Integer.valueOf(paring[0]) - 1;
+          var zwart   = Integer.valueOf(paring[1]) - 1;
           if (wit != noSpelers
               && zwart != noSpelers) {
-            String    witspeler   = spelers.get(wit).getNaam();
-            String    zwartspeler = spelers.get(zwart).getNaam();
+            var witspeler   = spelers.get(wit).getNaam();
+            var zwartspeler = spelers.get(zwart).getNaam();
             schrijfPartij(output, event, site, date, witspeler, zwartspeler);
             if (!enkel) {
               schrijfPartij(output, event, site, date, zwartspeler, witspeler);
@@ -580,24 +570,21 @@ public class StartCorrespondentie extends Batchjob {
 
   private static void sendEmail(MailData maildata, Session session) {
         try {
-      MimeMessage msg = new MimeMessage(session);
+      var msg = new MimeMessage(session);
       msg.setHeader("Content-Type", maildata.getContentType());
 
       msg.setFrom(new InternetAddress(maildata.getFrom()));
 
       if (maildata.getToSize() > 0) {
-        msg.setRecipients(MimeMessage.RecipientType.TO,
-                          fillAddresses(maildata.getTo().values()));
+        msg.setRecipients(TO, fillAddresses(maildata.getTo().values()));
       }
 
       if (maildata.getCcSize() > 0) {
-        msg.setRecipients(MimeMessage.RecipientType.CC,
-                          fillAddresses(maildata.getCc().values()));
+        msg.setRecipients(CC, fillAddresses(maildata.getCc().values()));
       }
 
       if (maildata.getBccSize() > 0) {
-        msg.setRecipients(MimeMessage.RecipientType.BCC,
-                          fillAddresses(maildata.getBcc().values()));
+        msg.setRecipients(BCC, fillAddresses(maildata.getBcc().values()));
       }
 
       msg.setSubject(maildata.getSubject());
@@ -605,8 +592,8 @@ public class StartCorrespondentie extends Batchjob {
       msg.setContent(maildata.getMessage(), maildata.getContentType());
 
       if (maildata.getHeaderSize() > 0) {
-        Map<String, String> headers  = maildata.getHeader();
-        for (String key : maildata.getHeader().keySet()) {
+        var headers  = maildata.getHeader();
+        for (var key : maildata.getHeader().keySet()) {
           msg.setHeader(key, headers.get(key));
         }
       }
@@ -618,7 +605,7 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static boolean setParameters(String[] args) {
-    Arguments     arguments = new Arguments(args);
+    var           arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
 
     arguments.setParameters(new String[] {CaissaTools.PAR_BERICHT,
@@ -678,22 +665,22 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static void stuurPerPartij(String subject) {
-    int     noSpelers = spelers.size();
-    Session session   = getSession();
-    for (String ronde : rondes) {
-      String[]  partijen  = ronde.split(" ");
-      for (String partij : partijen) {
-        String[] speler = partij.split("-");
-        int wit   = Integer.valueOf(speler[0])-1;
-        int zwart = Integer.valueOf(speler[1])-1;
+    var noSpelers = spelers.size();
+    var session   = getSession();
+    for (var ronde : rondes) {
+      var partijen  = ronde.split(" ");
+      for (var partij : partijen) {
+        var speler = partij.split("-");
+        var wit     = Integer.valueOf(speler[0])-1;
+        var zwart   = Integer.valueOf(speler[1])-1;
         if (wit < noSpelers
             && zwart < noSpelers) {
-          Spelerinfo  witspeler   = spelers.get(wit);
-          Spelerinfo  zwartspeler = spelers.get(zwart);
+          var witspeler   = spelers.get(wit);
+          var zwartspeler = spelers.get(zwart);
           if ((!parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)
               || nieuwespelers.contains(witspeler.getNaam())
               || nieuwespelers.contains(zwartspeler.getNaam()))) {
-            MailData  maildata  = new MailData();
+            var maildata  = new MailData();
             maildata.addTo(zwartspeler.getEmail());
             maildata.addCc(witspeler.getEmail());
             maildata.setFrom(parameters.get(CaissaTools.PAR_TSEMAIL));
@@ -721,10 +708,10 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static void stuurPerSpeler(String subject) {
-    Session session = getSession();
+    var session = getSession();
 
     spelers.forEach(speler -> {
-      MailData  maildata  = new MailData();
+      var maildata  = new MailData();
       maildata.addTo(speler.getEmail());
       maildata.setFrom(parameters.get(CaissaTools.PAR_TSEMAIL));
       maildata.setSubject(formatLijn(subject));
@@ -753,15 +740,15 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static Integer telPartijenMetZwart(Spelerinfo zwartspeler) {
-    Integer aantalPartijen  = 0;
-    int     noSpelers       = spelers.size();
-    String  zwartspelerId   = "-" + zwartspeler.getSpelerId().toString();
+    var aantalPartijen  = 0;
+    var noSpelers       = spelers.size();
+    var zwartspelerId   = "-" + zwartspeler.getSpelerId().toString();
 
-    for (String ronde : rondes) {
-      String[]  partijen  = ronde.split(" ");
-      for (String partij : partijen) {
+    for (var ronde : rondes) {
+      var partijen  = ronde.split(" ");
+      for (var partij : partijen) {
         if (partij.endsWith(zwartspelerId)) {
-          Integer witspelerId = Integer.valueOf(partij.split("-")[0]) - 1;
+          var witspelerId = Integer.valueOf(partij.split("-")[0]) - 1;
           if (witspelerId < noSpelers
               && isUitdaging(spelers.get(witspelerId).getNaam(),
                              zwartspeler.getNaam())) {

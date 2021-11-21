@@ -80,8 +80,8 @@ public final class PgnToLatex extends Batchjob {
   PgnToLatex() {}
 
   protected static String datumInTitel(String startDatum, String eindDatum) {
-    StringBuilder titelDatum  = new StringBuilder();
-    Date          datum       = null;
+    var   titelDatum  = new StringBuilder();
+    Date  datum       = null;
     try {
       datum = Datum.toDate(startDatum, CaissaConstants.PGN_DATUM_FORMAAT);
       titelDatum.append(Datum.fromDate(datum));
@@ -106,11 +106,12 @@ public final class PgnToLatex extends Batchjob {
   }
 
   public static void execute(String[] args) {
-    int           aantalPartijen  = 0;
-    eindDatum       = "0000.00.00";
-    output          = null;
-    startDatum      = "9999.99.99";
+    var           aantalPartijen  = 0;
     List<String>  template        = new ArrayList<>();
+
+    eindDatum       = CaissaConstants.DEF_STARTDATUM;
+    output          = null;
+    startDatum      = CaissaConstants.DEF_EINDDATUM;
 
     Banner.printMarcoBanner(resourceBundle.getString("banner.pgntolatex"));
 
@@ -118,20 +119,21 @@ public final class PgnToLatex extends Batchjob {
       return;
     }
 
-    String[]  bestand = parameters.get(CaissaTools.PAR_BESTAND)
-                                  .replace(EXT_PGN, "").split(";");
+    var bestand   = parameters.get(CaissaTools.PAR_BESTAND)
+                            .replace(EXT_PGN, "").split(";");
 
     auteur        = parameters.get(CaissaTools.PAR_AUTEUR);
     toernooitype  =
         CaissaUtils.getToernooitype(parameters.get(CaissaTools.PAR_ENKEL));
-    String[]  halve         =
+    //TODO Verwijderen en vervangen door schema.
+    var halve     =
         DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_HALVE)).split(";");
-    boolean   metMatrix     =
+    var metMatrix =
         parameters.get(CaissaTools.PAR_MATRIX).equals(DoosConstants.WAAR);
     titel         = parameters.get(CaissaTools.PAR_TITEL);
 
-    int           beginBody = -1;
-    int           eindeBody = -1;
+    var beginBody = -1;
+    var eindeBody = -1;
     TekstBestand  texInvoer;
     try {
       if (parameters.containsKey(CaissaTools.PAR_TEMPLATE)) {
@@ -186,7 +188,7 @@ public final class PgnToLatex extends Batchjob {
 
     Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
 
-    for (int i = 0; i < bestand.length; i++) {
+    for (var i = 0; i < bestand.length; i++) {
       partijen  = new TreeSet<>(new PGN.ByEventComparator());
       Map<String, String> texPartij = new HashMap<>();
       spelers   = new HashSet<>();
@@ -200,20 +202,20 @@ public final class PgnToLatex extends Batchjob {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
 
-      partijen.forEach(partij -> verwerkPartij(partij));
+      partijen.forEach(PgnToLatex::verwerkPartij);
 
       try {
-        int       noSpelers = spelers.size();
-        int       kolommen  =
+        var noSpelers = spelers.size();
+        var kolommen  =
             (toernooitype == CaissaConstants.TOERNOOI_MATCH
                                   ? partijen.size() : noSpelers * toernooitype);
         matrix    = null;
-        String[]  namen = new String[noSpelers];
+        var namen = new String[noSpelers];
         punten    = new Spelerinfo[noSpelers];
         // Maak de Matrix
         if (metMatrix) {
-          int j = 0;
-          for (String speler  : spelers) {
+          var j = 0;
+          for (var speler  : spelers) {
             namen[j++]  = speler;
           }
           Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
@@ -250,19 +252,19 @@ public final class PgnToLatex extends Batchjob {
         }
         params.put("Titel", titel);
 
-        String  status  = NORMAAL;
+        var status  = NORMAAL;
         if (i == 0) {
-          for (int j = 0; j < beginBody; j++) {
+          for (var j = 0; j < beginBody; j++) {
             status  = schrijf(template.get(j), status, kolommen, noSpelers,
                               texPartij, params);
           }
         }
-        for (int j = beginBody; j < eindeBody; j++) {
+        for (var j = beginBody; j < eindeBody; j++) {
           status  = schrijf(template.get(j), status, kolommen, noSpelers,
                             texPartij, params);
         }
         if (i == bestand.length - 1) {
-          for (int j = eindeBody + 1; j < template.size(); j++) {
+          for (var j = eindeBody + 1; j < template.size(); j++) {
             status  = schrijf(template.get(j), status, kolommen, noSpelers,
                               texPartij, params);
           }
@@ -281,7 +283,7 @@ public final class PgnToLatex extends Batchjob {
       DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
     }
 
-    for (String tex : bestand) {
+    for (var tex : bestand) {
       DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.bestand"),
                              parameters.get(PAR_UITVOERDIR) + tex + EXT_TEX));
@@ -347,9 +349,9 @@ public final class PgnToLatex extends Batchjob {
 
   private static void maakMatrix(int kolommen, int noSpelers)
       throws BestandException {
-    StringBuilder lijn  = new StringBuilder();
+    var lijn  = new StringBuilder();
     lijn.append("    \\begin{tabular} { | c | l | ");
-    for (int i = 0; i < kolommen; i++) {
+    for (var i = 0; i < kolommen; i++) {
       lijn.append("c | ");
     }
     lijn.append("r | r | r | }");
@@ -357,7 +359,7 @@ public final class PgnToLatex extends Batchjob {
     lijn  = new StringBuilder();
     output.write("    " + HLINE);
     lijn.append("    \\multicolumn{2}{|c|}{} ");
-    for (int i = 0; i < (toernooitype == 0 ? kolommen : noSpelers); i++) {
+    for (var i = 0; i < (toernooitype == 0 ? kolommen : noSpelers); i++) {
       if (toernooitype < 2) {
         lijn.append(" & ").append((i + 1));
       } else {
@@ -375,7 +377,7 @@ public final class PgnToLatex extends Batchjob {
     output.write("    \\cline{3-" + (2 + kolommen) + "}");
     if (toernooitype == 2) {
       lijn.append("    \\multicolumn{2}{|c|}{} & ");
-      for (int i = 0; i < noSpelers; i++) {
+      for (var i = 0; i < noSpelers; i++) {
         lijn.append(resourceBundle.getString("tag.wit")).append(" & ")
             .append(resourceBundle.getString("tag.zwart")).append(" & ");
       }
@@ -384,7 +386,7 @@ public final class PgnToLatex extends Batchjob {
       lijn  = new StringBuilder();
     }
     output.write("    " + HLINE);
-    for (int i = 0; i < noSpelers; i++) {
+    for (var i = 0; i < noSpelers; i++) {
       if (toernooitype == 0) {
         lijn.append("\\multicolumn{2}{|l|}{").append(punten[i].getNaam())
             .append("} & ");
@@ -392,7 +394,7 @@ public final class PgnToLatex extends Batchjob {
         lijn.append((i + 1)).append(" & ").append(punten[i].getNaam())
             .append(" & ");
       }
-      for (int j = 0; j < kolommen; j++) {
+      for (var j = 0; j < kolommen; j++) {
         if (toernooitype > 0) {
           if (i == j / toernooitype) {
             lijn.append("\\multicolumn{1}"
@@ -418,14 +420,14 @@ public final class PgnToLatex extends Batchjob {
         }
         lijn.append(" & ");
       }
-      int     pntn  = punten[i].getPunten().intValue();
-      String  decim = Utilities.kwart(punten[i].getPunten());
+      var pntn  = punten[i].getPunten().intValue();
+      var decim = Utilities.kwart(punten[i].getPunten());
       lijn.append(
           ((pntn == 0 && "".equals(decim)) || pntn >= 1 ?
               pntn : "")).append(decim);
       if (toernooitype > 0) {
-        int     wpntn   = punten[i].getTieBreakScore().intValue();
-        String  wdecim  = Utilities.kwart(punten[i].getTieBreakScore());
+        var wpntn   = punten[i].getTieBreakScore().intValue();
+        var wdecim  = Utilities.kwart(punten[i].getTieBreakScore());
         lijn.append(" & ").append(punten[i].getPartijen()).append(" & ");
         lijn.append(((wpntn == 0 && "".equals(wdecim))
                      || wpntn >= 1 ? wpntn : "")).append(wdecim);
@@ -440,7 +442,7 @@ public final class PgnToLatex extends Batchjob {
 
   private static String replaceParameters(String regel,
                                           Map<String, String> parameters) {
-    String resultaat  = regel;
+    var resultaat = regel;
     for (Entry<String, String> parameter : parameters.entrySet()) {
       resultaat = resultaat.replace("@"+parameter.getKey()+"@",
                                     parameter.getValue());
@@ -454,81 +456,81 @@ public final class PgnToLatex extends Batchjob {
                                 Map<String, String> texPartij,
                                 Map<String, String> parameters)
       throws BestandException {
-    String  start = regel.split(" ")[0];
-          switch(start) {
-          case "%@Include":
-            if ("matrix".equalsIgnoreCase(regel.split(" ")[1])
-                && null != matrix) {
-              maakMatrix(kolommen, noSpelers);
-            }
+    var start = regel.split(" ")[0];
+    switch(start) {
+      case "%@Include":
+        if ("matrix".equalsIgnoreCase(regel.split(" ")[1])
+            && null != matrix) {
+          maakMatrix(kolommen, noSpelers);
+        }
+        break;
+      case "%@IncludeStart":
+        switch(regel.split(" ")[1].toLowerCase()) {
+          case "keywords":
+            status  = KEYWORDS;
             break;
-          case "%@IncludeStart":
-            switch(regel.split(" ")[1].toLowerCase()) {
-            case "keywords":
-              status  = KEYWORDS;
-              break;
-            case "logo":
-              status  = KYW_LOGO;
-              break;
-            case "matrix":
-              status = KYW_MATRIX;
-              break;
-            case "partij":
-              status  = KYW_PARTIJEN;
-              break;
-            case "periode":
-              status  = KYW_PERIODE;
-              break;
-            default:
-              break;
-            }
+          case "logo":
+            status  = KYW_LOGO;
             break;
-          case "%@IncludeEind":
-            switch (regel.split(" ")[1].toLowerCase()) {
-            case "partij":
-              verwerkPartijen(partijen, texPartij, output);
-              break;
-            default:
-              break;
-            }
-            status  = NORMAAL;
+          case "matrix":
+            status = KYW_MATRIX;
             break;
-          case "%@I18N":
-            output.write("% " + resourceBundle.getString(regel.split(" ")[1]
-                                                              .toLowerCase()));
+          case "partij":
+            status  = KYW_PARTIJEN;
+            break;
+          case "periode":
+            status  = KYW_PERIODE;
             break;
           default:
-            switch (status) {
-            case KEYWORDS:
-              if (parameters.containsKey(CaissaTools.PAR_KEYWORDS)) {
-                output.write(replaceParameters(regel, parameters));
-              }
-              break;
-            case KYW_LOGO:
-              if (parameters.containsKey(CaissaTools.PAR_LOGO)) {
-                output.write(replaceParameters(regel, parameters));
-              }
-              break;
-            case KYW_MATRIX:
-              if (null != matrix) {
-                output.write(replaceParameters(regel, parameters));
-              }
-              break;
-            case KYW_PARTIJEN:
-              String[]  splits  = regel.substring(1).split("=");
-              texPartij.put(splits[0], splits[1]);
-              break;
-            case KYW_PERIODE:
-              if (parameters.containsKey("Periode")) {
-                output.write(replaceParameters(regel, parameters));
-              }
-              break;
+            break;
+        }
+        break;
+      case "%@IncludeEind":
+            switch (regel.split(" ")[1].toLowerCase()) {
+            case "partij":
+          verwerkPartijen(partijen, texPartij, output);
+          break;
             default:
-              output.write(replaceParameters(regel, parameters));
               break;
+        }
+        status  = NORMAAL;
+        break;
+      case "%@I18N":
+        output.write("% " + resourceBundle.getString(regel.split(" ")[1]
+                                                          .toLowerCase()));
+        break;
+      default:
+        switch (status) {
+          case KEYWORDS:
+            if (parameters.containsKey(CaissaTools.PAR_KEYWORDS)) {
+              output.write(replaceParameters(regel, parameters));
             }
             break;
+          case KYW_LOGO:
+            if (parameters.containsKey(CaissaTools.PAR_LOGO)) {
+              output.write(replaceParameters(regel, parameters));
+            }
+            break;
+          case KYW_MATRIX:
+            if (null != matrix) {
+              output.write(replaceParameters(regel, parameters));
+            }
+            break;
+          case KYW_PARTIJEN:
+            String[]  splits  = regel.substring(1).split("=");
+            texPartij.put(splits[0], splits[1]);
+            break;
+          case KYW_PERIODE:
+            if (parameters.containsKey("Periode")) {
+              output.write(replaceParameters(regel, parameters));
+            }
+            break;
+          default:
+            output.write(replaceParameters(regel, parameters));
+            break;
           }
+        break;
+    }
 
     return status;
   }
@@ -655,16 +657,16 @@ public final class PgnToLatex extends Batchjob {
       if (!partij.isBye()) {
         String  regel     = "";
         String  resultaat = partij.getTag(CaissaConstants.PGNTAG_RESULT)
-                                  .replaceAll("1/2", "\\\\textonehalf");
-        String  zetten    = partij.getZuivereZetten().replaceAll("#", "\\\\#");
-        if (partij.hasTag("FEN")) {
+                                  .replace("1/2", "\\textonehalf");
+        String  zetten    = partij.getZuivereZetten().replace("#", "\\\\#");
+        if (partij.hasTag(CaissaConstants.PGNTAG_FEN)) {
           // Partij met andere beginstelling.
-          fen = new FEN(partij.getTag("FEN"));
+          fen = new FEN(partij.getTag(CaissaConstants.PGNTAG_FEN));
         } else {
             fen = new FEN();
         }
         if (DoosUtils.isNotBlankOrNull(zetten)) {
-          if (partij.hasTag("FEN")) {
+          if (partij.hasTag(CaissaConstants.PGNTAG_FEN)) {
             regel = texPartij.get("fenpartij");
           } else {
             // 'Gewone' partij.
@@ -689,7 +691,7 @@ public final class PgnToLatex extends Batchjob {
               switch (tag) {
               case CaissaConstants.PGNTAG_RESULT:
                 regel = regel.replace("@" + tag + "@",
-                    partij.getTag(tag).replaceAll("1/2", "\\\\textonehalf"));
+                    partij.getTag(tag).replace("1/2", "\\textonehalf"));
                 break;
               case CaissaConstants.PGNTAG_ECO:
                 String extra = "";

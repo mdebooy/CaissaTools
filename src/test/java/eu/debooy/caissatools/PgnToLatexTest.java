@@ -133,8 +133,7 @@ public class PgnToLatexTest extends BatchTest {
         Bestand.equals(
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + BST_COMPETITIE1_TEX),
-            Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
-                                      BST_COMPETITIE1_TEX)));
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPETITIE1_TEX)));
 
     Bestand.delete(TEMP + File.separator + BST_COMPETITIE1_TEX);
   }
@@ -169,8 +168,7 @@ public class PgnToLatexTest extends BatchTest {
         Bestand.equals(
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + BST_COMPETITIE1_TEX),
-            Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
-                                      BST_COMPETITIE4_TEX)));
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPETITIE4_TEX)));
 
     Bestand.delete(TEMP + File.separator + BST_COMPETITIE1_TEX);
   }
@@ -202,8 +200,7 @@ public class PgnToLatexTest extends BatchTest {
         Bestand.equals(
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + BST_COMPETITIE1_TEX),
-            Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
-                                      BST_COMPETITIE2_TEX)));
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPETITIE2_TEX)));
 
     Bestand.delete(TEMP + File.separator + BST_COMPETITIE1_TEX);
   }
@@ -235,8 +232,7 @@ public class PgnToLatexTest extends BatchTest {
         Bestand.equals(
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + BST_COMPETITIE1_TEX),
-            Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
-                                      BST_COMPETITIE3_TEX)));
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPETITIE3_TEX)));
 
     Bestand.delete(TEMP + File.separator + BST_COMPETITIE1_TEX);
   }
@@ -271,8 +267,7 @@ public class PgnToLatexTest extends BatchTest {
         Bestand.equals(
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + BST_COMPETITIE1_TEX),
-            Bestand.openInvoerBestand(PgnToLatexTest.class.getClassLoader(),
-                                      BST_COMPETITIE5_TEX)));
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPETITIE5_TEX)));
 
     Bestand.delete(TEMP + File.separator + BST_COMPETITIE1_TEX);
   }

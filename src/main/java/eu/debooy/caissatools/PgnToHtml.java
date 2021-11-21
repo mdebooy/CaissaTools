@@ -123,13 +123,13 @@ public final class PgnToHtml extends Batchjob {
       return;
     }
 
-    String    invoer        = parameters.get(PAR_INVOERDIR)
-                              + parameters.get(CaissaTools.PAR_BESTAND)
-                              + EXT_PGN;
-    boolean   matrixOpStand =
+    var invoer        = parameters.get(PAR_INVOERDIR)
+                         + parameters.get(CaissaTools.PAR_BESTAND)
+                         + EXT_PGN;
+    var matrixOpStand =
         DoosConstants.WAAR.equalsIgnoreCase(
             parameters.get(CaissaTools.PAR_MATRIXOPSTAND));
-    String    uitvoerdir    = parameters.get(PAR_UITVOERDIR);
+    var uitvoerdir    = parameters.get(PAR_UITVOERDIR);
 
     Collection<PGN> partijen;
     try {
@@ -167,21 +167,21 @@ public final class PgnToHtml extends Batchjob {
     }
 
     // Maak de Matrix.
-    int           noSpelers = spelers.size();
-    int           kolommen  = noSpelers * enkel;
-    Spelerinfo[]  punten    = new Spelerinfo[noSpelers];
-    String[]      namen     = new String[noSpelers];
-    double[][]    matrix    = new double[noSpelers][noSpelers * enkel];
+    var noSpelers = spelers.size();
+    var kolommen  = noSpelers * enkel;
+    var punten    = new Spelerinfo[noSpelers];
+    var namen     = new String[noSpelers];
+    var matrix    = new double[noSpelers][noSpelers * enkel];
     Iterator<Spelerinfo>
                 speler    = spelers.iterator();
-    for (int i = 0; i < noSpelers; i++) {
+    for (var i = 0; i < noSpelers; i++) {
       namen[i]  = speler.next().getNaam();
-      for (int j = 0; j < kolommen; j++) {
+      for (var j = 0; j < kolommen; j++) {
         matrix[i][j] = -1.0;
       }
     }
     Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
-    for (int i = 0; i < noSpelers; i++) {
+    for (var i = 0; i < noSpelers; i++) {
       punten[i] = new Spelerinfo();
       punten[i].setNaam(namen[i]);
     }
@@ -198,12 +198,12 @@ public final class PgnToHtml extends Batchjob {
 
     // Maak het uitslagen.html bestand.
     if (enkel != CaissaConstants.TOERNOOI_MATCH) {
-      boolean     enkelrondig = (enkel == CaissaConstants.TOERNOOI_ENKEL);
-      Set<Partij> schema      =
+      var enkelrondig = (enkel == CaissaConstants.TOERNOOI_ENKEL);
+      var schema      =
           CaissaUtils.genereerSpeelschema(spelers, enkelrondig, partijen);
       if (!schema.isEmpty()) {
-        String[]    data      = vulKalender(spelers.size(), enkel,
-                                            competitie.getArray("kalender"));
+        var data      = vulKalender(spelers.size(), enkel,
+                                    competitie.getArray("kalender"));
         maakUitslagen(schema, data);
       }
     }
@@ -223,8 +223,8 @@ public final class PgnToHtml extends Batchjob {
   }
 
   private static void genereerLegenda() throws BestandException {
-    String  forfait   = resourceBundle.getString("message.forfait");
-    String  notRanked = resourceBundle.getString("message.notranked");
+    var forfait   = resourceBundle.getString("message.forfait");
+    var notRanked = resourceBundle.getString("message.notranked");
     genereerTabelheading();
     schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
     schrijfUitvoer(HTML_LEGENDA, notRanked, forfait);
@@ -253,15 +253,14 @@ public final class PgnToHtml extends Batchjob {
 
   private static void genereerUitslagtabel(Set<Partij> schema, String[] data)
       throws BestandException {
-    Iterator<Partij>  iter    = schema.iterator();
-    Partij            partij  = iter.next();
-    int               vorige  = Integer.parseInt(partij.getRonde()
-                                                       .getRound()
-                                                       .split("\\.")[0]);
+    var iter    = schema.iterator();
+    var partij  = iter.next();
+    var vorige  = Integer.parseInt(partij.getRonde().getRound()
+                                                    .split("\\.")[0]);
     genereerRondeheading(vorige, DoosUtils.nullToEmpty(data[vorige]));
 
     do {
-      int ronde = Integer.parseInt(partij.getRonde().getRound()
+      var ronde = Integer.parseInt(partij.getRonde().getRound()
                                          .split("\\.")[0]);
       if (ronde != vorige) {
         genereerRondefooting();
@@ -269,13 +268,13 @@ public final class PgnToHtml extends Batchjob {
         vorige  = ronde;
       }
 
-      String  klasse  =
+      var klasse  =
           (partij.isRanked() && !partij.isBye()) ? "" : " class=\"btncmp\"";
-      String  uitslag = partij.getUitslag().replaceAll("1/2", "&frac12;")
-                              .replace('-', (partij.isForfait() ? 'F' : '-'))
-                              .replace('*', '-');
-      String  wit     = partij.getWitspeler().getVolledigenaam();
-      String  zwart   = partij.getZwartspeler().getVolledigenaam();
+      var uitslag = partij.getUitslag().replace("1/2", "&frac12;")
+                          .replace('-', (partij.isForfait() ? 'F' : '-'))
+                          .replace('*', '-');
+      var wit     = partij.getWitspeler().getVolledigenaam();
+      var zwart   = partij.getZwartspeler().getVolledigenaam();
       schrijfUitvoer(HTML_TABLE_BODY, klasse, wit, zwart, uitslag);
       if (iter.hasNext()) {
         partij  = iter.next();
@@ -393,7 +392,7 @@ public final class PgnToHtml extends Batchjob {
       // De tbody
       schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
       var plaats  = 1;
-      for (int i = 0; i < noSpelers; i++) {
+      for (var i = 0; i < noSpelers; i++) {
         if (punten[i].getPartijen() > 0) {
           maakIndexBody(punten[i], plaats);
           plaats++;
@@ -423,8 +422,8 @@ public final class PgnToHtml extends Batchjob {
     output.write(prefix
         + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_NAAM),
                                swapNaam(speler.getNaam())));
-    int     pntn  = speler.getPunten().intValue();
-    String  decim = Utilities.kwart(speler.getPunten());
+    var pntn  = speler.getPunten().intValue();
+    var decim = Utilities.kwart(speler.getPunten());
     output.write(prefix
         + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_PUNTEN),
                                getPunten(pntn, decim),
@@ -432,8 +431,8 @@ public final class PgnToHtml extends Batchjob {
     output.write(prefix
         + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_PARTIJEN),
                                speler.getPartijen()));
-    int     wpntn   = speler.getTieBreakScore().intValue();
-    String  wdecim  = Utilities.kwart(speler.getTieBreakScore());
+    var wpntn   = speler.getTieBreakScore().intValue();
+    var wdecim  = Utilities.kwart(speler.getTieBreakScore());
     output.write(prefix
         + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_SB),
                                getPunten(wpntn, wdecim),
@@ -448,7 +447,7 @@ public final class PgnToHtml extends Batchjob {
     CaissaUtils.verwijderNietActief(punten, matrix, enkel);
 
     var actieveSpelers  = 0;
-    for (Spelerinfo speler : punten) {
+    for (var speler : punten) {
       if (speler.getPartijen() > 0) {
         actieveSpelers++;
       }
@@ -476,7 +475,7 @@ public final class PgnToHtml extends Batchjob {
       schrijfUitvoer(HTML_TABLE_BEGIN);
       // De colgroup
       schrijfUitvoer(HTML_TABLE_COLGROUP_BEGIN);
-      for (int i = 0; i < actieveSpelers; i++) {
+      for (var i = 0; i < actieveSpelers; i++) {
         if (enkel == 1) {
           schrijfUitvoer(HTML_TABLE_COLGROUP_ENKEL);
         } else {
@@ -487,7 +486,7 @@ public final class PgnToHtml extends Batchjob {
       // De thead
       schrijfUitvoer(HTML_TABLE_HEAD_BEGIN);
       output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN_M));
-      for (int i = 0; i < actieveSpelers; i++) {
+      for (var i = 0; i < actieveSpelers; i++) {
         if (enkel == 1) {
           output.write(prefix
               + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_ENKEL),
@@ -530,7 +529,7 @@ public final class PgnToHtml extends Batchjob {
       // De tbody
       schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
       var plaats  = 0;
-      for (int i = 0; i < noSpelers; i++) {
+      for (var i = 0; i < noSpelers; i++) {
         if (punten[i].getPartijen() > 0) {
           maakMatrixBody(punten[i], plaats, enkel, kolommen, matrix);
           plaats++;
@@ -563,7 +562,7 @@ public final class PgnToHtml extends Batchjob {
         + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_NAAM),
                                swapNaam(speler.getNaam())));
     StringBuilder lijn  = new StringBuilder();
-    for (int j = 0; j < kolommen; j++) {
+    for (var j = 0; j < kolommen; j++) {
       if ((j / enkel) * enkel == j) {
         lijn.append(prefix).append("      ");
       }
@@ -586,16 +585,16 @@ public final class PgnToHtml extends Batchjob {
         lijn  = new StringBuilder();
       }
     }
-    int     pntn  = speler.getPunten().intValue();
-    String  decim = Utilities.kwart(speler.getPunten());
+    var pntn  = speler.getPunten().intValue();
+    var decim = Utilities.kwart(speler.getPunten());
     output.write(prefix
         + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_PUNTEN),
                                getPunten(pntn, decim),
                                getDecimalen(pntn, decim)));
     output.write(prefix + MessageFormat.format(
         skelet.getProperty(HTML_TABLE_ROW_PARTIJEN), speler.getPartijen()));
-    int     wpntn   = speler.getTieBreakScore().intValue();
-    String  wdecim  = Utilities.kwart(speler.getTieBreakScore());
+    var wpntn   = speler.getTieBreakScore().intValue();
+    var wdecim  = Utilities.kwart(speler.getTieBreakScore());
     output.write(prefix
         + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_SB),
                                getPunten(wpntn, wdecim),
@@ -637,7 +636,7 @@ public final class PgnToHtml extends Batchjob {
 
   private static void schrijfUitvoer(String parameter)
       throws BestandException {
-    int k = 1;
+    var k = 1;
     while (skelet.containsKey(parameter + k)) {
       output.write(prefix + skelet.getProperty(parameter + k));
       k++;
@@ -646,7 +645,7 @@ public final class PgnToHtml extends Batchjob {
 
   private static void schrijfUitvoer(String parameter, Object... params)
       throws BestandException {
-    int k = 1;
+    var k = 1;
     while (skelet.containsKey(parameter + k)) {
       output.write(
           MessageFormat.format(prefix + skelet.getProperty(parameter + k),
@@ -656,7 +655,7 @@ public final class PgnToHtml extends Batchjob {
   }
 
   private static boolean setParameters(String[] args) {
-    Arguments     arguments = new Arguments(args);
+    var           arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
 
     arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
@@ -706,7 +705,7 @@ public final class PgnToHtml extends Batchjob {
   }
 
   private static String swapNaam(String naam) {
-    String[]  deel  = naam.split(",");
+    var deel  = naam.split(",");
     if (deel.length == 1) {
       return naam;
     }
@@ -716,13 +715,13 @@ public final class PgnToHtml extends Batchjob {
 
   private static String[] vulKalender(int aantalSpelers, int enkel,
                                       JSONArray kalender) {
-    int       rondes  = ((aantalSpelers-1+(aantalSpelers%2))*enkel)+1;
-    String[]  data    = new String[rondes];
-    for (int i = 0; i < kalender.size(); i++) {
-      JSONObject  item  = (JSONObject) kalender.get(i);
+    var rondes  = ((aantalSpelers-1+(aantalSpelers%2))*enkel)+1;
+    var data    = new String[rondes];
+    for (var i = 0; i < kalender.size(); i++) {
+      var item  = (JSONObject) kalender.get(i);
       if (item.containsKey("ronde")
           && item.containsKey("datum")) {
-        int ronde = Integer.parseInt(item.get("ronde").toString());
+        var ronde = Integer.parseInt(item.get("ronde").toString());
         if (ronde < rondes) {
           data[ronde] = item.get("datum").toString();
         }
