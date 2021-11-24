@@ -17,6 +17,7 @@
 package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
+import static eu.debooy.caissa.CaissaConstants.JSON_TAG_SPELERS;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
@@ -28,6 +29,7 @@ import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
@@ -40,13 +42,11 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
 import java.util.ResourceBundle;
-import java.util.Set;
 import java.util.TreeSet;
 
 
@@ -58,16 +58,15 @@ public final class PgnToLatex extends Batchjob {
   private static final  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
-  private static  String          auteur;
-  private static  String          eindDatum;
-  private static  double[][]      matrix;
-  private static  TekstBestand    output;
-  private static  Collection<PGN> partijen;
-  private static  Spelerinfo[]    punten;
-  private static  Set<String>     spelers;
-  private static  String          startDatum;
-  private static  String          titel;
-  private static  int             toernooitype;
+  private static  String            auteur;
+  private static  String            eindDatum;
+  private static  double[][]        matrix;
+  private static  TekstBestand      output;
+  private static  Collection<PGN>   partijen;
+  private static  List<Spelerinfo>  spelers;
+  private static  String            startDatum;
+  private static  String            titel;
+  private static  int               toernooitype;
 
   private static final String HLINE         = "\\hline";
   private static final String KEYWORDS      = "K";
@@ -78,6 +77,18 @@ public final class PgnToLatex extends Batchjob {
   private static final String NORMAAL       = "N";
 
   PgnToLatex() {}
+
+  private static void bepaalMinMaxDatum(String datum) {
+    if (DoosUtils.isNotBlankOrNull(datum)
+        && datum.indexOf('?') < 0) {
+      if (datum.compareTo(startDatum) < 0 ) {
+        startDatum  = datum;
+      }
+      if (datum.compareTo(eindDatum) > 0 ) {
+        eindDatum   = datum;
+      }
+    }
+  }
 
   protected static String datumInTitel(String startDatum, String eindDatum) {
     var   titelDatum  = new StringBuilder();
@@ -109,9 +120,9 @@ public final class PgnToLatex extends Batchjob {
     var           aantalPartijen  = 0;
     List<String>  template        = new ArrayList<>();
 
-    eindDatum       = CaissaConstants.DEF_STARTDATUM;
-    output          = null;
-    startDatum      = CaissaConstants.DEF_EINDDATUM;
+    eindDatum   = CaissaConstants.DEF_STARTDATUM;
+    output      = null;
+    startDatum  = CaissaConstants.DEF_EINDDATUM;
 
     Banner.printMarcoBanner(resourceBundle.getString("banner.pgntolatex"));
 
@@ -121,13 +132,12 @@ public final class PgnToLatex extends Batchjob {
 
     var bestand   = parameters.get(CaissaTools.PAR_BESTAND)
                             .replace(EXT_PGN, "").split(";");
+    var schema    = parameters.get(CaissaTools.PAR_SCHEMA)
+                            .replace(EXT_JSON, "").split(";");
 
     auteur        = parameters.get(CaissaTools.PAR_AUTEUR);
     toernooitype  =
         CaissaUtils.getToernooitype(parameters.get(CaissaTools.PAR_ENKEL));
-    //TODO Verwijderen en vervangen door schema.
-    var halve     =
-        DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_HALVE)).split(";");
     var metMatrix =
         parameters.get(CaissaTools.PAR_MATRIX).equals(DoosConstants.WAAR);
     titel         = parameters.get(CaissaTools.PAR_TITEL);
@@ -186,12 +196,25 @@ public final class PgnToLatex extends Batchjob {
       }
     }
 
-    Arrays.sort(halve, String.CASE_INSENSITIVE_ORDER);
-
     for (var i = 0; i < bestand.length; i++) {
       partijen  = new TreeSet<>(new PGN.ByEventComparator());
       Map<String, String> texPartij = new HashMap<>();
-      spelers   = new HashSet<>();
+
+      JsonBestand competitie;
+      try {
+        competitie  =
+            new JsonBestand.Builder()
+                           .setBestand(parameters.get(PAR_INVOERDIR)
+                                       + schema[i] + EXT_JSON)
+                           .setCharset(parameters.get(PAR_CHARSETIN))
+                           .build();
+      } catch (BestandException e) {
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+        return;
+      }
+
+      spelers = new ArrayList<>();
+      CaissaUtils.vulSpelers(spelers, competitie.getArray(JSON_TAG_SPELERS));
 
       try {
         partijen.addAll(
@@ -211,24 +234,17 @@ public final class PgnToLatex extends Batchjob {
                                   ? partijen.size() : noSpelers * toernooitype);
         matrix    = null;
         var namen = new String[noSpelers];
-        punten    = new Spelerinfo[noSpelers];
         // Maak de Matrix
         if (metMatrix) {
           var j = 0;
           for (var speler  : spelers) {
-            namen[j++]  = speler;
+            namen[j++]  = speler.getNaam();
           }
           Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
 
-          // Initialiseer de Spelerinfo array.
-          for (j = 0; j < noSpelers; j++) {
-            punten[j] = new Spelerinfo();
-            punten[j].setNaam(namen[j]);
-          }
-
           // Bepaal de score en weerstandspunten.
           matrix  = new double[noSpelers][kolommen];
-          CaissaUtils.vulToernooiMatrix(partijen, punten, matrix, toernooitype,
+          CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix, toernooitype,
                                         parameters
                                           .get(CaissaTools.PAR_MATRIXOPSTAND)
                                           .equals(DoosConstants.WAAR),
@@ -318,8 +334,6 @@ public final class PgnToLatex extends Batchjob {
                          resourceBundle.getString("help.speeldatum"), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_ENKEL, 14),
                          resourceBundle.getString("help.enkel"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_HALVE, 14),
-                         resourceBundle.getString("help.halve"), 80);
     DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 14),
                          getMelding(HLP_INVOERDIR), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_KEYWORDS, 14),
@@ -330,6 +344,8 @@ public final class PgnToLatex extends Batchjob {
                          resourceBundle.getString("help.matrix"), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_MATRIXOPSTAND, 14),
                          resourceBundle.getString("help.matrixopstand"), 80);
+    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SCHEMA, 14),
+                         resourceBundle.getString(CaissaTools.HLP_SCHEMA), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_TEMPLATE, 14),
                          resourceBundle.getString("help.template"), 80);
     DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_TITEL, 14),
@@ -338,8 +354,9 @@ public final class PgnToLatex extends Batchjob {
                          getMelding(HLP_UITVOERDIR), 80);
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(
-        MessageFormat.format(getMelding(HLP_PARAMVERPLICHT),
-                             CaissaTools.PAR_BESTAND), 80);
+        MessageFormat.format(getMelding(HLP_PARAMSVERPLICHT),
+                             CaissaTools.PAR_BESTAND,
+                             CaissaTools.PAR_SCHEMA), 80);
     DoosUtils.naarScherm(
         MessageFormat.format(
             resourceBundle.getString("help.paramsverplichtbijbestand"),
@@ -388,10 +405,10 @@ public final class PgnToLatex extends Batchjob {
     output.write("    " + HLINE);
     for (var i = 0; i < noSpelers; i++) {
       if (toernooitype == 0) {
-        lijn.append("\\multicolumn{2}{|l|}{").append(punten[i].getNaam())
+        lijn.append("\\multicolumn{2}{|l|}{").append(spelers.get(i).getNaam())
             .append("} & ");
       } else {
-        lijn.append((i + 1)).append(" & ").append(punten[i].getNaam())
+        lijn.append((i + 1)).append(" & ").append(spelers.get(i).getNaam())
             .append(" & ");
       }
       for (var j = 0; j < kolommen; j++) {
@@ -410,7 +427,7 @@ public final class PgnToLatex extends Batchjob {
         if (matrix[i][j] == 0.0) {
           lijn.append("0");
         } else if (matrix[i][j] == 0.5) {
-          lijn.append("\\textonehalf");
+          lijn.append(Utilities.kwart(0.5));
         } else if (matrix[i][j] >= 1.0) {
           lijn.append(((Double)matrix[i][j]).intValue())
               .append(Utilities.kwart(matrix[i][j]));
@@ -420,15 +437,15 @@ public final class PgnToLatex extends Batchjob {
         }
         lijn.append(" & ");
       }
-      var pntn  = punten[i].getPunten().intValue();
-      var decim = Utilities.kwart(punten[i].getPunten());
+      var pntn  = spelers.get(i).getPunten().intValue();
+      var decim = Utilities.kwart(spelers.get(i).getPunten());
       lijn.append(
           ((pntn == 0 && "".equals(decim)) || pntn >= 1 ?
               pntn : "")).append(decim);
       if (toernooitype > 0) {
-        var wpntn   = punten[i].getTieBreakScore().intValue();
-        var wdecim  = Utilities.kwart(punten[i].getTieBreakScore());
-        lijn.append(" & ").append(punten[i].getPartijen()).append(" & ");
+        var wpntn   = spelers.get(i).getTieBreakScore().intValue();
+        var wdecim  = Utilities.kwart(spelers.get(i).getTieBreakScore());
+        lijn.append(" & ").append(spelers.get(i).getPartijen()).append(" & ");
         lijn.append(((wpntn == 0 && "".equals(wdecim))
                      || wpntn >= 1 ? wpntn : "")).append(wdecim);
       }
@@ -486,12 +503,12 @@ public final class PgnToLatex extends Batchjob {
         }
         break;
       case "%@IncludeEind":
-            switch (regel.split(" ")[1].toLowerCase()) {
-            case "partij":
+        switch (regel.split(" ")[1].toLowerCase()) {
+        case "partij":
           verwerkPartijen(partijen, texPartij, output);
+        break;
+        default:
           break;
-            default:
-              break;
         }
         status  = NORMAAL;
         break;
@@ -545,16 +562,17 @@ public final class PgnToLatex extends Batchjob {
                                           PAR_CHARSETUIT,
                                           CaissaTools.PAR_DATUM,
                                           CaissaTools.PAR_ENKEL,
-                                          CaissaTools.PAR_HALVE,
                                           PAR_INVOERDIR,
                                           CaissaTools.PAR_KEYWORDS,
                                           CaissaTools.PAR_LOGO,
                                           CaissaTools.PAR_MATRIX,
                                           CaissaTools.PAR_MATRIXOPSTAND,
+                                          CaissaTools.PAR_SCHEMA,
                                           CaissaTools.PAR_TEMPLATE,
                                           CaissaTools.PAR_TITEL,
                                           PAR_UITVOERDIR});
-    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND});
+    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND,
+                                         CaissaTools.PAR_SCHEMA});
     if (!arguments.isValid()) {
       fouten.add(getMelding(ERR_INVALIDPARAMS));
     }
@@ -567,13 +585,13 @@ public final class PgnToLatex extends Batchjob {
     setParameter(arguments, CaissaTools.PAR_DATUM,
                  Datum.fromDate(new Date(), "dd/MM/yyyy HH:mm:ss"));
     setParameter(arguments, CaissaTools.PAR_ENKEL, DoosConstants.WAAR);
-    setParameter(arguments, CaissaTools.PAR_HALVE);
     setDirParameter(arguments, PAR_INVOERDIR);
     setParameter(arguments, CaissaTools.PAR_KEYWORDS);
     setParameter(arguments, CaissaTools.PAR_LOGO);
     setParameter(arguments, CaissaTools.PAR_MATRIX, DoosConstants.WAAR);
     setParameter(arguments, CaissaTools.PAR_MATRIXOPSTAND,
                  DoosConstants.ONWAAR);
+    setBestandParameter(arguments, CaissaTools.PAR_SCHEMA);
     setParameter(arguments, CaissaTools.PAR_TEMPLATE);
     setParameter(arguments, CaissaTools.PAR_TITEL);
     setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
@@ -584,18 +602,26 @@ public final class PgnToLatex extends Batchjob {
           MessageFormat.format(
               getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
     }
-    if (parameters.containsKey(CaissaTools.PAR_BESTAND)) {
-      if (parameters.containsKey(CaissaTools.PAR_HALVE)) {
-        fouten.add(resourceBundle.getString(CaissaTools.ERR_HALVE));
-      }
-      if (parameters.get(CaissaTools.PAR_BESTAND).contains(";")) {
-        if (!parameters.containsKey(CaissaTools.PAR_AUTEUR)
-            || !parameters.containsKey(CaissaTools.PAR_TITEL)) {
-          fouten.add(resourceBundle.getString(CaissaTools.ERR_BIJBESTAND));
-        }
+    if (parameters.containsKey(CaissaTools.PAR_BESTAND)
+        && parameters.get(CaissaTools.PAR_BESTAND).contains(";")) {
+      if (!parameters.containsKey(CaissaTools.PAR_AUTEUR)
+          || !parameters.containsKey(CaissaTools.PAR_TITEL)) {
+        fouten.add(resourceBundle.getString(CaissaTools.ERR_BIJBESTAND));
       }
     }
+    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_SCHEMA))
+                 .contains(File.separator)) {
+      fouten.add(
+          MessageFormat.format(
+              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_SCHEMA));
+    }
 
+    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
+                 .split(";").length !=
+        DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_SCHEMA))
+                 .split(";").length) {
+      fouten.add(resourceBundle.getString(CaissaTools.ERR_BEST_ONGELIJK));
+    }
     if (fouten.isEmpty()) {
       return true;
     }
@@ -607,39 +633,9 @@ public final class PgnToLatex extends Batchjob {
   }
 
   private static void verwerkPartij(PGN partij) {
-    // Verwerk de spelers
-    String  wit   = partij.getTag(CaissaConstants.PGNTAG_WHITE);
-    String  zwart = partij.getTag(CaissaConstants.PGNTAG_BLACK);
-    if (!"bye".equalsIgnoreCase(wit)
-        || DoosUtils.isNotBlankOrNull(wit)) {
-      spelers.add(wit);
-    }
-    if (!"bye".equalsIgnoreCase(zwart)
-        || DoosUtils.isNotBlankOrNull(zwart)) {
-      spelers.add(zwart);
-    }
+    bepaalMinMaxDatum(partij.getTag(CaissaConstants.PGNTAG_EVENTDATE));
+    bepaalMinMaxDatum(partij.getTag(CaissaConstants.PGNTAG_DATE));
 
-    // Verwerk de 'datums'
-    String  hulpDatum = partij.getTag(CaissaConstants.PGNTAG_EVENTDATE);
-    if (DoosUtils.isNotBlankOrNull(hulpDatum)
-        && hulpDatum.indexOf('?') < 0) {
-      if (hulpDatum.compareTo(startDatum) < 0 ) {
-        startDatum  = hulpDatum;
-      }
-      if (hulpDatum.compareTo(eindDatum) > 0 ) {
-        eindDatum   = hulpDatum;
-      }
-    }
-    hulpDatum = partij.getTag(CaissaConstants.PGNTAG_DATE);
-    if (DoosUtils.isNotBlankOrNull(hulpDatum)
-        && hulpDatum.indexOf('?') < 0) {
-      if (hulpDatum.compareTo(startDatum) < 0 ) {
-        startDatum  = hulpDatum;
-      }
-      if (hulpDatum.compareTo(eindDatum) > 0 ) {
-        eindDatum   = hulpDatum;
-      }
-    }
     if (DoosUtils.isBlankOrNull(auteur)) {
       auteur  = partij.getTag(CaissaConstants.PGNTAG_SITE);
     }

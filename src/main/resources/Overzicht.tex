@@ -1,0 +1,88 @@
+\documentclass[a4paper]{scrreprt}
+
+\usepackage[T1]{fontenc}
+\usepackage[dutch]{babel}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{lscape}
+\usepackage{background}
+
+\definecolor{headingkleur}{HTML}{004488}
+\definecolor{headingtekstkleur}{HTML}{FFFFFF}
+
+\arrayrulecolor{headingkleur}
+\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
+
+\geometry{
+  paperwidth=210mm,
+  paperheight=296mm,
+  twoside,
+  left=10mm,
+  top=10mm,
+  marginpar=23mm,
+  headsep=1pc,
+  marginparsep=1em,
+  footskip=9ex
+}
+\geometry{
+  textwidth = 190mm,
+  textheight = 270mm
+}
+
+% Penalties
+\pretolerance=60
+\tolerance=2000
+\widowpenalty=9999
+\interdisplaylinepenalty=100
+\interfootnotelinepenalty=1000
+\predisplaypenalty=50
+
+%@IncludeStart Logo
+\backgroundsetup{
+scale=1,
+color=black,
+opacity=0.1,
+angle=90,
+contents={%
+  \includegraphics[width=\textwidth]{@logo@}
+  }%
+}
+%@IncludeEind Logo
+
+\addtokomafont{section}{\centering}
+\addtokomafont{subsection}{\centering}
+
+\pagenumbering{gobble}
+
+\begin{document}
+ \sffamily
+ \footnotesize
+%@IncludeStart Body
+ \begin{landscape}
+%@IncludeStart titel
+  \section*{\color{headingkleur}@titel@}
+%@IncludeEind titel
+%@IncludeStart subtitel
+  \subsection*{\color{headingkleur}@subtitel@}
+%@IncludeEind subtitel
+  \begin{center}
+%@IncludeStart Matrix
+%@Include Matrix
+%@IncludeEind Matrix
+   \newpage
+%@IncludeStart Uitslagen
+%@Include Uitslagen
+   \arrayrulecolor{white}%
+   \begin{tabular} { | p{32mm} C{2mm} p{32mm} | C{5mm} | }
+    & & & \\
+    \multicolumn{4}{l}{@forfait@} \\
+    \multicolumn{4}{>{\columncolor{headingkleur!15}}l}{@notRanked@} \\
+   \end{tabular}
+%@IncludeEind Uitslagen
+  \end{center}
+ \end{landscape}
+%@IncludeEind Body
+\end{document}

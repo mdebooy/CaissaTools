@@ -51,8 +51,9 @@ public class PgnToLatexTest extends BatchTest {
       "--bestand=/tmp/competitie1;/tmp/competitie2;competitie3";
   private static final  String  PAR_BESTAND2  =
       "--bestand=competitie1;competitie2";
-  private static final  String  PAR_HALVE     = "--halve=Speler, 01;Speler, 02";
   private static final  String  PAR_MATRIX_N  = "--matrix=N";
+  private static final  String  PAR_SCHEMA2   =
+      "--schema=schema1;schema2";
   private static final  String  PAR_TITEL     = "--titel=Testing 97/98 - 98/99";
 
   @AfterClass
@@ -60,6 +61,8 @@ public class PgnToLatexTest extends BatchTest {
     verwijderBestanden(TEMP + File.separator,
                        new String[] {TestConstants.BST_COMPETITIE1_PGN,
                                      TestConstants.BST_COMPETITIE2_PGN,
+                                     TestConstants.BST_SCHEMA1_JSON,
+                                     TestConstants.BST_SCHEMA2_JSON,
                                      BST_COMPETITIE1_TEX});
   }
 
@@ -70,7 +73,9 @@ public class PgnToLatexTest extends BatchTest {
                                                Locale.getDefault());
 
     for (String bestand : new String[] {TestConstants.BST_COMPETITIE1_PGN,
-                                        TestConstants.BST_COMPETITIE2_PGN}) {
+                                        TestConstants.BST_COMPETITIE2_PGN,
+                                        TestConstants.BST_SCHEMA1_JSON,
+                                        TestConstants.BST_SCHEMA2_JSON}) {
       try {
         kopieerBestand(CLASSLOADER, bestand, TEMP + File.separator + bestand);
       } catch (IOException e) {
@@ -86,23 +91,41 @@ public class PgnToLatexTest extends BatchTest {
     VangOutEnErr.execute(PgnToLatex.class,
                          DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
 
-    assertEquals("Zonder parameters - helptekst", 39, out.size());
+    assertEquals("Zonder parameters - helptekst", 38, out.size());
     assertEquals("Zonder parameters - fouten", 1, err.size());
   }
 
   @Test
-  public void testFouten() {
-    String[]  args      = new String[] {PAR_BESTAND1, PAR_HALVE};
+  public void testOngelijkAantalBestanden() {
+    String[]  args      = new String[] {PAR_AUTEUR, PAR_BESTAND2,
+                                        TestConstants.PAR_INVOERDIR + TEMP,
+                                        TestConstants.PAR_SCHEMA1, PAR_TITEL};
     String[]  verwacht  = new String[] {
-        MessageFormat.format("Het bestand {0} bevat een directory.",
-                                     "bestand"),
-        resourceBundle.getString(CaissaTools.ERR_HALVE),
-        resourceBundle.getString(CaissaTools.ERR_BIJBESTAND)};
+        resourceBundle.getString(CaissaTools.ERR_BEST_ONGELIJK)};
 
     VangOutEnErr.execute(PgnToLatex.class,
                           DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
 
-    assertEquals("Fouten - helptekst", 39, out.size());
+    assertEquals("Fouten - helptekst", 38, out.size());
+    assertEquals("Fouten - fouten", 1, err.size());
+    assertArrayEquals("Error mesages", verwacht, err.toArray());
+  }
+
+  @Test
+  public void testFouten() {
+    String[]  args      = new String[] {PAR_BESTAND1,
+                                        TestConstants.PAR_INVOERDIR + TEMP,
+                                        TestConstants.PAR_SCHEMA1};
+    String[]  verwacht  = new String[] {
+        MessageFormat.format("Het bestand {0} bevat een directory.",
+                                     "bestand"),
+        resourceBundle.getString(CaissaTools.ERR_BIJBESTAND),
+        resourceBundle.getString(CaissaTools.ERR_BEST_ONGELIJK)};
+
+    VangOutEnErr.execute(PgnToLatex.class,
+                          DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
+
+    assertEquals("Fouten - helptekst", 38, out.size());
     assertEquals("Fouten - fouten", 3, err.size());
     assertArrayEquals("Error mesages", verwacht, err.toArray());
   }
@@ -112,6 +135,7 @@ public class PgnToLatexTest extends BatchTest {
     String[]  args      = new String[] {TestConstants.PAR_BESTAND1,
                                         TestConstants.PAR_ENKEL,
                                         TestConstants.PAR_INVOERDIR + TEMP,
+                                        TestConstants.PAR_SCHEMA1,
                                         TestConstants.PAR_UITVOERDIR + TEMP};
 
     try {
@@ -143,7 +167,7 @@ public class PgnToLatexTest extends BatchTest {
     String[]  args      = new String[] {PAR_AUTEUR, PAR_BESTAND2,
                                         TestConstants.PAR_ENKEL,
                                         TestConstants.PAR_INVOERDIR + TEMP,
-                                        PAR_TITEL,
+                                        PAR_SCHEMA2, PAR_TITEL,
                                         TestConstants.PAR_UITVOERDIR + TEMP};
 
     try {
@@ -169,7 +193,6 @@ public class PgnToLatexTest extends BatchTest {
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + BST_COMPETITIE1_TEX),
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMPETITIE4_TEX)));
-
     Bestand.delete(TEMP + File.separator + BST_COMPETITIE1_TEX);
   }
 
@@ -179,6 +202,7 @@ public class PgnToLatexTest extends BatchTest {
                                         TestConstants.PAR_ENKEL,
                                         TestConstants.PAR_INVOERDIR + TEMP,
                                         TestConstants.PAR_MATRIX_OP_STAND,
+                                        TestConstants.PAR_SCHEMA1,
                                         TestConstants.PAR_UITVOERDIR + TEMP};
 
     try {
@@ -211,6 +235,7 @@ public class PgnToLatexTest extends BatchTest {
                                         TestConstants.PAR_ENKEL,
                                         TestConstants.PAR_INVOERDIR + TEMP,
                                         PAR_MATRIX_N,
+                                        TestConstants.PAR_SCHEMA1,
                                         TestConstants.PAR_UITVOERDIR + TEMP};
 
     try {
@@ -242,7 +267,7 @@ public class PgnToLatexTest extends BatchTest {
     String[]  args      = new String[] {PAR_AUTEUR, PAR_BESTAND2,
                                         TestConstants.PAR_ENKEL,
                                         TestConstants.PAR_INVOERDIR + TEMP,
-                                        PAR_MATRIX_N, PAR_TITEL,
+                                        PAR_MATRIX_N, PAR_SCHEMA2, PAR_TITEL,
                                         TestConstants.PAR_UITVOERDIR + TEMP};
 
     try {

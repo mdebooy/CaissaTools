@@ -70,11 +70,9 @@ public class PgnToHtmlTest extends BatchTest {
                                                Locale.getDefault());
 
     try {
-      kopieerBestand(CLASSLOADER,
-                     TestConstants.BST_COMPETITIE1_PGN,
+      kopieerBestand(CLASSLOADER, TestConstants.BST_COMPETITIE1_PGN,
                      TEMP + File.separator + TestConstants.BST_COMPETITIE1_PGN);
-      kopieerBestand(CLASSLOADER,
-                     TestConstants.BST_SCHEMA1_JSON,
+      kopieerBestand(CLASSLOADER, TestConstants.BST_SCHEMA1_JSON,
                      TEMP + File.separator + TestConstants.BST_SCHEMA1_JSON);
     } catch (IOException e) {
       System.out.println(e.getLocalizedMessage());
@@ -116,14 +114,13 @@ public class PgnToHtmlTest extends BatchTest {
         Bestand.equals(
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_INDEX_HTML),
-            Bestand.openInvoerBestand(PgnToHtmlTest.class.getClassLoader(),
+            Bestand.openInvoerBestand(CLASSLOADER,
                                       TestConstants.BST_INDEX_HTML)));
     assertTrue("PgnToHtml - equals M",
         Bestand.equals(
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_MATRIX_HTML),
-            Bestand.openInvoerBestand(PgnToHtmlTest.class.getClassLoader(),
-                                      BST_MATRIX1)));
+            Bestand.openInvoerBestand(CLASSLOADER, BST_MATRIX1)));
   }
 
   @Test
@@ -150,19 +147,18 @@ public class PgnToHtmlTest extends BatchTest {
         Bestand.equals(
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_INDEX_HTML),
-            Bestand.openInvoerBestand(PgnToHtmlTest.class.getClassLoader(),
+            Bestand.openInvoerBestand(CLASSLOADER,
                                       TestConstants.BST_INDEX_HTML)));
     assertTrue("PgnToHtml - equals M",
         Bestand.equals(
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_MATRIX_HTML),
-            Bestand.openInvoerBestand(PgnToHtmlTest.class.getClassLoader(),
-                                      BST_MATRIX2)));
+            Bestand.openInvoerBestand(CLASSLOADER, BST_MATRIX2)));
     assertTrue("PgnToHtml - equals U",
         Bestand.equals(
             Bestand.openInvoerBestand(TEMP + File.separator
                                       + TestConstants.BST_UITSLAGEN_HTML),
-            Bestand.openInvoerBestand(PgnToHtmlTest.class.getClassLoader(),
+            Bestand.openInvoerBestand(CLASSLOADER,
                                       TestConstants.BST_UITSLAGEN_HTML)));
   }
 }

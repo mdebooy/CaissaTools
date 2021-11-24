@@ -29,8 +29,8 @@ public final class CaissaTools {
   private static final  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
+  public static final String  ERR_BEST_ONGELIJK   = "error.aantal.bestanden";
   public static final String  ERR_BESTANDENPGN    = "error.bestand.en.pgn";
-  public static final String  ERR_BEVATDIRECTORY  = "error.bevatdirectory";
   public static final String  ERR_BIJBESTAND      = "error.verplichtbijbestand";
   public static final String  ERR_EINDVOORSTART   = "error.eind.voor.start";
   public static final String  ERR_FOUTEDATUM      = "error.foutedatum";
@@ -48,6 +48,7 @@ public final class CaissaTools {
   public static final String  HLP_BESTAND       = "help.bestand";
   public static final String  HLP_MATRIXOPSTAND = "help.matrixopstand";
   public static final String  HLP_SCHEMA        = "help.competitieschema";
+  public static final String  HLP_SUBTITEL      = "help.subtitel";
 
   public static final String  LBL_BESTAND     = "label.bestand";
   public static final String  LBL_PGNBESTAND  = "label.pgnbestand";
@@ -77,6 +78,7 @@ public final class CaissaTools {
   public static final String  PAR_KEYWORDS            = "keywords";
   public static final String  PAR_LOGO                = "logo";
   public static final String  PAR_MATRIX              = "matrix";
+  public static final String  PAR_MATRIXEERST         = "matrixeerst";
   public static final String  PAR_MATRIXOPSTAND       = "matrixopstand";
   public static final String  PAR_MAXBESTANDEN        = "maxBestanden";
   public static final String  PAR_MAXVERSCHIL         = "maxVerschil";
@@ -98,6 +100,7 @@ public final class CaissaTools {
   public static final String  PAR_SPELERS             = "spelers";
   public static final String  PAR_STARTDATUM          = "startDatum";
   public static final String  PAR_STARTELO            = "startELO";
+  public static final String  PAR_SUBTITEL            = "subtitel";
   public static final String  PAR_TAG                 = "tag";
   public static final String  PAR_TEMPLATE            = "template";
   public static final String  PAR_TITEL               = "titel";
@@ -158,6 +161,9 @@ public final class CaissaTools {
         break;
       case "startpgn":
         StartPgn.execute(commandoArgs);
+        break;
+      case "toernooioverzicht":
+        Toernooioverzicht.execute(commandoArgs);
         break;
       case "vertaalpgn":
         VertaalPgn.execute(commandoArgs);

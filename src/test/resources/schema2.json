@@ -21,15 +21,7 @@
       {"naam": "Speler, 08",
        "seq": 8},
       {"naam": "Speler, 09",
-       "seq": 9},
-      {"naam": "Speler, 10",
-       "seq": 10},
-      {"naam": "Speler, 11",
-       "seq": 11},
-      {"naam": "Speler, 12",
-       "seq": 12},
-      {"naam": "Speler, 13",
-       "seq": 13}
+       "seq": 9}
     ],
     "kalender": [
       { "datum": "10/09/1997", "ronde": 1},
