@@ -131,9 +131,9 @@ public final class PgnToLatex extends Batchjob {
     }
 
     var bestand   = parameters.get(CaissaTools.PAR_BESTAND)
-                            .replace(EXT_PGN, "").split(";");
+                              .replace(EXT_PGN, "").split(";");
     var schema    = parameters.get(CaissaTools.PAR_SCHEMA)
-                            .replace(EXT_JSON, "").split(";");
+                              .replace(EXT_JSON, "").split(";");
 
     auteur        = parameters.get(CaissaTools.PAR_AUTEUR);
     toernooitype  =
@@ -652,7 +652,7 @@ public final class PgnToLatex extends Batchjob {
         var fen       = new FEN();
         var regel     = "";
         var resultaat = partij.getTag(CaissaConstants.PGNTAG_RESULT)
-                .replace("1/2", "\\textonehalf");
+                .replace("1/2", Utilities.kwart(0.5));
         var zetten    = partij.getZuivereZetten().replace("#", "\\\\#");
         if (partij.hasTag(CaissaConstants.PGNTAG_FEN)) {
           fen = new FEN(partij.getTag(CaissaConstants.PGNTAG_FEN));
@@ -682,7 +682,8 @@ public final class PgnToLatex extends Batchjob {
               switch (tag) {
                 case CaissaConstants.PGNTAG_RESULT:
                   regel = regel.replace("@" + tag + "@",
-                          partij.getTag(tag).replace("1/2", "\\textonehalf"));
+                          partij.getTag(tag)
+                                .replace("1/2", Utilities.kwart(0.5)));
                   break;
                 case CaissaConstants.PGNTAG_ECO:
                   var extra = "";
