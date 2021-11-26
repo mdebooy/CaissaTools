@@ -208,22 +208,17 @@ public final class PgnToLatex extends Batchjob {
                                        + schema[i] + EXT_JSON)
                            .setCharset(parameters.get(PAR_CHARSETIN))
                            .build();
-      } catch (BestandException e) {
+        partijen.addAll(
+            CaissaUtils.laadPgnBestand(parameters.get(PAR_INVOERDIR)
+                                       + bestand[i] + EXT_PGN,
+                                       parameters.get(PAR_CHARSETIN)));
+      } catch (BestandException | PgnException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
         return;
       }
 
       spelers = new ArrayList<>();
       CaissaUtils.vulSpelers(spelers, competitie.getArray(JSON_TAG_SPELERS));
-
-      try {
-        partijen.addAll(
-            CaissaUtils.laadPgnBestand(parameters.get(PAR_INVOERDIR)
-                                       + bestand[i] + EXT_PGN,
-                                       parameters.get(PAR_CHARSETIN)));
-      } catch (PgnException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      }
 
       partijen.forEach(PgnToLatex::verwerkPartij);
 
@@ -417,11 +412,10 @@ public final class PgnToLatex extends Batchjob {
             lijn.append("\\multicolumn{1}"
                         + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ");
             continue;
-          } else {
-            if ((j / toernooitype) * toernooitype != j ) {
-              lijn.append("\\multicolumn{1}"
-                          + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{");
-            }
+          }
+          if ((j / toernooitype) * toernooitype != j ) {
+            lijn.append("\\multicolumn{1}"
+                        + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{");
           }
         }
         if (matrix[i][j] == 0.0) {
@@ -482,33 +476,11 @@ public final class PgnToLatex extends Batchjob {
         }
         break;
       case "%@IncludeStart":
-        switch(regel.split(" ")[1].toLowerCase()) {
-          case "keywords":
-            status  = KEYWORDS;
-            break;
-          case "logo":
-            status  = KYW_LOGO;
-            break;
-          case "matrix":
-            status = KYW_MATRIX;
-            break;
-          case "partij":
-            status  = KYW_PARTIJEN;
-            break;
-          case "periode":
-            status  = KYW_PERIODE;
-            break;
-          default:
-            break;
-        }
+        status  = setStatus(regel.split(" ")[1].toLowerCase());
         break;
       case "%@IncludeEind":
-        switch (regel.split(" ")[1].toLowerCase()) {
-        case "partij":
+        if ("partij".equalsIgnoreCase(regel.split(" ")[1])) {
           verwerkPartijen(partijen, texPartij, output);
-        break;
-        default:
-          break;
         }
         status  = NORMAAL;
         break;
@@ -553,7 +525,7 @@ public final class PgnToLatex extends Batchjob {
   }
 
   private static boolean setParameters(String[] args) {
-    Arguments     arguments = new Arguments(args);
+    var           arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
 
     arguments.setParameters(new String[] {CaissaTools.PAR_AUTEUR,
@@ -632,6 +604,32 @@ public final class PgnToLatex extends Batchjob {
     return false;
   }
 
+  private static String setStatus(String keyword) {
+    String  status;
+    switch(keyword) {
+      case "keywords":
+        status  = KEYWORDS;
+        break;
+      case "logo":
+        status  = KYW_LOGO;
+        break;
+      case "matrix":
+        status = KYW_MATRIX;
+        break;
+      case "partij":
+        status  = KYW_PARTIJEN;
+        break;
+      case "periode":
+        status  = KYW_PERIODE;
+        break;
+      default:
+        status  = "";
+        break;
+    }
+
+    return status;
+  }
+
   private static void verwerkPartij(PGN partij) {
     bepaalMinMaxDatum(partij.getTag(CaissaConstants.PGNTAG_EVENTDATE));
     bepaalMinMaxDatum(partij.getTag(CaissaConstants.PGNTAG_DATE));
@@ -646,26 +644,23 @@ public final class PgnToLatex extends Batchjob {
 
   private static void verwerkPartijen(Collection<PGN> partijen,
                                       Map<String, String> texPartij,
-                                      TekstBestand output)
-      throws BestandException {
-    FEN fen = null;
-    for (PGN partij: partijen) {
-      if (!partij.isBye()) {
-        String  regel     = "";
-        String  resultaat = partij.getTag(CaissaConstants.PGNTAG_RESULT)
-                                  .replace("1/2", "\\textonehalf");
-        String  zetten    = partij.getZuivereZetten().replace("#", "\\\\#");
+                                      TekstBestand output) {
+    partijen.stream()
+            .filter(partij -> !partij.isBye())
+            .forEach(partij -> {
+      try {
+        var fen       = new FEN();
+        var regel     = "";
+        var resultaat = partij.getTag(CaissaConstants.PGNTAG_RESULT)
+                .replace("1/2", "\\textonehalf");
+        var zetten    = partij.getZuivereZetten().replace("#", "\\\\#");
         if (partij.hasTag(CaissaConstants.PGNTAG_FEN)) {
-          // Partij met andere beginstelling.
           fen = new FEN(partij.getTag(CaissaConstants.PGNTAG_FEN));
-        } else {
-            fen = new FEN();
         }
         if (DoosUtils.isNotBlankOrNull(zetten)) {
           if (partij.hasTag(CaissaConstants.PGNTAG_FEN)) {
             regel = texPartij.get("fenpartij");
           } else {
-            // 'Gewone' partij.
             if (partij.getZetten().isEmpty()) {
               regel = texPartij.get("legepartij");
             } else {
@@ -682,56 +677,58 @@ public final class PgnToLatex extends Batchjob {
         while (i >= 0) {
           int j = regel.indexOf('@', i+1);
           if (j > i) {
-            String  tag = regel.substring(i+1, j);
+            var tag = regel.substring(i+1, j);
             if (partij.hasTag(tag)) {
               switch (tag) {
-              case CaissaConstants.PGNTAG_RESULT:
-                regel = regel.replace("@" + tag + "@",
-                    partij.getTag(tag).replace("1/2", "\\textonehalf"));
-                break;
-              case CaissaConstants.PGNTAG_ECO:
-                String extra = "";
-                if (!partij.isRanked()) {
-                  extra = " "
-                      + resourceBundle.getString("tekst.buitencompetitie");
-                }
-                regel = regel.replace("@" + tag + "@",
-                                      partij.getTag(tag) + extra);
-                break;
-              default:
-                regel = regel.replace("@" + tag + "@", partij.getTag(tag));
-                break;
+                case CaissaConstants.PGNTAG_RESULT:
+                  regel = regel.replace("@" + tag + "@",
+                          partij.getTag(tag).replace("1/2", "\\textonehalf"));
+                  break;
+                case CaissaConstants.PGNTAG_ECO:
+                  var extra = "";
+                  if (!partij.isRanked()) {
+                    extra =
+                        " "
+                          + resourceBundle.getString("tekst.buitencompetitie");
+                  }
+                  regel = regel.replace("@" + tag + "@",
+                          partij.getTag(tag) + extra);
+                  break;
+                default:
+                  regel = regel.replace("@" + tag + "@", partij.getTag(tag));
+                  break;
               }
             } else {
               switch (tag) {
-              case CaissaConstants.PGNTAG_ECO:
-                String extra = "";
-                if (!partij.isRanked()) {
-                  extra = " "
-                      + resourceBundle.getString("tekst.buitencompetitie");
-                }
-                regel = regel.replace("@" + tag + "@", extra);
-                break;
-              case "_EnkelZetten":
-                regel = regel.replace("@_EnkelZetten@",
-                                      partij.getZuivereZetten()
-                                            .replace("#", "\\mate"));
-                break;
-              case "_Start":
-                regel = regel.replace("@_Start@",
-                                      fen.getAanZet()+" "+ fen.getZetnummer());
-                break;
-              case "_Stelling":
-                regel = regel.replace("@_Stelling@", fen.getPositie());
-                break;
-              case "_Zetten":
-                regel = regel.replace("@_Zetten@",
-                                      partij.getZetten()
-                                            .replace("#", "\\mate"));
-                break;
-              default:
-                regel = regel.replace("@" + tag + "@", tag);
-                break;
+                case CaissaConstants.PGNTAG_ECO:
+                  var extra = "";
+                  if (!partij.isRanked()) {
+                    extra =
+                        " "
+                          + resourceBundle.getString("tekst.buitencompetitie");
+                  }
+                  regel = regel.replace("@" + tag + "@", extra);
+                  break;
+                case "_EnkelZetten":
+                  regel = regel.replace("@_EnkelZetten@",
+                          partij.getZuivereZetten()
+                                  .replace("#", "\\mate"));
+                  break;
+                case "_Start":
+                  regel = regel.replace("@_Start@",
+                          fen.getAanZet()+" "+ fen.getZetnummer());
+                  break;
+                case "_Stelling":
+                  regel = regel.replace("@_Stelling@", fen.getPositie());
+                  break;
+                case "_Zetten":
+                  regel = regel.replace("@_Zetten@",
+                          partij.getZetten()
+                                  .replace("#", "\\mate"));
+                  break;
+                default:
+                  regel = regel.replace("@" + tag + "@", tag);
+                  break;
               }
             }
             j = i;
@@ -739,7 +736,9 @@ public final class PgnToLatex extends Batchjob {
           i = regel.indexOf('@', j+1);
         }
         output.write(regel);
+      } catch (BestandException e) {
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
-    }
+    });
   }
 }

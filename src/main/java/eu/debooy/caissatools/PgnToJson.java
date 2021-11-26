@@ -20,7 +20,6 @@ import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
-import eu.debooy.caissa.exceptions.FenException;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
@@ -172,7 +171,7 @@ public final class PgnToJson extends Batchjob {
                                 .setCharset(parameters.get(PAR_CHARSETUIT))
                                 .setLezen(false).build();
       output.write(mapper.writeValueAsString(lijst));
-    } catch (BestandException | FenException | IOException | PgnException e) {
+    } catch (BestandException | IOException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
@@ -440,7 +439,7 @@ public final class PgnToJson extends Batchjob {
   }
 
   private static Map<String, Object> verwerkPartij(PGN pgn, int partijnr)
-      throws FenException, PgnException {
+      throws PgnException {
     FEN fen;
 
     Map<String, Integer>        ids       =
@@ -494,7 +493,7 @@ public final class PgnToJson extends Batchjob {
     var                 zetten      =
         vertaal(zuivereZetten, vanStukken, naarStukken).split(" ");
     Map<String, Object> jsonZetten  = new LinkedHashMap<>();
-    for (int i = 0; i < zetten.length; i++) {
+    for (var i = 0; i < zetten.length; i++) {
       Map<String, String> jsonZet   = new LinkedHashMap<>();
       var                 pgnZet    = zetten[i].replaceAll("^[0-9]*\\.", "");
       jsonZet.put("notatie", pgnZet);

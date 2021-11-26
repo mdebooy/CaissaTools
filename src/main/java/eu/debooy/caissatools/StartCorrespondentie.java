@@ -139,9 +139,9 @@ public class StartCorrespondentie extends Batchjob {
 
   private static InternetAddress[] fillAddresses(Collection<String> addresses)
       throws AddressException {
-    int               index   = 0;
-    InternetAddress[] result  = new InternetAddress[addresses.size()];
-    for (String address : addresses) {
+    var index   = 0;
+    var result  = new InternetAddress[addresses.size()];
+    for (var address : addresses) {
       result[index]  = new InternetAddress(address);
       index++;
     }
@@ -192,34 +192,36 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static String getTekst(String lijn) {
-    if (lijn.startsWith("#")) {
-      if (DoosUtils.telTeken(lijn, '#') == 2) {
-        var parameter = lijn.substring(1).split("#")[0];
-        switch (parameter) {
-          case "geennieuwespelers":
-            if (!parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)) {
-              return lijn.substring(19);
-            }
-            break;
-          case "metzwart":
-            if (Integer.valueOf(emailparams.get(12)) > 0) {
-              return lijn.substring(10);
-            }
-            break;
-          case "nieuwespelers":
-            if (parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)) {
-              return lijn.substring(15);
-            }
-            break;
-          default:
-            return "";
-        }
-      }
+    if (!lijn.startsWith("#")) {
+      return lijn;
+    }
 
+    if (DoosUtils.telTeken(lijn, '#') != 2) {
       return "";
     }
 
-    return lijn;
+    var parameter = lijn.substring(1).split("#")[0];
+    switch (parameter) {
+      case "geennieuwespelers":
+        if (!parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)) {
+          return lijn.substring(19);
+        }
+        break;
+      case "metzwart":
+        if (Integer.valueOf(emailparams.get(12)) > 0) {
+          return lijn.substring(10);
+        }
+        break;
+      case "nieuwespelers":
+        if (parameters.containsKey(CaissaTools.PAR_NIEUWESPELERS)) {
+          return lijn.substring(15);
+        }
+        break;
+      default:
+        break;
+    }
+
+    return "";
   }
 
   public static void help() {
@@ -335,7 +337,7 @@ public class StartCorrespondentie extends Batchjob {
       lijn  = getTekst(lijn);
       if (DoosUtils.isNotBlankOrNull(lijn)) {
         if (DoosUtils.telTeken(lijn, '@') > 1) {
-          StringBuilder hulplijn = new StringBuilder();
+          var hulplijn = new StringBuilder();
           while (DoosUtils.telTeken(lijn, '@') > 1) {
             var at      = lijn.indexOf('@');
             hulplijn.append(lijn.substring(0, at));
@@ -392,16 +394,7 @@ public class StartCorrespondentie extends Batchjob {
           var zwartspeler = spelers.get(zwart);
           if (witspeler.getNaam().equals(to)
               && isUitdaging(witspeler.getNaam(), zwartspeler.getNaam())) {
-            emailparams.set(3,  zwartspeler.getVoornaam());
-            emailparams.set(4,  zwartspeler.getNaam());
-            emailparams.set(5,  zwartspeler.getAlias());
-            emailparams.set(6,  zwartspeler.getEmail());
-            emailparams.set(7,  witspeler.getVoornaam());
-            emailparams.set(8,  witspeler.getNaam());
-            emailparams.set(9,  witspeler.getAlias());
-            emailparams.set(10, witspeler.getEmail());
-            emailparams.set(11, "");
-            emailparams.set(12, "");
+            setEmailParams(witspeler, zwartspeler);
             resultaat.append(formatLijn(template)).append(" , ");
           }
         }
@@ -427,16 +420,7 @@ public class StartCorrespondentie extends Batchjob {
           var zwartspeler = spelers.get(zwart);
           if (zwartspeler.getNaam().equals(to)
               && isUitdaging(witspeler.getNaam(), zwartspeler.getNaam())) {
-            emailparams.set(3,  zwartspeler.getVoornaam());
-            emailparams.set(4,  zwartspeler.getNaam());
-            emailparams.set(5,  zwartspeler.getAlias());
-            emailparams.set(6,  zwartspeler.getEmail());
-            emailparams.set(7,  witspeler.getVoornaam());
-            emailparams.set(8,  witspeler.getNaam());
-            emailparams.set(9,  witspeler.getAlias());
-            emailparams.set(10, witspeler.getEmail());
-            emailparams.set(11, "");
-            emailparams.set(12, "");
+            setEmailParams(witspeler, zwartspeler);
             resultaat.append(formatLijn(template)).append(" , ");
           }
         }
@@ -460,16 +444,7 @@ public class StartCorrespondentie extends Batchjob {
             && zwart < noSpelers) {
           var witspeler   = spelers.get(wit);
           var zwartspeler = spelers.get(zwart);
-          emailparams.set(3,  zwartspeler.getVoornaam());
-          emailparams.set(4,  zwartspeler.getNaam());
-          emailparams.set(5,  zwartspeler.getAlias());
-          emailparams.set(6,  zwartspeler.getEmail());
-          emailparams.set(7,  witspeler.getVoornaam());
-          emailparams.set(8,  witspeler.getNaam());
-          emailparams.set(9,  witspeler.getAlias());
-          emailparams.set(10, witspeler.getEmail());
-          emailparams.set(11, "");
-          emailparams.set(12, "");
+          setEmailParams(witspeler, zwartspeler);
           resultaat.append(formatLijn(template));
         }
       }
@@ -604,6 +579,20 @@ public class StartCorrespondentie extends Batchjob {
     }
   }
 
+  private static void setEmailParams(Spelerinfo witspeler,
+                                     Spelerinfo zwartspeler) {
+    emailparams.set(3,  zwartspeler.getVoornaam());
+    emailparams.set(4,  zwartspeler.getNaam());
+    emailparams.set(5,  zwartspeler.getAlias());
+    emailparams.set(6,  zwartspeler.getEmail());
+    emailparams.set(7,  witspeler.getVoornaam());
+    emailparams.set(8,  witspeler.getNaam());
+    emailparams.set(9,  witspeler.getAlias());
+    emailparams.set(10, witspeler.getEmail());
+    emailparams.set(11, "");
+    emailparams.set(12, "");
+  }
+
   private static boolean setParameters(String[] args) {
     var           arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
@@ -685,16 +674,7 @@ public class StartCorrespondentie extends Batchjob {
             maildata.addCc(witspeler.getEmail());
             maildata.setFrom(parameters.get(CaissaTools.PAR_TSEMAIL));
             maildata.setSubject(formatLijn(subject));
-            emailparams.set(3,  zwartspeler.getVoornaam());
-            emailparams.set(4,  zwartspeler.getNaam());
-            emailparams.set(5,  zwartspeler.getAlias());
-            emailparams.set(6,  zwartspeler.getEmail());
-            emailparams.set(7,  witspeler.getVoornaam());
-            emailparams.set(8,  witspeler.getNaam());
-            emailparams.set(9,  witspeler.getAlias());
-            emailparams.set(10, witspeler.getEmail());
-            emailparams.set(11, "");
-            emailparams.set(12, "");
+            setEmailParams(witspeler, zwartspeler);
             maildata.setMessage(maakMessage());
             DoosUtils.naarScherm(
                 MessageFormat.format(resourceBundle.getString("label.email"),

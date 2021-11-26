@@ -43,7 +43,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Properties;
@@ -116,7 +115,6 @@ public final class PgnToHtml extends Batchjob {
   private static  int               enkel;
   private static  int               kolommen;
   private static  double[][]        matrix;
-  private static  int               noSpelers;
   private static  TekstBestand      output;
   private static  String            prefix  = "";
   private static  Properties        skelet;
@@ -139,16 +137,8 @@ public final class PgnToHtml extends Batchjob {
             parameters.get(CaissaTools.PAR_MATRIXOPSTAND));
     var uitvoerdir    = parameters.get(PAR_UITVOERDIR);
 
+    JsonBestand     competitie;
     Collection<PGN> partijen;
-    try {
-      partijen = CaissaUtils.laadPgnBestand(invoer,
-                                            parameters.get(PAR_CHARSETIN));
-    } catch (PgnException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      return;
-    }
-
-    JsonBestand competitie;
     try {
       competitie  =
           new JsonBestand.Builder()
@@ -157,7 +147,9 @@ public final class PgnToHtml extends Batchjob {
                                      + EXT_JSON)
                          .setCharset(parameters.get(PAR_CHARSETIN))
                          .build();
-    } catch (BestandException e) {
+      partijen = CaissaUtils.laadPgnBestand(invoer,
+                                            parameters.get(PAR_CHARSETIN));
+    } catch (BestandException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
@@ -175,17 +167,13 @@ public final class PgnToHtml extends Batchjob {
     }
 
     // Maak de Matrix.
-    noSpelers = spelers.size();
-    kolommen  = noSpelers * enkel;
-    var namen = new String[noSpelers];
-    matrix    = new double[noSpelers][noSpelers * enkel];
-    Iterator<Spelerinfo>
-                speler    = spelers.iterator();
+    var noSpelers = spelers.size();
+    var namen     = new String[noSpelers];
+    kolommen      = noSpelers * enkel;
+    matrix        = new double[noSpelers][kolommen];
+
     for (var i = 0; i < noSpelers; i++) {
-      namen[i]  = speler.next().getNaam();
-      for (var j = 0; j < kolommen; j++) {
-        matrix[i][j] = -1.0;
-      }
+      namen[i]  = spelers.get(i).getNaam();
     }
     Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
 
@@ -198,6 +186,7 @@ public final class PgnToHtml extends Batchjob {
 
     // Maak het index.html bestand.
     maakIndex();
+
     // Maak het uitslagen.html bestand.
     if (enkel != CaissaConstants.TOERNOOI_MATCH) {
       // Sortering terug zetten voor opmaken schema.
@@ -513,7 +502,7 @@ public final class PgnToHtml extends Batchjob {
         output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_EIND + 1));
         output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN + 2));
         output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN_M));
-        for (int i = 0; i < actieveSpelers; i++) {
+        for (var i = 0; i < actieveSpelers; i++) {
           output.write(prefix + MessageFormat.format(
                                     skelet.getProperty(HTML_TABLE_HEAD_DUBBEL2),
                                     resourceBundle.getString(TAG_WIT),
@@ -563,7 +552,7 @@ public final class PgnToHtml extends Batchjob {
     output.write(prefix
         + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_NAAM),
                                swapNaam(speler.getNaam())));
-    StringBuilder lijn  = new StringBuilder();
+    var lijn  = new StringBuilder();
     for (var j = 0; j < kolommen; j++) {
       if ((j / enkel) * enkel == j) {
         lijn.append(prefix).append("      ");

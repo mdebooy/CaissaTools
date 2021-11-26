@@ -221,10 +221,9 @@ public final class ELOBerekenaar extends Batchjob {
                               .setCharset(parameters.get(PAR_CHARSETUIT))
                               .build();
       while (invoer.hasNext()) {
-        var veld      = invoer.next();
-        var spelerId  = spelers.size();
-        spelers.put(veld[0], spelerId);
-        Spelerinfo  spelerinfo  = new Spelerinfo();
+        var veld        = invoer.next();
+        var spelerId    = spelers.size();
+        var spelerinfo  = new Spelerinfo();
         spelerinfo.setNaam(veld[0]);
         spelerinfo.setElo(Integer.valueOf(veld[1]));
         spelerinfo.setElogroei(Integer.valueOf(veld[2]));
@@ -245,6 +244,7 @@ public final class ELOBerekenaar extends Batchjob {
         }
         spelerinfo.setSpelerId(spelerId);
         spelerinfos.add(spelerId, spelerinfo);
+        spelers.put(veld[0], spelerId);
         if (veld[5].compareTo(laatsteDatum) >= 0) {
           calendar.setTime(spelerinfo.getLaatstePartij());
           calendar.add(Calendar.DATE, 1);
@@ -551,14 +551,14 @@ public final class ELOBerekenaar extends Batchjob {
       return;
     }
 
-    var spelerId  = spelers.size();
-    spelers.put(speler, spelerId);
-    Spelerinfo  spelerinfo  = new Spelerinfo();
+    var spelerId    = spelers.size();
+    var spelerinfo  = new Spelerinfo();
     spelerinfo.setEerstePartij(eloDatum);
     spelerinfo.setElo(startElo);
     spelerinfo.setNaam(speler);
     spelerinfo.setPartijen(0);
     spelerinfo.setSpelerId(spelerId);
     spelerinfos.add(spelerId, spelerinfo);
+    spelers.put(speler, spelerId);
   }
 }

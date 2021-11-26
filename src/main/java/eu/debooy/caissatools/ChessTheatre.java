@@ -98,7 +98,7 @@ public final class ChessTheatre extends Batchjob {
     if (aantalPartijen < minPartijen) {
       aantalPartijen  = minPartijen;
     }
-    int   gameFile        = 0;
+    var   gameFile        = 0;
 
     try {
       // Maak de headers.xml file

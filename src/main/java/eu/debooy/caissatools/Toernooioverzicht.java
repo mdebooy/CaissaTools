@@ -67,14 +67,15 @@ public final class Toernooioverzicht extends Batchjob {
   private static  TekstBestand      texInvoer;
   private static  int               toernooitype;
 
-  private static final String LTX_HLINE     = "\\hline";
-  private static final String LTX_EOL       = "\\\\";
-  private static final String KYW_LOGO      = "L";
-  private static final String KYW_MATRIX    = "M";
-  private static final String KYW_SUBTITEL  = "S";
-  private static final String KYW_TITEL     = "T";
-  private static final String KYW_UITSLAGEN = "U";
-  private static final String NORMAAL       = "N";
+  private static final String LTX_HLINE       = "\\hline";
+  private static final String LTX_EOL         = "\\\\";
+  private static final String KYW_DEELNEMERS  = "D";
+  private static final String KYW_LOGO        = "L";
+  private static final String KYW_MATRIX      = "M";
+  private static final String KYW_SUBTITEL    = "S";
+  private static final String KYW_TITEL       = "T";
+  private static final String KYW_UITSLAGEN   = "U";
+  private static final String NORMAAL         = "N";
 
   private static final String KLEUR         = "\\columncolor{headingkleur}";
   private static final String KLEURLICHT    = "\\columncolor{headingkleur!25}";
@@ -147,7 +148,8 @@ public final class Toernooioverzicht extends Batchjob {
       }
     }
 
-    JsonBestand competitie;
+    JsonBestand     competitie;
+    Collection<PGN> partijen  = new TreeSet<>(new PGN.ByEventComparator());
     try {
       competitie  =
           new JsonBestand.Builder()
@@ -156,23 +158,17 @@ public final class Toernooioverzicht extends Batchjob {
                                      + EXT_JSON)
                          .setCharset(parameters.get(PAR_CHARSETIN))
                          .build();
-    } catch (BestandException e) {
+      partijen.addAll(
+          CaissaUtils.laadPgnBestand(parameters.get(PAR_INVOERDIR)
+                                     + bestand + EXT_PGN,
+                                     parameters.get(PAR_CHARSETIN)));
+    } catch (PgnException | BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
 
     spelers = new ArrayList<>();
     CaissaUtils.vulSpelers(spelers, competitie.getArray(JSON_TAG_SPELERS));
-
-    Collection<PGN> partijen  = new TreeSet<>(new PGN.ByEventComparator());
-    try {
-      partijen.addAll(
-          CaissaUtils.laadPgnBestand(parameters.get(PAR_INVOERDIR)
-                                     + bestand + EXT_PGN,
-                                     parameters.get(PAR_CHARSETIN)));
-    } catch (PgnException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    }
 
     var noSpelers = spelers.size();
     var kolommen  =
@@ -296,6 +292,21 @@ public final class Toernooioverzicht extends Batchjob {
     DoosUtils.naarScherm();
   }
 
+  private static void maakDeelnemerslijst() {
+    spelers.stream()
+           .sorted(new Spelerinfo.ByNaamComparator())
+           .forEach(speler -> {
+        try {
+          output.write("     " + speler.getVolledigenaam() + " & "
+                  + speler.getTelefoon() + " & "
+                  + speler.getEmail() + " " + LTX_EOL);
+          output.write("     " + LTX_HLINE);
+        } catch (BestandException e) {
+          // Onwaarschijnlijk.
+        }
+      });
+  }
+
   private static void maakLatexMatrix(int kolommen, int noSpelers,
                                       boolean matrixEerst)
       throws BestandException {
@@ -404,8 +415,8 @@ public final class Toernooioverzicht extends Batchjob {
     }
   }
 
-  private static void maakLatexMatrixHead3Mat(StringBuilder lijn, int noSpelers)
-      throws BestandException {
+  private static void maakLatexMatrixHead3Mat(StringBuilder lijn,
+                                              int noSpelers) {
     for (var i = 0; i < noSpelers; i++) {
       lijn.append("& ").append(TEKSTKLEUR)
           .append(resourceBundle.getString("tag.wit"))
@@ -548,6 +559,11 @@ public final class Toernooioverzicht extends Batchjob {
     switch(start) {
       case "%@Include":
         switch (regel.split(" ")[1].toLowerCase()) {
+          case "deelnemers":
+            if (!spelers.isEmpty()) {
+              maakDeelnemerslijst();
+            }
+            break;
           case "matrix":
             if (null != matrix) {
               maakLatexMatrix(kolommen, noSpelers,
@@ -565,68 +581,62 @@ public final class Toernooioverzicht extends Batchjob {
         }
         break;
       case "%@IncludeStart":
-        switch(regel.split(" ")[1].toLowerCase()) {
-          case "logo":
-            status  = KYW_LOGO;
-            break;
-          case "matrix":
-            status = KYW_MATRIX;
-            break;
-          case "subtitel":
-            status = KYW_SUBTITEL;
-            break;
-          case "titel":
-            status = KYW_TITEL;
-            break;
-          case "uitslagen":
-            status = KYW_UITSLAGEN;
-            break;
-         default:
-            break;
-        }
+        status  = setStatus(regel.split(" ")[1].toLowerCase());
         break;
       case "%@IncludeEind":
         status  = NORMAAL;
         break;
       default:
-        switch (status) {
-          case KYW_LOGO:
-            if (parameters.containsKey(CaissaTools.PAR_LOGO)) {
-              output.write(replaceParameters(regel, parameters));
-            }
-            break;
-          case KYW_MATRIX:
-            if (null != matrix) {
-              output.write(replaceParameters(regel, parameters));
-            }
-            break;
-          case KYW_SUBTITEL:
-            if (parameters.containsKey(CaissaTools.PAR_SUBTITEL)) {
-              output.write(replaceParameters(regel, parameters));
-            }
-            break;
-          case KYW_TITEL:
-            if (parameters.containsKey(CaissaTools.PAR_TITEL)) {
-              output.write(replaceParameters(regel, parameters));
-            }
-            break;
-          case KYW_UITSLAGEN:
-            if (null != schema) {
-              output.write(replaceParameters(regel, parameters));
-            }
-            break;
-          default:
-            output.write(replaceParameters(regel, parameters));
-            break;
-          }
+        schrijfUitTemplate(regel, parameters, status);
         break;
     }
 
     return status;
   }
 
+  private static void schrijfUitTemplate(String regel,
+                                         Map<String, String> params,
+                                         String status)
+      throws BestandException {
+    switch (status) {
+      case KYW_DEELNEMERS:
+        if (!spelers.isEmpty()) {
+          output.write(replaceParameters(regel, params));
+        }
+        break;
+      case KYW_LOGO:
+        if (parameters.containsKey(CaissaTools.PAR_LOGO)) {
+          output.write(replaceParameters(regel, params));
+        }
+        break;
+      case KYW_MATRIX:
+        if (null != matrix) {
+          output.write(replaceParameters(regel, params));
+        }
+        break;
+      case KYW_SUBTITEL:
+        if (parameters.containsKey(CaissaTools.PAR_SUBTITEL)) {
+          output.write(replaceParameters(regel, params));
+        }
+        break;
+      case KYW_TITEL:
+        if (parameters.containsKey(CaissaTools.PAR_TITEL)) {
+          output.write(replaceParameters(regel, params));
+        }
+        break;
+      case KYW_UITSLAGEN:
+        if (null != schema) {
+          output.write(replaceParameters(regel, params));
+        }
+        break;
+      default:
+        output.write(replaceParameters(regel, params));
+        break;
+      }
+  }
+
   private static boolean setParameters(String[] args) {
-    Arguments     arguments = new Arguments(args);
+    var           arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
 
     arguments.setParameters(new String[] {CaissaTools.PAR_AUTEUR,
@@ -691,6 +701,35 @@ public final class Toernooioverzicht extends Batchjob {
     return false;
   }
 
+  private static String setStatus(String keyword) {
+    String  status;
+    switch(keyword) {
+      case "deelnemers":
+        status  = KYW_DEELNEMERS;
+        break;
+      case "logo":
+        status  = KYW_LOGO;
+        break;
+      case "matrix":
+        status  = KYW_MATRIX;
+        break;
+      case "subtitel":
+        status  = KYW_SUBTITEL;
+        break;
+      case "titel":
+        status  = KYW_TITEL;
+        break;
+      case "uitslagen":
+        status  = KYW_UITSLAGEN;
+        break;
+      default:
+        status  = "";
+        break;
+    }
+
+    return status;
+  }
+
   private static void vulParams(Map<String, String> params) {
     if (parameters.containsKey(CaissaTools.PAR_SUBTITEL)) {
       params.put(CaissaTools.PAR_SUBTITEL,
@@ -702,6 +741,8 @@ public final class Toernooioverzicht extends Batchjob {
     if (parameters.containsKey(CaissaTools.PAR_TITEL)) {
       params.put(CaissaTools.PAR_TITEL, parameters.get(CaissaTools.PAR_TITEL));
     }
+    params.put("deelnemerslijst",
+               resourceBundle.getString("label.deelnemerslijst"));
     params.put("forfait", resourceBundle.getString("message.forfait")
                                         .replace("<b>", "\\textbf{")
                                         .replace("</b>", "}"));

@@ -76,12 +76,21 @@ contents={%
 %@IncludeStart Uitslagen
 %@Include Uitslagen
    \arrayrulecolor{white}%
-   \begin{tabular} { | p{32mm} C{2mm} p{32mm} | C{5mm} | }
+   \begin{tabular}{ | p{32mm} C{2mm} p{32mm} | C{5mm} | }
     & & & \\
     \multicolumn{4}{l}{@forfait@} \\
     \multicolumn{4}{>{\columncolor{headingkleur!15}}l}{@notRanked@} \\
    \end{tabular}
 %@IncludeEind Uitslagen
+   \newpage
+%@IncludeStart Deelnemers
+   \arrayrulecolor{headingkleur!25}
+   \begin{tabular}{ l c l }
+    \rowcolor{headingkleur}
+    \multicolumn{3}{c}{\large\color{headingtekstkleur}@deelnemerslijst@} \\
+%@Include Deelnemers
+   \end{tabular}
+%@IncludeEind Deelnemers
   \end{center}
  \end{landscape}
 %@IncludeEind Body
