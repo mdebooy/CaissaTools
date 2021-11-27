@@ -244,6 +244,9 @@ public final class PgnToLatex extends Batchjob {
                                           .get(CaissaTools.PAR_MATRIXOPSTAND)
                                           .equals(DoosConstants.WAAR),
                                         CaissaConstants.TIEBREAK_SB);
+          matrix    = CaissaUtils.verwijderNietActief(spelers, matrix, toernooitype);
+          kolommen  = matrix[0].length;
+          noSpelers = spelers.size();
         }
 
         // Zet de te vervangen waardes.

@@ -189,6 +189,10 @@ public final class PgnToHtml extends Batchjob {
 
     // Maak het uitslagen.html bestand.
     if (enkel != CaissaConstants.TOERNOOI_MATCH) {
+      // Opnieuw lezen om niet actieve spelers terug te krijgen.
+      spelers.clear();
+      CaissaUtils.vulSpelers(spelers, competitie.getArray(JSON_TAG_SPELERS));
+
       // Sortering terug zetten voor opmaken schema.
       spelers.sort(new Spelerinfo.BySpelerSeqComparator());
       var enkelrondig = (enkel == CaissaConstants.TOERNOOI_ENKEL);
@@ -364,11 +368,9 @@ public final class PgnToHtml extends Batchjob {
         prefix  = "";
       }
 
-      // Start de tabel
       schrijfUitvoer(HTML_TABLE_BEGIN);
-      // De colgroup
       schrijfUitvoer(HTML_TABLE_COLGROUP);
-      // De thead
+
       schrijfUitvoer(HTML_TABLE_HEAD_BEGIN);
       output.write(prefix
           + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_NR),
@@ -386,17 +388,13 @@ public final class PgnToHtml extends Batchjob {
           + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_SB),
                                  resourceBundle.getString(TAG_SB)));
       schrijfUitvoer(HTML_TABLE_HEAD_EIND);
-      // De tbody
+
       schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
-      var plaats  = 1;
       for (var i = 0; i < noSpelers; i++) {
-        if (spelers.get(i).getPartijen() > 0) {
-          maakIndexBody(spelers.get(i), plaats);
-          plaats++;
-        }
+        maakIndexBody(spelers.get(i), i+1);
       }
-      // Alles netjes afsluiten
       schrijfUitvoer(HTML_TABLE_BODY_EIND);
+
       schrijfUitvoer(HTML_TABLE_EIND);
     } catch (BestandException | IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -437,14 +435,30 @@ public final class PgnToHtml extends Batchjob {
     output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_EIND));
   }
 
-  private static void maakMatrix() {
-    List<Spelerinfo>  actief  = new ArrayList<>();
-    actief.addAll(spelers);
-    CaissaUtils.verwijderNietActief(actief, matrix, enkel);
+  private static void maakMatchMatrix(long noSpelers) throws BestandException {
+    output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_EIND + 1));
+    output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN + 2));
+    output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN_M));
+    for (var i = 0; i < noSpelers; i++) {
+      output.write(prefix + MessageFormat.format(
+                                skelet.getProperty(HTML_TABLE_HEAD_DUBBEL2),
+                                resourceBundle.getString(TAG_WIT),
+                                resourceBundle.getString(TAG_ZWART)));
+    }
+    output.write(prefix
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_PUNTEN),
+                               ""));
+    output.write(prefix
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_PARTIJEN),
+                               ""));
+    output.write(prefix
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_SB), ""));
+  }
 
-    var actieveSpelers  = actief.stream()
-                                .filter(speler -> (speler.getPartijen() > 0))
-                                .count();
+  private static void maakMatrix() {
+    matrix        = CaissaUtils.verwijderNietActief(spelers, matrix, enkel);
+    kolommen      = matrix[0].length;
+    var noSpelers = spelers.size();
 
     skelet  = new Properties();
     try {
@@ -456,38 +470,36 @@ public final class PgnToHtml extends Batchjob {
       skelet.load(PgnToHtml.class.getClassLoader()
                            .getResourceAsStream("matrix.properties"));
 
+      prefix  = "";
       if (skelet.containsKey(PROP_INDENT)) {
         prefix  = DoosUtils.stringMetLengte("",
             Integer.valueOf(skelet.getProperty(PROP_INDENT)));
-      } else {
-        prefix  = "";
       }
 
       // Start de tabel
       schrijfUitvoer(HTML_TABLE_BEGIN);
       // De colgroup
+      String  enkeltekst;
       schrijfUitvoer(HTML_TABLE_COLGROUP_BEGIN);
-      for (var i = 0; i < actieveSpelers; i++) {
-        if (enkel == 1) {
-          schrijfUitvoer(HTML_TABLE_COLGROUP_ENKEL);
-        } else {
-          schrijfUitvoer(HTML_TABLE_COLGROUP_DUBBEL);
-        }
+      if (enkel == 1) {
+        enkeltekst  = HTML_TABLE_COLGROUP_ENKEL;
+      } else {
+        enkeltekst  = HTML_TABLE_COLGROUP_DUBBEL;
+      }
+      for (var i = 0; i < noSpelers; i++) {
+        schrijfUitvoer(enkeltekst);
       }
       schrijfUitvoer(HTML_TABLE_COLGROUP_EIND);
       // De thead
       schrijfUitvoer(HTML_TABLE_HEAD_BEGIN);
       output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN_M));
-      for (var i = 0; i < actieveSpelers; i++) {
-        if (enkel == 1) {
-          output.write(prefix
-              + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_ENKEL),
-                                     (i + 1)));
-        } else {
-          output.write(prefix
-              + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_DUBBEL),
-                                     (i + 1)));
-        }
+      if (enkel == 1) {
+        enkeltekst  = skelet.getProperty(HTML_TABLE_HEAD_ENKEL);
+      } else {
+        enkeltekst  = skelet.getProperty(HTML_TABLE_HEAD_DUBBEL);
+      }
+      for (var i = 0; i < noSpelers; i++) {
+        output.write(prefix + MessageFormat.format(enkeltekst, (i + 1)));
       }
       output.write(prefix
           + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_PUNTEN),
@@ -499,36 +511,16 @@ public final class PgnToHtml extends Batchjob {
           + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_SB),
                                  resourceBundle.getString(TAG_SB)));
       if (enkel == 2) {
-        output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_EIND + 1));
-        output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN + 2));
-        output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN_M));
-        for (var i = 0; i < actieveSpelers; i++) {
-          output.write(prefix + MessageFormat.format(
-                                    skelet.getProperty(HTML_TABLE_HEAD_DUBBEL2),
-                                    resourceBundle.getString(TAG_WIT),
-                                    resourceBundle.getString(TAG_ZWART)));
-        }
-        output.write(prefix
-            + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_PUNTEN),
-                                   ""));
-        output.write(prefix
-            + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_PARTIJEN),
-                                   ""));
-        output.write(prefix
-            + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_SB), ""));
+        maakMatchMatrix(noSpelers);
       }
       schrijfUitvoer(HTML_TABLE_HEAD_EIND);
-      // De tbody
+
       schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
-      var plaats  = 0;
-      for (var i = 0; i < actieveSpelers; i++) {
-        if (actief.get(i).getPartijen() > 0) {
-          maakMatrixBody(actief.get(i), plaats);
-          plaats++;
-        }
+      for (var i = 0; i < noSpelers; i++) {
+        maakMatrixBody(spelers.get(i), i);
       }
-      // Alles netjes afsluiten
       schrijfUitvoer(HTML_TABLE_BODY_EIND);
+
       schrijfUitvoer(HTML_TABLE_EIND);
     } catch (BestandException | IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());

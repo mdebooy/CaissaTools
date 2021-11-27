@@ -8,7 +8,9 @@
 \usepackage{array}
 \usepackage{graphicx}
 \usepackage{lscape}
+%@IncludeStart Logo
 \usepackage{background}
+%@IncludeEind Logo
 
 \definecolor{headingkleur}{HTML}{004488}
 \definecolor{headingtekstkleur}{HTML}{FFFFFF}
@@ -72,18 +74,18 @@ contents={%
 %@IncludeStart Matrix
 %@Include Matrix
 %@IncludeEind Matrix
-   \newpage
 %@IncludeStart Uitslagen
+   \newpage
 %@Include Uitslagen
    \arrayrulecolor{white}%
    \begin{tabular}{ | p{32mm} C{2mm} p{32mm} | C{5mm} | }
     & & & \\
-    \multicolumn{4}{l}{@forfait@} \\
     \multicolumn{4}{>{\columncolor{headingkleur!15}}l}{@notRanked@} \\
+    \multicolumn{4}{l}{@forfait@} \\
    \end{tabular}
 %@IncludeEind Uitslagen
-   \newpage
 %@IncludeStart Deelnemers
+   \newpage
    \arrayrulecolor{headingkleur!25}
    \begin{tabular}{ l c l }
     \rowcolor{headingkleur}
@@ -91,6 +93,17 @@ contents={%
 %@Include Deelnemers
    \end{tabular}
 %@IncludeEind Deelnemers
+%@IncludeStart Kalender
+   \newpage
+   \arrayrulecolor{headingkleur!25}
+   \begin{tabular}{ c l }
+    \rowcolor{headingkleur}
+    \multicolumn{2}{c}{\large\color{headingtekstkleur}@kalender@} \\
+    \rowcolor{headingkleur}
+    \color{headingtekstkleur}@datum@ & \color{headingtekstkleur}@activiteit@ \\
+%@Include Kalender
+   \end{tabular}
+%@IncludeEind Kalender
   \end{center}
  \end{landscape}
 %@IncludeEind Body
