@@ -62,6 +62,7 @@ public final class Toernooioverzicht extends Batchjob {
   private static final  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
 
+  private static  List<Spelerinfo>  deelnemers;
   private static  JSONArray         jsonKalender;
   private static  String[]          kalender;
   private static  double[][]        matrix;
@@ -72,6 +73,7 @@ public final class Toernooioverzicht extends Batchjob {
   private static  int               toernooitype;
 
   private static final String LTX_HLINE       = "\\hline";
+  private static final String LTX_END_TABULAR = "\\end{tabular}";
   private static final String LTX_EOL         = "\\\\";
   private static final String KYW_DEELNEMERS  = "D";
   private static final String KYW_KALENDER    = "K";
@@ -174,6 +176,10 @@ public final class Toernooioverzicht extends Batchjob {
       spelers       = new ArrayList<>();
       CaissaUtils.vulSpelers(spelers, competitie.getArray(JSON_TAG_SPELERS));
 
+      deelnemers    = new ArrayList<>();
+      deelnemers.addAll(spelers);
+      deelnemers.sort(new Spelerinfo.ByNaamComparator());
+
       jsonKalender  = competitie.getArray(JSON_TAG_KALENDER);
       kalender      =
           CaissaUtils.vulKalender(JSON_TAG_KALENDER_RONDE, spelers.size(),
@@ -217,7 +223,7 @@ public final class Toernooioverzicht extends Batchjob {
     }
 
     // Bepaal de score en weerstandspunten.
-    matrix  = new double[noSpelers][kolommen];
+    matrix    = new double[noSpelers][kolommen];
     CaissaUtils.vulToernooiMatrix(partijen,
                                   spelers,
                                   matrix, toernooitype,
@@ -225,6 +231,9 @@ public final class Toernooioverzicht extends Batchjob {
                                     .get(CaissaTools.PAR_MATRIXOPSTAND)
                                     .equals(DoosConstants.WAAR),
                                   CaissaConstants.TIEBREAK_SB);
+    matrix    = CaissaUtils.verwijderNietActief(spelers, matrix, toernooitype);
+    kolommen  = matrix[0].length;
+    noSpelers = spelers.size();
 
     // Zet de te vervangen waardes.
     Map<String, String> params  = new HashMap<>();
@@ -307,19 +316,13 @@ public final class Toernooioverzicht extends Batchjob {
     DoosUtils.naarScherm();
   }
 
-  private static void maakDeelnemerslijst() {
-    spelers.stream()
-           .sorted(new Spelerinfo.ByNaamComparator())
-           .forEach(speler -> {
-        try {
-          output.write("    " + speler.getVolledigenaam() + " & "
-                  + speler.getTelefoon() + " & "
-                  + speler.getEmail() + " " + LTX_EOL);
-          output.write("    " + LTX_HLINE);
-        } catch (BestandException e) {
-          // Onwaarschijnlijk.
-        }
-      });
+  private static void maakDeelnemerslijst() throws BestandException {
+    for (Spelerinfo deelnemer : deelnemers) {
+      output.write("    " + deelnemer.getVolledigenaam() + " & "
+              + deelnemer.getTelefoon() + " & "
+              + deelnemer.getEmail() + " " + LTX_EOL);
+      output.write("    " + LTX_HLINE);
+    }
   }
 
   private static void maakKalender() throws BestandException {
@@ -397,7 +400,7 @@ public final class Toernooioverzicht extends Batchjob {
       output.write(lijn.toString());
       output.write("    " + LTX_HLINE);
     }
-    output.write("   \\end{tabular}");
+    output.write("   " + LTX_END_TABULAR);
   }
 
   private static void maakLatexMatrixBodyMat(StringBuilder lijn, int rij,
@@ -515,7 +518,7 @@ public final class Toernooioverzicht extends Batchjob {
                                          .split("\\.")[0]);
       if (ronde != vorige) {
         output.write("    " + LTX_HLINE);
-        output.write("   \\end{tabular}");
+        output.write("   " + LTX_END_TABULAR);
         maakRondeheading(ronde, DoosUtils.nullToEmpty(kalender[ronde]));
         vorige  = ronde;
       }
@@ -539,7 +542,7 @@ public final class Toernooioverzicht extends Batchjob {
     } while (null != partij);
 
     output.write("    " + LTX_HLINE);
-    output.write("   \\end{tabular}");
+    output.write("   " + LTX_END_TABULAR);
   }
 
   private static void matrixEerst(StringBuilder lijn, int kolommen,
