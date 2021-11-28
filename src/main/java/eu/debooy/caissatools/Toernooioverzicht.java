@@ -82,6 +82,8 @@ public final class Toernooioverzicht extends Batchjob {
   private static final String KYW_UITSLAGEN   = "U";
   private static final String NORMAAL         = "N";
 
+  private static final String TAG_KALENDER    = "kalender";
+
   private static final String KLEUR           = "\\columncolor{headingkleur}";
   private static final String KLEURLICHT      = "\\columncolor{headingkleur!25}";
   private static final String RIJKLEUR        = "\\rowcolor{headingkleur}";
@@ -613,7 +615,7 @@ public final class Toernooioverzicht extends Batchjob {
               maakDeelnemerslijst();
             }
             break;
-          case "kalender":
+          case TAG_KALENDER:
             if (!spelers.isEmpty()) {
               maakKalender();
             }
@@ -764,7 +766,7 @@ public final class Toernooioverzicht extends Batchjob {
       case "deelnemers":
         status  = KYW_DEELNEMERS;
         break;
-      case "kalender":
+      case TAG_KALENDER:
         status  = KYW_KALENDER;
         break;
       case "logo":
@@ -801,17 +803,14 @@ public final class Toernooioverzicht extends Batchjob {
     if (parameters.containsKey(CaissaTools.PAR_TITEL)) {
       params.put(CaissaTools.PAR_TITEL, parameters.get(CaissaTools.PAR_TITEL));
     }
-    params.put("activiteit",
-               resourceBundle.getString("label.activiteit"));
-    params.put("datum",
-               resourceBundle.getString("label.datum"));
+    params.put("activiteit", resourceBundle.getString("label.activiteit"));
+    params.put("datum", resourceBundle.getString("label.datum"));
     params.put("deelnemerslijst",
                resourceBundle.getString("label.deelnemerslijst"));
     params.put("forfait", resourceBundle.getString("message.forfait")
                                         .replace("<b>", "\\textbf{")
                                         .replace("</b>", "}"));
-    params.put("kalender",
-               resourceBundle.getString("label.kalender"));
+    params.put(TAG_KALENDER, resourceBundle.getString("label.kalender"));
     params.put("notRanked", resourceBundle.getString("message.notranked"));
   }
 }
