@@ -19,6 +19,7 @@ package eu.debooy.caissatools;
 import eu.debooy.caissa.CaissaConstants;
 import static eu.debooy.caissa.CaissaConstants.JSON_TAG_ENKELRONDIG;
 import static eu.debooy.caissa.CaissaConstants.JSON_TAG_KALENDER;
+import static eu.debooy.caissa.CaissaConstants.JSON_TAG_KALENDER_DATUM;
 import static eu.debooy.caissa.CaissaConstants.JSON_TAG_KALENDER_RONDE;
 import static eu.debooy.caissa.CaissaConstants.JSON_TAG_SPELERS;
 import eu.debooy.caissa.CaissaUtils;
@@ -39,6 +40,8 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.charset.Charset;
 import java.text.MessageFormat;
+import java.time.LocalDate;
+import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
@@ -48,6 +51,8 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
+import org.json.simple.JSONArray;
+import org.json.simple.JSONObject;
 
 
 /**
@@ -79,13 +84,17 @@ public final class PgnToHtml extends Batchjob {
       "table.head.dubbel2";
   public static final String  HTML_TABLE_HEAD_EIND        = "table.head.eind.";
   public static final String  HTML_TABLE_HEAD_ENKEL       = "table.head.enkel";
+  public static final String  HTML_TABLE_HEAD_KALENDER    =
+      "table.head.kalender";
   public static final String  HTML_TABLE_HEAD_NAAM        = "table.head.naam";
   public static final String  HTML_TABLE_HEAD_NR          = "table.head.nr";
   public static final String  HTML_TABLE_HEAD_PARTIJEN    =
       "table.head.partijen";
   public static final String  HTML_TABLE_HEAD_PUNTEN      = "table.head.punten";
   public static final String  HTML_TABLE_HEAD_SB          = "table.head.sb";
+  public static final String  HTML_TABLE_ROW              = "table.row";
   public static final String  HTML_TABLE_ROW_BEGIN        = "table.row.begin";
+  public static final String  HTML_TABLE_ROW_DATUM        = "table.row.datum";
   public static final String  HTML_TABLE_ROW_EIND         = "table.row.eind";
   public static final String  HTML_TABLE_ROW_NAAM         = "table.row.naam";
   public static final String  HTML_TABLE_ROW_NR           = "table.row.nr";
@@ -97,13 +106,16 @@ public final class PgnToHtml extends Batchjob {
   public static final String  HTML_TABLE_ROW_ZELF         = "table.row.zelf";
   public static final String  HTML_TABLE_ROW_ZWART        = "table.row.zwart";
 
-  public static final String  TAG_NAAM      = "tag.naam";
-  public static final String  TAG_NUMMER    = "tag.nummer";
-  public static final String  TAG_PARTIJEN  = "tag.partijen";
-  public static final String  TAG_PUNTEN    = "tag.punten";
-  public static final String  TAG_SB        = "tag.sb";
-  public static final String  TAG_WIT       = "tag.wit";
-  public static final String  TAG_ZWART     = "tag.zwart";
+  public static final String  TAG_ACTIVITEIT  = "label.activiteit";
+  public static final String  TAG_DATUM       = "label.datum";
+  public static final String  TAG_HTML        = "label.html.";
+  public static final String  TAG_NAAM        = "tag.naam";
+  public static final String  TAG_NUMMER      = "tag.nummer";
+  public static final String  TAG_PARTIJEN    = "tag.partijen";
+  public static final String  TAG_PUNTEN      = "tag.punten";
+  public static final String  TAG_SB          = "tag.sb";
+  public static final String  TAG_WIT         = "tag.wit";
+  public static final String  TAG_ZWART       = "tag.zwart";
 
   public static final String  PROP_INDENT = "indent";
 
@@ -114,6 +126,7 @@ public final class PgnToHtml extends Batchjob {
 
   private static  int               enkel;
   private static  int               kolommen;
+  private static  JSONArray         kalender;
   private static  double[][]        matrix;
   private static  TekstBestand      output;
   private static  String            prefix  = "";
@@ -149,6 +162,7 @@ public final class PgnToHtml extends Batchjob {
                          .build();
       partijen = CaissaUtils.laadPgnBestand(invoer,
                                             parameters.get(PAR_CHARSETIN));
+      kalender    = competitie.getArray(JSON_TAG_KALENDER);
     } catch (BestandException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
@@ -206,6 +220,8 @@ public final class PgnToHtml extends Batchjob {
         maakUitslagen(schema, data);
       }
     }
+
+    maakKalender();
 
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.bestand"),
@@ -432,6 +448,96 @@ public final class PgnToHtml extends Batchjob {
         + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_SB),
                                getPunten(wpntn, wdecim),
                                getDecimalen(wpntn, wdecim)));
+    output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_EIND));
+  }
+
+  private static void maakKalender() {
+    var datum             =
+        ((JSONObject) kalender.get(0)).get(JSON_TAG_KALENDER_DATUM).toString();
+    var formatter         = DateTimeFormatter.ofPattern(DoosConstants.DATUM);
+    var speeldag          = LocalDate.parse(datum, formatter)
+                                     .getDayOfWeek().getValue();
+    var vandaag           = LocalDate.now();
+    var volgendeSpeeldag  = vandaag.plusDays(7 - vandaag.getDayOfWeek()
+                                                        .getValue() + speeldag)
+                                   .format(formatter);
+
+    skelet  = new Properties();
+    try {
+      output    = new TekstBestand.Builder()
+                                  .setBestand(parameters.get(PAR_UITVOERDIR)
+                                              + "kalender.html")
+                                  .setCharset(parameters.get(PAR_CHARSETUIT))
+                                  .setLezen(false).build();
+      skelet.load(PgnToHtml.class.getClassLoader()
+                           .getResourceAsStream("kalender.properties"));
+
+      if (skelet.containsKey(PROP_INDENT)) {
+        prefix  = DoosUtils.stringMetLengte("",
+            Integer.valueOf(skelet.getProperty(PROP_INDENT)));
+      } else {
+        prefix  = "";
+      }
+
+      schrijfUitvoer(HTML_TABLE_BEGIN);
+      schrijfUitvoer(HTML_TABLE_COLGROUP);
+
+      schrijfUitvoer(HTML_TABLE_HEAD_BEGIN);
+      output.write(prefix
+          + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_KALENDER),
+                                 resourceBundle.getString(TAG_DATUM)));
+      output.write(prefix
+          + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_KALENDER),
+                                 resourceBundle.getString(TAG_ACTIVITEIT)));
+      schrijfUitvoer(HTML_TABLE_HEAD_EIND);
+
+      schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
+      for (var i = 0; i < kalender.size(); i++) {
+        maakKalenderBody((JSONObject) kalender.get(i), volgendeSpeeldag);
+      }
+      schrijfUitvoer(HTML_TABLE_BODY_EIND);
+
+      schrijfUitvoer(HTML_TABLE_EIND);
+    } catch (BestandException | IOException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+    } finally {
+      try {
+        if (output != null) {
+          output.close();
+        }
+      } catch (BestandException ex) {
+        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
+      }
+    }
+  }
+
+  private static void maakKalenderBody(JSONObject item, String volgende)
+      throws BestandException {
+    var datum = item.get("datum").toString();
+    var type  = "ronde";
+    if (item.containsKey("inhaal")) {
+      type  = "inhaal";
+    }
+    if (item.containsKey("extra")) {
+      type  = "extra";
+    }
+    output.write(prefix +
+        MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_BEGIN
+                                                  + "." + type),
+                             datum.equals(volgende) ? " attentie" : ""));
+    output.write(prefix +
+        MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_DATUM), datum));
+    String  activiteit;
+    if (resourceBundle.containsKey(TAG_HTML + type)) {
+      activiteit  =
+          MessageFormat.format(resourceBundle.getString(TAG_HTML + type),
+                               item.get(type).toString());
+    } else {
+      activiteit  = item.get(type).toString();
+    }
+    output.write(prefix +
+        MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW),
+                             activiteit));
     output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_EIND));
   }
 
