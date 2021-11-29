@@ -148,8 +148,7 @@ public class AnalyseToLatex extends Batchjob {
     }
   }
 
-  private static String getTexmatezetten(char[] data, int start, int lengte)
-      throws BestandException {
+  private static String getTexmatezetten(char[] data, int start, int lengte) {
     var texmatezetten =
       new StringBuilder(new String(data, start, lengte));
 
@@ -206,7 +205,7 @@ public class AnalyseToLatex extends Batchjob {
                                    String titel) throws BestandException {
     while (texInvoer.hasNext()) {
       String  regel = texInvoer.next();
-      System.out.println(regel.replace("@Auteur@", auteur)
+      uitvoer.write(regel.replace("@Auteur@", auteur)
                          .replace("@Titel@",  titel));
     }
   }
@@ -214,13 +213,13 @@ public class AnalyseToLatex extends Batchjob {
   private static void schrijfCommentaar(char[] commentaar,
                                         int start, int lengte)
       throws BestandException {
-    System.out.println("\\par\\justify "
+    uitvoer.write("\\par\\justify "
                     + new String(commentaar, start, lengte));
   }
 
   private static void schrijfEinde()
       throws BestandException {
-    System.out.println("\\end{document}");
+    uitvoer.write("\\end{document}");
   }
 
   private static void schrijfVariant(char[] variant, int start, int lengte)
@@ -230,12 +229,12 @@ public class AnalyseToLatex extends Batchjob {
   private static void schrijfZetten(char[] zetten,
                                     int start, int lengte)
       throws BestandException {
-    System.out.println("\\par\\centering|"
+    uitvoer.write("\\par\\centering|"
                     + getTexmatezetten(zetten, start, lengte) + "|");
   }
 
   private static boolean setParameters(String[] args) {
-    Arguments     arguments = new Arguments(args);
+    var           arguments = new Arguments(args);
     List<String>  fouten    = new ArrayList<>();
 
     arguments.setParameters(new String[] {CaissaTools.PAR_AUTEUR,
@@ -332,40 +331,40 @@ public class AnalyseToLatex extends Batchjob {
       throws BestandException {
     switch (resultaat) {
     case CaissaConstants.PARTIJ_REMISE:
-      System.out.println("|\\drawn|");
+      uitvoer.write("|\\drawn|");
       break;
     case CaissaConstants.PARTIJ_WIT_WINT:
-      System.out.println("|\\whitewins|");
+      uitvoer.write("|\\whitewins|");
       break;
     case CaissaConstants.PARTIJ_ZWART_WINT:
-      System.out.println("|\\blackwins|");
+      uitvoer.write("|\\blackwins|");
       break;
     default:
-      System.out.println("|");
+      uitvoer.write("|");
       break;
     }
   }
 
   private static void verwerkPartijHeading(PGN partij) throws BestandException {
-    System.out.println("");
-    System.out.println("\\whitename{" + partij.getWhite() + "}");
-    System.out.println("\\blackname{" + partij.getBlack() + "}");
-    System.out.println("\\chessevent{"
+    uitvoer.write("");
+    uitvoer.write("\\whitename{" + partij.getWhite() + "}");
+    uitvoer.write("\\blackname{" + partij.getBlack() + "}");
+    uitvoer.write("\\chessevent{"
                     + partij.getTag(CaissaConstants.PGNTAG_EVENT) + "}");
     String  eco = partij.getTag(CaissaConstants.PGNTAG_ECO);
     if (DoosUtils.isNotBlankOrNull(eco)) {
-      System.out.println("\\chessopening{"
+      uitvoer.write("\\chessopening{"
                       + ecoBundle.getString(eco.substring(0, 3)) + "}");
-      System.out.println("\\ECO{" + eco + "}");
+      uitvoer.write("\\ECO{" + eco + "}");
     }
-    System.out.println("");
-    System.out.println("\\makegametitle");
-    System.out.println("");
+    uitvoer.write("");
+    uitvoer.write("\\makegametitle");
+    uitvoer.write("");
 
     if (partij.hasTag("Annotator")) {
-      System.out.println(resourceBundle.getString("label.annotator")
+      uitvoer.write(resourceBundle.getString("label.annotator")
                       + " \\emph{" + partij.getTag("Annotator") + "}");
-      System.out.println("");
+      uitvoer.write("");
     }
   }
 
@@ -389,9 +388,9 @@ public class AnalyseToLatex extends Batchjob {
 
   private static int zoekEinde(char[] zetten, int van, int tot,
                                char begin, char eind) {
-    int aantalbegin = 1;
-    int aantaleind  = 0;
-    int einde       = 0;
+    var aantalbegin = 1;
+    var aantaleind  = 0;
+    var einde       = 0;
 
     while (aantalbegin != aantaleind
         && van < tot) {

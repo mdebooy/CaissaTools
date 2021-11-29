@@ -458,8 +458,8 @@ public final class PgnToHtml extends Batchjob {
     var speeldag          = LocalDate.parse(datum, formatter)
                                      .getDayOfWeek().getValue();
     var vandaag           = LocalDate.now();
-    var volgendeSpeeldag  = vandaag.plusDays(7 - vandaag.getDayOfWeek()
-                                                        .getValue() + speeldag)
+    var volgendeSpeeldag  = vandaag.plusDays(7L - vandaag.getDayOfWeek()
+                                                         .getValue() + speeldag)
                                    .format(formatter);
 
     skelet  = new Properties();
