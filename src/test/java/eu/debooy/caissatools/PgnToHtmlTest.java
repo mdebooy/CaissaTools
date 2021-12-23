@@ -19,8 +19,6 @@ package eu.debooy.caissatools;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
-import eu.debooy.doosutils.test.DoosUtilsTestConstants;
-import eu.debooy.doosutils.test.VangOutEnErr;
 import java.io.File;
 import java.io.IOException;
 import java.util.Locale;
@@ -45,7 +43,7 @@ public class PgnToHtmlTest extends BatchTest {
 
   @AfterClass
   public static void afterClass() {
-    verwijderBestanden(TEMP + File.separator,
+    verwijderBestanden(getTemp() + File.separator,
                        new String[] {TestConstants.BST_COMPETITIE1_PGN,
                                      TestConstants.BST_INDEX_HTML,
                                      TestConstants.BST_MATRIX_HTML,
@@ -56,8 +54,8 @@ public class PgnToHtmlTest extends BatchTest {
   }
 
   @Before
-  public void before() {
-    verwijderBestanden(TEMP + File.separator,
+  public void beforeTest() {
+    verwijderBestanden(getTemp() + File.separator,
                        new String[] {TestConstants.BST_INDEX_HTML,
                                      TestConstants.BST_MATRIX_HTML,
                                      BST_MATRIX1, BST_MATRIX2});
@@ -71,9 +69,9 @@ public class PgnToHtmlTest extends BatchTest {
 
     try {
       kopieerBestand(CLASSLOADER, TestConstants.BST_COMPETITIE1_PGN,
-                     TEMP + File.separator + TestConstants.BST_COMPETITIE1_PGN);
+                     getTemp() + File.separator + TestConstants.BST_COMPETITIE1_PGN);
       kopieerBestand(CLASSLOADER, TestConstants.BST_SCHEMA1_JSON,
-                     TEMP + File.separator + TestConstants.BST_SCHEMA1_JSON);
+                     getTemp() + File.separator + TestConstants.BST_SCHEMA1_JSON);
     } catch (IOException e) {
       System.out.println(e.getLocalizedMessage());
       throw new BestandException(e);
@@ -82,10 +80,11 @@ public class PgnToHtmlTest extends BatchTest {
 
   @Test
   public void testLeeg() {
-    String[]  args      = new String[] {};
+    String[]  args  = new String[] {};
 
-    VangOutEnErr.execute(PgnToHtml.class,
-                         DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
+    before();
+    PgnToHtml.execute(args);
+    after();
 
     assertEquals("Zonder parameters - helptekst", 27, out.size());
     assertEquals("Zonder parameters - fouten", 1, err.size());
@@ -93,70 +92,72 @@ public class PgnToHtmlTest extends BatchTest {
 
   @Test
   public void testPgnToHtml() throws BestandException {
-    String[]  args      = new String[] {TestConstants.PAR_BESTAND1,
-                                        TestConstants.PAR_INVOERDIR + TEMP,
-                                        TestConstants.PAR_SCHEMA1,
-                                        TestConstants.PAR_UITVOERDIR + TEMP};
+    String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
+                                    TestConstants.PAR_INVOERDIR + getTemp(),
+                                    TestConstants.PAR_SCHEMA1,
+                                    TestConstants.PAR_UITVOERDIR + getTemp()};
 
-    VangOutEnErr.execute(PgnToHtml.class,
-                         DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
+    before();
+    PgnToHtml.execute(args);
+    after();
 
     assertEquals("PgnToHtml - helptekst", 19, out.size());
     assertEquals("PgnToHtml - fouten", 0, err.size());
     assertEquals("PgnToHtml - 14",
-                 TEMP + File.separator + TestConstants.BST_COMPETITIE1_PGN,
+                 getTemp() + File.separator + TestConstants.BST_COMPETITIE1_PGN,
                  out.get(13).split(":")[1].trim());
     assertEquals("PgnToHtml - 15", TestConstants.TOT_PARTIJEN,
                  out.get(14).split(":")[1].trim());
-    assertEquals("PgnToHtml - 16", TEMP + File.separator,
+    assertEquals("PgnToHtml - 16", getTemp() + File.separator,
                  out.get(15).split(":")[1].trim());
     assertTrue("PgnToHtml - equals I",
         Bestand.equals(
-            Bestand.openInvoerBestand(TEMP + File.separator
+            Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_INDEX_HTML),
             Bestand.openInvoerBestand(CLASSLOADER,
                                       TestConstants.BST_INDEX_HTML)));
     assertTrue("PgnToHtml - equals M",
         Bestand.equals(
-            Bestand.openInvoerBestand(TEMP + File.separator
+            Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_MATRIX_HTML),
             Bestand.openInvoerBestand(CLASSLOADER, BST_MATRIX1)));
   }
 
   @Test
   public void testOpStand() throws BestandException {
-    String[]  args      = new String[] {TestConstants.PAR_BESTAND1,
-                                        TestConstants.PAR_INVOERDIR + TEMP,
-                                        TestConstants.PAR_MATRIX_OP_STAND,
-                                        TestConstants.PAR_SCHEMA1,
-                                        TestConstants.PAR_UITVOERDIR + TEMP};
+    String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
+                                    TestConstants.PAR_INVOERDIR + getTemp(),
+                                    TestConstants.PAR_MATRIX_OP_STAND,
+                                    TestConstants.PAR_SCHEMA1,
+                                    TestConstants.PAR_UITVOERDIR + getTemp()};
 
-    VangOutEnErr.execute(PgnToHtml.class,
-                         DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
+    before();
+    PgnToHtml.execute(args);
+    after();
 
     assertEquals("Op Stand - helptekst", 19, out.size());
     assertEquals("Op Stand - fouten", 0, err.size());
     assertEquals("PgnToHtml - 14",
-                 TEMP + File.separator + TestConstants.BST_COMPETITIE1_PGN,
+                 getTemp() + File.separator + TestConstants.BST_COMPETITIE1_PGN,
                  out.get(13).split(":")[1].trim());
     assertEquals("PgnToHtml - 15", TestConstants.TOT_PARTIJEN,
                  out.get(14).split(":")[1].trim());
-    assertEquals("PgnToHtml - 16", TEMP + File.separator,
+    assertEquals("PgnToHtml - 16", getTemp() + File.separator,
                  out.get(15).split(":")[1].trim());
     assertTrue("Op Stand - equals I",
         Bestand.equals(
-            Bestand.openInvoerBestand(TEMP + File.separator
+            Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_INDEX_HTML),
             Bestand.openInvoerBestand(CLASSLOADER,
                                       TestConstants.BST_INDEX_HTML)));
     assertTrue("PgnToHtml - equals M",
         Bestand.equals(
-            Bestand.openInvoerBestand(TEMP + File.separator
+            Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_MATRIX_HTML),
             Bestand.openInvoerBestand(CLASSLOADER, BST_MATRIX2)));
     assertTrue("PgnToHtml - equals U",
         Bestand.equals(
-            Bestand.openInvoerBestand(TEMP + File.separator
+            Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_UITSLAGEN_HTML),
             Bestand.openInvoerBestand(CLASSLOADER,
                                       TestConstants.BST_UITSLAGEN_HTML)));

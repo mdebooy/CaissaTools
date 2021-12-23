@@ -21,8 +21,6 @@ import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
-import eu.debooy.doosutils.test.DoosUtilsTestConstants;
-import eu.debooy.doosutils.test.VangOutEnErr;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -56,7 +54,7 @@ public class VertaalPgnTest extends BatchTest {
 
   @AfterClass
   public static void afterClass() {
-    verwijderBestanden(TEMP + File.separator,
+    verwijderBestanden(getTemp() + File.separator,
                        new String[] {TestConstants.BST_PARTIJ_PGN,
                                      BST_PARTIJ_NL_PGN});
   }
@@ -70,7 +68,7 @@ public class VertaalPgnTest extends BatchTest {
     try {
       kopieerBestand(CLASSLOADER,
                      TestConstants.BST_PARTIJ_PGN,
-                     TEMP + File.separator + TestConstants.BST_PARTIJ_PGN);
+                     getTemp() + File.separator + TestConstants.BST_PARTIJ_PGN);
     } catch (IOException e) {
       System.out.println(e.getLocalizedMessage());
       throw new BestandException(e);
@@ -88,8 +86,9 @@ public class VertaalPgnTest extends BatchTest {
           resourceBundle.getString(CaissaTools.ERR_TALENGELIJK),
           vanTaal, naarTaal)};
 
-    VangOutEnErr.execute(VertaalPgn.class,
-                         DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
+    before();
+    VertaalPgn.execute(args);
+    after();
 
     assertEquals("Zonder parameters - helptekst", 29, out.size());
     assertEquals("Zonder parameters - fouten", 2, err.size());
@@ -105,8 +104,9 @@ public class VertaalPgnTest extends BatchTest {
     String[]  verwacht  = new String[] {
         resourceBundle.getString(CaissaTools.ERR_BESTANDENPGN)};
 
-    VangOutEnErr.execute(VertaalPgn.class,
-                         DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
+    before();
+    VertaalPgn.execute(args);
+    after();
 
     assertEquals("Met parameters - helptekst", 29, out.size());
     assertEquals("Met parameters - fouten", 1, err.size());
@@ -119,8 +119,9 @@ public class VertaalPgnTest extends BatchTest {
     String[]  args  = new String[] {PAR_PGN + pgnZetten,
                                     PAR_VANTAAL, PAR_NAARTAAL};
 
-    VangOutEnErr.execute(VertaalPgn.class,
-                         DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
+    before();
+    VertaalPgn.execute(args);
+    after();
 
     assertEquals("Met pgn - helptekst", 14, out.size());
     assertEquals("Met pgn - fouten", 0, err.size());
@@ -130,20 +131,22 @@ public class VertaalPgnTest extends BatchTest {
   @Test
   public void testBestand() throws PgnException {
     String[]  args          = new String[] {TestConstants.PAR_BESTAND3,
-                                            TestConstants.PAR_INVOERDIR + TEMP,
+                                            TestConstants.PAR_INVOERDIR
+                                              + getTemp(),
                                             PAR_VANTAAL, PAR_NAARTAAL};
 
-    VangOutEnErr.execute(VertaalPgn.class,
-                         DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
+    before();
+    VertaalPgn.execute(args);
+    after();
 
     Collection<PGN> partijen  =
-        CaissaUtils.laadPgnBestand(TEMP + File.separator + BST_PARTIJ_NL_PGN,
-                                   CHARSET);
+        CaissaUtils.laadPgnBestand(getTemp() + File.separator
+                                    + BST_PARTIJ_NL_PGN);
 
     assertEquals("Met bestand - helptekst", 18, out.size());
     assertEquals("Met bestand - fouten", 0, err.size());
     assertEquals("Met bestand - uitvoer",
-                 TEMP + File.separator + BST_PARTIJ_NL_PGN,
+                 getTemp() + File.separator + BST_PARTIJ_NL_PGN,
                  out.get(13).split(":")[1].trim());
     assertEquals("Met bestand - aantal (1)", "1",
                  out.get(14).split(":")[1].trim());

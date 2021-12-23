@@ -19,8 +19,6 @@ package eu.debooy.caissatools;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
-import eu.debooy.doosutils.test.DoosUtilsTestConstants;
-import eu.debooy.doosutils.test.VangOutEnErr;
 import java.io.File;
 import java.io.IOException;
 import java.text.MessageFormat;
@@ -52,9 +50,10 @@ public class StartPgnTest extends BatchTest {
 
   @AfterClass
   public static void afterClass() throws BestandException {
-    Bestand.delete(TEMP + File.separator + TestConstants.BST_COMPETITIE_JSON);
-    Bestand.delete(TEMP + File.separator + TestConstants.BST_TEKORT_JSON);
-    Bestand.delete(TEMP + File.separator + TestConstants.BST_TELANG_JSON);
+    Bestand.delete(getTemp() + File.separator
+                    + TestConstants.BST_COMPETITIE_JSON);
+    Bestand.delete(getTemp() + File.separator + TestConstants.BST_TEKORT_JSON);
+    Bestand.delete(getTemp() + File.separator + TestConstants.BST_TELANG_JSON);
   }
 
   @BeforeClass
@@ -72,13 +71,16 @@ public class StartPgnTest extends BatchTest {
     try {
       kopieerBestand(CLASSLOADER,
                      TestConstants.BST_COMPETITIE_JSON,
-                     TEMP + File.separator + TestConstants.BST_COMPETITIE_JSON);
+                     getTemp() + File.separator
+                      + TestConstants.BST_COMPETITIE_JSON);
       kopieerBestand(CLASSLOADER,
                      TestConstants.BST_TEKORT_JSON,
-                     TEMP + File.separator + TestConstants.BST_TEKORT_JSON);
+                     getTemp() + File.separator
+                      + TestConstants.BST_TEKORT_JSON);
       kopieerBestand(CLASSLOADER,
                      TestConstants.BST_TELANG_JSON,
-                     TEMP + File.separator + TestConstants.BST_TELANG_JSON);
+                     getTemp() + File.separator
+                      + TestConstants.BST_TELANG_JSON);
     } catch (IOException e) {
       System.out.println(e.getLocalizedMessage());
       throw new BestandException(e);
@@ -89,8 +91,9 @@ public class StartPgnTest extends BatchTest {
   public void testLeeg() {
     String[]  args      = new String[] {};
 
-    VangOutEnErr.execute(StartPgn.class,
-                         DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
+    before();
+    StartPgn.execute(args);
+    after();
 
     assertEquals(26, out.size());
     assertEquals(1, err.size());
@@ -98,39 +101,41 @@ public class StartPgnTest extends BatchTest {
 
   @Test
   public void testStartPgn() throws BestandException {
-    String[]  args      = new String[] {PAR_BESTAND, PAR_SCHEMA,
-                                        TestConstants.PAR_INVOERDIR + TEMP};
+    String[]  args  = new String[] {PAR_BESTAND, PAR_SCHEMA,
+                                    TestConstants.PAR_INVOERDIR + getTemp()};
 
     try {
-      Bestand.delete(TEMP + File.separator + BST_START_PGN);
+      Bestand.delete(getTemp() + File.separator + BST_START_PGN);
     } catch (BestandException e) {
       // No problem.
     }
 
-    VangOutEnErr.execute(StartPgn.class,
-                         DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
+    before();
+    StartPgn.execute(args);
+    after();
 
     assertEquals(17, out.size());
     assertEquals(0, err.size());
-    assertEquals(TEMP + File.separator + BST_START_PGN,
+    assertEquals(getTemp() + File.separator + BST_START_PGN,
                  out.get(13).split(":")[1].trim());
     assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(StartPgnTest.class.getClassLoader(),
                                       BST_START_PGN),
-            Bestand.openInvoerBestand(TEMP + File.separator
+            Bestand.openInvoerBestand(getTemp() + File.separator
                                       + BST_START_PGN)));
 
-    Bestand.delete(TEMP + File.separator + BST_START_PGN);
+    Bestand.delete(getTemp() + File.separator + BST_START_PGN);
   }
 
   @Test
   public void testTekort() throws BestandException {
-    String[]  args      = new String[] {PAR_BESTAND, PAR_TEKORT,
-                                        TestConstants.PAR_INVOERDIR + TEMP};
+    String[]  args  = new String[] {PAR_BESTAND, PAR_TEKORT,
+                                    TestConstants.PAR_INVOERDIR + getTemp()};
 
-    VangOutEnErr.execute(StartPgn.class,
-                         DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
+    before();
+    StartPgn.execute(args);
+    after();
 
     assertEquals(13, out.size());
     assertEquals(1, err.size());
@@ -139,11 +144,12 @@ public class StartPgnTest extends BatchTest {
 
   @Test
   public void testTelang() throws BestandException {
-    String[]  args      = new String[] {PAR_BESTAND, PAR_TELANG,
-                                        TestConstants.PAR_INVOERDIR + TEMP};
+    String[]  args  = new String[] {PAR_BESTAND, PAR_TELANG,
+                                    TestConstants.PAR_INVOERDIR + getTemp()};
 
-    VangOutEnErr.execute(StartPgn.class,
-                         DoosUtilsTestConstants.CMD_EXECUTE, args, out, err);
+    before();
+    StartPgn.execute(args);
+    after();
 
     assertEquals(13, out.size());
     assertEquals(1, err.size());
