@@ -1,0 +1,49 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 18,
+  "applicatie": "SpelerStatistiek",
+  "help": "Maakt een statistiek van alle partijen van de opgegeven speler.",
+  "banner": "Speler Statistieken",
+  "parameters": [
+    {
+      "parameter": "bestand",
+      "extensie": "pgn",
+      "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de partijen in PGN formaat.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "charsetin",
+      "lang": "charsetin",
+      "help": "De characterset van de invoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "charsetuit",
+      "lang": "charsetuit",
+      "help": "De characterset van de uitvoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "logo",
+      "kort": "l",
+      "lang": "logo",
+      "help": "Het logo voor op de titel pagina."
+    },
+    {
+      "parameter": "speler",
+      "kort": "s",
+      "lang": "speler",
+      "help": "De speler voor de statistieken.",
+      "verplicht": true
+    },
+    {
+      "parameter": "tag",
+      "kort": "t",
+      "lang": "tag",
+      "help": "De PGN tag waarop de statistieken gebaseerd zijn. Zonder deze parameter zijn het de tegenstanders. Bij de tag \"date\" wordt het het jaar."
+    }
+  ]
+}

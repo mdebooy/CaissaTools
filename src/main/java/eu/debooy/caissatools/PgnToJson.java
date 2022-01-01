@@ -21,17 +21,17 @@ import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.PgnException;
-import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
+import static eu.debooy.doosutils.Batchjob.help;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.ParameterBundle;
+import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
-import java.io.File;
 import java.io.IOException;
 import java.io.Serializable;
-import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -53,7 +53,8 @@ import org.codehaus.jackson.map.ObjectMapper;
  */
 public final class PgnToJson extends Batchjob {
   private static final  ResourceBundle  resourceBundle  =
-      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+      ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
+                               Locale.getDefault());
 
   private static final String   DEFSTUKKEN  =
       CaissaConstants.Stukcodes.valueOf("EN").getStukcodes();
@@ -69,7 +70,7 @@ public final class PgnToJson extends Batchjob {
   private static  String  vanStukken;
   private static  boolean voorNico      = false;
 
-  private PgnToJson() {}
+  protected PgnToJson() {}
 
   public static class IdComparator
   implements Comparator<String>, Serializable {
@@ -106,58 +107,59 @@ public final class PgnToJson extends Batchjob {
   }
 
   public static void execute(String[] args) {
-    TekstBestand  output      = null;
+    setParameterBundle(new ParameterBundle.Builder()
+                           .setBaseName(CaissaTools.TOOL_PGNTOJSON)
+                           .setValidator(new BestandDefaultParameters())
+                           .build());
 
-    Banner.printMarcoBanner(resourceBundle.getString("banner.pgntojson"));
+    Banner.printMarcoBanner(DoosUtils.nullToEmpty(paramBundle.getBanner()));
 
-    if (!setParameters(args)) {
+    if (!paramBundle.isValid()
+        || !paramBundle.setArgs(args)) {
+      help();
+      printFouten();
       return;
     }
 
-    var includeLege = parameters.get(CaissaTools.PAR_INCLUDELEGE)
-                                      .equals(DoosConstants.WAAR);
+    var includeLege = paramBundle.getBoolean(CaissaTools.PAR_INCLUDELEGE);
 
-    defaultEco    = parameters.get(CaissaTools.PAR_DEFAULTECO);
-    metFen        = parameters.get(CaissaTools.PAR_METFEN)
-                              .equals(DoosConstants.WAAR);
-    metTrajecten  = parameters.get(CaissaTools.PAR_METTRAJECTEN)
-                              .equals(DoosConstants.WAAR);
-    metPgnviewer  = parameters.get(CaissaTools.PAR_METPGNVIEWER)
-                              .equals(DoosConstants.WAAR);
-    voorNico      = parameters.get(CaissaTools.PAR_VOORNICO)
-                              .equals(DoosConstants.WAAR);
+    defaultEco    = paramBundle.getString(CaissaTools.PAR_DEFAULTECO);
+    metFen        = paramBundle.getBoolean(CaissaTools.PAR_METFEN);
+    metTrajecten  = paramBundle.getBoolean(CaissaTools.PAR_METTRAJECTEN);
+    metPgnviewer  = paramBundle.getBoolean(CaissaTools.PAR_METPGNVIEWER);
+    voorNico      = paramBundle.getBoolean(CaissaTools.PAR_VOORNICO);
 
     // Haal de stukcodes op
     naarStukken =
         CaissaConstants.Stukcodes
-                       .valueOf(parameters.get(CaissaTools.PAR_NAARTAAL)
-                                          .toUpperCase())
+                       .valueOf(paramBundle.getString(CaissaTools.PAR_NAARTAAL)
+                                           .toUpperCase())
                        .getStukcodes();
     vanStukken  =
         CaissaConstants.Stukcodes
-                       .valueOf(parameters.get(CaissaTools.PAR_VANTAAL)
-                                          .toUpperCase())
+                       .valueOf(paramBundle.getString(CaissaTools.PAR_VANTAAL)
+                                           .toUpperCase())
                        .getStukcodes();
 
-    var invoer    = parameters.get(PAR_INVOERDIR)
-                     + parameters.get(CaissaTools.PAR_BESTAND) + EXT_PGN;
+    var invoer    = paramBundle.getBestand(CaissaTools.PAR_BESTAND,
+                                           BestandConstants.EXT_PGN);
     var mapper    = new ObjectMapper();
     List<Map<String, Object>>
                     lijst     = new ArrayList<>();
-    var uitvoer   = parameters.get(PAR_UITVOERDIR)
-                     + parameters.get(CaissaTools.PAR_JSON) + EXT_JSON;
+    var uitvoer   = paramBundle.getBestand(CaissaTools.PAR_JSON,
+                                           BestandConstants.EXT_JSON);
 
-    Collection<PGN> partijen;
-    try {
-      partijen = CaissaUtils.laadPgnBestand(invoer,
-                                            parameters.get(PAR_CHARSETIN));
-    } catch (PgnException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      return;
-    }
+    Collection<PGN> partijen  = null;
+    var             partijnr  = 1;
+    try (var output  =
+          new TekstBestand.Builder()
+                          .setBestand(uitvoer)
+                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
+                          .setLezen(false).build()) {
+      partijen =
+          CaissaUtils.laadPgnBestand(invoer,
+                                     paramBundle.getString(PAR_CHARSETIN));
 
-    var partijnr  = 1;
-    try {
       for (var pgn: partijen) {
         if (includeLege
             || DoosUtils.isNotBlankOrNull(pgn.getZuivereZetten())) {
@@ -166,34 +168,24 @@ public final class PgnToJson extends Batchjob {
         }
       }
 
-      output  = new TekstBestand.Builder()
-                                .setBestand(uitvoer)
-                                .setCharset(parameters.get(PAR_CHARSETUIT))
-                                .setLezen(false).build();
       output.write(mapper.writeValueAsString(lijst));
     } catch (BestandException | IOException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    } finally {
-      try {
-        if (output != null) {
-          output.close();
-        }
-      } catch (BestandException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      }
     }
 
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.bestand"),
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
                              invoer));
-    DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.partijen"),
+    if (null != partijen) {
+      DoosUtils.naarScherm(
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_PARTIJEN),
                              partijen.size()));
+    }
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.uitvoer"),
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_UITVOER),
                              uitvoer));
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.partijen"),
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_PARTIJEN),
                              (partijnr - 1)));
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getMelding(MSG_KLAAR));
@@ -218,52 +210,6 @@ public final class PgnToJson extends Batchjob {
     return ((9 - (coordinaat%10)) * 10) + (coordinaat/10) + 1;
   }
 
-  public static void help() {
-    DoosUtils.naarScherm("java -jar CaissaTools.jar PgnToJson ["
-                         + getMelding(LBL_OPTIE)
-                         + "] --bestand=<"
-                         + resourceBundle.getString("label.pgnbestand") + ">");
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 13),
-                         resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 13),
-        MessageFormat.format(getMelding(HLP_CHARSETIN),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 13),
-        MessageFormat.format(getMelding(HLP_CHARSETUIT),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_DEFAULTECO, 13),
-                         resourceBundle.getString("help.defaulteco"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_INCLUDELEGE, 13),
-                         resourceBundle.getString("help.includelege"), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 13),
-                         getMelding(HLP_INVOERDIR), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_JSON, 13),
-                         resourceBundle.getString("help.json"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_METFEN, 13),
-                         resourceBundle.getString("help.metfen"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_METPGNVIEWER, 13),
-                         resourceBundle.getString("help.metpgnviewer"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_METTRAJECTEN, 13),
-                         resourceBundle.getString("help.mettrajecten"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_NAARTAAL, 13),
-        MessageFormat.format(resourceBundle.getString("help.naartaal"),
-                             Locale.getDefault().getLanguage()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 13),
-                         getMelding(HLP_UITVOERDIR), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_VANTAAL, 13),
-        MessageFormat.format(resourceBundle.getString("help.vantaal"),
-                             Locale.getDefault().getLanguage()), 80);
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(
-        MessageFormat.format(getMelding(HLP_PARAMVERPLICHT),
-                             CaissaTools.PAR_BESTAND), 80);
-    DoosUtils.naarScherm(resourceBundle.getString("help.talengelijk"), 80);
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(getMelding(MSG_KLAAR));
-    DoosUtils.naarScherm();
-  }
-
   private static void setFenbord(int[] bord, Map<String, Integer> ids) {
     for (var i = 9; i > 1; i--) {
       for (var j = 1; j < 9; j++) {
@@ -275,83 +221,6 @@ public final class PgnToJson extends Batchjob {
         }
       }
     }
-  }
-
-  private static boolean setParameters(String[] args) {
-    var           arguments = new Arguments(args);
-    List<String>  fouten    = new ArrayList<>();
-
-    arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
-                                          PAR_CHARSETIN,
-                                          PAR_CHARSETUIT,
-                                          CaissaTools.PAR_DEFAULTECO,
-                                          CaissaTools.PAR_INCLUDELEGE,
-                                          PAR_INVOERDIR,
-                                          CaissaTools.PAR_JSON,
-                                          CaissaTools.PAR_METFEN,
-                                          CaissaTools.PAR_METPGNVIEWER,
-                                          CaissaTools.PAR_METTRAJECTEN,
-                                          CaissaTools.PAR_NAARTAAL,
-                                          PAR_UITVOERDIR,
-                                          CaissaTools.PAR_VANTAAL,
-                                          CaissaTools.PAR_VOORNICO});
-    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND});
-    if (!arguments.isValid()) {
-      fouten.add(getMelding(ERR_INVALIDPARAMS));
-    }
-
-    parameters.clear();
-    setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
-    setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
-    setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
-    setParameter(arguments, CaissaTools.PAR_DEFAULTECO, "");
-    setParameter(arguments, CaissaTools.PAR_INCLUDELEGE, DoosConstants.ONWAAR);
-    setDirParameter(arguments, PAR_INVOERDIR);
-    if (arguments.hasArgument(CaissaTools.PAR_JSON)) {
-      setBestandParameter(arguments, CaissaTools.PAR_JSON, EXT_JSON);
-    } else {
-      setParameter(CaissaTools.PAR_JSON,
-                   parameters.get(CaissaTools.PAR_BESTAND));
-    }
-    setParameter(CaissaTools.PAR_METFEN,
-                 arguments.hasArgument(CaissaTools.PAR_METFEN)
-                     ? DoosConstants.WAAR : DoosConstants.ONWAAR);
-    setParameter(CaissaTools.PAR_METPGNVIEWER,
-                 arguments.hasArgument(CaissaTools.PAR_METPGNVIEWER)
-                     ? DoosConstants.WAAR : DoosConstants.ONWAAR);
-    setParameter(CaissaTools.PAR_METTRAJECTEN,
-                 arguments.hasArgument(CaissaTools.PAR_METTRAJECTEN)
-                     ? DoosConstants.WAAR : DoosConstants.ONWAAR);
-    setParameter(arguments, CaissaTools.PAR_NAARTAAL,
-                 Locale.getDefault().getLanguage());
-    setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
-    setParameter(arguments, CaissaTools.PAR_VANTAAL,
-                 Locale.getDefault().getLanguage());
-    setParameter(CaissaTools.PAR_VOORNICO,
-                 arguments.hasArgument(CaissaTools.PAR_VOORNICO)
-                     ? DoosConstants.WAAR : DoosConstants.ONWAAR);
-
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
-                 .contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
-    }
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_JSON))
-                 .contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_JSON));
-    }
-
-    if (fouten.isEmpty()) {
-      return true;
-    }
-
-    help();
-    printFouten(fouten);
-
-    return false;
   }
 
   private static String vertaal(String zetten,

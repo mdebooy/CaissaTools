@@ -1,0 +1,78 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 18,
+  "applicatie": "ELOBerekenaar",
+  "help": "Berekent de ELO rating van de spelers in het PGN bestand.",
+  "banner": "ELO Berekenaar",
+  "parameters": [
+    {
+      "parameter": "charsetin",
+      "lang": "charsetin",
+      "help": "De characterset van de invoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "charsetuit",
+      "lang": "charsetuit",
+      "help": "De characterset van de uitvoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "eindDatum",
+      "lang": "eindDatum",
+      "help": "Na deze datum worden de partijen niet meer meegerekend (yyyy.mm.dd)."
+    },
+    {
+      "parameter": "extraInfo",
+      "lang": "extraInfo",
+      "help": "Extra informatie (tegenstander en toernooi) in het geschiedenisBestand.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "geschiedenisBestand",
+      "extensie": "csv",
+      "lang": "geschiedenisBestand",
+      "help": "Het bestand (met .csv extensie) met de evolutie van de ratings. Indien niet opgegeven dan wordt de naam gelijk aan het <spelerBestand> (zonder .csv extensie) + \"H\" (met .csv extensie).",
+      "type": "bestand"
+    },
+    {
+      "parameter": "maxVerschil",
+      "lang": "maxVerschil",
+      "help": "Het maximale verschil tussen de ratings van de spelers (standaard 400). Enkel toegestaan samen met 'vasteKfactor'.",
+      "standaard": 400
+    },
+    {
+      "parameter": "spelerBestand",
+      "extensie": "csv",
+      "lang": "spelerBestand",
+      "help": "Een CSV bestand (met .csv extensie) met de recentste rating van de spelers. Dit bestand wordt bijgewerkt of aangemaakt.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "startDatum",
+      "lang": "startDatum",
+      "help": "De datum (deze meegeteld) vanaf wanneer de partijen meetellen (yyyy.mm.dd)."
+    },
+    {
+      "parameter": "startELO",
+      "lang": "startElo",
+      "help": "De start ELO punten voor 'unrated' spelers. De standaard waarde is 1600.",
+      "standaard": 1600
+    },
+    {
+      "parameter": "toernooiBestand",
+      "extensie": "pgn",
+      "lang": "toernooiBestand",
+      "help": "Het bestand met de partijen uit een toernooi in PGN formaat.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "vasteKfactor",
+      "lang": "vasteKfactor",
+      "help": "Een vaste K-Factor.",
+      "type": "long"
+    }
+  ]
+}

@@ -22,19 +22,18 @@ import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.FenException;
 import eu.debooy.caissa.exceptions.PgnException;
-import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
+import static eu.debooy.doosutils.Batchjob.help;
+import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.ManifestInfo;
+import eu.debooy.doosutils.ParameterBundle;
+import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
-import java.io.File;
-import java.nio.charset.Charset;
 import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Collection;
-import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import java.util.TreeSet;
@@ -44,16 +43,31 @@ import java.util.TreeSet;
  * @author Marco de Booij
  */
 public final class ChessTheatre extends Batchjob {
-  private static  ManifestInfo    manifestInfo    = new ManifestInfo();
-  private static  ResourceBundle  resourceBundle  =
-      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+  private static final  ManifestInfo    manifestInfo    = new ManifestInfo();
+  private static final  ResourceBundle  resourceBundle  =
+      ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
+                               Locale.getDefault());
 
   private static final String HTML_ROUND_START  = "<round roundname=\"";
   private static final String HTML_ROUND_EINDE  = "</round";
 
-  private ChessTheatre(){}
+  protected ChessTheatre(){}
 
   public static void execute(String[] args) {
+    setParameterBundle(new ParameterBundle.Builder()
+                           .setBaseName(CaissaTools.TOOL_CHESSTHEATRE)
+                           .setClassloader(ChessTheatre.class.getClassLoader())
+                           .build());
+
+    Banner.printMarcoBanner(DoosUtils.nullToEmpty(paramBundle.getBanner()));
+
+    if (!paramBundle.isValid()
+        || !paramBundle.setArgs(args)) {
+      help();
+      printFouten();
+      return;
+    }
+
     TekstBestand  gamedata      = null;
     TekstBestand  headers       = null;
     var           maxBestanden  = 50;
@@ -61,22 +75,14 @@ public final class ChessTheatre extends Batchjob {
     TekstBestand  updates       = null;
     var           versie        = manifestInfo.getBuildVersion();
 
-    Banner.printMarcoBanner(resourceBundle.getString("banner.chesstheatre"));
-
-    if (!setParameters(args)) {
-      return;
-    }
-
-    if (parameters.containsKey(CaissaTools.PAR_MAXBESTANDEN)) {
-      var hulp  =
-          Integer.parseInt(parameters.get(CaissaTools.PAR_MAXBESTANDEN));
+    if (paramBundle.containsArgument(CaissaTools.PAR_MAXBESTANDEN)) {
+      var hulp  = paramBundle.getLong(CaissaTools.PAR_MAXBESTANDEN).intValue();
       if (hulp > 0) {
         maxBestanden  = hulp;
       }
     }
-    if (parameters.containsKey(CaissaTools.PAR_MINPARTIJEN)) {
-      var hulp  =
-          Integer.parseInt(parameters.get(CaissaTools.PAR_MINPARTIJEN));
+    if (paramBundle.containsArgument(CaissaTools.PAR_MINPARTIJEN)) {
+      var hulp  = paramBundle.getLong(CaissaTools.PAR_MINPARTIJEN).intValue();
       if (hulp > 0) {
         minPartijen   = hulp;
       }
@@ -85,10 +91,10 @@ public final class ChessTheatre extends Batchjob {
     Collection<PGN> partijen    = new TreeSet<>(new PGN.ByEventComparator());
     try {
       partijen.addAll(
-          CaissaUtils.laadPgnBestand(parameters.get(PAR_INVOERDIR) +
-                                     parameters.get(CaissaTools.PAR_BESTAND)
-                                     + EXT_PGN,
-                      parameters.get(PAR_CHARSETIN)));
+          CaissaUtils.laadPgnBestand(
+              paramBundle.getBestand(CaissaTools.PAR_BESTAND,
+                                     BestandConstants.EXT_PGN),
+              paramBundle.getString(PAR_CHARSETIN)));
     } catch (PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
@@ -102,21 +108,25 @@ public final class ChessTheatre extends Batchjob {
 
     try {
       // Maak de headers.xml file
-      headers   = new TekstBestand.Builder()
-                                  .setBestand(parameters.get(PAR_UITVOERDIR)
-                                              + "headers.xml")
-                                  .setCharset(parameters.get(PAR_CHARSETUIT))
-                                  .setLezen(false).build();
+      headers   =
+          new TekstBestand.Builder()
+                          .setBestand(paramBundle.getString(PAR_UITVOERDIR)
+                                      + "headers.xml")
+                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
+                          .setLezen(false).build();
       headers.write(CaissaTools.XML_HEADING);
       headers.write("<chessgames gamesperfile=\"" + aantalPartijen
-                    + "\"  pgnfile=\"" + parameters.get(CaissaTools.PAR_ZIP)
-                    + ".zip\">");
+                    + "\"  pgnfile=\""
+                    + paramBundle.getBestand(CaissaTools.PAR_ZIP,
+                                             BestandConstants.EXT_ZIP)
+                    + "\">");
       // Maak de updates.xml file
-      updates   = new TekstBestand.Builder()
-                                  .setBestand(parameters.get(PAR_UITVOERDIR)
-                                              + "updates.xml")
-                                  .setCharset(parameters.get(PAR_CHARSETUIT))
-                                  .setLezen(false).build();
+      updates   =
+          new TekstBestand.Builder()
+                          .setBestand(paramBundle.getString(PAR_UITVOERDIR)
+                                      + "updates.xml")
+                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
+                          .setLezen(false).build();
       updates.write(CaissaTools.XML_HEADING);
 
       var partijNummer  = 0;
@@ -139,9 +149,9 @@ public final class ChessTheatre extends Batchjob {
           // Maak de gamedataX.xml file
           gamedata  =
               new TekstBestand.Builder()
-                              .setBestand(parameters.get(PAR_UITVOERDIR)
+                              .setBestand(paramBundle.getString(PAR_UITVOERDIR)
                                           + "gamedata" + gameFile + ".xml")
-                              .setCharset(parameters.get(PAR_CHARSETUIT))
+                              .setCharset(paramBundle.getString(PAR_CHARSETUIT))
                               .setLezen(false).build();
           gamedata.write(CaissaTools.XML_HEADING);
           gamedata.write("<gamedata>");
@@ -238,101 +248,21 @@ public final class ChessTheatre extends Batchjob {
       }
     }
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.partijen"),
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_PARTIJEN),
                              partijen.size()));
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.bestanden"),
                              gameFile));
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.uitvoer"),
-                             parameters.get(PAR_UITVOERDIR)));
+                             paramBundle.getString(PAR_UITVOERDIR)));
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getMelding(MSG_KLAAR));
     DoosUtils.naarScherm();
   }
 
-  public static void help() {
-    DoosUtils.naarScherm("java -jar CaissaTools.jar ChessTheatre ["
-                         + getMelding(LBL_OPTIE)
-                         + "] --bestand=<"
-                         + resourceBundle.getString("label.pgnbestand") + ">");
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 13),
-                         resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 13),
-        MessageFormat.format(getMelding(HLP_CHARSETIN),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 13),
-        MessageFormat.format(getMelding(HLP_CHARSETUIT),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 13),
-                         getMelding(HLP_INVOERDIR), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_MAXBESTANDEN, 13),
-                         resourceBundle.getString("help.maxbestanden"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_MINPARTIJEN, 13),
-                         resourceBundle.getString("help.minpartijen"), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 13),
-                         getMelding(HLP_UITVOERDIR), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_ZIP, 13),
-                         resourceBundle.getString("help.zip"), 80);
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(
-        MessageFormat.format(getMelding(HLP_PARAMVERPLICHT),
-                             CaissaTools.PAR_BESTAND), 80);
-  }
-
   private static String parseZetten(FEN fen, String pgnZetten)
       throws PgnException {
     return CaissaUtils.pgnZettenToChessTheatre(fen, pgnZetten);
-  }
-
-  private static boolean setParameters(String[] args) {
-    var           arguments = new Arguments(args);
-    List<String>  fouten    = new ArrayList<>();
-
-    arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
-                                          PAR_CHARSETIN,
-                                          PAR_CHARSETUIT,
-                                          PAR_INVOERDIR,
-                                          CaissaTools.PAR_MAXBESTANDEN,
-                                          CaissaTools.PAR_MINPARTIJEN,
-                                          PAR_UITVOERDIR,
-                                          CaissaTools.PAR_ZIP});
-    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND});
-    if (!arguments.isValid()) {
-      fouten.add(getMelding(ERR_INVALIDPARAMS));
-    }
-
-    parameters.clear();
-    setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
-    setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
-    setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
-    setDirParameter(arguments, PAR_INVOERDIR);
-    setDirParameter(arguments, CaissaTools.PAR_MAXBESTANDEN);
-    setDirParameter(arguments, CaissaTools.PAR_MINPARTIJEN);
-    setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
-    setBestandParameter(arguments, CaissaTools.PAR_ZIP, EXT_ZIP);
-
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
-                 .contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
-    }
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_ZIP))
-                 .contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_ZIP));
-    }
-
-    if (fouten.isEmpty()) {
-      return true;
-    }
-
-    help();
-    printFouten(fouten);
-
-    return false;
   }
 }

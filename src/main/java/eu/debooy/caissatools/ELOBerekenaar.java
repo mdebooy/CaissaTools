@@ -22,19 +22,19 @@ import eu.debooy.caissa.ELO;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.PgnException;
-import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.ParameterBundle;
+import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.CsvBestand;
 import eu.debooy.doosutils.exception.BestandException;
-import java.io.File;
-import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
@@ -50,71 +50,76 @@ import java.util.TreeSet;
  * @author Marco de Booij
  */
 public final class ELOBerekenaar extends Batchjob {
-  private static final  int           START_ELO   = 1600;
+  private static final  ResourceBundle  resourceBundle  =
+      ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
+                               Locale.getDefault());
   private static final  String[]      KOLOMMEN    =
       new String[]{"speler","elo","groei","partijen","eerstePartij",
                    "laatstePartij","eersteEloDatum","minElo","minEloDatum",
                    "maxElo","maxEloDatum"};
-  private static final  String        TXT_BANNER  = "banner.eloberekenaar";
-  private static final  List<String>  UITSLAGEN   = new ArrayList<>();
+  private static final  List<String>  UITSLAGEN   =
+          Arrays.asList(CaissaConstants.PARTIJ_ZWART_WINT,
+                        CaissaConstants.PARTIJ_REMISE,
+                        CaissaConstants.PARTIJ_WIT_WINT,
+                        CaissaConstants.PARTIJ_BEZIG);
 
   private static  String      eindDatum;
   private static  boolean     extraInfo;
-  private static  CsvBestand  geschiedenis;
   private static  Integer     kFactor;
   private static  Integer     maxVerschil;
   private static  String      startDatum;
   private static  int         startElo;
   private static  int         verwerkt;
 
-  private static final  ResourceBundle    resourceBundle  =
-      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
-  private static final  List<Spelerinfo>  spelerinfos     = new ArrayList<>();
-  private static final  Map<String, Integer>
-                                          spelers         = new TreeMap<>();
+  private static  List<Spelerinfo>      spelerinfos;
+  private static  Map<String, Integer>  spelers;
 
-  private ELOBerekenaar() {}
+  protected ELOBerekenaar() {}
 
   public static void execute(String[] args) {
-    init();
+    setParameterBundle(new ParameterBundle.Builder()
+                           .setBaseName(CaissaTools.TOOL_ELOBEREKENAAR)
+                           .setValidator(new ELOBerekenaarParameters())
+                           .build());
 
-    Banner.printMarcoBanner(resourceBundle.getString(TXT_BANNER));
+    Banner.printMarcoBanner(DoosUtils.nullToEmpty(paramBundle.getBanner()));
 
-    if (!setParameters(args)) {
+    if (!paramBundle.isValid()
+        || !paramBundle.setArgs(args)) {
+      help();
+      printFouten();
       return;
     }
 
-    if (parameters.containsKey(CaissaTools.PAR_STARTELO)) {
-      startElo    =
-          Integer.parseInt(parameters.get(CaissaTools.PAR_STARTELO));
-    }
-    if (parameters.containsKey(CaissaTools.PAR_VASTEKFACTOR)) {
-      kFactor =
-          Integer.parseInt(parameters.get(CaissaTools.PAR_VASTEKFACTOR));
-    }
-    if (parameters.containsKey(CaissaTools.PAR_MAXVERSCHIL)) {
-      maxVerschil =
-          Integer.parseInt(parameters.get(CaissaTools.PAR_MAXVERSCHIL));
-    }
+    spelerinfos   = new ArrayList<>();
+    spelers       = new TreeMap<>();
 
-    extraInfo = parameters.get(CaissaTools.PAR_EXTRAINFO)
-                          .equals(DoosConstants.WAAR);
-    var geschiedenisbestand =
-        parameters.get(PAR_UITVOERDIR)
-        + parameters.get(CaissaTools.PAR_GESCHIEDENISBESTAND) + EXT_CSV;
-    var toernooibestand     =
-        parameters.get(PAR_INVOERDIR)
-        + parameters.get(CaissaTools.PAR_TOERNOOIBESTAND) + EXT_PGN;
-    var spelerbestand       =
-        parameters.get(PAR_UITVOERDIR)
-        + parameters.get(CaissaTools.PAR_SPELERBESTAND) + EXT_CSV;
+    if (paramBundle.containsArgument(CaissaTools.PAR_EINDDATUM)) {
+      eindDatum   = paramBundle.getString(CaissaTools.PAR_EINDDATUM);
+    } else {
+      eindDatum   = CaissaConstants.DEF_EINDDATUM;
+    }
+    extraInfo   = paramBundle.getBoolean(CaissaTools.PAR_EXTRAINFO);
+    if (paramBundle.containsArgument(CaissaTools.PAR_VASTEKFACTOR)) {
+      kFactor   = paramBundle.getLong(CaissaTools.PAR_VASTEKFACTOR).intValue();
+    } else {
+      kFactor   = null;
+    }
+    maxVerschil = paramBundle.getLong(CaissaTools.PAR_MAXVERSCHIL).intValue();
+    startElo    = paramBundle.getLong(CaissaTools.PAR_STARTELO).intValue();
+    startDatum  = paramBundle.getString(CaissaTools.PAR_STARTDATUM);
+    verwerkt    = 0;
 
-    startDatum  = leesSpelers(spelerbestand);
-    var aantalPartijen  = verwerkToernooi(toernooibestand, geschiedenisbestand);
+    startDatum  =
+        leesSpelers(paramBundle.getBestand(CaissaTools.PAR_SPELERBESTAND,
+                                           BestandConstants.EXT_CSV));
+    var aantalPartijen  = verwerkToernooi();
 
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.bestand"),
-                             spelerbestand));
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
+                             paramBundle
+                                 .getBestand(CaissaTools.PAR_SPELERBESTAND,
+                                             BestandConstants.EXT_CSV)));
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.startdatum"),
                              startDatum));
@@ -124,11 +129,10 @@ public final class ELOBerekenaar extends Batchjob {
                              eindDatum));
     }
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.partijen"),
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_PARTIJEN),
                              aantalPartijen));
     if (verwerkt > 0) {
-      schrijfSpelers(spelers, spelerinfos, spelerbestand,
-                     parameters.get(PAR_CHARSETUIT));
+      schrijfSpelers(spelers, spelerinfos);
       DoosUtils.naarScherm(
           MessageFormat.format(resourceBundle.getString("label.verwerkt"),
                                verwerkt));
@@ -143,83 +147,16 @@ public final class ELOBerekenaar extends Batchjob {
     DoosUtils.naarScherm();
   }
 
-  public static void help() {
-    DoosUtils.naarScherm("java -jar CaissaTools.jar ELOBerekenaar ["
-                         + getMelding(LBL_OPTIE) + "] \\");
-    DoosUtils.naarScherm("    --spelerBestand=<"
-                         + resourceBundle.getString("label.csvbestand")
-                         + "> --toernooiBestand=<"
-                         + resourceBundle.getString("label.pgnbestand") + ">");
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 20),
-        MessageFormat.format(getMelding(HLP_CHARSETIN),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 20),
-        MessageFormat.format(getMelding(HLP_CHARSETUIT),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_EINDDATUM, 20),
-                         resourceBundle.getString("help.einddatum"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_EXTRAINFO, 20),
-                         resourceBundle.getString("help.extrainfo"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_GESCHIEDENISBESTAND,
-                                           20),
-                         resourceBundle.getString("help.geschiedenisbestand"),
-                         80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 20),
-                         getMelding(HLP_INVOERDIR), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_MAXVERSCHIL, 20),
-        MessageFormat.format(resourceBundle.getString("help.maxverschil"),
-                             ELO.MAX_VERSCHIL), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SPELERBESTAND, 20),
-                         resourceBundle.getString("help.spelerbestand"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_STARTDATUM, 20),
-                         resourceBundle.getString("help.startdatum"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_STARTELO, 20),
-        MessageFormat.format(resourceBundle.getString("help.startelo"),
-                             START_ELO), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_TOERNOOIBESTAND, 20),
-                         resourceBundle.getString("help.toernooibestand"), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 20),
-                         getMelding(HLP_UITVOERDIR), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_VASTEKFACTOR, 20),
-                         resourceBundle.getString("help.vastekfactor"), 80);
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(
-        MessageFormat.format(getMelding(HLP_PARAMSVERPLICHT),
-                             CaissaTools.PAR_SPELERBESTAND,
-                             CaissaTools.PAR_TOERNOOIBESTAND), 80);
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(resourceBundle.getString("help.eloberekenaar.extra"),
-                         80);
-    DoosUtils.naarScherm();
-  }
-
-  private static void init() {
-    UITSLAGEN.clear();
-    UITSLAGEN.add(CaissaConstants.PARTIJ_ZWART_WINT);
-    UITSLAGEN.add(CaissaConstants.PARTIJ_REMISE);
-    UITSLAGEN.add(CaissaConstants.PARTIJ_WIT_WINT);
-    UITSLAGEN.add(CaissaConstants.PARTIJ_BEZIG);
-
-    geschiedenis  = null;
-    kFactor       = null;
-    maxVerschil   = ELO.MAX_VERSCHIL;
-    spelerinfos.clear();
-    spelers.clear();
-    startElo      = START_ELO;
-    verwerkt      = 0;
-  }
-
   private static String leesSpelers(String spelerBestand) {
-    var         laatsteDatum  = startDatum;
-    CsvBestand  invoer        = null;
-    try {
-      var calendar  = Calendar.getInstance();
-      // Is eigenlijk een uitvoer.
-      invoer  = new CsvBestand.Builder()
+    var laatsteDatum  =
+        DoosUtils.nullToValue(paramBundle.getString(CaissaTools.PAR_STARTDATUM),
+                              CaissaConstants.DEF_STARTDATUM);
+
+    try (var invoer  = new CsvBestand.Builder()
                               .setBestand(spelerBestand)
-                              .setCharset(parameters.get(PAR_CHARSETUIT))
-                              .build();
+                              .setCharset(paramBundle.getString(PAR_CHARSETUIT))
+                              .build()) {
+      var calendar  = Calendar.getInstance();
       while (invoer.hasNext()) {
         var veld        = invoer.next();
         var spelerId    = spelers.size();
@@ -261,14 +198,6 @@ public final class ELOBerekenaar extends Batchjob {
           MessageFormat.format(
               resourceBundle.getString(CaissaTools.ERR_FOUTEDATUMIN),
               spelerBestand) + " [" + e.getLocalizedMessage() + "]");
-    } finally {
-      try {
-        if (invoer != null) {
-          invoer.close();
-        }
-      } catch (BestandException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      }
     }
 
     return laatsteDatum;
@@ -312,16 +241,17 @@ public final class ELOBerekenaar extends Batchjob {
   }
 
   private static void schrijfSpelers(Map<String, Integer> spelers,
-                                     List<Spelerinfo> spelerinfos,
-                                     String spelerBestand, String charsetUit) {
-    CsvBestand  csvBestand  = null;
-    try {
-      csvBestand  = new CsvBestand.Builder().setBestand(spelerBestand)
-                                            .setCharset(charsetUit)
-                                            .setLezen(false)
-                                            .setKolomNamen(KOLOMMEN)
-                                            .build();
-
+                                     List<Spelerinfo> spelerinfos) {
+    try (var csvBestand  =
+            new CsvBestand.Builder()
+                          .setBestand(
+                              paramBundle
+                                  .getBestand(CaissaTools.PAR_SPELERBESTAND,
+                                              BestandConstants.EXT_CSV))
+                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
+                          .setLezen(false)
+                          .setKolomNamen(KOLOMMEN)
+                          .build()) {
       var velden  = new Object[KOLOMMEN.length];
       for (Integer spelerId  : spelers.values()) {
         velden[0] = spelerinfos.get(spelerId).getNaam();
@@ -352,99 +282,10 @@ public final class ELOBerekenaar extends Batchjob {
       }
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    } finally {
-      try {
-        if (null != csvBestand) {
-          csvBestand.close();
-        }
-      } catch (BestandException ex) {
-        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
-      }
     }
   }
 
-  private static boolean setParameters(String[] args) {
-    var           arguments = new Arguments(args);
-    List<String>  fouten    = new ArrayList<>();
-
-    arguments.setParameters(new String[] {PAR_CHARSETIN,
-                                          PAR_CHARSETUIT,
-                                          CaissaTools.PAR_EINDDATUM,
-                                          CaissaTools.PAR_EXTRAINFO,
-                                          CaissaTools.PAR_GESCHIEDENISBESTAND,
-                                          PAR_INVOERDIR,
-                                          CaissaTools.PAR_MAXVERSCHIL,
-                                          CaissaTools.PAR_SPELERBESTAND,
-                                          CaissaTools.PAR_STARTDATUM,
-                                          CaissaTools.PAR_STARTELO,
-                                          CaissaTools.PAR_TOERNOOIBESTAND,
-                                          PAR_UITVOERDIR,
-                                          CaissaTools.PAR_VASTEKFACTOR});
-    arguments.setVerplicht(new String[] {CaissaTools.PAR_SPELERBESTAND,
-                                         CaissaTools.PAR_TOERNOOIBESTAND});
-    if (!arguments.isValid()) {
-      fouten.add(getMelding(ERR_INVALIDPARAMS));
-    }
-
-    parameters.clear();
-    setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
-    setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
-    setParameter(arguments, CaissaTools.PAR_EINDDATUM);
-    setParameter(arguments, CaissaTools.PAR_EXTRAINFO, DoosConstants.ONWAAR);
-    setDirParameter(arguments, PAR_INVOERDIR);
-    setParameter(arguments, CaissaTools.PAR_MAXVERSCHIL);
-    setBestandParameter(arguments, CaissaTools.PAR_SPELERBESTAND, EXT_CSV);
-    setParameter(arguments, CaissaTools.PAR_STARTDATUM);
-    setParameter(arguments, CaissaTools.PAR_STARTELO);
-    setBestandParameter(arguments, CaissaTools.PAR_TOERNOOIBESTAND, EXT_PGN);
-    setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
-    setParameter(arguments, CaissaTools.PAR_VASTEKFACTOR);
-    if (arguments.hasArgument(CaissaTools.PAR_GESCHIEDENISBESTAND)) {
-      setBestandParameter(arguments, CaissaTools.PAR_GESCHIEDENISBESTAND,
-                    EXT_CSV);
-    } else {
-      setParameter(CaissaTools.PAR_GESCHIEDENISBESTAND,
-                   parameters.get(CaissaTools.PAR_SPELERBESTAND) + "H");
-    }
-
-    for (var parameter : new String[] {CaissaTools.PAR_GESCHIEDENISBESTAND,
-                                       CaissaTools.PAR_SPELERBESTAND,
-                                       CaissaTools.PAR_TOERNOOIBESTAND}) {
-      if (DoosUtils.nullToEmpty(parameters.get(parameter))
-                   .contains(File.separator)) {
-        fouten.add(
-            MessageFormat.format(getMelding(ERR_BEVATDIRECTORY), parameter));
-      }
-    }
-    if (parameters.containsKey(CaissaTools.PAR_MAXVERSCHIL)
-        && !parameters.containsKey(CaissaTools.PAR_VASTEKFACTOR)) {
-      fouten.add(resourceBundle.getString(CaissaTools.ERR_MAXVERSCHIL));
-    }
-
-    eindDatum   =
-        DoosUtils.nullToValue(parameters.get(CaissaTools.PAR_EINDDATUM),
-                              CaissaConstants.DEF_EINDDATUM);
-    startDatum  =
-        DoosUtils.nullToValue(parameters.get(CaissaTools.PAR_STARTDATUM),
-                              CaissaConstants.DEF_STARTDATUM);
-    if (eindDatum.compareTo(startDatum) < 0) {
-      fouten.add(
-          MessageFormat.format(
-              resourceBundle.getString(CaissaTools.ERR_EINDVOORSTART),
-                                       startDatum, eindDatum));
-    }
-
-    if (fouten.isEmpty()) {
-      return true;
-    }
-
-    help();
-    printFouten(fouten);
-
-    return false;
-  }
-
-  private static int verwerkPartij(PGN partij)
+  private static int verwerkPartij(PGN partij, CsvBestand geschiedenis)
       throws BestandException {
     var   datum     = partij.getTag(CaissaConstants.PGNTAG_DATE);
     Date  eloDatum;
@@ -509,38 +350,34 @@ public final class ELOBerekenaar extends Batchjob {
     return 1;
   }
 
-  private static int verwerkToernooi(String toernooibestand,
-                                     String geschiedenisbestand) {
+  private static int verwerkToernooi() {
     var aantalPartijen  = 0;
 
-    try {
-      geschiedenis  = new CsvBestand.Builder().setBestand(geschiedenisbestand)
-                                              .setLezen(false)
-                                              .setHeader(false)
-                                              .setAppend(true)
-                                              .build();
+    try (var geschiedenis  =
+            new CsvBestand.Builder().setBestand(
+                    paramBundle.getBestand(CaissaTools.PAR_GESCHIEDENISBESTAND,
+                                           BestandConstants.EXT_CSV))
+                                    .setLezen(false)
+                                    .setHeader(false)
+                                    .setAppend(true)
+                                    .build()) {
       Collection<PGN>
           partijen  = new TreeSet<>();
       partijen.addAll(
-          CaissaUtils.laadPgnBestand(toernooibestand,
-                                     parameters.get(PAR_CHARSETIN)));
+          CaissaUtils
+              .laadPgnBestand(
+                  paramBundle.getBestand(CaissaTools.PAR_TOERNOOIBESTAND,
+                                         BestandConstants.EXT_PGN),
+                  paramBundle.getString(PAR_CHARSETIN)));
       for (var partij : partijen) {
         if (!partij.isBye()
             && partij.isRated()) {
-          verwerkt  += verwerkPartij(partij);
+          verwerkt  += verwerkPartij(partij, geschiedenis);
         }
       }
       aantalPartijen  = partijen.size();
     } catch (BestandException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    } finally {
-      try {
-        if (geschiedenis != null) {
-          geschiedenis.close();
-        }
-      } catch (BestandException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      }
     }
 
     return aantalPartijen;

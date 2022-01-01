@@ -1,0 +1,37 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 18,
+  "applicatie": "StartPgn",
+  "help": "Maakt een PGN bestand aan met alle partijen die tussen de opgegeven spelers gespeeld (moeten) worden.",
+  "banner": "Start PGN",
+  "parameters": [
+    {
+      "parameter": "bestand",
+      "extensie": "pgn",
+      "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de partijen in PGN formaat.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "charsetin",
+      "lang": "charsetin",
+      "help": "De characterset van de invoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "charsetuit",
+      "lang": "charsetuit",
+      "help": "De characterset van de uitvoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "schema",
+      "extensie": "json",
+      "lang": "schema",
+      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender).",
+      "type": "bestand"
+    }
+  ]
+}

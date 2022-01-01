@@ -1,0 +1,46 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 18,
+  "applicatie": "PgnCleaner",
+  "help": "Kopieert de partijen met zetten naar een nieuw bestand. Het kan ook gebruikt worden om commentaar en varianten te verwijderen.",
+  "banner": "Schoonmaken van een PGN bestand",
+  "parameters": [
+    {
+      "parameter": "bestand",
+      "extensie": "pgn",
+      "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de partijen in PGN formaat.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "charsetin",
+      "lang": "charsetin",
+      "help": "De characterset van de invoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "charsetuit",
+      "lang": "charsetuit",
+      "help": "De characterset van de uitvoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "enkelzetten",
+      "kort": "e",
+      "lang": "enkelzetten",
+      "help": "Enkel de zetten behouden. Hiermee verwijder je de commentaren en varianten.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "uitvoer",
+      "extensie": "pgn",
+      "kort": "u",
+      "lang": "uitvoer",
+      "help": "De naam van het uitvoer bestand.",
+      "type": "bestand",
+      "verplicht": true
+    }
+  ]
+}

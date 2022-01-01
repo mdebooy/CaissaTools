@@ -20,25 +20,22 @@ import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.PgnException;
-import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
-import static eu.debooy.doosutils.Batchjob.setBestandParameter;
-import static eu.debooy.doosutils.Batchjob.setDirParameter;
+import static eu.debooy.doosutils.Batchjob.help;
 import eu.debooy.doosutils.Datum;
+import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.ParameterBundle;
+import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
-import java.io.File;
-import java.nio.charset.Charset;
 import java.text.DecimalFormat;
 import java.text.MessageFormat;
 import java.text.ParseException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Map.Entry;
@@ -50,8 +47,9 @@ import java.util.TreeMap;
  * @author Marco de Booij
  */
 public final class SpelerStatistiek extends Batchjob {
-  private static  ResourceBundle  resourceBundle  =
-      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+  private static final  ResourceBundle  resourceBundle  =
+      ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
+                               Locale.getDefault());
 
   private static final  String    LATEX_HLINE   = "\\hline";
   private static final  String    LATEX_MCOLUMN = " & \\multicolumn{5}{c|}{ ";
@@ -64,7 +62,7 @@ public final class SpelerStatistiek extends Batchjob {
   private static  String  startdatum  = "9999.99.99";
   private static  int     verwerkt    = 0;
 
-  private SpelerStatistiek() {}
+  protected SpelerStatistiek() {}
 
   protected static String datumInTitel(String startdatum, String einddatum) {
     var   titelDatum  = new StringBuilder();
@@ -93,24 +91,30 @@ public final class SpelerStatistiek extends Batchjob {
   }
 
   public static void execute(String[] args) {
-    Banner
-        .printMarcoBanner(resourceBundle.getString("banner.spelerstatistiek"));
+    setParameterBundle(new ParameterBundle.Builder()
+                           .setBaseName(CaissaTools.TOOL_SPELERSTATISTIEK)
+                           .build());
 
-    if (!setParameters(args)) {
+    Banner.printMarcoBanner(DoosUtils.nullToEmpty(paramBundle.getBanner()));
+
+    if (!paramBundle.isValid()
+        || !paramBundle.setArgs(args)) {
+      help();
+      printFouten();
       return;
     }
 
-    var     bestand       = parameters.get(CaissaTools.PAR_BESTAND);
     Map<String, int[]>
             items         = new TreeMap<>( );
-    var     speler        = parameters.get(CaissaTools.PAR_SPELER);
-    var     statistiektag = parameters.get(CaissaTools.PAR_TAG);
+    var     speler        = paramBundle.getString(CaissaTools.PAR_SPELER);
+    var     statistiektag = paramBundle.getString(CaissaTools.PAR_TAG);
 
     Collection<PGN> partijen;
     try {
-      partijen = CaissaUtils.laadPgnBestand(parameters.get(PAR_INVOERDIR)
-                                            + bestand + EXT_PGN,
-                                            parameters.get(PAR_CHARSETIN));
+      partijen =
+          CaissaUtils.laadPgnBestand(paramBundle
+                                        .getBestand(CaissaTools.PAR_BESTAND),
+                                     paramBundle.getString(PAR_CHARSETIN));
     } catch (PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
@@ -119,11 +123,13 @@ public final class SpelerStatistiek extends Batchjob {
     partijen.forEach(partij -> verwerkPartij(partij, items, speler,
                                              statistiektag));
 
-    schrijfLatex(bestand, items, speler);
+    schrijfLatex(items, speler);
 
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.bestand"),
-                             bestand + EXT_TEX));
+                             paramBundle
+                                .getBestand(CaissaTools.PAR_BESTAND,
+                                            BestandConstants.EXT_TEX)));
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.partijen"),
                              partijen.size()));
@@ -154,50 +160,15 @@ public final class SpelerStatistiek extends Batchjob {
     return new int[] {0,0,0,0,0,0};
   }
 
-  public static void help() {
-    DoosUtils.naarScherm("java -jar CaissaTools.jar SpelerStatistiek ["
-                         + getMelding(LBL_OPTIE)
-                         + "] \\");
-    DoosUtils.naarScherm("    --bestand=<"
-                         + resourceBundle.getString("label.pgnbestand")
-                         + "> --speler=<"
-                         + resourceBundle.getString("label.spelernaam")
-                         + ">");
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 11),
-                         resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 11),
-        MessageFormat.format(getMelding(HLP_CHARSETIN),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 11),
-        MessageFormat.format(getMelding(HLP_CHARSETUIT),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 11),
-                         getMelding(HLP_INVOERDIR), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_LOGO, 11),
-                         resourceBundle.getString("help.logo"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SPELER, 11),
-                         resourceBundle.getString("help.statistiekspeler"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_TAG, 11),
-                         resourceBundle.getString("help.tag"), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 11),
-                         getMelding(HLP_UITVOERDIR), 80);
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(
-        MessageFormat.format(getMelding(HLP_PARAMSVERPLICHT),
-                             "bestand", "speler"), 80);
-    DoosUtils.naarScherm();
-  }
-
-  private static void schrijfLatex(String bestand, Map<String, int[]> items,
-                                   String speler) {
+  private static void schrijfLatex(Map<String, int[]> items, String speler) {
     TekstBestand  output  = null;
     try {
       output  =
           new TekstBestand.Builder()
-                          .setBestand(parameters.get(PAR_UITVOERDIR)
-                                      + bestand + EXT_TEX)
-                          .setCharset(parameters.get(PAR_CHARSETUIT))
+                          .setBestand(paramBundle
+                                          .getBestand(CaissaTools.PAR_BESTAND,
+                                                      BestandConstants.EXT_TEX))
+                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
                           .setLezen(false).build();
 
       schrijfLatexHeader(output, speler);
@@ -264,7 +235,8 @@ public final class SpelerStatistiek extends Batchjob {
     output.write("");
     output.write("\\begin{document}");
     if (DoosUtils
-            .isNotBlankOrNull(parameters.containsKey(CaissaTools.PAR_LOGO))) {
+            .isNotBlankOrNull(paramBundle
+                                  .containsParameter(CaissaTools.PAR_LOGO))) {
       output.write("\\DeclareGraphicsExtensions{.pdf,.png,.gif,.jpg}");
     }
     output.write("\\begin{titlepage}");
@@ -275,10 +247,11 @@ public final class SpelerStatistiek extends Batchjob {
     output.write("    \\vspace{1in}");
     output.write("    \\huge " + swapNaam(speler) + LATEX_NEWLINE);
     if (DoosUtils
-            .isNotBlankOrNull(parameters.containsKey(CaissaTools.PAR_LOGO))) {
+            .isNotBlankOrNull(paramBundle
+                                  .containsParameter(CaissaTools.PAR_LOGO))) {
       output.write("    \\vspace{2in}");
       output.write("    \\includegraphics[width=6cm]{"
-                   + parameters.get(CaissaTools.PAR_LOGO) + "} \\\\");
+                   + paramBundle.getString(CaissaTools.PAR_LOGO) + "} \\\\");
     }
     output.write("    \\vspace{1in}");
     output.write("    \\large " + datumInTitel(startdatum, einddatum)
@@ -315,18 +288,21 @@ public final class SpelerStatistiek extends Batchjob {
     var lijn  = new StringBuilder();
     lijn.append(swapNaam(sleutel));
     // Als witspeler
-    lijn  = new StringBuilder(schrijfStatistiekDeel(statistiek[0], statistiek[1],
-                                                  statistiek[2],
-                                                  lijn.toString(), output));
+    lijn  = new StringBuilder(schrijfStatistiekDeel(statistiek[0],
+                                                    statistiek[1],
+                                                    statistiek[2],
+                                                    lijn.toString(), output));
     // Als zwartspeler
-    lijn  = new StringBuilder(schrijfStatistiekDeel(statistiek[3], statistiek[4],
-                                                  statistiek[5],
-                                                  lijn.toString(), output));
+    lijn  = new StringBuilder(schrijfStatistiekDeel(statistiek[3],
+                                                    statistiek[4],
+                                                    statistiek[5],
+                                                    lijn.toString(), output));
     // Totaal
-    lijn  = new StringBuilder(schrijfStatistiekDeel(statistiek[0] + statistiek[3],
-                                                  statistiek[1] + statistiek[4],
-                                                  statistiek[2] + statistiek[5],
-                                                  lijn.toString(), output));
+    lijn  =
+        new StringBuilder(schrijfStatistiekDeel(statistiek[0] + statistiek[3],
+                                                statistiek[1] + statistiek[4],
+                                                statistiek[2] + statistiek[5],
+                                                lijn.toString(), output));
     lijn.append(LATEX_NEWLINE);
     output.write(lijn.toString());
     output.write(SPACES6 + LATEX_HLINE);
@@ -357,51 +333,6 @@ public final class SpelerStatistiek extends Batchjob {
     }
 
     return lijn.toString();
-  }
-
-  private static boolean setParameters(String[] args) {
-    var           arguments = new Arguments(args);
-    List<String>  fouten    = new ArrayList<>();
-
-    arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
-                                          PAR_CHARSETIN,
-                                          PAR_CHARSETUIT,
-                                          PAR_INVOERDIR,
-                                          CaissaTools.PAR_LOGO,
-                                          CaissaTools.PAR_SPELER,
-                                          CaissaTools.PAR_TAG,
-                                          PAR_UITVOERDIR});
-    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND,
-                                         CaissaTools.PAR_SPELER});
-    if (!arguments.isValid()) {
-      fouten.add(getMelding(ERR_INVALIDPARAMS));
-    }
-
-    parameters.clear();
-    setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
-    setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
-    setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
-    setDirParameter(arguments, PAR_INVOERDIR);
-    setDirParameter(arguments, CaissaTools.PAR_LOGO);
-    setDirParameter(arguments, CaissaTools.PAR_SPELER);
-    setDirParameter(arguments, CaissaTools.PAR_TAG);
-    setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
-
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
-                 .contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
-    }
-
-    if (fouten.isEmpty()) {
-      return true;
-    }
-
-    help();
-    printFouten(fouten);
-
-    return false;
   }
 
   private static String swapNaam(String naam) {

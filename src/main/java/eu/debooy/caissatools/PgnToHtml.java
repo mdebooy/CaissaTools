@@ -17,28 +17,22 @@
 package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
-import static eu.debooy.caissa.CaissaConstants.JSON_TAG_ENKELRONDIG;
-import static eu.debooy.caissa.CaissaConstants.JSON_TAG_KALENDER;
-import static eu.debooy.caissa.CaissaConstants.JSON_TAG_KALENDER_DATUM;
-import static eu.debooy.caissa.CaissaConstants.JSON_TAG_KALENDER_RONDE;
-import static eu.debooy.caissa.CaissaConstants.JSON_TAG_SPELERS;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Partij;
 import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.PgnException;
-import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.ParameterBundle;
+import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.html.Utilities;
-import java.io.File;
 import java.io.IOException;
-import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
@@ -122,9 +116,9 @@ public final class PgnToHtml extends Batchjob {
   private static  final ClassLoader     classloader     =
       PgnToHtml.class.getClassLoader();
   private static  final ResourceBundle  resourceBundle  =
-      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+      ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
+                               Locale.getDefault());
 
-  private static  int               enkel;
   private static  int               kolommen;
   private static  JSONArray         kalender;
   private static  double[][]        matrix;
@@ -132,58 +126,66 @@ public final class PgnToHtml extends Batchjob {
   private static  String            prefix  = "";
   private static  Properties        skelet;
   private static  List<Spelerinfo>  spelers;
+  private static  int               toernooitype;
 
-  private PgnToHtml() {}
+  protected PgnToHtml() {}
 
   public static void execute(String[] args) {
-    Banner.printMarcoBanner(resourceBundle.getString("banner.pgntohtml"));
+    setParameterBundle(new ParameterBundle.Builder()
+                           .setBaseName(CaissaTools.TOOL_PGNTOHTML)
+                           .build());
 
-    if (!setParameters(args)) {
+    Banner.printMarcoBanner(DoosUtils.nullToEmpty(paramBundle.getBanner()));
+
+    if (!paramBundle.isValid()
+        || !paramBundle.setArgs(args)) {
+      help();
+      printFouten();
       return;
     }
 
-    var invoer        = parameters.get(PAR_INVOERDIR)
-                         + parameters.get(CaissaTools.PAR_BESTAND)
-                         + EXT_PGN;
-    var matrixOpStand =
-        DoosConstants.WAAR.equalsIgnoreCase(
-            parameters.get(CaissaTools.PAR_MATRIXOPSTAND));
-    var uitvoerdir    = parameters.get(PAR_UITVOERDIR);
+    var invoer        =
+        paramBundle.getInvoerbestand(CaissaTools.PAR_BESTAND,
+                                     BestandConstants.EXT_PGN);
+    var matrixOpStand = paramBundle.getBoolean(CaissaTools.PAR_MATRIXOPSTAND);
 
     JsonBestand     competitie;
     Collection<PGN> partijen;
     try {
       competitie  =
           new JsonBestand.Builder()
-                         .setBestand(parameters.get(PAR_INVOERDIR)
-                                     + parameters.get(CaissaTools.PAR_SCHEMA)
-                                     + EXT_JSON)
-                         .setCharset(parameters.get(PAR_CHARSETIN))
+                         .setBestand(
+                            paramBundle
+                                .getInvoerbestand(CaissaTools.PAR_SCHEMA,
+                                                  BestandConstants.EXT_JSON))
+                         .setCharset(paramBundle.getString(PAR_CHARSETIN))
                          .build();
-      partijen = CaissaUtils.laadPgnBestand(invoer,
-                                            parameters.get(PAR_CHARSETIN));
-      kalender    = competitie.getArray(JSON_TAG_KALENDER);
+      partijen    =
+          CaissaUtils.laadPgnBestand(invoer,
+                                     paramBundle.getString(PAR_CHARSETIN));
+      kalender    = competitie.getArray(CaissaConstants.JSON_TAG_KALENDER);
     } catch (BestandException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
 
     spelers = new ArrayList<>();
-    CaissaUtils.vulSpelers(spelers, competitie.getArray(JSON_TAG_SPELERS));
+    CaissaUtils.vulSpelers(spelers,
+                    competitie.getArray(CaissaConstants.JSON_TAG_SPELERS));
 
     // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
-    if (competitie.containsKey(JSON_TAG_ENKELRONDIG)) {
-      enkel = ((boolean) competitie.get(JSON_TAG_ENKELRONDIG)
-                  ? CaissaConstants.TOERNOOI_ENKEL
-                  : CaissaConstants.TOERNOOI_DUBBEL);
+    if (competitie.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
+      toernooitype  =
+          ((Long) competitie.get(CaissaConstants.JSON_TAG_TOERNOOITYPE))
+              .intValue();
     } else {
-      enkel = CaissaConstants.TOERNOOI_MATCH;
+      toernooitype  = CaissaConstants.TOERNOOI_MATCH;
     }
 
     // Maak de Matrix.
     var noSpelers = spelers.size();
     var namen     = new String[noSpelers];
-    kolommen      = noSpelers * enkel;
+    kolommen      = noSpelers * toernooitype;
     matrix        = new double[noSpelers][kolommen];
 
     for (var i = 0; i < noSpelers; i++) {
@@ -192,7 +194,7 @@ public final class PgnToHtml extends Batchjob {
     Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
 
     // Bepaal de score en SB score.
-    CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix, enkel,
+    CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix, toernooitype,
                                   matrixOpStand, CaissaConstants.TIEBREAK_SB);
 
     // Maak het matrix.html bestand.
@@ -202,21 +204,23 @@ public final class PgnToHtml extends Batchjob {
     maakIndex();
 
     // Maak het uitslagen.html bestand.
-    if (enkel != CaissaConstants.TOERNOOI_MATCH) {
+    if (toernooitype != CaissaConstants.TOERNOOI_MATCH) {
       // Opnieuw lezen om niet actieve spelers terug te krijgen.
       spelers.clear();
-      CaissaUtils.vulSpelers(spelers, competitie.getArray(JSON_TAG_SPELERS));
+      CaissaUtils.vulSpelers(spelers,
+                      competitie.getArray(CaissaConstants.JSON_TAG_SPELERS));
 
       // Sortering terug zetten voor opmaken schema.
       spelers.sort(new Spelerinfo.BySpelerSeqComparator());
-      var enkelrondig = (enkel == CaissaConstants.TOERNOOI_ENKEL);
+      var enkelrondig = (toernooitype == CaissaConstants.TOERNOOI_ENKEL);
       var schema      =
           CaissaUtils.genereerSpeelschema(spelers, enkelrondig, partijen);
       if (!schema.isEmpty()) {
         var data      =
-            CaissaUtils.vulKalender(JSON_TAG_KALENDER_RONDE, spelers.size(),
-                                    enkel,
-                                    competitie.getArray(JSON_TAG_KALENDER));
+            CaissaUtils.vulKalender(CaissaConstants.JSON_TAG_KALENDER_RONDE,
+                                    spelers.size(), toernooitype,
+                                    competitie.getArray(
+                                        CaissaConstants.JSON_TAG_KALENDER));
         maakUitslagen(schema, data);
       }
     }
@@ -224,14 +228,14 @@ public final class PgnToHtml extends Batchjob {
     maakKalender();
 
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.bestand"),
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
                              invoer));
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.partijen"),
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_PARTIJEN),
                              partijen.size()));
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.uitvoer"),
-                             uitvoerdir));
+                             paramBundle.getString(PAR_UITVOERDIR)));
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getMelding(MSG_KLAAR));
     DoosUtils.naarScherm();
@@ -328,52 +332,18 @@ public final class PgnToHtml extends Batchjob {
     return "" + ((Double) score).intValue() + Utilities.kwart(score);
   }
 
-  public static void help() {
-    DoosUtils.naarScherm("java -jar CaissaTools.jar PgnToHtml ["
-                         + getMelding(LBL_OPTIE)
-                         + "] --bestand=<"
-                         + resourceBundle.getString(CaissaTools.LBL_PGNBESTAND)
-                         + ">"
-                         + " --schema=<"
-                         + resourceBundle.getString(CaissaTools.LBL_SCHEMA)
-                         + ">");
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 14),
-                         resourceBundle.getString(CaissaTools.HLP_BESTAND), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 14),
-        MessageFormat.format(getMelding(HLP_CHARSETIN),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 14),
-        MessageFormat.format(getMelding(HLP_CHARSETUIT),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 14),
-                         getMelding(HLP_INVOERDIR), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_MATRIXOPSTAND, 14),
-                         resourceBundle.getString(
-                             CaissaTools.HLP_MATRIXOPSTAND), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SCHEMA, 14),
-                         resourceBundle.getString(CaissaTools.HLP_SCHEMA), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 14),
-                         getMelding(HLP_UITVOERDIR), 80);
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(
-        MessageFormat.format(getMelding(HLP_PARAMSVERPLICHT),
-                             CaissaTools.PAR_BESTAND, CaissaTools.PAR_SCHEMA),
-                             80);
-    DoosUtils.naarScherm();
-  }
-
   private static void maakIndex() {
     var noSpelers = spelers.size();
 
     skelet  = new Properties();
     Collections.sort(spelers);
     try {
-      output    = new TekstBestand.Builder()
-                                  .setBestand(parameters.get(PAR_UITVOERDIR)
-                                              + "index.html")
-                                  .setCharset(parameters.get(PAR_CHARSETUIT))
-                                  .setLezen(false).build();
+      output    =
+          new TekstBestand.Builder()
+                          .setBestand(paramBundle.getString(PAR_UITVOERDIR)
+                                        + DoosUtils.getFileSep() + "index.html")
+                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
+                          .setLezen(false).build();
       skelet.load(PgnToHtml.class.getClassLoader()
                            .getResourceAsStream("index.properties"));
 
@@ -453,7 +423,8 @@ public final class PgnToHtml extends Batchjob {
 
   private static void maakKalender() {
     var datum             =
-        ((JSONObject) kalender.get(0)).get(JSON_TAG_KALENDER_DATUM).toString();
+        ((JSONObject) kalender.get(0))
+            .get(CaissaConstants.JSON_TAG_KALENDER_DATUM).toString();
     var formatter         = DateTimeFormatter.ofPattern(DoosConstants.DATUM);
     var speeldag          = LocalDate.parse(datum, formatter)
                                      .getDayOfWeek().getValue();
@@ -464,11 +435,13 @@ public final class PgnToHtml extends Batchjob {
 
     skelet  = new Properties();
     try {
-      output    = new TekstBestand.Builder()
-                                  .setBestand(parameters.get(PAR_UITVOERDIR)
-                                              + "kalender.html")
-                                  .setCharset(parameters.get(PAR_CHARSETUIT))
-                                  .setLezen(false).build();
+      output    =
+          new TekstBestand.Builder()
+                          .setBestand(paramBundle.getString(PAR_UITVOERDIR)
+                                        + DoosUtils.getFileSep()
+                                        + "kalender.html")
+                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
+                          .setLezen(false).build();
       skelet.load(PgnToHtml.class.getClassLoader()
                            .getResourceAsStream("kalender.properties"));
 
@@ -562,17 +535,20 @@ public final class PgnToHtml extends Batchjob {
   }
 
   private static void maakMatrix() {
-    matrix        = CaissaUtils.verwijderNietActief(spelers, matrix, enkel);
+    matrix        = CaissaUtils.verwijderNietActief(spelers, matrix,
+                                                    toernooitype);
     kolommen      = matrix[0].length;
     var noSpelers = spelers.size();
 
     skelet  = new Properties();
     try {
-      output  = new TekstBestand.Builder()
-                                .setBestand(parameters.get(PAR_UITVOERDIR)
-                                            + "matrix.html")
-                                .setCharset(parameters.get(PAR_CHARSETUIT))
-                                .setLezen(false).build();
+      output  =
+          new TekstBestand.Builder()
+                          .setBestand(paramBundle.getString(PAR_UITVOERDIR)
+                                        + DoosUtils.getFileSep()
+                                        + "matrix.html")
+                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
+                          .setLezen(false).build();
       skelet.load(PgnToHtml.class.getClassLoader()
                            .getResourceAsStream("matrix.properties"));
 
@@ -587,7 +563,7 @@ public final class PgnToHtml extends Batchjob {
       // De colgroup
       String  enkeltekst;
       schrijfUitvoer(HTML_TABLE_COLGROUP_BEGIN);
-      if (enkel == 1) {
+      if (toernooitype == 1) {
         enkeltekst  = HTML_TABLE_COLGROUP_ENKEL;
       } else {
         enkeltekst  = HTML_TABLE_COLGROUP_DUBBEL;
@@ -599,7 +575,7 @@ public final class PgnToHtml extends Batchjob {
       // De thead
       schrijfUitvoer(HTML_TABLE_HEAD_BEGIN);
       output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN_M));
-      if (enkel == 1) {
+      if (toernooitype == CaissaConstants.TOERNOOI_ENKEL) {
         enkeltekst  = skelet.getProperty(HTML_TABLE_HEAD_ENKEL);
       } else {
         enkeltekst  = skelet.getProperty(HTML_TABLE_HEAD_DUBBEL);
@@ -616,7 +592,7 @@ public final class PgnToHtml extends Batchjob {
       output.write(prefix
           + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_SB),
                                  resourceBundle.getString(TAG_SB)));
-      if (enkel == 2) {
+      if (toernooitype == CaissaConstants.TOERNOOI_DUBBEL) {
         maakMatchMatrix(noSpelers);
       }
       schrijfUitvoer(HTML_TABLE_HEAD_EIND);
@@ -652,14 +628,14 @@ public final class PgnToHtml extends Batchjob {
                                swapNaam(speler.getNaam())));
     var lijn  = new StringBuilder();
     for (var j = 0; j < kolommen; j++) {
-      if ((j / enkel) * enkel == j) {
+      if ((j / toernooitype) * toernooitype == j) {
         lijn.append(prefix).append("      ");
       }
-      if (i == j / enkel) {
+      if (i == j / toernooitype) {
         lijn.append(skelet.getProperty(HTML_TABLE_ROW_ZELF));
       } else {
         // -1 is een niet gespeelde partij.
-        if ((j / enkel) * enkel == j) {
+        if ((j / toernooitype) * toernooitype == j) {
           lijn.append(
               MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_WIT),
                                    getScore(matrix[i][j])));
@@ -669,7 +645,7 @@ public final class PgnToHtml extends Batchjob {
                                    getScore(matrix[i][j])));
         }
       }
-      if ((j / enkel) * enkel != j) {
+      if ((j / toernooitype) * toernooitype != j) {
         output.write(lijn.toString());
         lijn  = new StringBuilder();
       }
@@ -694,11 +670,13 @@ public final class PgnToHtml extends Batchjob {
   private static void maakUitslagen(Set<Partij> schema, String[] data) {
     skelet  = new Properties();
     try {
-      output  = new TekstBestand.Builder()
-                                .setBestand(parameters.get(PAR_UITVOERDIR)
-                                            + "uitslagen.html")
-                                .setCharset(parameters.get(PAR_CHARSETUIT))
-                                .setLezen(false).build();
+      output  =
+          new TekstBestand.Builder()
+                          .setBestand(paramBundle.getString(PAR_UITVOERDIR)
+                                        + DoosUtils.getFileSep()
+                                        + "uitslagen.html")
+                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
+                          .setLezen(false).build();
       skelet.load(classloader.getResourceAsStream("uitslagen.properties"));
 
       if (skelet.containsKey(PROP_INDENT)) {
@@ -740,56 +718,6 @@ public final class PgnToHtml extends Batchjob {
           params));
       k++;
     }
-  }
-
-  private static boolean setParameters(String[] args) {
-    var           arguments = new Arguments(args);
-    List<String>  fouten    = new ArrayList<>();
-
-    arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
-                                          PAR_CHARSETIN,
-                                          PAR_CHARSETUIT,
-                                          PAR_INVOERDIR,
-                                          CaissaTools.PAR_MATRIXOPSTAND,
-                                          CaissaTools.PAR_SCHEMA,
-                                          PAR_UITVOERDIR});
-    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND,
-                                         CaissaTools.PAR_SCHEMA});
-    if (!arguments.isValid()) {
-      fouten.add(getMelding(ERR_INVALIDPARAMS));
-    }
-
-    parameters.clear();
-    setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
-    setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
-    setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
-    setDirParameter(arguments, PAR_INVOERDIR);
-    setParameter(arguments, CaissaTools.PAR_MATRIXOPSTAND,
-                 DoosConstants.ONWAAR);
-    setBestandParameter(arguments, CaissaTools.PAR_SCHEMA, EXT_JSON);
-    setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
-
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
-                 .contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
-    }
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_SCHEMA))
-                 .contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_SCHEMA));
-    }
-
-    if (fouten.isEmpty()) {
-      return true;
-    }
-
-    help();
-    printFouten(fouten);
-
-    return false;
   }
 
   private static String swapNaam(String naam) {

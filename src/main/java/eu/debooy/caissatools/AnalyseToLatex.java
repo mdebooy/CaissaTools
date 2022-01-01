@@ -21,22 +21,19 @@ import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.PgnException;
 import static eu.debooy.caissatools.CaissaTools.PAR_SCHAAKNOTATIE;
-import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
-import static eu.debooy.doosutils.Batchjob.setBestandParameter;
-import static eu.debooy.doosutils.Batchjob.setDirParameter;
+import static eu.debooy.doosutils.Batchjob.help;
+import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.ParameterBundle;
+import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.CsvBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
-import java.io.File;
 import java.nio.charset.Charset;
-import java.text.MessageFormat;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.ResourceBundle;
@@ -51,7 +48,8 @@ public class AnalyseToLatex extends Batchjob {
   private static final  String  PAR_ANALYZEBEGIN    = "AnalyseBegin.tex";
 
   private static final  ResourceBundle  resourceBundle  =
-      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+      ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
+                               Locale.getDefault());
   private static final  ResourceBundle  ecoBundle       =
       ResourceBundle.getBundle("eco", Locale.getDefault());
 
@@ -63,21 +61,29 @@ public class AnalyseToLatex extends Batchjob {
 
   public static void execute(String[] args) {
     var                 charsetIn     = Charset.defaultCharset().name();
-    var                 charsetUit    = "UTF-8";
+    var                 charsetUit    = BestandConstants.UTF8;
     CsvBestand          schaaknotatie = null;
 
-    Banner.printMarcoBanner(resourceBundle.getString("banner.analysetolatex"));
+    setParameterBundle(new ParameterBundle.Builder()
+                           .setBaseName(CaissaTools.TOOL_ANALYSETEX)
+                           .build());
 
-    if (!setParameters(args)) {
+    Banner.printMarcoBanner(DoosUtils.nullToEmpty(paramBundle.getBanner()));
+
+    if (!paramBundle.isValid()
+        || !paramBundle.setArgs(args)) {
+      help();
+      printFouten();
       return;
     }
 
     try {
-      if (parameters.containsKey(CaissaTools.PAR_TEMPLATE)) {
+      if (paramBundle.containsArgument(CaissaTools.PAR_TEMPLATE)) {
         texInvoer =
             new TekstBestand.Builder()
                             .setBestand(
-                                parameters.get(CaissaTools.PAR_TEMPLATE))
+                                paramBundle
+                                    .getBestand(CaissaTools.PAR_TEMPLATE))
                             .setCharset(charsetIn).build();
       } else {
         texInvoer =
@@ -87,16 +93,16 @@ public class AnalyseToLatex extends Batchjob {
                             .setBestand(PAR_ANALYZEBEGIN).build();
       }
 
-      uitvoer = new TekstBestand.Builder()
-                                .setBestand(parameters.get(PAR_UITVOERDIR)
-                                    + parameters.get(CaissaTools.PAR_BESTAND)
-                                    + EXT_TEX)
-                                .setCharset(charsetUit)
-                                .setLezen(false).build();
-      schrijfBegin(DoosUtils
-                      .nullToEmpty(parameters.get(CaissaTools.PAR_AUTEUR)),
-                   DoosUtils
-                      .nullToEmpty(parameters.get(CaissaTools.PAR_TITEL)));
+      uitvoer =
+          new TekstBestand.Builder()
+                          .setBestand(
+                              paramBundle.getBestand(CaissaTools.PAR_BESTAND,
+                                                     BestandConstants.EXT_TEX))
+                          .setCharset(charsetUit)
+                          .setLezen(false).build();
+      schrijfBegin(
+          DoosUtils.nullToEmpty(paramBundle.getString(CaissaTools.PAR_AUTEUR)),
+          DoosUtils.nullToEmpty(paramBundle.getString(CaissaTools.PAR_TITEL)));
 
       schaaknotatie =
           new CsvBestand.Builder()
@@ -113,9 +119,8 @@ public class AnalyseToLatex extends Batchjob {
       Collection<PGN>
           partijen    = new TreeSet<>(new PGN.ByEventComparator());
       partijen.addAll(CaissaUtils.laadPgnBestand(
-                          parameters.get(PAR_INVOERDIR)
-                          + parameters.get(CaissaTools.PAR_BESTAND),
-                      charsetIn));
+                          paramBundle.getBestand(CaissaTools.PAR_BESTAND),
+                                                 charsetIn));
       for (var partij: partijen) {
         verwerkPartij(partij);
       }
@@ -128,22 +133,22 @@ public class AnalyseToLatex extends Batchjob {
         if (null != schaaknotatie) {
           schaaknotatie.close();
         }
-      } catch (BestandException ex) {
-        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
+      } catch (BestandException e) {
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
       try {
         if (null != texInvoer) {
           texInvoer.close();
         }
-      } catch (BestandException ex) {
-        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
+      } catch (BestandException e) {
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
       try {
         if (null != uitvoer) {
           uitvoer.close();
         }
-      } catch (BestandException ex) {
-        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
+      } catch (BestandException e) {
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
   }
@@ -159,34 +164,6 @@ public class AnalyseToLatex extends Batchjob {
                         .replace("\\.\\.", "")
                         .replaceAll(" [1-9][0-9]*\\.", " ")
                         .replace("  ", " ").trim();
-  }
-
-  public static void help() {
-    DoosUtils.naarScherm("java -jar CaissaTools.jar AnalyseToLatex ["
-                         + getMelding(LBL_OPTIE)
-                         + "] --bestand=<"
-                         + resourceBundle.getString("label.pgnbestand") + ">");
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_AUTEUR, 12),
-                         resourceBundle.getString("help.auteur"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 12),
-                         resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 12),
-        MessageFormat.format(getMelding(HLP_CHARSETIN),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 12),
-                         getMelding(HLP_INVOERDIR), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_TEMPLATE, 12),
-                         resourceBundle.getString("help.template"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_TITEL, 12),
-                         resourceBundle.getString("help.documenttitel"), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 12),
-                         getMelding(HLP_UITVOERDIR), 80);
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(
-        MessageFormat.format(getMelding(HLP_PARAMVERPLICHT),
-                             "bestand"), 80);
-    DoosUtils.naarScherm();
   }
 
   private static void replaceAll(StringBuilder sb,
@@ -231,48 +208,6 @@ public class AnalyseToLatex extends Batchjob {
       throws BestandException {
     uitvoer.write("\\par\\centering|"
                     + getTexmatezetten(zetten, start, lengte) + "|");
-  }
-
-  private static boolean setParameters(String[] args) {
-    var           arguments = new Arguments(args);
-    List<String>  fouten    = new ArrayList<>();
-
-    arguments.setParameters(new String[] {CaissaTools.PAR_AUTEUR,
-                                          CaissaTools.PAR_BESTAND,
-                                          PAR_CHARSETIN,
-                                          PAR_INVOERDIR,
-                                          CaissaTools.PAR_TEMPLATE,
-                                          CaissaTools.PAR_TITEL,
-                                          PAR_UITVOERDIR});
-    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND});
-    if (!arguments.isValid()) {
-      fouten.add(getMelding(ERR_INVALIDPARAMS));
-    }
-
-    parameters.clear();
-    setParameter(arguments, CaissaTools.PAR_AUTEUR);
-    setBestandParameter(arguments, CaissaTools.PAR_BESTAND);
-    setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
-    setDirParameter(arguments, PAR_INVOERDIR);
-    setParameter(arguments, CaissaTools.PAR_TEMPLATE);
-    setParameter(arguments, CaissaTools.PAR_TITEL);
-    setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
-
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
-                 .contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
-    }
-
-    if (fouten.isEmpty()) {
-      return true;
-    }
-
-    help();
-    printFouten(fouten);
-
-    return false;
   }
 
   private static void verwerkCommentaar(char[] commentaar, int start, int eind)

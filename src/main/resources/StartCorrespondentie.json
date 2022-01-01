@@ -1,0 +1,69 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 18,
+  "applicatie": "StartCorrespondentie",
+  "help": "Maakt een PGN bestand aan voor een correspondentietoernooi met alle partijen die tussen de opgegeven spelers gespeeld (moeten) worden. Het kan de start e-mails versturen.",
+  "banner": "Start Correspondentietoernooi",
+  "parameters": [
+    {
+      "parameter": "bericht",
+      "kort": "b",
+      "lang": "bericht",
+      "help": "Het bestand met de inhoud van de start e-mail. De eerste regel is het onderwerp.",
+      "type": "bestand"
+    },
+    {
+      "parameter": "charsetin",
+      "lang": "charsetin",
+      "help": "De characterset van de invoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "charsetuit",
+      "lang": "charsetuit",
+      "help": "De characterset van de uitvoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "nieuwespelers",
+      "lang": "nieuwespelers",
+      "help": "Lijst met spelers (gescheiden door een ;) die nog geen start e-mail hebben ontvangen."
+    },
+    {
+      "parameter": "perpartij",
+      "lang": "perpartij",
+      "help": "E-mail per partij <j|N>.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "schema",
+      "extensie": "json",
+      "lang": "schema",
+      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender).",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "smtppoort",
+      "lang": "smtppoort",
+      "help": "De poort van de SMTP server. 25 is de default.",
+      "standaard": 25
+    },
+    {
+      "parameter": "smtpserver",
+      "lang": "smtpserver",
+      "help": "De SMTP server die gebruikt wordt om, indien opgegeven, de e-mails te versturen."
+    },
+    {
+      "parameter": "tsemail",
+      "lang": "tsemail",
+      "help": "Het e-mail adres van de toernooileider."
+    },
+    {
+      "parameter": "uitvoerdir",
+      "lang": "uitvoerdir",
+      "help": "Het e-mail adres van de toernooileider.",
+      "type": "map"
+    }
+  ]
+}

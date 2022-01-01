@@ -2,7 +2,7 @@
     "Event": "Testing 97/98",
     "Site": "Caissa Tools",
     "EventDate": "1997.10.03",
-    "enkelrondig": false,
+    "toernooitype": 2,
     "spelers": [
       {"naam": "Speler, 01",
        "seq": 1},

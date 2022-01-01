@@ -16,6 +16,7 @@
  */
 package eu.debooy.caissatools;
 
+import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
@@ -42,10 +43,14 @@ public class StartPgnTest extends BatchTest {
   private static  String  errTekort;
   private static  String  errTelang;
 
-  private static final  String  PAR_BESTAND = "--bestand=start";
-  private static final  String  PAR_SCHEMA  = "--schema=competitie";
-  private static final  String  PAR_TEKORT  = "--schema=tekort";
-  private static final  String  PAR_TELANG  = "--schema=telang";
+  private static final  String  PAR_BESTAND = "--bestand=" + getTemp()
+                                                + File.separator + "start";
+  private static final  String  PAR_SCHEMA  = "--schema=" + getTemp()
+                                                + File.separator + "competitie";
+  private static final  String  PAR_TEKORT  = "--schema=" + getTemp()
+                                                + File.separator + "tekort";
+  private static final  String  PAR_TELANG  = "--schema=" + getTemp()
+                                                + File.separator + "telang";
 
 
   @AfterClass
@@ -59,7 +64,7 @@ public class StartPgnTest extends BatchTest {
   @BeforeClass
   public static void beforeClass() throws BestandException {
     Locale.setDefault(new Locale(TestConstants.TST_TAAL));
-    resourceBundle  = ResourceBundle.getBundle("ApplicatieResources",
+    resourceBundle  = ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                                Locale.getDefault());
 
     errTekort  =
@@ -89,20 +94,18 @@ public class StartPgnTest extends BatchTest {
 
   @Test
   public void testLeeg() {
-    String[]  args      = new String[] {};
+    var args      = new String[] {};
 
     before();
     StartPgn.execute(args);
     after();
 
-    assertEquals(26, out.size());
     assertEquals(1, err.size());
   }
 
   @Test
   public void testStartPgn() throws BestandException {
-    String[]  args  = new String[] {PAR_BESTAND, PAR_SCHEMA,
-                                    TestConstants.PAR_INVOERDIR + getTemp()};
+    var args  = new String[] {PAR_BESTAND, PAR_SCHEMA};
 
     try {
       Bestand.delete(getTemp() + File.separator + BST_START_PGN);
@@ -130,8 +133,7 @@ public class StartPgnTest extends BatchTest {
 
   @Test
   public void testTekort() throws BestandException {
-    String[]  args  = new String[] {PAR_BESTAND, PAR_TEKORT,
-                                    TestConstants.PAR_INVOERDIR + getTemp()};
+    var args  = new String[] {PAR_BESTAND, PAR_TEKORT};
 
     before();
     StartPgn.execute(args);
@@ -144,8 +146,7 @@ public class StartPgnTest extends BatchTest {
 
   @Test
   public void testTelang() throws BestandException {
-    String[]  args  = new String[] {PAR_BESTAND, PAR_TELANG,
-                                    TestConstants.PAR_INVOERDIR + getTemp()};
+    var args  = new String[] {PAR_BESTAND, PAR_TELANG};
 
     before();
     StartPgn.execute(args);

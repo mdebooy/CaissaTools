@@ -17,24 +17,23 @@
 package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
-import static eu.debooy.caissa.CaissaConstants.JSON_TAG_SPELERS;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.PgnException;
-import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
+import static eu.debooy.doosutils.Batchjob.help;
 import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.ParameterBundle;
+import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
-import java.io.File;
-import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -56,7 +55,8 @@ import java.util.TreeSet;
  */
 public final class PgnToLatex extends Batchjob {
   private static final  ResourceBundle  resourceBundle  =
-      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+      ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
+                               Locale.getDefault());
 
   private static  String            auteur;
   private static  String            eindDatum;
@@ -92,7 +92,7 @@ public final class PgnToLatex extends Batchjob {
 
   protected static String datumInTitel(String startDatum, String eindDatum) {
     var   titelDatum  = new StringBuilder();
-    Date  datum       = null;
+    Date  datum;
     try {
       datum = Datum.toDate(startDatum, CaissaConstants.PGN_DATUM_FORMAAT);
       titelDatum.append(Datum.fromDate(datum));
@@ -117,6 +117,21 @@ public final class PgnToLatex extends Batchjob {
   }
 
   public static void execute(String[] args) {
+    setParameterBundle(new ParameterBundle.Builder()
+                           .setBaseName(CaissaTools.TOOL_PGNTOLATEX)
+                           .setClassloader(PgnToLatex.class.getClassLoader())
+                           .setValidator(new PgnToLatexParameters())
+                           .build());
+
+    Banner.printMarcoBanner(DoosUtils.nullToEmpty(paramBundle.getBanner()));
+
+    if (!paramBundle.isValid()
+        || !paramBundle.setArgs(args)) {
+      help();
+      printFouten();
+      return;
+    }
+
     var           aantalPartijen  = 0;
     List<String>  template        = new ArrayList<>();
 
@@ -124,49 +139,22 @@ public final class PgnToLatex extends Batchjob {
     output      = null;
     startDatum  = CaissaConstants.DEF_EINDDATUM;
 
-    Banner.printMarcoBanner(resourceBundle.getString("banner.pgntolatex"));
+    var bestand   =
+        paramBundle.getString(CaissaTools.PAR_BESTAND)
+                   .replace(BestandConstants.EXT_PGN, "").split(";");
+    var schema    =
+        paramBundle.getString(CaissaTools.PAR_SCHEMA)
+                   .replace(BestandConstants.EXT_PGN, "")
+                   .replace(BestandConstants.EXT_JSON, "").split(";");
 
-    if (!setParameters(args)) {
-      return;
-    }
-
-    var bestand   = parameters.get(CaissaTools.PAR_BESTAND)
-                              .replace(EXT_PGN, "").split(";");
-    var schema    = parameters.get(CaissaTools.PAR_SCHEMA)
-                              .replace(EXT_JSON, "").split(";");
-
-    auteur        = parameters.get(CaissaTools.PAR_AUTEUR);
-    toernooitype  =
-        CaissaUtils.getToernooitype(parameters.get(CaissaTools.PAR_ENKEL));
+    auteur        = paramBundle.getString(CaissaTools.PAR_AUTEUR);
     var metMatrix =
-        parameters.get(CaissaTools.PAR_MATRIX).equals(DoosConstants.WAAR);
-    titel         = parameters.get(CaissaTools.PAR_TITEL);
+        paramBundle.getBoolean(CaissaTools.PAR_MATRIX);
+    titel         = paramBundle.getString(CaissaTools.PAR_TITEL);
 
     var beginBody = -1;
     var eindeBody = -1;
-    TekstBestand  texInvoer;
-    try {
-      if (parameters.containsKey(CaissaTools.PAR_TEMPLATE)) {
-        texInvoer =
-            new TekstBestand.Builder()
-                            .setBestand(
-                                parameters.get(CaissaTools.PAR_TEMPLATE))
-                            .setCharset(parameters.get(PAR_CHARSETIN)).build();
-      } else {
-        texInvoer =
-            new TekstBestand.Builder()
-                            .setBestand("Caissa.tex")
-                            .setClassLoader(PgnToLatex.class.getClassLoader())
-                            .setCharset(parameters.get(PAR_CHARSETIN)).build();
-      }
-    } catch (BestandException e) {
-      DoosUtils.foutNaarScherm(MessageFormat.format(
-          resourceBundle.getString(CaissaTools.ERR_TEMPLATE),
-                                   parameters.get(CaissaTools.PAR_TEMPLATE)));
-      return;
-    }
-
-    try {
+    try (var texInvoer = getTemplate()) {
       String  regel;
       while (texInvoer.hasNext()) {
         regel = texInvoer.next();
@@ -179,21 +167,14 @@ public final class PgnToLatex extends Batchjob {
         template.add(regel);
       }
 
-      output  = new TekstBestand.Builder()
-                                .setBestand(parameters.get(PAR_UITVOERDIR)
-                                            + bestand[0] + EXT_TEX)
-                                .setCharset(parameters.get(PAR_CHARSETIN))
-                                .setLezen(false).build();
+      output  =
+          new TekstBestand.Builder()
+                          .setBestand(getUitvoerbestand(bestand[0],
+                                      BestandConstants.EXT_TEX))
+                          .setCharset(paramBundle.getString(PAR_CHARSETIN))
+                          .setLezen(false).build();
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    } finally {
-      try {
-        if (texInvoer != null) {
-          texInvoer.close();
-        }
-      } catch (BestandException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      }
     }
 
     for (var i = 0; i < bestand.length; i++) {
@@ -202,23 +183,31 @@ public final class PgnToLatex extends Batchjob {
 
       JsonBestand competitie;
       try {
-        competitie  =
+        competitie    =
             new JsonBestand.Builder()
-                           .setBestand(parameters.get(PAR_INVOERDIR)
-                                       + schema[i] + EXT_JSON)
-                           .setCharset(parameters.get(PAR_CHARSETIN))
+                           .setBestand(getInvoerbestand(schema[i],
+                                       BestandConstants.EXT_JSON))
+                           .setCharset(paramBundle.getString(PAR_CHARSETIN))
                            .build();
         partijen.addAll(
-            CaissaUtils.laadPgnBestand(parameters.get(PAR_INVOERDIR)
-                                       + bestand[i] + EXT_PGN,
-                                       parameters.get(PAR_CHARSETIN)));
+            CaissaUtils.laadPgnBestand(getInvoerbestand(bestand[i],
+                                       BestandConstants.EXT_PGN),
+                                       paramBundle.getString(PAR_CHARSETIN)));
+        if (competitie.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
+          toernooitype =
+              ((Long) competitie.get(CaissaConstants.JSON_TAG_TOERNOOITYPE))
+                  .intValue();
+        } else {
+          toernooitype = CaissaConstants.TOERNOOI_MATCH;
+        }
       } catch (BestandException | PgnException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
         return;
       }
 
-      spelers = new ArrayList<>();
-      CaissaUtils.vulSpelers(spelers, competitie.getArray(JSON_TAG_SPELERS));
+      spelers       = new ArrayList<>();
+      CaissaUtils.vulSpelers(spelers,
+                      competitie.getArray(CaissaConstants.JSON_TAG_SPELERS));
 
       partijen.forEach(PgnToLatex::verwerkPartij);
 
@@ -240,11 +229,12 @@ public final class PgnToLatex extends Batchjob {
           // Bepaal de score en weerstandspunten.
           matrix  = new double[noSpelers][kolommen];
           CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix, toernooitype,
-                                        parameters
-                                          .get(CaissaTools.PAR_MATRIXOPSTAND)
-                                          .equals(DoosConstants.WAAR),
+                                        paramBundle
+                                          .getBoolean(
+                                              CaissaTools.PAR_MATRIXOPSTAND),
                                         CaissaConstants.TIEBREAK_SB);
-          matrix    = CaissaUtils.verwijderNietActief(spelers, matrix, toernooitype);
+          matrix    =
+              CaissaUtils.verwijderNietActief(spelers, matrix, toernooitype);
           kolommen  = matrix[0].length;
           noSpelers = spelers.size();
         }
@@ -252,14 +242,16 @@ public final class PgnToLatex extends Batchjob {
         // Zet de te vervangen waardes.
         Map<String, String> params  = new HashMap<>();
         params.put("Auteur", auteur);
-        params.put("Datum", parameters.get(CaissaTools.PAR_DATUM));
-        if (parameters.containsKey(CaissaTools.PAR_KEYWORDS)) {
+        params.put("Datum",
+                   Datum.fromDate(paramBundle.getDate(CaissaTools.PAR_DATUM),
+                                  CaissaConstants.PGN_DATUM_FORMAAT));
+        if (paramBundle.containsArgument(CaissaTools.PAR_KEYWORDS)) {
           params.put(CaissaTools.PAR_KEYWORDS,
-                     parameters.get(CaissaTools.PAR_KEYWORDS));
+                     paramBundle.getString(CaissaTools.PAR_KEYWORDS));
         }
-        if (parameters.containsKey(CaissaTools.PAR_LOGO)) {
+        if (paramBundle.containsArgument(CaissaTools.PAR_LOGO)) {
           params.put(CaissaTools.PAR_LOGO,
-                     parameters.get(CaissaTools.PAR_LOGO));
+                     paramBundle.getString(CaissaTools.PAR_LOGO));
         }
         if (bestand.length == 1) {
           params.put("Periode", datumInTitel(startDatum, eindDatum));
@@ -286,6 +278,12 @@ public final class PgnToLatex extends Batchjob {
         aantalPartijen  += partijen.size();
       } catch (BestandException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+      } finally {
+        try {
+          competitie.close();
+        } catch (BestandException e) {
+          DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+        }
       }
     }
 
@@ -293,73 +291,69 @@ public final class PgnToLatex extends Batchjob {
       if (output != null) {
         output.close();
       }
-    } catch (BestandException ex) {
-      DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
+    } catch (BestandException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     }
 
     for (var tex : bestand) {
       DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.bestand"),
-                             parameters.get(PAR_UITVOERDIR) + tex + EXT_TEX));
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
+                             getUitvoerbestand(tex, BestandConstants.EXT_TEX)));
     }
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.partijen"),
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_PARTIJEN),
                              aantalPartijen));
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getMelding(MSG_KLAAR));
     DoosUtils.naarScherm();
   }
 
-  public static void help() {
-    DoosUtils.naarScherm("java -jar CaissaTools.jar PgnToLatex ["
-                         + getMelding(LBL_OPTIE)
-                         + "] --bestand=<"
-                         + resourceBundle.getString("label.pgnbestand") + ">");
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_AUTEUR, 14),
-                         resourceBundle.getString("help.auteur"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 14),
-                         resourceBundle.getString("help.bestand"), 80);
-    DoosUtils.naarScherm("                  ",
-                         resourceBundle.getString("help.bestanden"), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 14),
-        MessageFormat.format(getMelding(HLP_CHARSETIN),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 14),
-        MessageFormat.format(getMelding(HLP_CHARSETUIT),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_DATUM, 14),
-                         resourceBundle.getString("help.speeldatum"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_ENKEL, 14),
-                         resourceBundle.getString("help.enkel"), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 14),
-                         getMelding(HLP_INVOERDIR), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_KEYWORDS, 14),
-                         resourceBundle.getString("help.keywords"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_LOGO, 14),
-                         resourceBundle.getString("help.logo"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_MATRIX, 14),
-                         resourceBundle.getString("help.matrix"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_MATRIXOPSTAND, 14),
-                         resourceBundle.getString("help.matrixopstand"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SCHEMA, 14),
-                         resourceBundle.getString(CaissaTools.HLP_SCHEMA), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_TEMPLATE, 14),
-                         resourceBundle.getString("help.template"), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_TITEL, 14),
-                         resourceBundle.getString("help.documenttitel"), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 14),
-                         getMelding(HLP_UITVOERDIR), 80);
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(
-        MessageFormat.format(getMelding(HLP_PARAMSVERPLICHT),
-                             CaissaTools.PAR_BESTAND,
-                             CaissaTools.PAR_SCHEMA), 80);
-    DoosUtils.naarScherm(
-        MessageFormat.format(
-            resourceBundle.getString("help.paramsverplichtbijbestand"),
-                             CaissaTools.PAR_AUTEUR, CaissaTools.PAR_TITEL));
-    DoosUtils.naarScherm();
+  private static String getInvoerbestand(String bestand, String extensie) {
+    if (bestand.contains(DoosUtils.getFileSep())) {
+      return bestand + extensie;
+    }
+    if (paramBundle.containsArgument(PAR_INVOERDIR)) {
+      return paramBundle.getString(PAR_INVOERDIR) + DoosUtils.getFileSep()
+              + bestand + extensie;
+    }
+
+    return bestand + extensie;
+  }
+
+  private static TekstBestand getTemplate()
+      throws BestandException {
+    TekstBestand  texInvoer;
+      if (paramBundle.containsArgument(CaissaTools.PAR_TEMPLATE)) {
+        texInvoer =
+            new TekstBestand.Builder()
+                            .setBestand(
+                                paramBundle.getBestand(
+                                    CaissaTools.PAR_TEMPLATE))
+                            .setCharset(paramBundle.getString(PAR_CHARSETIN))
+                            .build();
+      } else {
+        texInvoer =
+            new TekstBestand.Builder()
+                            .setBestand("Caissa.tex")
+                            .setClassLoader(PgnToLatex.class.getClassLoader())
+                            .setCharset(paramBundle.getString(PAR_CHARSETIN))
+                            .build();
+      }
+
+      return texInvoer;
+  }
+
+  private static String getUitvoerbestand(String bestand, String extensie) {
+    if (bestand.contains(DoosUtils.getFileSep())) {
+      return bestand + extensie;
+    }
+    if (paramBundle.containsArgument(PAR_INVOERDIR)
+        || paramBundle.containsArgument(PAR_UITVOERDIR)) {
+      return paramBundle.getString(PAR_UITVOERDIR) + DoosUtils.getFileSep()
+              + bestand + extensie;
+    }
+
+    return bestand + extensie;
   }
 
   private static void maakMatrix(int kolommen, int noSpelers)
@@ -458,8 +452,9 @@ public final class PgnToLatex extends Batchjob {
                                           Map<String, String> parameters) {
     var resultaat = regel;
     for (Entry<String, String> parameter : parameters.entrySet()) {
-      resultaat = resultaat.replace("@"+parameter.getKey()+"@",
-                                    parameter.getValue());
+      resultaat =
+          resultaat.replace("@"+parameter.getKey()+"@",
+                            parameter.getValue());
     }
 
     return resultaat;
@@ -525,86 +520,6 @@ public final class PgnToLatex extends Batchjob {
     }
 
     return status;
-  }
-
-  private static boolean setParameters(String[] args) {
-    var           arguments = new Arguments(args);
-    List<String>  fouten    = new ArrayList<>();
-
-    arguments.setParameters(new String[] {CaissaTools.PAR_AUTEUR,
-                                          CaissaTools.PAR_BESTAND,
-                                          PAR_CHARSETIN,
-                                          PAR_CHARSETUIT,
-                                          CaissaTools.PAR_DATUM,
-                                          CaissaTools.PAR_ENKEL,
-                                          PAR_INVOERDIR,
-                                          CaissaTools.PAR_KEYWORDS,
-                                          CaissaTools.PAR_LOGO,
-                                          CaissaTools.PAR_MATRIX,
-                                          CaissaTools.PAR_MATRIXOPSTAND,
-                                          CaissaTools.PAR_SCHEMA,
-                                          CaissaTools.PAR_TEMPLATE,
-                                          CaissaTools.PAR_TITEL,
-                                          PAR_UITVOERDIR});
-    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND,
-                                         CaissaTools.PAR_SCHEMA});
-    if (!arguments.isValid()) {
-      fouten.add(getMelding(ERR_INVALIDPARAMS));
-    }
-
-    parameters.clear();
-    setParameter(arguments, CaissaTools.PAR_AUTEUR);
-    setBestandParameter(arguments, CaissaTools.PAR_BESTAND);
-    setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
-    setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
-    setParameter(arguments, CaissaTools.PAR_DATUM,
-                 Datum.fromDate(new Date(), "dd/MM/yyyy HH:mm:ss"));
-    setParameter(arguments, CaissaTools.PAR_ENKEL, DoosConstants.WAAR);
-    setDirParameter(arguments, PAR_INVOERDIR);
-    setParameter(arguments, CaissaTools.PAR_KEYWORDS);
-    setParameter(arguments, CaissaTools.PAR_LOGO);
-    setParameter(arguments, CaissaTools.PAR_MATRIX, DoosConstants.WAAR);
-    setParameter(arguments, CaissaTools.PAR_MATRIXOPSTAND,
-                 DoosConstants.ONWAAR);
-    setBestandParameter(arguments, CaissaTools.PAR_SCHEMA);
-    setParameter(arguments, CaissaTools.PAR_TEMPLATE);
-    setParameter(arguments, CaissaTools.PAR_TITEL);
-    setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
-
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
-                 .contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
-    }
-    if (parameters.containsKey(CaissaTools.PAR_BESTAND)
-        && parameters.get(CaissaTools.PAR_BESTAND).contains(";")) {
-      if (!parameters.containsKey(CaissaTools.PAR_AUTEUR)
-          || !parameters.containsKey(CaissaTools.PAR_TITEL)) {
-        fouten.add(resourceBundle.getString(CaissaTools.ERR_BIJBESTAND));
-      }
-    }
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_SCHEMA))
-                 .contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_SCHEMA));
-    }
-
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
-                 .split(";").length !=
-        DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_SCHEMA))
-                 .split(";").length) {
-      fouten.add(resourceBundle.getString(CaissaTools.ERR_BEST_ONGELIJK));
-    }
-    if (fouten.isEmpty()) {
-      return true;
-    }
-
-    help();
-    printFouten(fouten);
-
-    return false;
   }
 
   private static String setStatus(String keyword) {

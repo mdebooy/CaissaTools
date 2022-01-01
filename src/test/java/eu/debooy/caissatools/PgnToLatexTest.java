@@ -16,12 +16,12 @@
  */
 package eu.debooy.caissatools;
 
+import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
 import java.io.File;
 import java.io.IOException;
-import java.text.MessageFormat;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import org.junit.AfterClass;
@@ -49,7 +49,7 @@ public class PgnToLatexTest extends BatchTest {
       "--bestand=/tmp/competitie1;/tmp/competitie2;competitie3";
   private static final  String  PAR_BESTAND2  =
       "--bestand=competitie1;competitie2";
-  private static final  String  PAR_MATRIX_N  = "--matrix=N";
+  private static final  String  PAR_MATRIX    = "--matrix";
   private static final  String  PAR_SCHEMA2   =
       "--schema=schema1;schema2";
   private static final  String  PAR_TITEL     = "--titel=Testing 97/98 - 98/99";
@@ -67,7 +67,7 @@ public class PgnToLatexTest extends BatchTest {
   @BeforeClass
   public static void beforeClass() throws BestandException {
     Locale.setDefault(new Locale(TestConstants.TST_TAAL));
-    resourceBundle  = ResourceBundle.getBundle("ApplicatieResources",
+    resourceBundle  = ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                                Locale.getDefault());
 
     for (String bestand : new String[] {TestConstants.BST_COMPETITIE1_PGN,
@@ -75,7 +75,8 @@ public class PgnToLatexTest extends BatchTest {
                                         TestConstants.BST_SCHEMA1_JSON,
                                         TestConstants.BST_SCHEMA2_JSON}) {
       try {
-        kopieerBestand(CLASSLOADER, bestand, getTemp() + File.separator + bestand);
+        kopieerBestand(CLASSLOADER, bestand,
+                       getTemp() + File.separator + bestand);
       } catch (IOException e) {
         throw new BestandException(e);
       }
@@ -90,14 +91,12 @@ public class PgnToLatexTest extends BatchTest {
     PgnToLatex.execute(args);
     after();
 
-    assertEquals("Zonder parameters - helptekst", 38, out.size());
-    assertEquals("Zonder parameters - fouten", 1, err.size());
+    assertEquals(1, err.size());
   }
 
   @Test
   public void testOngelijkAantalBestanden() {
     String[]  args  = new String[] {PAR_AUTEUR, PAR_BESTAND2,
-                                    TestConstants.PAR_INVOERDIR + getTemp(),
                                     TestConstants.PAR_SCHEMA1, PAR_TITEL};
     String[]  verwacht  = new String[] {
         resourceBundle.getString(CaissaTools.ERR_BEST_ONGELIJK)};
@@ -106,36 +105,31 @@ public class PgnToLatexTest extends BatchTest {
     PgnToLatex.execute(args);
     after();
 
-    assertEquals("Fouten - helptekst", 38, out.size());
-    assertEquals("Fouten - fouten", 1, err.size());
-    assertArrayEquals("Error mesages", verwacht, err.toArray());
+    assertEquals(1, err.size());
+    assertArrayEquals(verwacht, err.toArray());
   }
 
   @Test
   public void testFouten() {
     String[]  args  = new String[] {PAR_BESTAND1,
-                                    TestConstants.PAR_INVOERDIR + getTemp(),
                                     TestConstants.PAR_SCHEMA1};
     String[]  verwacht  = new String[] {
-        MessageFormat.format("Het bestand {0} bevat een directory.",
-                                     "bestand"),
-        resourceBundle.getString(CaissaTools.ERR_BIJBESTAND),
-        resourceBundle.getString(CaissaTools.ERR_BEST_ONGELIJK)};
+        resourceBundle.getString(CaissaTools.ERR_BEST_ONGELIJK),
+        resourceBundle.getString(CaissaTools.ERR_BIJBESTAND)};
 
     before();
     PgnToLatex.execute(args);
     after();
 
-    assertEquals("Fouten - helptekst", 38, out.size());
-    assertEquals("Fouten - fouten", 3, err.size());
-    assertArrayEquals("Error mesages", verwacht, err.toArray());
+    assertEquals(2, err.size());
+    assertArrayEquals(verwacht, err.toArray());
   }
 
   @Test
   public void testPgnToLatex() throws BestandException {
     String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
-                                    TestConstants.PAR_ENKEL,
                                     TestConstants.PAR_INVOERDIR + getTemp(),
+                                    PAR_MATRIX,
                                     TestConstants.PAR_SCHEMA1,
                                     TestConstants.PAR_UITVOERDIR + getTemp()};
 
@@ -148,14 +142,11 @@ public class PgnToLatexTest extends BatchTest {
     PgnToLatex.execute(args);
     after();
 
-    assertEquals("PgnToLatex - helptekst", 18, out.size());
-    assertEquals("PgnToLatex - fouten", 0, err.size());
-    assertEquals("PgnToLatex - 14",
-                 getTemp() + File.separator + BST_COMPETITIE1_TEX,
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + BST_COMPETITIE1_TEX,
                  out.get(13).split(":")[1].trim());
-    assertEquals("PgnToLatex - 15", "150",
-                 out.get(14).split(":")[1].trim());
-    assertTrue("PgnToLatex - equals",
+    assertEquals("150", out.get(14).split(":")[1].trim());
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + BST_COMPETITIE1_TEX),
@@ -167,10 +158,10 @@ public class PgnToLatexTest extends BatchTest {
   @Test
   public void testPgnToLatex2() throws BestandException {
     String[]  args  = new String[] {PAR_AUTEUR, PAR_BESTAND2,
-                                    TestConstants.PAR_ENKEL,
                                     TestConstants.PAR_INVOERDIR + getTemp(),
                                     PAR_SCHEMA2, PAR_TITEL,
-                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+                                    TestConstants.PAR_UITVOERDIR + getTemp(),
+                                    PAR_MATRIX};
 
     try {
       Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
@@ -181,17 +172,14 @@ public class PgnToLatexTest extends BatchTest {
     PgnToLatex.execute(args);
     after();
 
-    assertEquals("PgnToLatex 2 - helptekst", 19, out.size());
-    assertEquals("PgnToLatex 2 - fouten", 0, err.size());
-    assertEquals("PgnToLatex 2 - 14",
-                 getTemp() + File.separator + BST_COMPETITIE1_TEX,
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + BST_COMPETITIE1_TEX,
                  out.get(13).split(":")[1].trim());
-    assertEquals("PgnToLatex 2 - 15",
-                 getTemp() + File.separator + BST_COMPETITIE2_TEX,
+    assertEquals(getTemp() + File.separator + BST_COMPETITIE2_TEX,
                  out.get(14).split(":")[1].trim());
-    assertEquals("PgnToLatex 2 - 16", "214",
-                 out.get(15).split(":")[1].trim());
-    assertTrue("PgnToLatex 2 - equals",
+    assertEquals("214", out.get(15).split(":")[1].trim());
+
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + BST_COMPETITIE1_TEX),
@@ -202,8 +190,8 @@ public class PgnToLatexTest extends BatchTest {
   @Test
   public void testOpStand() throws BestandException {
     String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
-                                    TestConstants.PAR_ENKEL,
                                     TestConstants.PAR_INVOERDIR + getTemp(),
+                                    PAR_MATRIX,
                                     TestConstants.PAR_MATRIX_OP_STAND,
                                     TestConstants.PAR_SCHEMA1,
                                     TestConstants.PAR_UITVOERDIR + getTemp()};
@@ -217,14 +205,11 @@ public class PgnToLatexTest extends BatchTest {
     PgnToLatex.execute(args);
     after();
 
-    assertEquals("Op Stand - helptekst", 18, out.size());
-    assertEquals("Op Stand - fouten", 0, err.size());
-    assertEquals("Op Stand - 14",
-                 getTemp() + File.separator + BST_COMPETITIE1_TEX,
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + BST_COMPETITIE1_TEX,
                  out.get(13).split(":")[1].trim());
-    assertEquals("Op Stand - 15", "150",
-                 out.get(14).split(":")[1].trim());
-    assertTrue("Op Stand - equals",
+    assertEquals("150", out.get(14).split(":")[1].trim());
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + BST_COMPETITIE1_TEX),
@@ -236,9 +221,7 @@ public class PgnToLatexTest extends BatchTest {
   @Test
   public void testZonderMatrix() throws BestandException {
     String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
-                                    TestConstants.PAR_ENKEL,
                                     TestConstants.PAR_INVOERDIR + getTemp(),
-                                    PAR_MATRIX_N,
                                     TestConstants.PAR_SCHEMA1,
                                     TestConstants.PAR_UITVOERDIR + getTemp()};
 
@@ -251,14 +234,11 @@ public class PgnToLatexTest extends BatchTest {
     PgnToLatex.execute(args);
     after();
 
-    assertEquals("Zonder Matrix - helptekst", 18, out.size());
-    assertEquals("Zonder Matrix - fouten", 0, err.size());
-    assertEquals("Zonder Matrix - 14",
-                 getTemp() + File.separator + BST_COMPETITIE1_TEX,
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + BST_COMPETITIE1_TEX,
                  out.get(13).split(":")[1].trim());
-    assertEquals("Zonder Matrix - 15", "150",
-                 out.get(14).split(":")[1].trim());
-    assertTrue("Zonder Matrix - equals",
+    assertEquals("150", out.get(14).split(":")[1].trim());
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + BST_COMPETITIE1_TEX),
@@ -270,9 +250,8 @@ public class PgnToLatexTest extends BatchTest {
   @Test
   public void testZonderMatrix2() throws BestandException {
     String[]  args  = new String[] {PAR_AUTEUR, PAR_BESTAND2,
-                                    TestConstants.PAR_ENKEL,
                                     TestConstants.PAR_INVOERDIR + getTemp(),
-                                    PAR_MATRIX_N, PAR_SCHEMA2, PAR_TITEL,
+                                    PAR_SCHEMA2, PAR_TITEL,
                                     TestConstants.PAR_UITVOERDIR + getTemp()};
 
     try {
@@ -284,17 +263,13 @@ public class PgnToLatexTest extends BatchTest {
     PgnToLatex.execute(args);
     after();
 
-    assertEquals("Zonder Matrix 2 - helptekst", 19, out.size());
-    assertEquals("Zonder Matrix 2 - fouten", 0, err.size());
-    assertEquals("Zonder Matrix 2 - 14",
-                 getTemp() + File.separator + BST_COMPETITIE1_TEX,
+    assertEquals( 0, err.size());
+    assertEquals(getTemp() + File.separator + BST_COMPETITIE1_TEX,
                  out.get(13).split(":")[1].trim());
-    assertEquals("Zonder Matrix 2 - 15",
-                 getTemp() + File.separator + BST_COMPETITIE2_TEX,
+    assertEquals(getTemp() + File.separator + BST_COMPETITIE2_TEX,
                  out.get(14).split(":")[1].trim());
-    assertEquals("Zonder Matrix 2 - 16", "214",
-                 out.get(15).split(":")[1].trim());
-    assertTrue("Zonder Matrix 2 - equals",
+    assertEquals("214", out.get(15).split(":")[1].trim());
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + BST_COMPETITIE1_TEX),

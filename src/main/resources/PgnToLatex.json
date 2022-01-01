@@ -1,0 +1,102 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 18,
+  "applicatie": "PgnToLatex",
+  "help": "Zet een PGN bestand met partijen uit een toernooi om in een .tex bestand.",
+  "banner": "PGN to LaTeX",
+  "parameters": [
+    {
+      "parameter": "auteur",
+      "lang": "auteur",
+      "help": "De auteur of club die de partijen publiceert."
+    },
+    {
+      "parameter": "bestand",
+      "extensie": "pgn",
+      "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de partijen in PGN formaat. Kan ook een lijst met bestanden zijn (gescheiden door een ;).",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "charsetin",
+      "lang": "charsetin",
+      "help": "De characterset van de invoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "charsetuit",
+      "lang": "charsetuit",
+      "help": "De characterset van de uitvoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "datum",
+      "lang": "datum",
+      "formaat": "dd/MM/yyyy",
+      "help": "Datum van het toernooi (dd/mm/yyyy).",
+      "type": "date"
+    },
+    {
+      "parameter": "invoerdir",
+      "lang": "invoerdir",
+      "help": "Directory waar het invoer bestand moet staan.",
+      "type": "map"
+    },
+    {
+      "parameter": "keywords",
+      "lang": "keywords",
+      "help": "Lijst van keywords (gescheiden door een ;)."
+    },
+    {
+      "parameter": "logo",
+      "kort": "l",
+      "lang": "logo",
+      "help": "Logo als watermark op de pagina's."
+    },
+    {
+      "parameter": "matrix",
+      "lang": "matrix",
+      "help": "Met uitslagen matrix.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "matrixeerst",
+      "lang": "matrixeerst",
+      "help": "De matrix moet eerst staan. Bij afwezigheid van deze parameter staan de punten eerst.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "matrixopstand",
+      "lang": "opstand",
+      "help": "Matrix gesorteerd op de stand.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "schema",
+      "extensie": "json",
+      "lang": "schema",
+      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender). Kan ook een lijst met bestanden zijn (gescheiden door een ;). In dat geval moet het aantal schema's gelijk zijn aan het aantal bestanden.",
+      "type": "bestand"
+    },
+    {
+      "parameter": "template",
+      "extensie": "tex",
+      "lang": "template",
+      "help": "Een template voor het uitvoer TEX bestand.",
+      "type": "bestand"
+    },
+    {
+      "parameter": "titel",
+      "lang": "titel",
+      "help": "De titel van het document."
+    },
+    {
+      "parameter": "uitvoerdir",
+      "lang": "uitvoerdir",
+      "help": "Directory waar het uitvoer bestand moet staan. Enkel als deze anders is dan de <invoerdir>.",
+      "type": "map"
+    }
+  ]
+}

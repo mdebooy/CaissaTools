@@ -17,22 +17,17 @@
 package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
-import static eu.debooy.caissa.CaissaConstants.JSON_TAG_KALENDER;
-import static eu.debooy.caissa.CaissaConstants.JSON_TAG_KALENDER_DATUM;
-import static eu.debooy.caissa.CaissaConstants.JSON_TAG_KALENDER_RONDE;
-import static eu.debooy.caissa.CaissaConstants.JSON_TAG_SPELERS;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.Spelerinfo;
-import eu.debooy.doosutils.Arguments;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.Datum;
+import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.ParameterBundle;
 import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
-import java.io.File;
-import java.nio.charset.Charset;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
@@ -48,7 +43,8 @@ import org.json.simple.JSONObject;
  */
 public final class StartPgn extends Batchjob {
   private static final  ResourceBundle  resourceBundle  =
-      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+      ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
+                               Locale.getDefault());
 
   private static  String[]          rondes;
   private static  List<String>      speeldata;
@@ -60,12 +56,20 @@ public final class StartPgn extends Batchjob {
   private static  TekstBestand      output;
   private static  String            site;
 
-  private StartPgn() {}
+  protected StartPgn() {}
 
   public static void execute(String[] args) {
-    Banner.printMarcoBanner(resourceBundle.getString("banner.startpgn"));
+    setParameterBundle(new ParameterBundle.Builder()
+                           .setBaseName(CaissaTools.TOOL_STARTPGN)
+                           .setValidator(new BestandDefaultParameters())
+                           .build());
 
-    if (!setParameters(args)) {
+    Banner.printMarcoBanner(DoosUtils.nullToEmpty(paramBundle.getBanner()));
+
+    if (!paramBundle.isValid()
+        || !paramBundle.setArgs(args)) {
+      help();
+      printFouten();
       return;
     }
 
@@ -73,10 +77,9 @@ public final class StartPgn extends Batchjob {
     try {
       schema  =
           new JsonBestand.Builder()
-                         .setBestand(parameters.get(PAR_INVOERDIR)
-                                     + parameters.get(CaissaTools.PAR_SCHEMA)
-                                     + EXT_JSON)
-                         .setCharset(parameters.get(PAR_CHARSETIN))
+                         .setBestand(paramBundle
+                                        .getBestand(CaissaTools.PAR_SCHEMA))
+                         .setCharset(paramBundle.getString(PAR_CHARSETIN))
                          .build();
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -94,12 +97,13 @@ public final class StartPgn extends Batchjob {
     spelers   = new ArrayList<>();
 
     try {
-      vulSpeeldata(schema.getArray(JSON_TAG_KALENDER));
+      vulSpeeldata(schema.getArray(CaissaConstants.JSON_TAG_KALENDER));
     } catch (ParseException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
-    CaissaUtils.vulSpelers(spelers, schema.getArray(JSON_TAG_SPELERS));
+    CaissaUtils.vulSpelers(spelers,
+                           schema.getArray(CaissaConstants.JSON_TAG_SPELERS));
 
     noSpelers = spelers.size();
     rondes    = CaissaUtils.bergertabel(spelers.size());
@@ -111,14 +115,13 @@ public final class StartPgn extends Batchjob {
       return;
     }
 
-    var uitvoer = parameters.get(PAR_UITVOERDIR)
-                   + parameters.get(CaissaTools.PAR_BESTAND) + EXT_PGN;
-
     try {
-      output  = new TekstBestand.Builder()
-                                .setBestand(uitvoer)
-                                .setCharset(parameters.get(PAR_CHARSETUIT))
-                                .setLezen(false).build();
+      output  =
+          new TekstBestand.Builder()
+                          .setBestand(paramBundle
+                                          .getBestand(CaissaTools.PAR_BESTAND))
+                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
+                          .setLezen(false).build();
     schrijfToernooi();
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -140,43 +143,9 @@ public final class StartPgn extends Batchjob {
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString(
                                 CaissaTools.LBL_BESTAND),
-                             uitvoer));
+                             paramBundle.getBestand(CaissaTools.PAR_BESTAND)));
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getMelding(MSG_KLAAR));
-    DoosUtils.naarScherm();
-  }
-
-  public static void help() {
-    DoosUtils.naarScherm("java -jar CaissaTools.jar StartPgn "
-                         +  getMelding(LBL_OPTIE) + " "
-                         + MessageFormat.format(
-                                getMelding(LBL_PARAM), CaissaTools.PAR_BESTAND,
-                                resourceBundle.getString(
-                                    CaissaTools.LBL_PGNBESTAND)) + " "
-                         + MessageFormat.format(
-                                getMelding(LBL_PARAM), CaissaTools.PAR_SCHEMA,
-                                resourceBundle.getString(
-                                    CaissaTools.LBL_SCHEMA)));
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_BESTAND, 14),
-                         resourceBundle.getString(CaissaTools.HLP_BESTAND), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETIN, 14),
-        MessageFormat.format(getMelding(HLP_CHARSETIN),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_CHARSETUIT, 14),
-        MessageFormat.format(getMelding(HLP_CHARSETUIT),
-                             Charset.defaultCharset().name()), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_INVOERDIR, 14),
-                         getMelding(HLP_INVOERDIR), 80);
-    DoosUtils.naarScherm(getParameterTekst(CaissaTools.PAR_SCHEMA, 14),
-                         resourceBundle.getString(CaissaTools.HLP_SCHEMA), 80);
-    DoosUtils.naarScherm(getParameterTekst(PAR_UITVOERDIR, 14),
-                         getMelding(HLP_UITVOERDIR), 80);
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(
-        MessageFormat.format(getMelding(HLP_PARAMSVERPLICHT),
-                             CaissaTools.PAR_BESTAND, CaissaTools.PAR_SCHEMA),
-                             80);
     DoosUtils.naarScherm();
   }
 
@@ -223,54 +192,6 @@ public final class StartPgn extends Batchjob {
     output.write("");
   }
 
-  private static boolean setParameters(String[] args) {
-    var           arguments = new Arguments(args);
-    List<String>  fouten    = new ArrayList<>();
-
-    arguments.setParameters(new String[] {CaissaTools.PAR_BESTAND,
-                                          PAR_CHARSETIN,
-                                          PAR_CHARSETUIT,
-                                          PAR_INVOERDIR,
-                                          CaissaTools.PAR_SCHEMA,
-                                          PAR_UITVOERDIR});
-    arguments.setVerplicht(new String[] {CaissaTools.PAR_BESTAND,
-                                         CaissaTools.PAR_SCHEMA});
-    if (!arguments.isValid()) {
-      fouten.add(getMelding(ERR_INVALIDPARAMS));
-    }
-
-    parameters.clear();
-    setBestandParameter(arguments, CaissaTools.PAR_BESTAND, EXT_PGN);
-    setParameter(arguments, PAR_CHARSETIN, Charset.defaultCharset().name());
-    setParameter(arguments, PAR_CHARSETUIT, Charset.defaultCharset().name());
-    setDirParameter(arguments, PAR_INVOERDIR);
-    setBestandParameter(arguments, CaissaTools.PAR_SCHEMA, EXT_JSON);
-    setDirParameter(arguments, PAR_UITVOERDIR, getParameter(PAR_INVOERDIR));
-
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_BESTAND))
-                 .contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_BESTAND));
-    }
-
-    if (DoosUtils.nullToEmpty(parameters.get(CaissaTools.PAR_SCHEMA))
-                 .contains(File.separator)) {
-      fouten.add(
-          MessageFormat.format(
-              getMelding(ERR_BEVATDIRECTORY), CaissaTools.PAR_SCHEMA));
-    }
-
-    if (fouten.isEmpty()) {
-      return true;
-    }
-
-    help();
-    printFouten(fouten);
-
-    return false;
-  }
-
   private static void verwerkRondes(Integer round, int wit, int zwart)
       throws BestandException {
     for (var ronde : rondes) {
@@ -287,10 +208,11 @@ public final class StartPgn extends Batchjob {
   private static void vulSpeeldata(JSONArray kalender) throws ParseException {
      for (var i = 0; i < kalender.size(); i++) {
       var item  = (JSONObject) kalender.get(i);
-      if (item.containsKey(JSON_TAG_KALENDER_RONDE)
-          && item.containsKey(JSON_TAG_KALENDER_DATUM)) {
+      if (item.containsKey(CaissaConstants.JSON_TAG_KALENDER_RONDE)
+          && item.containsKey(CaissaConstants.JSON_TAG_KALENDER_DATUM)) {
         speeldata.add(Datum.fromDate(
-                Datum.toDate(item.get(JSON_TAG_KALENDER_DATUM).toString()),
+                Datum.toDate(item.get(CaissaConstants.JSON_TAG_KALENDER_DATUM)
+                                 .toString()),
                       CaissaConstants.PGN_DATUM_FORMAAT));
       }
     }

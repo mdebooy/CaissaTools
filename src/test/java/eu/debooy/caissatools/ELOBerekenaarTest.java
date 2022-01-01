@@ -17,6 +17,7 @@
 package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
+import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
@@ -51,7 +52,7 @@ public class ELOBerekenaarTest extends BatchTest {
   private static final  String  DATUM3            = "1998.06.13";
 
   private static final  String  PAR_EINDDATUM = "--eindDatum=1997.12.31";
-  private static final  String  PAR_EXTRAINFO = "--extraInfo=J";
+  private static final  String  PAR_EXTRAINFO = "--extraInfo";
 
   @Before
   public void beforeTest() {
@@ -76,13 +77,14 @@ public class ELOBerekenaarTest extends BatchTest {
   @BeforeClass
   public static void beforeClass() throws BestandException {
     Locale.setDefault(new Locale(TestConstants.TST_TAAL));
-    resourceBundle  = ResourceBundle.getBundle("ApplicatieResources",
+    resourceBundle  = ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                                Locale.getDefault());
 
     for (String bestand : new String[] {TestConstants.BST_COMPETITIE1_PGN,
                                         TestConstants.BST_COMPETITIE2_PGN}) {
       try {
-        kopieerBestand(CLASSLOADER, bestand, getTemp() + File.separator + bestand);
+        kopieerBestand(CLASSLOADER, bestand, getTemp()
+                        + File.separator + bestand);
       } catch (IOException e) {
         throw new BestandException(e);
       }
@@ -97,40 +99,33 @@ public class ELOBerekenaarTest extends BatchTest {
     ELOBerekenaar.execute(args);
     after();
 
-    assertEquals("Zonder parameters - helptekst", 49, out.size());
-    assertEquals("Zonder parameters - fouten", 1, err.size());
+    assertEquals(1, err.size());
   }
 
   @Test
   public void testMetEindDatum() throws BestandException {
     String[]  args      = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
                                         TestConstants.PAR_SPELERBESTAND,
-                                        TestConstants.PAR_INVOERDIR + getTemp(),
                                         PAR_EINDDATUM};
 
     before();
     ELOBerekenaar.execute(args);
     after();
 
-    assertEquals("Met Einddatum 1 - helptekst", 22, out.size());
-    assertEquals("Met Einddatum 1 - fouten", 0, err.size());
-    assertEquals("Met Einddatum 1 - 15",
-                 getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(14).split(":")[1].trim());
-    assertEquals("Met Einddatum 1 - 16", CaissaConstants.DEF_STARTDATUM,
+    assertEquals(CaissaConstants.DEF_STARTDATUM,
                  out.get(15).split(":")[1].trim());
-    assertEquals("Met Einddatum 1 - 17", DATUM2,
-                 out.get(16).split(":")[1].trim());
-    assertEquals("Met Einddatum 1 - 18", TestConstants.TOT_PARTIJEN,
-                 out.get(17).split(":")[1].trim());
-    assertEquals("Met Einddatum 1 - 19", "52",
-                 out.get(18).split(":")[1].trim());
-    assertTrue("Met Einddatum 1 - equals",
+    assertEquals(DATUM2, out.get(16).split(":")[1].trim());
+    assertEquals(TestConstants.TOT_PARTIJEN, out.get(17).split(":")[1].trim());
+    assertEquals("52", out.get(18).split(":")[1].trim());
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
-    assertTrue("Met Einddatum 1 - H equals",
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMPH_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
@@ -140,53 +135,42 @@ public class ELOBerekenaarTest extends BatchTest {
     ELOBerekenaar.execute(args);
     after();
 
-    assertEquals("Met Einddatum 2 - helptekst", 20, out.size());
-    assertEquals("Met Einddatum 2 - fouten", 0, err.size());
-    assertEquals("Met Einddatum 2 - 14",
-                 getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(13).split(":")[1].trim());
-    assertEquals("Met Einddatum 2 - 15", DATUM1,
-                 out.get(14).split(":")[1].trim());
-    assertEquals("Met Einddatum 2 - 16", DATUM2,
-                 out.get(15).split(":")[1].trim());
-    assertEquals("Met Einddatum 2 - 17", TestConstants.TOT_PARTIJEN,
-                 out.get(16).split(":")[1].trim());
-    assertTrue("Met Einddatum 2 - equals",
+    assertEquals(DATUM1, out.get(14).split(":")[1].trim());
+    assertEquals(DATUM2, out.get(15).split(":")[1].trim());
+    assertEquals(TestConstants.TOT_PARTIJEN, out.get(16).split(":")[1].trim());
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
-    assertTrue("Met Einddatum 2 - H equals",
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMPH_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_COMPETITIEH_CSV)));
 
     args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
-                          TestConstants.PAR_SPELERBESTAND,
-                          TestConstants.PAR_INVOERDIR + getTemp()};
+                          TestConstants.PAR_SPELERBESTAND};
 
     before();
     ELOBerekenaar.execute(args);
     after();
 
-    assertEquals("Met Einddatum 3 - helptekst", 20, out.size());
-    assertEquals("Met Einddatum 3 - fouten", 0, err.size());
-    assertEquals("Met Einddatum 3 - 14",
-                 getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(13).split(":")[1].trim());
-    assertEquals("Met Einddatum 3 - 15", DATUM1,
-                 out.get(14).split(":")[1].trim());
-    assertEquals("Met Einddatum 3 - 16", TestConstants.TOT_PARTIJEN,
-                 out.get(15).split(":")[1].trim());
-    assertEquals("Met Einddatum 3 - 17", "98",
-                 out.get(16).split(":")[1].trim());
-    assertTrue("Met Einddatum 3 - equals",
+    assertEquals(DATUM1, out.get(14).split(":")[1].trim());
+    assertEquals(TestConstants.TOT_PARTIJEN, out.get(15).split(":")[1].trim());
+    assertEquals("98", out.get(16).split(":")[1].trim());
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
-    assertTrue("Met Einddatum 3 - H equals",
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMPH_TOT_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
@@ -196,30 +180,27 @@ public class ELOBerekenaarTest extends BatchTest {
   @Test
   public void testVolledigBestand() throws BestandException {
     String[]  args      = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
-                                        TestConstants.PAR_SPELERBESTAND,
-                                        TestConstants.PAR_INVOERDIR + getTemp()};
+                                        TestConstants.PAR_SPELERBESTAND};
 
     before();
     ELOBerekenaar.execute(args);
     after();
 
-    assertEquals("Met Volledig 1 - helptekst", 21, out.size());
-    assertEquals("Met Volledig 1 - fouten", 0, err.size());
-    assertEquals("Met Volledig 1 - 15",
-                 getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(14).split(":")[1].trim());
-    assertEquals("Met Volledig 1 - 16", CaissaConstants.DEF_STARTDATUM,
+    assertEquals(CaissaConstants.DEF_STARTDATUM,
                  out.get(15).split(":")[1].trim());
-    assertEquals("Volledig 1 - 17", TestConstants.TOT_PARTIJEN,
+    assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(16).split(":")[1].trim());
-    assertEquals("Volledig 1 - 18", TestConstants.TOT_PARTIJEN,
+    assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(17).split(":")[1].trim());
-    assertTrue("Volledig 1 - equals",
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
-    assertTrue("Volledig 1 - H equals",
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMPH_TOT_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
@@ -229,21 +210,17 @@ public class ELOBerekenaarTest extends BatchTest {
     ELOBerekenaar.execute(args);
     after();
 
-    assertEquals("Volledig 2 - helptekst", 19, out.size());
-    assertEquals("Volledig 2 - fouten", 0, err.size());
-    assertEquals("Volledig 2 - 14",
-                 getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(13).split(":")[1].trim());
-    assertEquals("Volledig 2 - 15", DATUM3,
-                 out.get(14).split(":")[1].trim());
-    assertEquals("Volledig 2 - 16", TestConstants.TOT_PARTIJEN,
-                 out.get(15).split(":")[1].trim());
-    assertTrue("Volledig 2 - equals",
+    assertEquals(DATUM3, out.get(14).split(":")[1].trim());
+    assertEquals(TestConstants.TOT_PARTIJEN, out.get(15).split(":")[1].trim());
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
-    assertTrue("Volledig 2 - H equals",
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMPH_TOT_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
@@ -254,34 +231,30 @@ public class ELOBerekenaarTest extends BatchTest {
   public void testVolledigBestandExtra() throws BestandException {
     String[]  args      = new String[] {PAR_EXTRAINFO,
                                         TestConstants.PAR_TOERNOOIBESTAND1,
-                                        TestConstants.PAR_SPELERBESTAND,
-                                        TestConstants.PAR_INVOERDIR + getTemp()};
+                                        TestConstants.PAR_SPELERBESTAND};
 
     before();
     ELOBerekenaar.execute(args);
     after();
 
-    assertEquals("Met Volledig Extra - helptekst", 21, out.size());
-    assertEquals("Met Volledig Extra - fouten", 0, err.size());
-    assertEquals("Met Volledig Extra - 14",
-                 "Maak bestand "+ getTemp() + File.separator
+    assertEquals(0, err.size());
+    assertEquals("Maak bestand "+ getTemp() + File.separator
                  + TestConstants.BST_COMPETITIE_CSV + ".",
                  out.get(13).trim());
-    assertEquals("Met Volledig Extra - 15",
-                 getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
+    assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(14).split(":")[1].trim());
-    assertEquals("Met Volledig Extra - 16", CaissaConstants.DEF_STARTDATUM,
+    assertEquals(CaissaConstants.DEF_STARTDATUM,
                  out.get(15).split(":")[1].trim());
-    assertEquals("Volledig Extra - 17", TestConstants.TOT_PARTIJEN,
+    assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(16).split(":")[1].trim());
-    assertEquals("Volledig Extra - 18", TestConstants.TOT_PARTIJEN,
+    assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(17).split(":")[1].trim());
-    assertTrue("Volledig Extra - equals",
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
-    assertTrue("Volledig Extra - H equals",
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, "competitieH.extra.csv"),
             Bestand.openInvoerBestand(getTemp() + File.separator
@@ -291,60 +264,51 @@ public class ELOBerekenaarTest extends BatchTest {
   @Test
   public void testTweeBestanden() throws BestandException {
     String[]  args      = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
-                                        TestConstants.PAR_SPELERBESTAND,
-                                        TestConstants.PAR_INVOERDIR + getTemp()};
+                                        TestConstants.PAR_SPELERBESTAND};
 
     before();
     ELOBerekenaar.execute(args);
     after();
 
-    assertEquals("Twee Bestanden 1 - helptekst", 21, out.size());
-    assertEquals("Twee Bestanden 1 - fouten", 0, err.size());
-    assertEquals("Twee Bestanden 1 - 15",
-                 getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(14).split(":")[1].trim());
-    assertEquals("Twee Bestanden 1 - 16", CaissaConstants.DEF_STARTDATUM,
+    assertEquals(CaissaConstants.DEF_STARTDATUM,
                  out.get(15).split(":")[1].trim());
-    assertEquals("Twee Bestanden 1 - 17", TestConstants.TOT_PARTIJEN,
+    assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(16).split(":")[1].trim());
-    assertEquals("Twee Bestanden 1 - 18", TestConstants.TOT_PARTIJEN,
+    assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(17).split(":")[1].trim());
-    assertTrue("Twee Bestanden 1 - equals",
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
-    assertTrue("Twee Bestanden 1 - H equals",
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMPH_TOT_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_COMPETITIEH_CSV)));
 
     args      = new String[] {TestConstants.PAR_TOERNOOIBESTAND2,
-                              TestConstants.PAR_SPELERBESTAND,
-                              TestConstants.PAR_INVOERDIR + getTemp()};
+                              TestConstants.PAR_SPELERBESTAND};
 
     before();
     ELOBerekenaar.execute(args);
     after();
 
-    assertEquals("Twee Bestanden 2 - helptekst", 20, out.size());
-    assertEquals("Twee Bestanden 2 - fouten", 0, err.size());
-    assertEquals("Twee Bestanden 2 - 14",
-                 getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(13).split(":")[1].trim());
-    assertEquals("Twee Bestanden 2 - 15", DATUM3,
-                 out.get(14).split(":")[1].trim());
-    assertEquals("Twee Bestanden 2 - 16", "64",
-                 out.get(15).split(":")[1].trim());
-    assertEquals("Twee Bestanden 2 - 17", "62",
-                 out.get(16).split(":")[1].trim());
-    assertTrue("Twee Bestanden 2 - equals",
+    assertEquals(DATUM3, out.get(14).split(":")[1].trim());
+    assertEquals("64", out.get(15).split(":")[1].trim());
+    assertEquals("62", out.get(16).split(":")[1].trim());
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMPD_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_COMPETITIE_CSV)));
-    assertTrue("Volledig 2 - H equals",
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMPHD_CSV),
             Bestand.openInvoerBestand(getTemp() + File.separator

@@ -1,0 +1,85 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 18,
+  "applicatie": "PgnToJson",
+  "help": "Maakt een overzicht van het toernooi in het PGN bestand.",
+  "extrahelp": "Als 'vanTaal' en 'naarTaal' gelijk zijn wordt er geen vertaling gedaan.",
+  "banner": "PGN to JSON",
+  "parameters": [
+    {
+      "parameter": "bestand",
+      "extensie": "pgn",
+      "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de partijen in PGN formaat.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "charsetin",
+      "lang": "charsetin",
+      "help": "De characterset van de invoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "charsetuit",
+      "lang": "charsetuit",
+      "help": "De characterset van de uitvoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "defaulteco",
+      "lang": "eco",
+      "help": "ECO code als die niet in de PGN staat."
+    },
+    {
+      "parameter": "includelege",
+      "lang": "metlege",
+      "help": "Kopieer partijen zonder zetten.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "json",
+      "extensie": "json",
+      "lang": "json",
+      "help": "Het bestand met de partijen in JSON formaat.",
+      "type": "bestand"
+    },
+    {
+      "parameter": "metFEN",
+      "lang": "metFEN",
+      "help": "Zetten bevatten ook de FEN code van de stelling.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "metPgnviewer",
+      "lang": "pgnviewer",
+      "help": "Informatie voor de PGNViewer toevoegen.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "metTrajecten",
+      "lang": "trajecten",
+      "help": "De partij bevat ook de trajecten die de stukken doen. Nodig voor de PGNViewer.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "naartaal",
+      "lang": "naartaal",
+      "help": "De taal van de uitvoer als die anders is dan: {0}. Gebruik 'UTF8' voor 'figuurtjes'.",
+      "type": "locale"
+    },
+    {
+      "parameter": "vantaal",
+      "lang": "vantaal",
+      "help": "De taal van de invoer als die anders is dan: {0}.",
+      "type": "locale"
+    },
+    {
+      "parameter": "voorNico",
+      "lang": "nico",
+      "help": "Voor de PGNViewer van Nico.",
+      "type": "boolean"
+    }
+  ]
+}

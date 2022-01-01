@@ -16,6 +16,7 @@
  */
 package eu.debooy.caissatools;
 
+import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
@@ -41,12 +42,17 @@ public class PgnToJsonTest extends BatchTest {
   private static final  String  BST_JSON_PGN          = "json.pgn";
   private static final  String  BST_PARTIJ_JSON       = "partij.json";
 
-  private static final  String  PAR_BESTAND_JSON      = "--bestand=json";
-  private static final  String  PAR_BESTAND_PARTIJ    = "--bestand=partij";
-  private static final  String  PAR_INCL_LEGE_J       = "--includelege=J";
-  private static final  String  PAR_JSON_COMPETITIE1  = "--json=competitie1";
-  private static final  String  PAR_JSON_JSON         = "--json=json";
-  private static final  String  PAR_JSON_PARTIJ       = "--json=partij";
+  private static final  String  PAR_BESTAND_JSON      =
+      "--bestand=" + getTemp() + DoosUtils.getFileSep()+ "json";
+  private static final  String  PAR_BESTAND_PARTIJ    =
+      "--bestand=" + getTemp() + DoosUtils.getFileSep()+ "partij";
+  private static final  String  PAR_INCL_LEGE         = "--metlege";
+  private static final  String  PAR_JSON_COMPETITIE1  =
+      "--json=" + getTemp() + DoosUtils.getFileSep()+ "competitie1";
+  private static final  String  PAR_JSON_JSON         =
+      "--json=" + getTemp() + DoosUtils.getFileSep()+ "json";
+  private static final  String  PAR_JSON_PARTIJ       =
+      "--json=" + getTemp() + DoosUtils.getFileSep()+ "partij";
 
   @AfterClass
   public static void afterClass() {
@@ -76,52 +82,11 @@ public class PgnToJsonTest extends BatchTest {
     }
   }
 
-//  @Test
-//  public void testCompetitieMetPgnView() throws BestandException {
-//    String[]  args  = new String[] {TestConstants.PAR_BESTAND2,
-//                                    PAR_INCL_LEGE_J,
-//                                    TestConstants.PAR_INVOERDIR + getTemp(),
-//                                    PAR_JSON_COMPETITIE,
-//                                    "--pgnviewer=J",
-//                                    TestConstants.PAR_UITVOERDIR + getTemp()};
-//
-//    try {
-//      Bestand.delete(getTemp() + File.separator + BST_COMPETITIE_JSON);
-//    } catch (BestandException e) {
-//    }
-//
-//    before();
-//    PgnToJson.execute(args);
-//    after();
-//
-//    assertEquals("PgnToJson - helptekst", 18, out.size());
-//    assertEquals("PgnToJson - fouten", 0, 0);
-//    assertEquals("PgnToJson - 14",
-//                 getTemp() + File.separator + TestConstants.BST_COMPETITIE2_PGN,
-//                 out.get(13).split(":")[1].trim());
-//    assertEquals("PgnToJson - 15", "64",
-//                 out.get(14).split(":")[1].trim());
-//    assertEquals("PgnToJson - 16", getTemp() + File.separator + BST_COMPETITIE_JSON,
-//                 out.get(15).split(":")[1].trim());
-//    assertEquals("PgnToJson - 17", "64",
-//                 out.get(16).split(":")[1].trim());
-//    assertTrue("PgnToJson - equals",
-//        Bestand.equals(
-//            Bestand.openInvoerBestand(getTemp() + File.separator
-//                                      + BST_COMPETITIE_JSON),
-//            Bestand.openInvoerBestand(PgnToJsonTest.class.getClassLoader(),
-//                                      "competitie2.json")));
-//
-//    Bestand.delete(getTemp() + File.separator + BST_COMPETITIE_JSON);
-//  }
-
   @Test
   public void testCompetitiePgnToJson() throws BestandException {
     String[]  args  = new String[] {TestConstants.PAR_BESTAND2,
-                                    PAR_INCL_LEGE_J,
-                                    TestConstants.PAR_INVOERDIR + getTemp(),
-                                    PAR_JSON_COMPETITIE1,
-                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+                                    PAR_INCL_LEGE,
+                                    PAR_JSON_COMPETITIE1};
 
     try {
       Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_JSON);
@@ -132,18 +97,14 @@ public class PgnToJsonTest extends BatchTest {
     PgnToJson.execute(args);
     after();
 
-    assertEquals("PgnToJson - helptekst", 20, out.size());
-    assertEquals("PgnToJson - fouten", 0, err.size());
-    assertEquals("PgnToJson - 14",
-                 getTemp() + File.separator + TestConstants.BST_COMPETITIE2_PGN,
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE2_PGN,
                  out.get(13).split(":")[1].trim());
-    assertEquals("PgnToJson - 15", "64",
-                 out.get(14).split(":")[1].trim());
-    assertEquals("PgnToJson - 16", getTemp() + File.separator + BST_COMPETITIE1_JSON,
+    assertEquals("64", out.get(14).split(":")[1].trim());
+    assertEquals(getTemp() + File.separator + BST_COMPETITIE1_JSON,
                  out.get(15).split(":")[1].trim());
-    assertEquals("PgnToJson - 17", "64",
-                  out.get(16).split(":")[1].trim());
-    assertTrue("PgnToJson - equals",
+    assertEquals("64", out.get(16).split(":")[1].trim());
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + BST_COMPETITIE1_JSON),
@@ -161,17 +122,14 @@ public class PgnToJsonTest extends BatchTest {
     PgnToJson.execute(args);
     after();
 
-    assertEquals("Zonder parameters - helptekst", 37, out.size());
-    assertEquals("Zonder parameters - fouten", 1, err.size());
+    assertEquals(1, err.size());
   }
 
   @Test
   public void testMetLegePartijen() throws BestandException {
     String[]  args  = new String[] {PAR_BESTAND_JSON,
-                                    PAR_INCL_LEGE_J,
-                                    TestConstants.PAR_INVOERDIR + getTemp(),
-                                    PAR_JSON_JSON,
-                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+                                    PAR_INCL_LEGE,
+                                    PAR_JSON_JSON};
 
     try {
       Bestand.delete(getTemp() + File.separator + BST_JSON_JSON);
@@ -182,49 +140,18 @@ public class PgnToJsonTest extends BatchTest {
     PgnToJson.execute(args);
     after();
 
-    assertEquals("Met lege partijen - helptekst", 20, out.size());
-    assertEquals("Met lege partijen - fouten", 0, err.size());
-    assertEquals("PgnToJson - 15", "2",
-                 out.get(14).split(":")[1].trim());
-    assertEquals("PgnToJson - 17", "2",
-                 out.get(16).split(":")[1].trim());
+    assertEquals(0, err.size());
+    assertEquals("2", out.get(14).split(":")[1].trim());
+    assertEquals("2", out.get(16).split(":")[1].trim());
 
     Bestand.delete(getTemp() + File.separator + BST_JSON_JSON);
   }
 
-//  @Test
-//  public void testPartijMetPgnView() throws BestandException {
-//    String[]  args  = new String[] {PAR_BESTAND_PARTIJ,
-//                                    TestConstants.PAR_INVOERDIR + getTemp(),
-//                                    PAR_JSON_PARTIJ,
-//                                    "--pgnviewer=J",
-//                                    TestConstants.PAR_UITVOERDIR + getTemp()};
-//
-//    try {
-//      Bestand.delete(getTemp() + File.separator + BST_PARTIJ_JSON);
-//    } catch (BestandException e) {
-//    }
-//
-//    before();
-//    PgnToJson.execute(args);
-//    after();
-//
-//    assertTrue("PartijMetPgnView",
-//        Bestand.equals(
-//            Bestand.openInvoerBestand(getTemp() + File.separator
-//                                      + BST_PARTIJ_JSON),
-//            Bestand.openInvoerBestand(PgnToJsonTest.class.getClassLoader(),
-//                                      "partijPgnviewer.json")));
-//
-//    Bestand.delete(getTemp() + File.separator + BST_PARTIJ_JSON);
-//  }
-
   @Test
   public void testPartijToJson() throws BestandException {
     String[]  args  = new String[] {PAR_BESTAND_PARTIJ,
-                                    TestConstants.PAR_INVOERDIR + getTemp(),
-                                    PAR_JSON_PARTIJ,
-                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+                                    PAR_INCL_LEGE,
+                                    PAR_JSON_PARTIJ};
 
     try {
       Bestand.delete(getTemp() + File.separator + BST_PARTIJ_JSON);
@@ -235,7 +162,7 @@ public class PgnToJsonTest extends BatchTest {
     PgnToJson.execute(args);
     after();
 
-    assertTrue("PartijToJson",
+    assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + BST_PARTIJ_JSON),
@@ -248,9 +175,7 @@ public class PgnToJsonTest extends BatchTest {
   @Test
   public void testZonderLegePartijen() throws BestandException {
     String[]  args  = new String[] {PAR_BESTAND_JSON,
-                                    TestConstants.PAR_INVOERDIR + getTemp(),
-                                    PAR_JSON_JSON,
-                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+                                    PAR_JSON_JSON};
 
     try {
       Bestand.delete(getTemp() + File.separator + BST_JSON_JSON);
@@ -261,12 +186,9 @@ public class PgnToJsonTest extends BatchTest {
     PgnToJson.execute(args);
     after();
 
-    assertEquals("Zonder lege partijen - helptekst", 20, out.size());
-    assertEquals("Zonder lege partijen - fouten", 0, err.size());
-    assertEquals("PgnToJson - 15", "2",
-                 out.get(14).split(":")[1].trim());
-    assertEquals("PgnToJson - 17", "1",
-                 out.get(16).split(":")[1].trim());
+    assertEquals(0, err.size());
+    assertEquals("2", out.get(14).split(":")[1].trim());
+    assertEquals("1", out.get(16).split(":")[1].trim());
 
     Bestand.delete(getTemp() + File.separator + BST_JSON_JSON);
   }

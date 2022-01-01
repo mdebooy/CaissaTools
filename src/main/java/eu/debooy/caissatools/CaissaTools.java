@@ -17,7 +17,13 @@
 package eu.debooy.caissatools;
 
 import eu.debooy.doosutils.Banner;
+import eu.debooy.doosutils.Batchjob;
+import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.ParameterBundle;
+import java.text.MessageFormat;
+import java.util.Arrays;
+import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
 
@@ -25,19 +31,20 @@ import java.util.ResourceBundle;
 /**
  * @author Marco de Booij
  */
-public final class CaissaTools {
+public final class CaissaTools extends Batchjob {
   private static final  ResourceBundle  resourceBundle  =
-      ResourceBundle.getBundle("ApplicatieResources", Locale.getDefault());
+      ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
+                               Locale.getDefault());
 
-  public static final String  ERR_BEST_ONGELIJK   = "error.aantal.bestanden";
-  public static final String  ERR_BESTANDENPGN    = "error.bestand.en.pgn";
-  public static final String  ERR_BIJBESTAND      = "error.verplichtbijbestand";
-  public static final String  ERR_EINDVOORSTART   = "error.eind.voor.start";
-  public static final String  ERR_FOUTEDATUM      = "error.foutedatum";
-  public static final String  ERR_FOUTEDATUMIN    = "error.foutedatumin";
-  public static final String  ERR_GEENINVOER      = "error.geen.invoer";
-  public static final String  ERR_HALVE           = "error.halve.verboden";
-  public static final String  ERR_KALENDER        = "error.kalender";
+  public static final String  ERR_BEST_ONGELIJK = "error.aantal.bestanden";
+  public static final String  ERR_BESTANDENPGN  = "error.bestand.en.pgn";
+  public static final String  ERR_BIJBESTAND    = "error.verplichtbijbestand";
+  public static final String  ERR_EINDVOORSTART = "error.eind.voor.start";
+  public static final String  ERR_FOUTEDATUM    = "error.foutedatum";
+  public static final String  ERR_FOUTEDATUMIN  = "error.foutedatumin";
+  public static final String  ERR_GEENINVOER    = "error.geen.invoer";
+  public static final String  ERR_HALVE         = "error.halve.verboden";
+  public static final String  ERR_KALENDER      = "error.kalender";
 
   public static final String  ERR_MAAKNIEUWBESTAND  = "error.maaknieuwbestand";
   public static final String  ERR_MAXVERSCHIL       = "error.maxverschil";
@@ -50,18 +57,22 @@ public final class CaissaTools {
   public static final String  HLP_SCHEMA        = "help.competitieschema";
   public static final String  HLP_SUBTITEL      = "help.subtitel";
 
-  public static final String  LBL_BESTAND     = "label.bestand";
-  public static final String  LBL_PGNBESTAND  = "label.pgnbestand";
-  public static final String  LBL_SCHEMA      = "label.competitieschema";
+  public static final String  LBL_BESTAND       = "label.bestand";
+  public static final String  LBL_EMAIL         = "label.email";
+  public static final String  LBL_JIJ           = "label.jij";
+  public static final String  LBL_PARTIJEN      = "label.partijen";
+  public static final String  LBL_PGNBESTAND    = "label.pgnbestand";
+  public static final String  LBL_SCHEMA        = "label.competitieschema";
+  public static final String  LBL_UITVOER       = "label.uitvoer";
 
   public static final String  MSG_NIEUWBESTAND  = "message.nieuwbestand";
+  public static final String  MSG_NIEUWESPELER  = "message.nieuwespeler";
+  public static final String  MSG_NIEUWESPELERS = "message.nieuwespelers";
   public static final String  MSG_STARTTOERNOOI = "message.starttoernooi";
 
   public static final String  PAR_AUTEUR              = "auteur";
   public static final String  PAR_BERICHT             = "bericht";
   public static final String  PAR_BESTAND             = "bestand";
-  public static final String  PAR_CHARSETIN           = "charsetin";
-  public static final String  PAR_CHARSETUIT          = "charsetuit";
   public static final String  PAR_DATE                = "date";
   public static final String  PAR_DATUM               = "datum";
   public static final String  PAR_DEFAULTECO          = "defaulteco";
@@ -105,6 +116,7 @@ public final class CaissaTools {
   public static final String  PAR_TEMPLATE            = "template";
   public static final String  PAR_TITEL               = "titel";
   public static final String  PAR_TOERNOOIBESTAND     = "toernooiBestand";
+  public static final String  PAR_TYPE                = "type";
   public static final String  PAR_TSEMAIL             = "tsemail";
   public static final String  PAR_UITVOER             = "uitvoer";
   public static final String  PAR_VANTAAL             = "vantaal";
@@ -112,12 +124,32 @@ public final class CaissaTools {
   public static final String  PAR_VOORNICO            = "voorNico";
   public static final String  PAR_ZIP                 = "zip";
 
+  protected static final  String  TOOL_ANALYSETEX         = "AnalyseToLatex";
+  protected static final  String  TOOL_CHESSTHEATRE       = "ChessTheatre";
+  protected static final  String  TOOL_ELOBEREKENAAR      = "ELOBerekenaar";
+  protected static final  String  TOOL_PGNCLEANER         = "PgnCleaner";
+  protected static final  String  TOOL_PGNTOHTML          = "PgnToHtml";
+  protected static final  String  TOOL_PGNTOJSON          = "PgnToJson";
+  protected static final  String  TOOL_PGNTOLATEX         = "PgnToLatex";
+  protected static final  String  TOOL_SPELERSTATISTIEK   = "SpelerStatistiek";
+  protected static final  String  TOOL_STARTCORRESP       =
+      "StartCorrespondentie";
+  protected static final  String  TOOL_STARTPGN           = "StartPgn";
+  protected static final  String  TOOL_TOERNOOIOVERZICHT  = "Toernooioverzicht";
+  protected static final  String  TOOL_VERTAALPGN         = "VertaalPgn";
+
+  protected static final  List<String>  tools =
+      Arrays.asList(TOOL_ANALYSETEX, TOOL_CHESSTHEATRE, TOOL_ELOBEREKENAAR,
+                    TOOL_PGNCLEANER, TOOL_PGNTOHTML, TOOL_PGNTOJSON,
+                    TOOL_PGNTOLATEX, TOOL_SPELERSTATISTIEK, TOOL_STARTCORRESP,
+                    TOOL_STARTPGN, TOOL_TOERNOOIOVERZICHT, TOOL_VERTAALPGN);
+
   public static final String  TXT_BANNER  = "Caissa Tools";
 
   public static final String  XML_HEADING =
       "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>";
 
-  private CaissaTools() {}
+  protected CaissaTools() {}
 
   public static void main(String[] args) {
     if (args.length == 0) {
@@ -127,7 +159,6 @@ public final class CaissaTools {
     }
 
     var commando      = args[0];
-
     var commandoArgs  = new String[args.length-1];
     System.arraycopy(args, 1, commandoArgs, 0, args.length-1);
 
@@ -171,55 +202,21 @@ public final class CaissaTools {
       default:
         Banner.printMarcoBanner(TXT_BANNER);
         help();
+        DoosUtils.foutNaarScherm(
+            MessageFormat.format(getMelding(ERR_TOOLONBEKEND), commando));
+        DoosUtils.naarScherm();
         break;
     }
   }
 
-  private static void help() {
-    DoosUtils.naarScherm("  AnalyseToLatex       ",
-                         resourceBundle.getString("help.analysetolatex"), 80);
-    DoosUtils.naarScherm("  ChessTheatre         ",
-                         resourceBundle.getString("help.chesstheatre"), 80);
-    DoosUtils.naarScherm("  ELOBerekenaar        ",
-                         resourceBundle.getString("help.eloberekenaar"), 80);
-    DoosUtils.naarScherm("  PgnCleaner           ",
-                         resourceBundle.getString("help.pgncleaner"), 80);
-    DoosUtils.naarScherm("  PgnToHtml            ",
-                         resourceBundle.getString("help.pgntohtml"), 80);
-    DoosUtils.naarScherm("  PgnToJson            ",
-                         resourceBundle.getString("help.pgntojson"), 80);
-    DoosUtils.naarScherm("  PgnToLatex           ",
-                         resourceBundle.getString("help.pgntolatex"), 80);
-    DoosUtils.naarScherm("  StartCorrespondentie ",
-                         resourceBundle.getString("help.startcorrespondentie"),
-                         80);
-    DoosUtils.naarScherm("  StartPgn             ",
-                         resourceBundle.getString("help.startpgn"), 80);
-    DoosUtils.naarScherm("  SpelerStatistiek     ",
-                         resourceBundle.getString("help.spelerstatistiek"), 80);
-    DoosUtils.naarScherm("  VertaalPgn           ",
-                         resourceBundle.getString("help.vertaalpgn"), 80);
-    DoosUtils.naarScherm("");
-    AnalyseToLatex.help();
-    DoosUtils.naarScherm("");
-    ChessTheatre.help();
-    DoosUtils.naarScherm("");
-    ELOBerekenaar.help();
-    DoosUtils.naarScherm("");
-    PgnCleaner.help();
-    DoosUtils.naarScherm("");
-    PgnToHtml.help();
-    DoosUtils.naarScherm("");
-    PgnToJson.help();
-    DoosUtils.naarScherm("");
-    PgnToLatex.help();
-    DoosUtils.naarScherm("");
-    StartCorrespondentie.help();
-    DoosUtils.naarScherm("");
-    StartPgn.help();
-    DoosUtils.naarScherm("");
-    SpelerStatistiek.help();
-    DoosUtils.naarScherm("");
-    VertaalPgn.help();
+  public static void help() {
+    tools.forEach(tool -> {
+      var parameterBundle = new ParameterBundle.Builder()
+                           .setBaseName(tool)
+                           .build();
+      parameterBundle.help();
+      DoosUtils.naarScherm(DoosUtils.stringMetLengte("_", 80, "_"));
+      DoosUtils.naarScherm();
+    });
   }
 }

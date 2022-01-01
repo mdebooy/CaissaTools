@@ -1,0 +1,49 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 18,
+  "applicatie": "ChessTheatre",
+  "help": "Zet een bestand met PGN partijen om naar invoer voor ChessTheatre.",
+  "banner": "ChessTheatre",
+  "parameters": [
+    {
+      "parameter": "bestand",
+      "extensie": "pgn",
+      "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de partijen in PGN formaat.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "charsetin",
+      "lang": "charsetin",
+      "help": "De characterset van de invoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "charsetuit",
+      "lang": "charsetuit",
+      "help": "De characterset van de uitvoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "maxBestanden",
+      "lang": "maxBestanden",
+      "help": "Maximum aantal bestanden voor de partijen. Standaard waarde is 50.",
+      "standaard": 50
+    },
+    {
+      "parameter": "minPartijen",
+      "lang": "minPartijen",
+      "help": "Minimum aantal partijen per bestand. Standaard waarde is totaal aantal partijen gedeeld door <maxBestanden>.",
+      "type": "long"
+    },
+    {
+      "parameter": "zip",
+      "extensie": "zip",
+      "lang": "zip",
+      "help": "Naam (met eventuele directory) van de zip file. Deze zip file wordt niet door dit programma gemaakt.",
+      "type": "bestand"
+    }
+  ]
+}

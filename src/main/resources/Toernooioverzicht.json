@@ -1,0 +1,78 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 18,
+  "applicatie": "Toernooioverzicht",
+  "help": "Maakt een overzicht van het toernooi in het PGN bestand.",
+  "banner": "Toernooioverzicht",
+  "parameters": [
+    {
+      "parameter": "bestand",
+      "extensie": "pgn",
+      "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de partijen in PGN formaat.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "charsetin",
+      "lang": "charsetin",
+      "help": "De characterset van de invoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "charsetuit",
+      "lang": "charsetuit",
+      "help": "De characterset van de uitvoer als deze niet {0} is.",
+      "type": "charset"
+    },
+    {
+      "parameter": "logo",
+      "kort": "l",
+      "lang": "logo",
+      "help": "Logo als watermark op de pagina's."
+    },
+    {
+      "parameter": "matrix",
+      "lang": "matrix",
+      "help": "Met uitslagen matrix.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "matrixeerst",
+      "lang": "matrixeerst",
+      "help": "De matrix moet eerst staan. Bij afwezigheid van deze parameter staan de punten eerst.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "matrixopstand",
+      "lang": "opstand",
+      "help": "Matrix gesorteerd op de stand.",
+      "type": "boolean"
+    },
+    {
+      "parameter": "schema",
+      "extensie": "json",
+      "lang": "schema",
+      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender).",
+      "type": "bestand"
+    },
+    {
+      "parameter": "subtitel",
+      "lang": "subtitel",
+      "help": "Subtitel."
+    },
+    {
+      "parameter": "template",
+      "extensie": "tex",
+      "lang": "template",
+      "help": "Een template voor het uitvoer TEX bestand.",
+      "type": "bestand"
+    },
+    {
+      "parameter": "titel",
+      "lang": "titel",
+      "help": "Titel."
+    }
+  ]
+}
