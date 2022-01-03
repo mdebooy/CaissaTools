@@ -68,6 +68,7 @@ public class StartCorrespondentie extends Batchjob {
   public static void execute(String[] args) {
     setParameterBundle(new ParameterBundle.Builder()
                            .setBaseName(CaissaTools.TOOL_STARTCORRESP)
+                           .setValidator(new BestandDefaultParameters())
                            .build());
 
     Banner.printMarcoBanner(DoosUtils.nullToEmpty(paramBundle.getBanner()));
@@ -98,7 +99,6 @@ public class StartCorrespondentie extends Batchjob {
           new JsonBestand.Builder()
                          .setBestand(paramBundle
                                         .getBestand(CaissaTools.PAR_SCHEMA))
-                         .setCharset(paramBundle.getString(PAR_CHARSETIN))
                          .build();
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -108,8 +108,9 @@ public class StartCorrespondentie extends Batchjob {
     var date    = competitie.get(CaissaConstants.JSON_TAG_EVENTDATE).toString();
     var datum   = getDatum(date);
     var enkel   = true;
-    if (competitie.containsKey(CaissaTools.PAR_ENKELRONDIG)) {
-      enkel = (boolean) competitie.get(CaissaTools.PAR_ENKELRONDIG);
+    if (competitie.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
+      enkel = (Long) competitie.get(CaissaConstants.JSON_TAG_TOERNOOITYPE)
+                  == CaissaConstants.TOERNOOI_ENKEL;
     }
     var event   = competitie.get(CaissaTools.PAR_EVENT).toString();
     var site    = competitie.get(CaissaTools.PAR_SITE).toString();
@@ -123,8 +124,8 @@ public class StartCorrespondentie extends Batchjob {
                     competitie.getArray(CaissaConstants.JSON_TAG_SPELERS));
     var noSpelers = spelers.size();
 
-    var uitvoer   = paramBundle.getString(PAR_UITVOERDIR) + event
-                      + BestandConstants.EXT_PGN;
+    var uitvoer   = paramBundle.getBestand(CaissaTools.PAR_BESTAND,
+                                           BestandConstants.EXT_PGN);
 
     rondes  = CaissaUtils.bergertabel(noSpelers);
     maakToernooi(event, site, date, enkel, uitvoer);
@@ -246,7 +247,6 @@ public class StartCorrespondentie extends Batchjob {
             new TekstBestand.Builder()
                             .setBestand(paramBundle
                                             .getString(CaissaTools.PAR_BERICHT))
-                            .setCharset(paramBundle.getString(PAR_CHARSETIN))
                             .build()) {
         if (message.hasNext()) {
           subject = message.next();
@@ -441,8 +441,6 @@ public class StartCorrespondentie extends Batchjob {
     try {
       output  = new TekstBestand.Builder()
                                 .setBestand(uitvoer)
-                                .setCharset(paramBundle
-                                                .getString(PAR_CHARSETUIT))
                                 .setLezen(false).build();
       for (var ronde : rondes) {
         for (var partij : ronde.split(" ")) {

@@ -65,23 +65,6 @@ public class AnalyseToLatexTest extends BatchTest {
     AnalyseToLatex.execute(args);
     after();
 
-    assertEquals("Zonder parameters - helptekst", 26, out.size());
-    assertEquals("Zonder parameters - fouten", 1, err.size());
+    assertEquals(1, err.size());
   }
-
-//  @Test
-//  public void testAnalyseToLatex() throws BestandException {
-//    String[]  args  = new String[] {TestConstants.PAR_AUTEUR,
-//                                    TestConstants.PAR_BESTAND4,
-//                                    TestConstants.PAR_INVOERDIR + getTemp(),
-//                                    TestConstants.PAR_UITVOERDIR
-//                                     + "/homes/booymar/Schaken/"};
-//
-//    before();
-//    AnalyseToLatex.execute(args);
-//    after();
-//debug();
-//    assertEquals("PgnToLatex - helptekst", 18, out.size());
-//    assertEquals("PgnToLatex - fouten", 0, err.size());
-//  }
 }

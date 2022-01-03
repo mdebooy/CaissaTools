@@ -16,18 +16,6 @@
       "verplicht": true
     },
     {
-      "parameter": "charsetin",
-      "lang": "charsetin",
-      "help": "De characterset van de invoer als deze niet {0} is.",
-      "type": "charset"
-    },
-    {
-      "parameter": "charsetuit",
-      "lang": "charsetuit",
-      "help": "De characterset van de uitvoer als deze niet {0} is.",
-      "type": "charset"
-    },
-    {
       "parameter": "defaulteco",
       "lang": "eco",
       "help": "ECO code als die niet in de PGN staat."
@@ -42,7 +30,7 @@
       "parameter": "json",
       "extensie": "json",
       "lang": "json",
-      "help": "Het bestand met de partijen in JSON formaat.",
+      "help": "Het bestand met de partijen in JSON formaat. Standaard gelijk aan de naam van <bestand>.",
       "type": "bestand"
     },
     {

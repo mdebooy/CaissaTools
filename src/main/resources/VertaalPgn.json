@@ -3,7 +3,7 @@
   "_prefixlengte": 18,
   "applicatie": "VertaalPgn",
   "help": "Vertaal de stuk-codes van een PGN partij van een taal naar een andere taal.",
-  "extrahelp": "De invoer kan of een PGN <bestand> zijn of een invoer als parameter <pgn>. In geval van een bestand wordt er een bestand aangemaakt met de <naartaal> (voorafgegaan van een _) aan het eind van de bestandsnaam.",
+  "extrahelp": "De invoer kan of een PGN <bestand> zijn of een invoer als parameter <pgn>. In geval van een bestand wordt er een bestand aangemaakt met de <naartaal> (voorafgegaan van een _) aan het eind van de bestandsnaam. In geval van een <pgn> wordt de uitvoer op het scherm gegeven.",
   "banner": "Vertaal PGN",
   "parameters": [
     {
@@ -13,18 +13,6 @@
       "lang": "bestand",
       "help": "Het bestand met de partijen in PGN formaat.",
       "type": "bestand"
-    },
-    {
-      "parameter": "charsetin",
-      "lang": "charsetin",
-      "help": "De characterset van de invoer als deze niet {0} is.",
-      "type": "charset"
-    },
-    {
-      "parameter": "charsetuit",
-      "lang": "charsetuit",
-      "help": "De characterset van de uitvoer als deze niet {0} is.",
-      "type": "charset"
     },
     {
       "parameter": "naartaal",

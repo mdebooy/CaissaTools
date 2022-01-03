@@ -171,7 +171,6 @@ public final class PgnToLatex extends Batchjob {
           new TekstBestand.Builder()
                           .setBestand(getUitvoerbestand(bestand[0],
                                       BestandConstants.EXT_TEX))
-                          .setCharset(paramBundle.getString(PAR_CHARSETIN))
                           .setLezen(false).build();
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -187,12 +186,10 @@ public final class PgnToLatex extends Batchjob {
             new JsonBestand.Builder()
                            .setBestand(getInvoerbestand(schema[i],
                                        BestandConstants.EXT_JSON))
-                           .setCharset(paramBundle.getString(PAR_CHARSETIN))
                            .build();
         partijen.addAll(
             CaissaUtils.laadPgnBestand(getInvoerbestand(bestand[i],
-                                       BestandConstants.EXT_PGN),
-                                       paramBundle.getString(PAR_CHARSETIN)));
+                                       BestandConstants.EXT_PGN)));
         if (competitie.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
           toernooitype =
               ((Long) competitie.get(CaissaConstants.JSON_TAG_TOERNOOITYPE))
@@ -329,14 +326,12 @@ public final class PgnToLatex extends Batchjob {
                             .setBestand(
                                 paramBundle.getBestand(
                                     CaissaTools.PAR_TEMPLATE))
-                            .setCharset(paramBundle.getString(PAR_CHARSETIN))
                             .build();
       } else {
         texInvoer =
             new TekstBestand.Builder()
                             .setBestand("Caissa.tex")
                             .setClassLoader(PgnToLatex.class.getClassLoader())
-                            .setCharset(paramBundle.getString(PAR_CHARSETIN))
                             .build();
       }
 

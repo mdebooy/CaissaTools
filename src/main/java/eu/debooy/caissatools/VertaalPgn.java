@@ -88,30 +88,26 @@ public final class VertaalPgn extends Batchjob {
       return;
     }
 
-    var             invoer    = paramBundle.getBestand(CaissaTools.PAR_BESTAND);
-    TekstBestand    output    = null;
-    var             uitvoer   =
+    var uitvoer =
         paramBundle.getBestand(CaissaTools.PAR_BESTAND,
                                "_"
                                + paramBundle.getString(CaissaTools.PAR_NAARTAAL)
                                + BestandConstants.EXT_PGN);
+
     Collection<PGN> partijen;
     try {
       partijen =
-          CaissaUtils.laadPgnBestand(invoer,
-                                     paramBundle.getString(PAR_CHARSETIN));
+          CaissaUtils
+              .laadPgnBestand(paramBundle.getBestand(CaissaTools.PAR_BESTAND));
     } catch (PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
 
-    try {
-      output  =
+    try (var output  =
           new TekstBestand.Builder()
                           .setBestand(uitvoer)
-                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
-                          .setLezen(false).build();
-
+                          .setLezen(false).build()) {
       for (var partij: partijen) {
         var zetten  = partij.getZetten();
         partij.setZetten(CaissaUtils.vertaalStukken(zetten,
@@ -121,21 +117,13 @@ public final class VertaalPgn extends Batchjob {
       output.close();
     } catch (BestandException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    } finally {
-      try {
-        if (output != null) {
-          output.close();
-        }
-      } catch (BestandException ex) {
-        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
-      }
     }
 
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.bestand"),
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
                              uitvoer));
     DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.partijen"),
+        MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_PARTIJEN),
                              partijen.size()));
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getMelding(MSG_KLAAR));

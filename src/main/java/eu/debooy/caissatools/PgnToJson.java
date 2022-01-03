@@ -154,11 +154,9 @@ public final class PgnToJson extends Batchjob {
     try (var output  =
           new TekstBestand.Builder()
                           .setBestand(uitvoer)
-                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
                           .setLezen(false).build()) {
       partijen =
-          CaissaUtils.laadPgnBestand(invoer,
-                                     paramBundle.getString(PAR_CHARSETIN));
+          CaissaUtils.laadPgnBestand(invoer);
 
       for (var pgn: partijen) {
         if (includeLege

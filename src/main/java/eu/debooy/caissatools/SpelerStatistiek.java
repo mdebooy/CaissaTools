@@ -113,8 +113,7 @@ public final class SpelerStatistiek extends Batchjob {
     try {
       partijen =
           CaissaUtils.laadPgnBestand(paramBundle
-                                        .getBestand(CaissaTools.PAR_BESTAND),
-                                     paramBundle.getString(PAR_CHARSETIN));
+                                        .getBestand(CaissaTools.PAR_BESTAND));
     } catch (PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
@@ -168,7 +167,6 @@ public final class SpelerStatistiek extends Batchjob {
                           .setBestand(paramBundle
                                           .getBestand(CaissaTools.PAR_BESTAND,
                                                       BestandConstants.EXT_TEX))
-                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
                           .setLezen(false).build();
 
       schrijfLatexHeader(output, speler);

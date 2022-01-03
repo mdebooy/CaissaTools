@@ -20,18 +20,6 @@
       "verplicht": true
     },
     {
-      "parameter": "charsetin",
-      "lang": "charsetin",
-      "help": "De characterset van de invoer als deze niet {0} is.",
-      "type": "charset"
-    },
-    {
-      "parameter": "charsetuit",
-      "lang": "charsetuit",
-      "help": "De characterset van de uitvoer als deze niet {0} is.",
-      "type": "charset"
-    },
-    {
       "parameter": "datum",
       "lang": "datum",
       "formaat": "dd/MM/yyyy",
@@ -77,7 +65,7 @@
       "parameter": "schema",
       "extensie": "json",
       "lang": "schema",
-      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender). Kan ook een lijst met bestanden zijn (gescheiden door een ;). In dat geval moet het aantal schema's gelijk zijn aan het aantal bestanden.",
+      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender). Kan ook een lijst met bestanden zijn (gescheiden door een ;). In dat geval moet het aantal schema's gelijk zijn aan het aantal bestanden. Standaard gelijk aan de naam van <bestand>.",
       "type": "bestand"
     },
     {

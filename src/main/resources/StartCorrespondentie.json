@@ -6,23 +6,19 @@
   "banner": "Start Correspondentietoernooi",
   "parameters": [
     {
-      "parameter": "bericht",
+      "parameter": "bestand",
+      "extensie": "pgn",
       "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de partijen in PGN formaat.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "bericht",
       "lang": "bericht",
       "help": "Het bestand met de inhoud van de start e-mail. De eerste regel is het onderwerp.",
       "type": "bestand"
-    },
-    {
-      "parameter": "charsetin",
-      "lang": "charsetin",
-      "help": "De characterset van de invoer als deze niet {0} is.",
-      "type": "charset"
-    },
-    {
-      "parameter": "charsetuit",
-      "lang": "charsetuit",
-      "help": "De characterset van de uitvoer als deze niet {0} is.",
-      "type": "charset"
     },
     {
       "parameter": "nieuwespelers",
@@ -32,21 +28,20 @@
     {
       "parameter": "perpartij",
       "lang": "perpartij",
-      "help": "E-mail per partij <j|N>.",
+      "help": "E-mail per partij.",
       "type": "boolean"
     },
     {
       "parameter": "schema",
       "extensie": "json",
       "lang": "schema",
-      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender).",
-      "type": "bestand",
-      "verplicht": true
+      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender). Standaard gelijk aan de naam van <bestand>.",
+      "type": "bestand"
     },
     {
       "parameter": "smtppoort",
       "lang": "smtppoort",
-      "help": "De poort van de SMTP server. 25 is de default.",
+      "help": "De poort van de SMTP server. De standaard waarde is 25.",
       "standaard": 25
     },
     {
@@ -58,12 +53,6 @@
       "parameter": "tsemail",
       "lang": "tsemail",
       "help": "Het e-mail adres van de toernooileider."
-    },
-    {
-      "parameter": "uitvoerdir",
-      "lang": "uitvoerdir",
-      "help": "Het e-mail adres van de toernooileider.",
-      "type": "map"
     }
   ]
 }

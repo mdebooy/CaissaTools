@@ -69,8 +69,7 @@ public final class PgnCleaner extends Batchjob {
     Collection<PGN> partijen;
     try {
       partijen =
-          CaissaUtils.laadPgnBestand(invoer,
-                                     paramBundle.getString(PAR_CHARSETIN));
+          CaissaUtils.laadPgnBestand(invoer);
     } catch (PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
@@ -79,7 +78,6 @@ public final class PgnCleaner extends Batchjob {
     try (var output  =
             new TekstBestand.Builder()
                             .setBestand(uitvoer)
-                            .setCharset(paramBundle.getString(PAR_CHARSETUIT))
                             .setLezen(false).build()){
       for (var partij: partijen) {
         if (enkelZetten) {

@@ -158,11 +158,9 @@ public final class PgnToHtml extends Batchjob {
                             paramBundle
                                 .getInvoerbestand(CaissaTools.PAR_SCHEMA,
                                                   BestandConstants.EXT_JSON))
-                         .setCharset(paramBundle.getString(PAR_CHARSETIN))
                          .build();
       partijen    =
-          CaissaUtils.laadPgnBestand(invoer,
-                                     paramBundle.getString(PAR_CHARSETIN));
+          CaissaUtils.laadPgnBestand(invoer);
       kalender    = competitie.getArray(CaissaConstants.JSON_TAG_KALENDER);
     } catch (BestandException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -342,7 +340,6 @@ public final class PgnToHtml extends Batchjob {
           new TekstBestand.Builder()
                           .setBestand(paramBundle.getString(PAR_UITVOERDIR)
                                         + DoosUtils.getFileSep() + "index.html")
-                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
                           .setLezen(false).build();
       skelet.load(PgnToHtml.class.getClassLoader()
                            .getResourceAsStream("index.properties"));
@@ -440,7 +437,6 @@ public final class PgnToHtml extends Batchjob {
                           .setBestand(paramBundle.getString(PAR_UITVOERDIR)
                                         + DoosUtils.getFileSep()
                                         + "kalender.html")
-                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
                           .setLezen(false).build();
       skelet.load(PgnToHtml.class.getClassLoader()
                            .getResourceAsStream("kalender.properties"));
@@ -547,7 +543,6 @@ public final class PgnToHtml extends Batchjob {
                           .setBestand(paramBundle.getString(PAR_UITVOERDIR)
                                         + DoosUtils.getFileSep()
                                         + "matrix.html")
-                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
                           .setLezen(false).build();
       skelet.load(PgnToHtml.class.getClassLoader()
                            .getResourceAsStream("matrix.properties"));
@@ -675,7 +670,6 @@ public final class PgnToHtml extends Batchjob {
                           .setBestand(paramBundle.getString(PAR_UITVOERDIR)
                                         + DoosUtils.getFileSep()
                                         + "uitslagen.html")
-                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
                           .setLezen(false).build();
       skelet.load(classloader.getResourceAsStream("uitslagen.properties"));
 

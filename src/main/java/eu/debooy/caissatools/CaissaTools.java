@@ -116,6 +116,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_TEMPLATE            = "template";
   public static final String  PAR_TITEL               = "titel";
   public static final String  PAR_TOERNOOIBESTAND     = "toernooiBestand";
+  public static final String  PAR_TOERNOOITYPE        = "toernooitype";
   public static final String  PAR_TYPE                = "type";
   public static final String  PAR_TSEMAIL             = "tsemail";
   public static final String  PAR_UITVOER             = "uitvoer";
@@ -214,6 +215,8 @@ public final class CaissaTools extends Batchjob {
       var parameterBundle = new ParameterBundle.Builder()
                            .setBaseName(tool)
                            .build();
+      DoosUtils.naarScherm(parameterBundle.getApplicatie());
+      DoosUtils.naarScherm();
       parameterBundle.help();
       DoosUtils.naarScherm(DoosUtils.stringMetLengte("_", 80, "_"));
       DoosUtils.naarScherm();

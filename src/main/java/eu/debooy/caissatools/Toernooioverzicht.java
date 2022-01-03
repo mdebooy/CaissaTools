@@ -104,14 +104,12 @@ public final class Toernooioverzicht extends Batchjob {
           new TekstBestand.Builder()
                           .setBestand(
                               paramBundle.getBestand(CaissaTools.PAR_TEMPLATE))
-                          .setCharset(paramBundle.getString(PAR_CHARSETIN))
                           .build();
     } else {
       texInvoer =
           new TekstBestand.Builder()
                           .setBestand(DEF_TEMPLATE)
                           .setClassLoader(classloader)
-                          .setCharset(paramBundle.getString(PAR_CHARSETIN))
                           .build();
     }
   }
@@ -119,8 +117,6 @@ public final class Toernooioverzicht extends Batchjob {
   public static void execute(String[] args) {
     setParameterBundle(new ParameterBundle.Builder()
                            .setBaseName(CaissaTools.TOOL_TOERNOOIOVERZICHT)
-                           .setClassloader(Toernooioverzicht.class
-                                                            .getClassLoader())
                            .setValidator(new BestandDefaultParameters())
                            .build());
 
@@ -156,7 +152,6 @@ public final class Toernooioverzicht extends Batchjob {
                           .setBestand(
                               paramBundle.getBestand(CaissaTools.PAR_BESTAND,
                                                      BestandConstants.EXT_TEX))
-                          .setCharset(paramBundle.getString(PAR_CHARSETIN))
                           .setLezen(false).build();
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -175,13 +170,11 @@ public final class Toernooioverzicht extends Batchjob {
           new JsonBestand.Builder()
                          .setBestand(
                             paramBundle.getBestand(CaissaTools.PAR_SCHEMA))
-                         .setCharset(paramBundle.getString(PAR_CHARSETIN))
                          .build()) {
       partijen.addAll(
           CaissaUtils.laadPgnBestand(
               paramBundle.getBestand(CaissaTools.PAR_BESTAND,
-                                     BestandConstants.EXT_PGN),
-              paramBundle.getString(PAR_CHARSETIN)));
+                                     BestandConstants.EXT_PGN)));
       spelers         = new ArrayList<>();
       if (competitie.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
         toernooitype  =

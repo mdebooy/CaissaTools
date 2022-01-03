@@ -79,7 +79,6 @@ public final class StartPgn extends Batchjob {
           new JsonBestand.Builder()
                          .setBestand(paramBundle
                                         .getBestand(CaissaTools.PAR_SCHEMA))
-                         .setCharset(paramBundle.getString(PAR_CHARSETIN))
                          .build();
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -120,7 +119,6 @@ public final class StartPgn extends Batchjob {
           new TekstBestand.Builder()
                           .setBestand(paramBundle
                                           .getBestand(CaissaTools.PAR_BESTAND))
-                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
                           .setLezen(false).build();
     schrijfToernooi();
     } catch (BestandException e) {

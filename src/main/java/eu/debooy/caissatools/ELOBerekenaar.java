@@ -154,7 +154,6 @@ public final class ELOBerekenaar extends Batchjob {
 
     try (var invoer  = new CsvBestand.Builder()
                               .setBestand(spelerBestand)
-                              .setCharset(paramBundle.getString(PAR_CHARSETUIT))
                               .build()) {
       var calendar  = Calendar.getInstance();
       while (invoer.hasNext()) {
@@ -248,7 +247,6 @@ public final class ELOBerekenaar extends Batchjob {
                               paramBundle
                                   .getBestand(CaissaTools.PAR_SPELERBESTAND,
                                               BestandConstants.EXT_CSV))
-                          .setCharset(paramBundle.getString(PAR_CHARSETUIT))
                           .setLezen(false)
                           .setKolomNamen(KOLOMMEN)
                           .build()) {
@@ -367,8 +365,7 @@ public final class ELOBerekenaar extends Batchjob {
           CaissaUtils
               .laadPgnBestand(
                   paramBundle.getBestand(CaissaTools.PAR_TOERNOOIBESTAND,
-                                         BestandConstants.EXT_PGN),
-                  paramBundle.getString(PAR_CHARSETIN)));
+                                         BestandConstants.EXT_PGN)));
       for (var partij : partijen) {
         if (!partij.isBye()
             && partij.isRated()) {

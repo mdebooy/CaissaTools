@@ -15,22 +15,10 @@
       "verplicht": true
     },
     {
-      "parameter": "charsetin",
-      "lang": "charsetin",
-      "help": "De characterset van de invoer als deze niet {0} is.",
-      "type": "charset"
-    },
-    {
-      "parameter": "charsetuit",
-      "lang": "charsetuit",
-      "help": "De characterset van de uitvoer als deze niet {0} is.",
-      "type": "charset"
-    },
-    {
       "parameter": "schema",
       "extensie": "json",
       "lang": "schema",
-      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender).",
+      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender). Standaard gelijk aan de naam van <bestand>.",
       "type": "bestand"
     }
   ]
