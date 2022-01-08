@@ -36,7 +36,6 @@ import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -118,7 +117,6 @@ public final class PgnToHtml extends Batchjob {
       ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                Locale.getDefault());
 
-  private static  int               kolommen;
   private static  JSONArray         kalender;
   private static  double[][]        matrix;
   private static  TekstBestand      output;
@@ -184,14 +182,7 @@ public final class PgnToHtml extends Batchjob {
 
     // Maak de Matrix.
     var noSpelers = spelers.size();
-    var namen     = new String[noSpelers];
-    kolommen      = noSpelers * toernooitype;
-    matrix        = new double[noSpelers][kolommen];
-
-    for (var i = 0; i < noSpelers; i++) {
-      namen[i]  = spelers.get(i).getNaam();
-    }
-    Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
+    matrix        = new double[noSpelers][noSpelers * toernooitype];
 
     // Bepaal de score en SB score.
     CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix, toernooitype,
@@ -540,7 +531,7 @@ public final class PgnToHtml extends Batchjob {
   }
 
   private static void maakMatrix() {
-    kolommen      = matrix[0].length;
+    var kolommen  = matrix[0].length;
     var noSpelers = spelers.size();
 
     skelet  = new Properties();
@@ -601,7 +592,7 @@ public final class PgnToHtml extends Batchjob {
 
       schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
       for (var i = 0; i < noSpelers; i++) {
-        maakMatrixBody(spelers.get(i), i);
+        maakMatrixBody(spelers.get(i), i, kolommen);
       }
       schrijfUitvoer(HTML_TABLE_BODY_EIND);
 
@@ -619,7 +610,7 @@ public final class PgnToHtml extends Batchjob {
     }
   }
 
-  private static void maakMatrixBody(Spelerinfo speler, int i)
+  private static void maakMatrixBody(Spelerinfo speler, int i, int kolommen)
       throws BestandException {
     output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_BEGIN));
     output.write(prefix
