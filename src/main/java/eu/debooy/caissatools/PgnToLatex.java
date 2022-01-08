@@ -216,7 +216,7 @@ public final class PgnToLatex extends Batchjob {
         matrix    = null;
         var namen = new String[noSpelers];
         // Maak de Matrix
-        if (metMatrix) {
+        if (Boolean.TRUE.equals(metMatrix)) {
           var j = 0;
           for (var speler  : spelers) {
             namen[j++]  = speler.getNaam();

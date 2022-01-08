@@ -18,7 +18,7 @@
       "parameter": "logo",
       "kort": "l",
       "lang": "logo",
-      "help": "Logo als watermark op de pagina's."
+      "help": "Logo als watermark op de pagina''s."
     },
     {
       "parameter": "matrix",
@@ -61,6 +61,13 @@
       "parameter": "titel",
       "lang": "titel",
       "help": "Titel van het overzicht."
+    },
+    {
+      "parameter": "uitvoer",
+      "extensie": "tex",
+      "lang": "uitvoer",
+      "help": "Het uitvoer bestand.",
+      "type": "bestand"
     }
   ]
 }

@@ -80,7 +80,7 @@ public final class PgnCleaner extends Batchjob {
                             .setBestand(uitvoer)
                             .setLezen(false).build()){
       for (var partij: partijen) {
-        if (enkelZetten) {
+        if (Boolean.TRUE.equals(enkelZetten)) {
           partij.setZetten(partij.getZuivereZetten());
         }
 

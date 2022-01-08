@@ -159,7 +159,7 @@ public final class PgnToJson extends Batchjob {
           CaissaUtils.laadPgnBestand(invoer);
 
       for (var pgn: partijen) {
-        if (includeLege
+        if (Boolean.TRUE.equals(includeLege)
             || DoosUtils.isNotBlankOrNull(pgn.getZuivereZetten())) {
           lijst.add(verwerkPartij(pgn, partijnr));
           partijnr++;

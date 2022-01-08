@@ -18,24 +18,17 @@ package eu.debooy.caissatools;
 
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
-import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.ParameterBundle;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
-import java.util.Locale;
-import java.util.ResourceBundle;
 
 
 /**
  * @author Marco de Booij
  */
 public final class CaissaTools extends Batchjob {
-  private static final  ResourceBundle  resourceBundle  =
-      ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
-                               Locale.getDefault());
-
   public static final String  ERR_BEST_ONGELIJK = "error.aantal.bestanden";
   public static final String  ERR_BESTANDENPGN  = "error.bestand.en.pgn";
   public static final String  ERR_BIJBESTAND    = "error.verplichtbijbestand";

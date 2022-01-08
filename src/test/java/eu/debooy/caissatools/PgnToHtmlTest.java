@@ -156,4 +156,16 @@ public class PgnToHtmlTest extends BatchTest {
             Bestand.openInvoerBestand(CLASSLOADER,
                                       TestConstants.BST_UITSLAGEN_HTML)));
   }
+
+  @Test
+  public void testMarco() {
+    String[]  args  = new String[] {"-b", "/homes/booymar/Schaken/Clubs en Organisaties/De Brug/Correspondentietoernooien/DBC-0004",
+                                    "--uitvoerdir=/tmp"};
+
+    before();
+    PgnToHtml.execute(args);
+    after();
+
+    debug();
+  }
 }

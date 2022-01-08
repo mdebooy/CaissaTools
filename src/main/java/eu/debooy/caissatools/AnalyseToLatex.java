@@ -27,11 +27,9 @@ import static eu.debooy.doosutils.Batchjob.help;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.ParameterBundle;
-import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.CsvBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
-import java.nio.charset.Charset;
 import java.util.Collection;
 import java.util.HashMap;
 import java.util.Locale;
@@ -45,7 +43,9 @@ import java.util.regex.Pattern;
  * @author Marco de Booij
  */
 public class AnalyseToLatex extends Batchjob {
-  private static final  String  PAR_ANALYZEBEGIN    = "AnalyseBegin.tex";
+  private static final  ClassLoader CLASSLOADER         =
+      AnalyseToLatex.class.getClassLoader();
+  private static final  String      PAR_ANALYZEBEGIN    = "AnalyseBegin.tex";
 
   private static final  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
@@ -54,18 +54,14 @@ public class AnalyseToLatex extends Batchjob {
       ResourceBundle.getBundle("eco", Locale.getDefault());
 
   private static final  Map<String, String> notaties  = new HashMap<>();
-  private static        TekstBestand        texInvoer;
   private static        TekstBestand        uitvoer;
 
   AnalyseToLatex(){}
 
   public static void execute(String[] args) {
-    var                 charsetIn     = Charset.defaultCharset().name();
-    var                 charsetUit    = BestandConstants.UTF8;
-    CsvBestand          schaaknotatie = null;
-
     setParameterBundle(new ParameterBundle.Builder()
                            .setBaseName(CaissaTools.TOOL_ANALYSETEX)
+                           .setValidator(new BestandDefaultParameters())
                            .build());
 
     Banner.printMarcoBanner(DoosUtils.nullToEmpty(paramBundle.getBanner()));
@@ -77,38 +73,22 @@ public class AnalyseToLatex extends Batchjob {
       return;
     }
 
-    try {
-      if (paramBundle.containsArgument(CaissaTools.PAR_TEMPLATE)) {
-        texInvoer =
-            new TekstBestand.Builder()
-                            .setBestand(
-                                paramBundle
-                                    .getBestand(CaissaTools.PAR_TEMPLATE))
-                            .setCharset(charsetIn).build();
-      } else {
-        texInvoer =
-            new TekstBestand.Builder()
-                            .setClassLoader(AnalyseToLatex.class
-                                                          .getClassLoader())
-                            .setBestand(PAR_ANALYZEBEGIN).build();
-      }
-
+    try (var texInvoer      = getTemplate();
+         var schaaknotatie  =
+          new CsvBestand.Builder()
+                        .setBestand(PAR_SCHAAKNOTATIE)
+                        .setClassLoader(CLASSLOADER)
+                        .build()) {
       uitvoer =
           new TekstBestand.Builder()
                           .setBestand(
-                              paramBundle.getBestand(CaissaTools.PAR_BESTAND,
-                                                     BestandConstants.EXT_TEX))
-                          .setCharset(charsetUit)
+                              paramBundle.getBestand(CaissaTools.PAR_UITVOER))
                           .setLezen(false).build();
       schrijfBegin(
           DoosUtils.nullToEmpty(paramBundle.getString(CaissaTools.PAR_AUTEUR)),
-          DoosUtils.nullToEmpty(paramBundle.getString(CaissaTools.PAR_TITEL)));
+          DoosUtils.nullToEmpty(paramBundle.getString(CaissaTools.PAR_TITEL)),
+          texInvoer);
 
-      schaaknotatie =
-          new CsvBestand.Builder()
-                        .setBestand(PAR_SCHAAKNOTATIE)
-                        .setClassLoader(AnalyseToLatex.class.getClassLoader())
-                        .build();
       while (schaaknotatie.hasNext()) {
         var notatie = schaaknotatie.next();
         if (notatie.length == 2) {
@@ -119,8 +99,7 @@ public class AnalyseToLatex extends Batchjob {
       Collection<PGN>
           partijen    = new TreeSet<>(new PGN.ByEventComparator());
       partijen.addAll(CaissaUtils.laadPgnBestand(
-                          paramBundle.getBestand(CaissaTools.PAR_BESTAND),
-                                                 charsetIn));
+                          paramBundle.getBestand(CaissaTools.PAR_BESTAND)));
       for (var partij: partijen) {
         verwerkPartij(partij);
       }
@@ -130,20 +109,6 @@ public class AnalyseToLatex extends Batchjob {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
       try {
-        if (null != schaaknotatie) {
-          schaaknotatie.close();
-        }
-      } catch (BestandException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      }
-      try {
-        if (null != texInvoer) {
-          texInvoer.close();
-        }
-      } catch (BestandException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      }
-      try {
         if (null != uitvoer) {
           uitvoer.close();
         }
@@ -151,6 +116,27 @@ public class AnalyseToLatex extends Batchjob {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
+  }
+
+  private static TekstBestand getTemplate()
+      throws BestandException {
+    TekstBestand  texInvoer;
+      if (paramBundle.containsArgument(CaissaTools.PAR_TEMPLATE)) {
+        texInvoer =
+            new TekstBestand.Builder()
+                            .setBestand(
+                                paramBundle.getBestand(
+                                    CaissaTools.PAR_TEMPLATE))
+                            .build();
+      } else {
+        texInvoer =
+            new TekstBestand.Builder()
+                            .setBestand(PAR_ANALYZEBEGIN)
+                            .setClassLoader(CLASSLOADER)
+                            .build();
+      }
+
+      return texInvoer;
   }
 
   private static String getTexmatezetten(char[] data, int start, int lengte) {
@@ -178,8 +164,9 @@ public class AnalyseToLatex extends Batchjob {
     }
   }
 
-  private static void schrijfBegin(String auteur,
-                                   String titel) throws BestandException {
+  private static void schrijfBegin(String auteur, String titel,
+                                   TekstBestand texInvoer)
+      throws BestandException {
     while (texInvoer.hasNext()) {
       String  regel = texInvoer.next();
       uitvoer.write(regel.replace("@Auteur@", auteur)

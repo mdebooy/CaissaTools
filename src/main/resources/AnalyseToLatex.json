@@ -30,6 +30,13 @@
       "parameter": "titel",
       "lang": "titel",
       "help": "De titel van het document."
+    },
+    {
+      "parameter": "uitvoer",
+      "extensie": "tex",
+      "lang": "texbestand",
+      "help": "Het uitvoer bestand.",
+      "type": "bestand"
     }
   ]
 }

@@ -17,7 +17,7 @@
     {
       "parameter": "naartaal",
       "lang": "naartaal",
-      "help": "De taal van de uitvoer als die anders is dan: {0}. Gebruik 'UTF8' voor 'figuurtjes'.",
+      "help": "De taal van de uitvoer als die anders is dan: {0}. Gebruik ''UTF8'' voor ''figuurtjes''.",
       "type": "locale"
     },
     {

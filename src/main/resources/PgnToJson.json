@@ -3,7 +3,7 @@
   "_prefixlengte": 18,
   "applicatie": "PgnToJson",
   "help": "Maakt een overzicht van het toernooi in het PGN bestand.",
-  "extrahelp": "Als 'vanTaal' en 'naarTaal' gelijk zijn wordt er geen vertaling gedaan.",
+  "extrahelp": "Als <vanTaal> en <naarTaal> gelijk zijn wordt er geen vertaling gedaan.",
   "banner": "PGN to JSON",
   "parameters": [
     {
@@ -54,7 +54,7 @@
     {
       "parameter": "naartaal",
       "lang": "naartaal",
-      "help": "De taal van de uitvoer als die anders is dan: {0}. Gebruik 'UTF8' voor 'figuurtjes'.",
+      "help": "De taal van de uitvoer als die anders is dan: {0}. Gebruik ''UTF8'' voor ''figuurtjes''.",
       "type": "locale"
     },
     {

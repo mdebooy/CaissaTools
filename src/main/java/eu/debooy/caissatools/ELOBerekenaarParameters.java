@@ -48,8 +48,8 @@ public class ELOBerekenaarParameters implements IParameterBundleValidator {
                              .getWaarde() + "H");
     }
 
-    if (params.containsKey(CaissaTools.PAR_MAXVERSCHIL)
-        && !params.containsKey(CaissaTools.PAR_VASTEKFACTOR)) {
+    if (argumenten.contains(CaissaTools.PAR_MAXVERSCHIL)
+        && !argumenten.contains(CaissaTools.PAR_VASTEKFACTOR)) {
       fouten.add(resourceBundle.getString(CaissaTools.ERR_MAXVERSCHIL));
     }
 

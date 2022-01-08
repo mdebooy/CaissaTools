@@ -130,7 +130,6 @@ public final class Toernooioverzicht extends Batchjob {
     }
 
     output        = null;
-    toernooitype  = paramBundle.getLong(CaissaTools.PAR_TYPE).intValue();
 
     try {
       bepaalTexInvoer();
@@ -150,8 +149,7 @@ public final class Toernooioverzicht extends Batchjob {
       output  =
           new TekstBestand.Builder()
                           .setBestand(
-                              paramBundle.getBestand(CaissaTools.PAR_BESTAND,
-                                                     BestandConstants.EXT_TEX))
+                              paramBundle.getBestand(CaissaTools.PAR_UITVOER))
                           .setLezen(false).build();
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -178,7 +176,8 @@ public final class Toernooioverzicht extends Batchjob {
       spelers         = new ArrayList<>();
       if (competitie.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
         toernooitype  =
-            (Integer) competitie.get(CaissaConstants.JSON_TAG_TOERNOOITYPE);
+            ((Long) competitie.get(CaissaConstants.JSON_TAG_TOERNOOITYPE))
+                .intValue();
       } else {
         toernooitype  = CaissaConstants.TOERNOOI_DUBBEL;
       }
@@ -210,7 +209,6 @@ public final class Toernooioverzicht extends Batchjob {
       namen[i++]  = speler.getNaam();
     }
     Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
-
 
     if (toernooitype != CaissaConstants.TOERNOOI_MATCH) {
       // Sortering terug zetten voor opmaken schema.
@@ -270,8 +268,8 @@ public final class Toernooioverzicht extends Batchjob {
   private static void maakDeelnemerslijst() throws BestandException {
     for (Spelerinfo deelnemer : deelnemers) {
       output.write("    " + deelnemer.getVolledigenaam() + " & "
-              + deelnemer.getTelefoon() + " & "
-              + deelnemer.getEmail() + " " + LTX_EOL);
+              + DoosUtils.nullToEmpty(deelnemer.getTelefoon()) + " & "
+              + DoosUtils.nullToEmpty(deelnemer.getEmail()) + " " + LTX_EOL);
       output.write("    " + LTX_HLINE);
     }
   }
@@ -366,21 +364,13 @@ public final class Toernooioverzicht extends Batchjob {
           lijn.append("\\multicolumn{1}"
                       + "{>{").append(KLEUR).append("}c|}{} ");
           continue;
-        } else {
-          if ((j / toernooitype) * toernooitype != j ) {
-            lijn.append("\\multicolumn{1}"
-                        + "{>{").append(KLEURLICHT).append("}c|}{");
-          }
+        }
+        if ((j / toernooitype) * toernooitype != j ) {
+          lijn.append("\\multicolumn{1}"
+                      + "{>{").append(KLEURLICHT).append("}c|}{");
         }
       }
-      if (matrix[rij][j] == 0.0) {
-        lijn.append("0");
-      } else if (matrix[rij][j] == 0.5) {
-        lijn.append(Utilities.kwart(0.5));
-      } else if (matrix[rij][j] >= 1.0) {
-        lijn.append(((Double)matrix[rij][j]).intValue())
-            .append(Utilities.kwart(matrix[rij][j]));
-      }
+      lijn.append(score(matrix[rij][j]));
       if (toernooitype > 0 && (j / toernooitype) * toernooitype != j ) {
         lijn.append("}");
       }
@@ -478,7 +468,8 @@ public final class Toernooioverzicht extends Batchjob {
       }
 
       var uitslag = partij.getUitslag().replace("1/2", Utilities.kwart(0.5))
-                          .replace('-', (partij.isForfait() ? 'F' : '-'))
+                          .replace("-", (partij.isForfait() ? "\\textbf{f}"
+                                                            : "-"))
                           .replace('*', '-');
       var wit     = partij.getWitspeler().getVolledigenaam();
       var zwart   = partij.getZwartspeler().getVolledigenaam();
@@ -646,6 +637,18 @@ public final class Toernooioverzicht extends Batchjob {
       }
   }
 
+  private static String score(double score) {
+    if (score == 0.0) {
+      return "0";
+    }
+
+    if (score < 1.0) {
+      return Utilities.kwart(score);
+    }
+
+    return "" + ((Double) score).intValue() + Utilities.kwart(score);
+  }
+
   private static String setStatus(String keyword) {
     String  status;
     switch(keyword) {
@@ -696,6 +699,7 @@ public final class Toernooioverzicht extends Batchjob {
     params.put("deelnemerslijst",
                resourceBundle.getString("label.deelnemerslijst"));
     params.put("forfait", resourceBundle.getString("message.forfait")
+                                        .toLowerCase()
                                         .replace("<b>", "\\textbf{")
                                         .replace("</b>", "}"));
     params.put(TAG_KALENDER, resourceBundle.getString("label.kalender"));

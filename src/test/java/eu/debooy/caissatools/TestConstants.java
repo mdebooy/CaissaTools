@@ -24,20 +24,21 @@ import java.io.File;
  * @author Marco de Booij
  */
 public final class TestConstants extends BatchTest {
-  public static final String  BST_ANALYSE_PGN     = "analyse.pgn";
-  public static final String  BST_COMPETITIE_CSV  = "competitie.csv";
-  public static final String  BST_COMPETITIE_JSON = "competitie.json";
-  public static final String  BST_COMPETITIE1_PGN = "competitie1.pgn";
-  public static final String  BST_COMPETITIE2_PGN = "competitie2.pgn";
-  public static final String  BST_COMPETITIEH_CSV = "competitieH.csv";
-  public static final String  BST_INDEX_HTML      = "index.html";
-  public static final String  BST_MATRIX_HTML     = "matrix.html";
-  public static final String  BST_PARTIJ_PGN      = "partij.pgn";
-  public static final String  BST_SCHEMA1_JSON    = "schema1.json";
-  public static final String  BST_SCHEMA2_JSON    = "schema2.json";
-  public static final String  BST_TEKORT_JSON     = "tekort.json";
-  public static final String  BST_TELANG_JSON     = "telang.json";
-  public static final String  BST_UITSLAGEN_HTML  = "uitslagen.html";
+  public static final String  BST_ANALYSE_PGN       = "analyse.pgn";
+  public static final String  BST_COMPETITIE_CSV    = "competitie.csv";
+  public static final String  BST_COMPETITIE_JSON   = "competitie.json";
+  public static final String  BST_COMPETITIE1_PGN   = "competitie1.pgn";
+  public static final String  BST_COMPETITIE2_PGN   = "competitie2.pgn";
+  public static final String  BST_COMPETITIEH_CSV   = "competitieH.csv";
+  public static final String  BST_GESCHIEDENIS_CSV  = "geschiedenis.csv";
+  public static final String  BST_INDEX_HTML        = "index.html";
+  public static final String  BST_MATRIX_HTML       = "matrix.html";
+  public static final String  BST_PARTIJ_PGN        = "partij.pgn";
+  public static final String  BST_SCHEMA1_JSON      = "schema1.json";
+  public static final String  BST_SCHEMA2_JSON      = "schema2.json";
+  public static final String  BST_TEKORT_JSON       = "tekort.json";
+  public static final String  BST_TELANG_JSON       = "telang.json";
+  public static final String  BST_UITSLAGEN_HTML    = "uitslagen.html";
 
   public static final String  MSG_ERROR_MESSAGES  = "Error mesages";
 
@@ -51,6 +52,8 @@ public final class TestConstants extends BatchTest {
   public static final String  PAR_BESTAND4          =
       "--bestand=" + getTemp() + File.separator + "analyse.pgn";
 
+  public static final String  PAR_GESCHIEDENIS      =
+      "--geschiedenisBestand=" + getTemp() + File.separator + "geschiedenis";
   public static final String  PAR_INVOERDIR         = "--invoerdir=";
   public static final String  PAR_MATRIX_OP_STAND   = "--opstand";
   public static final String  PAR_SCHEMA1           =

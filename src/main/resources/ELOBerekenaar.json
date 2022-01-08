@@ -26,7 +26,7 @@
     {
       "parameter": "maxVerschil",
       "lang": "maxVerschil",
-      "help": "Het maximale verschil tussen de ratings van de spelers (standaard 400). Enkel toegestaan samen met 'vasteKfactor'.",
+      "help": "Het maximale verschil tussen de ratings van de spelers (standaard 400). Enkel toegestaan samen met <vasteKfactor>.",
       "standaard": 400
     },
     {
@@ -45,7 +45,7 @@
     {
       "parameter": "startELO",
       "lang": "startElo",
-      "help": "De start ELO punten voor 'unrated' spelers. De standaard waarde is 1600.",
+      "help": "De start ELO punten voor ''unrated'' spelers. De standaard waarde is 1600.",
       "standaard": 1600
     },
     {

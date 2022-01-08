@@ -46,6 +46,9 @@ public class BestandDefaultParameters implements IParameterBundleValidator {
     if (params.containsKey(CaissaTools.PAR_SCHEMA)) {
       valideerMetBestand(CaissaTools.PAR_SCHEMA, params, argumenten, fouten);
     }
+    if (params.containsKey(CaissaTools.PAR_UITVOER)) {
+      valideerMetBestand(CaissaTools.PAR_UITVOER, params, argumenten, fouten);
+    }
 
     return fouten;
   }

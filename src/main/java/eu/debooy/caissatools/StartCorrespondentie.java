@@ -131,7 +131,8 @@ public class StartCorrespondentie extends Batchjob {
     maakToernooi(event, site, date, enkel, uitvoer);
 
     if (paramBundle.containsParameter(CaissaTools.PAR_SMTPSERVER)) {
-      if (paramBundle.getBoolean(CaissaTools.PAR_PERPARTIJ)) {
+      if (Boolean.TRUE
+                 .equals(paramBundle.getBoolean(CaissaTools.PAR_PERPARTIJ))) {
         stuurPerPartij(subject);
       } else {
         stuurPerSpeler(subject);

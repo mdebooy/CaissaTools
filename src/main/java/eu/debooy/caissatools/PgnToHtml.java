@@ -27,7 +27,6 @@ import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.ParameterBundle;
-import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
@@ -133,6 +132,7 @@ public final class PgnToHtml extends Batchjob {
   public static void execute(String[] args) {
     setParameterBundle(new ParameterBundle.Builder()
                            .setBaseName(CaissaTools.TOOL_PGNTOHTML)
+                           .setValidator(new BestandDefaultParameters())
                            .build());
 
     Banner.printMarcoBanner(DoosUtils.nullToEmpty(paramBundle.getBanner()));
@@ -144,9 +144,7 @@ public final class PgnToHtml extends Batchjob {
       return;
     }
 
-    var invoer        =
-        paramBundle.getInvoerbestand(CaissaTools.PAR_BESTAND,
-                                     BestandConstants.EXT_PGN);
+    var invoer        = paramBundle.getBestand(CaissaTools.PAR_BESTAND);
     var matrixOpStand = paramBundle.getBoolean(CaissaTools.PAR_MATRIXOPSTAND);
 
     JsonBestand     competitie;
@@ -155,18 +153,22 @@ public final class PgnToHtml extends Batchjob {
       competitie  =
           new JsonBestand.Builder()
                          .setBestand(
-                            paramBundle
-                                .getInvoerbestand(CaissaTools.PAR_SCHEMA,
-                                                  BestandConstants.EXT_JSON))
+                            paramBundle.getBestand(CaissaTools.PAR_SCHEMA))
                          .build();
       partijen    =
           CaissaUtils.laadPgnBestand(invoer);
-      kalender    = competitie.getArray(CaissaConstants.JSON_TAG_KALENDER);
+      if (competitie.containsKey(CaissaConstants.JSON_TAG_KALENDER)) {
+        kalender  = competitie.getArray(CaissaConstants.JSON_TAG_KALENDER);
+      } else {
+        kalender  = new JSONArray();
+      }
     } catch (BestandException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
 
+    var beeindigd = partijen.stream().filter(partij -> partij.isBeeindigd())
+                                     .count();
     spelers = new ArrayList<>();
     CaissaUtils.vulSpelers(spelers,
                     competitie.getArray(CaissaConstants.JSON_TAG_SPELERS));
@@ -195,11 +197,16 @@ public final class PgnToHtml extends Batchjob {
     CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix, toernooitype,
                                   matrixOpStand, CaissaConstants.TIEBREAK_SB);
 
-    // Maak het matrix.html bestand.
-    maakMatrix();
+    if (beeindigd > 0) {
+      matrix  = CaissaUtils.verwijderNietActief(spelers, matrix, toernooitype);
+    }
+    if (matrix.length > 0) {
+      // Maak het matrix.html bestand.
+      maakMatrix();
 
-    // Maak het index.html bestand.
-    maakIndex();
+      // Maak het index.html bestand.
+      maakIndex();
+    }
 
     // Maak het uitslagen.html bestand.
     if (toernooitype != CaissaConstants.TOERNOOI_MATCH) {
@@ -223,7 +230,9 @@ public final class PgnToHtml extends Batchjob {
       }
     }
 
-    maakKalender();
+    if (!kalender.isEmpty()) {
+      maakKalender();
+    }
 
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
@@ -531,8 +540,6 @@ public final class PgnToHtml extends Batchjob {
   }
 
   private static void maakMatrix() {
-    matrix        = CaissaUtils.verwijderNietActief(spelers, matrix,
-                                                    toernooitype);
     kolommen      = matrix[0].length;
     var noSpelers = spelers.size();
 

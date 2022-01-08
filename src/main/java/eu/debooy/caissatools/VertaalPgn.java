@@ -114,7 +114,6 @@ public final class VertaalPgn extends Batchjob {
                                                     vanStukken, naarStukken));
         output.write(partij.toString());
       }
-      output.close();
     } catch (BestandException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     }
