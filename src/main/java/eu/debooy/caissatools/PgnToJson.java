@@ -76,24 +76,21 @@ public final class PgnToJson extends Batchjob {
   implements Comparator<String>, Serializable {
     private static final  long  serialVersionUID  = 1L;
 
-    private static final  Map<String, Integer> STUKKEN =
-        new HashMap<String, Integer>() {
-          private static final long serialVersionUID = 1L;
-          {
-            put("q", 11);
-            put("r", 12);
-            put("b", 13);
-            put("n", 14);
-            put("k", 15);
-            put("p", 16);
-            put("Q", 21);
-            put("R", 22);
-            put("B", 23);
-            put("N", 24);
-            put("K", 25);
-            put("P", 26);
-          }
-        };
+    private static final  Map<String, Integer> STUKKEN  = new HashMap<>();
+    static {
+      STUKKEN.put("q", 11);
+      STUKKEN.put("r", 12);
+      STUKKEN.put("b", 13);
+      STUKKEN.put("n", 14);
+      STUKKEN.put("k", 15);
+      STUKKEN.put("p", 16);
+      STUKKEN.put("Q", 21);
+      STUKKEN.put("R", 22);
+      STUKKEN.put("B", 23);
+      STUKKEN.put("N", 24);
+      STUKKEN.put("K", 25);
+      STUKKEN.put("P", 26);
+    }
 
     @Override
     public int compare(String id1, String id2) {

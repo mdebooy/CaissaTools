@@ -165,9 +165,8 @@ public final class PgnToHtml extends Batchjob {
       return;
     }
 
-    var beeindigd = partijen.stream().filter(partij -> partij.isBeeindigd())
-                                     .count();
-    spelers = new ArrayList<>();
+    var beeindigd = partijen.stream().filter(PGN::isBeeindigd).count();
+    spelers       = new ArrayList<>();
     CaissaUtils.vulSpelers(spelers,
                     competitie.getArray(CaissaConstants.JSON_TAG_SPELERS));
 
