@@ -42,7 +42,7 @@
       "parameter": "zip",
       "extensie": "zip",
       "lang": "zip",
-      "help": "Naam (met eventuele directory) van de zip file. Deze zip file wordt niet door dit programma gemaakt.",
+      "help": "Naam (met eventuele directory) van de zip file. Dit zip bestand wordt niet door dit programma gemaakt.",
       "type": "bestand"
     }
   ]

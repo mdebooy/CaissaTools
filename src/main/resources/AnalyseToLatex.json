@@ -35,7 +35,7 @@
       "parameter": "uitvoer",
       "extensie": "tex",
       "lang": "texbestand",
-      "help": "Het uitvoer bestand.",
+      "help": "Het uitvoerbestand.",
       "type": "bestand"
     }
   ]

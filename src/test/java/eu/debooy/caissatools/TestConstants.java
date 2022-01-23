@@ -54,7 +54,7 @@ public final class TestConstants extends BatchTest {
 
   public static final String  PAR_GESCHIEDENIS      =
       "--geschiedenisBestand=" + getTemp() + File.separator + "geschiedenis";
-  public static final String  PAR_INVOERDIR         = "--invoerdir=";
+  public static final String  PAR_INVOERDIR         = "--invoermap=";
   public static final String  PAR_MATRIX_OP_STAND   = "--opstand";
   public static final String  PAR_SCHEMA1           =
       "--schema=" + getTemp() + File.separator + "schema1";
@@ -65,7 +65,7 @@ public final class TestConstants extends BatchTest {
       "--toernooiBestand=" + getTemp() + File.separator + "competitie1";
   public static final String  PAR_TOERNOOIBESTAND2  =
       "--toernooiBestand=" + getTemp() + File.separator + "competitie2";
-  public static final String  PAR_UITVOERDIR        = "--uitvoerdir=";
+  public static final String  PAR_UITVOERDIR        = "--uitvoermap=";
 
   public static final String  TOT_PARTIJEN  = "150";
 

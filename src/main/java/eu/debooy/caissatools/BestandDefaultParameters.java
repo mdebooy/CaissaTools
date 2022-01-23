@@ -61,9 +61,10 @@ public class BestandDefaultParameters implements IParameterBundleValidator {
       return;
     }
 
-    if (!argumenten.contains(param)) {
-      params.get(param).setWaarde(params.get(CaissaTools.PAR_BESTAND)
-                                        .getWaarde());
+    if (!argumenten.contains(param)
+        && params.get(param).getStandaard().toString().startsWith("_@")
+        && params.get(param).getStandaard().toString().endsWith("@_")) {
+      return;
     }
 
     if (DoosUtils.nullToEmpty(params.get(CaissaTools.PAR_BESTAND)

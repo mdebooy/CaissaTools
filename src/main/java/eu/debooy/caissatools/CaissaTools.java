@@ -63,6 +63,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  MSG_NIEUWESPELERS = "message.nieuwespelers";
   public static final String  MSG_STARTTOERNOOI = "message.starttoernooi";
 
+  public static final String  PAR_ALLEN               = "allen";
   public static final String  PAR_AUTEUR              = "auteur";
   public static final String  PAR_BERICHT             = "bericht";
   public static final String  PAR_BESTAND             = "bestand";

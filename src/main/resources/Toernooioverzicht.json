@@ -6,6 +6,13 @@
   "banner": "Toernooioverzicht",
   "parameters": [
     {
+      "parameter": "allen",
+      "kort": "a",
+      "lang": "allen",
+      "help": "Alle spelers. Ook die nog niet gespeeld hebben.",
+      "type": "boolean"
+    },
+    {
       "parameter": "bestand",
       "extensie": "pgn",
       "kort": "b",
@@ -43,6 +50,7 @@
       "extensie": "json",
       "lang": "schema",
       "help": "JSON bestand met informatie over de competitie (info, spelers en kalender). Standaard gelijk aan de naam van <bestand>.",
+      "standaard": "_@bestand@_",
       "type": "bestand"
     },
     {
@@ -67,6 +75,7 @@
       "extensie": "tex",
       "lang": "uitvoer",
       "help": "Het uitvoer bestand.",
+      "standaard": "_@bestand@_",
       "type": "bestand"
     }
   ]

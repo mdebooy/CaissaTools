@@ -228,7 +228,10 @@ public final class Toernooioverzicht extends Batchjob {
                                   paramBundle
                                     .getBoolean(CaissaTools.PAR_MATRIXOPSTAND),
                                   CaissaConstants.TIEBREAK_SB);
-    matrix    = CaissaUtils.verwijderNietActief(spelers, matrix, toernooitype);
+    if (Boolean.FALSE
+               .equals(paramBundle.getBoolean(CaissaTools.PAR_ALLEN))) {
+      matrix  = CaissaUtils.verwijderNietActief(spelers, matrix, toernooitype);
+    }
     kolommen  = matrix[0].length;
     noSpelers = spelers.size();
 

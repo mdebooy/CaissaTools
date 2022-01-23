@@ -13,7 +13,7 @@
     {
       "parameter": "extraInfo",
       "lang": "extraInfo",
-      "help": "Extra informatie (tegenstander en toernooi) in het geschiedenisBestand.",
+      "help": "Extra informatie (tegenstander en toernooi) in het <geschiedenisBestand>.",
       "type": "boolean"
     },
     {

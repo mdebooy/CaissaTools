@@ -19,6 +19,7 @@
       "extensie": "json",
       "lang": "schema",
       "help": "JSON bestand met informatie over de competitie (info, spelers en kalender). Standaard gelijk aan de naam van <bestand>.",
+      "standaard": "_@bestand@_",
       "type": "bestand"
     }
   ]

@@ -187,7 +187,9 @@ public final class PgnToHtml extends Batchjob {
     CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix, toernooitype,
                                   matrixOpStand, CaissaConstants.TIEBREAK_SB);
 
-    if (beeindigd > 0) {
+    if (beeindigd > 0
+        && Boolean.FALSE
+                  .equals(paramBundle.getBoolean(CaissaTools.PAR_ALLEN))) {
       matrix  = CaissaUtils.verwijderNietActief(spelers, matrix, toernooitype);
     }
     if (matrix.length > 0) {
@@ -233,9 +235,7 @@ public final class PgnToHtml extends Batchjob {
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.uitvoer"),
                              paramBundle.getString(PAR_UITVOERDIR)));
-    DoosUtils.naarScherm();
-    DoosUtils.naarScherm(getMelding(MSG_KLAAR));
-    DoosUtils.naarScherm();
+    klaar();
   }
 
   private static void genereerLegenda() throws BestandException {
