@@ -24,7 +24,6 @@ import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
-import static eu.debooy.doosutils.Batchjob.help;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.ParameterBundle;
