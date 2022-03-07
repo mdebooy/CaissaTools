@@ -36,4 +36,12 @@ public class ToernooioverzichtTest extends BatchTest {
     assertEquals(1, err.size());
     assertEquals("PAR-0001", err.get(0).split(" ")[0]);
   }
+
+  @Test
+  public void testMarco() {
+    String[]  args  = new String[] {"--bestand", "/homes/booymar/Downloads/partijen.pgn",
+                                    "--schema", "/homes/booymar/Downloads/Competitie.json"};
+
+    Toernooioverzicht.execute(args);
+  }
 }

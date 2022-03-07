@@ -59,6 +59,7 @@ public final class Toernooioverzicht extends Batchjob {
                                Locale.getDefault());
 
   private static  List<Spelerinfo>  deelnemers;
+  private static  JSONArray         jsonInhalen;
   private static  JSONArray         jsonKalender;
   private static  String[]          kalender;
   private static  double[][]        matrix;
@@ -75,6 +76,7 @@ public final class Toernooioverzicht extends Batchjob {
   private static final  String  LTX_EOL         = "\\\\";
 
   private static final  String  KYW_DEELNEMERS  = "D";
+  private static final  String  KYW_INHALEN     = "I";
   private static final  String  KYW_KALENDER    = "K";
   private static final  String  KYW_LOGO        = "L";
   private static final  String  KYW_MATRIX      = "M";
@@ -84,6 +86,7 @@ public final class Toernooioverzicht extends Batchjob {
 
   private static final  String  NORMAAL         = "N";
 
+  private static final  String  TAG_INHALEN     = "inhalen";
   private static final  String  TAG_KALENDER    = "kalender";
 
   private static final  String  KLEUR           = "\\columncolor{headingkleur}";
@@ -187,6 +190,8 @@ public final class Toernooioverzicht extends Batchjob {
       deelnemers.addAll(spelers);
       deelnemers.sort(new Spelerinfo.ByNaamComparator());
 
+      jsonInhalen   = competitie.getArray("inhalen");
+
       jsonKalender  = competitie.getArray(CaissaConstants.JSON_TAG_KALENDER);
       kalender      =
           CaissaUtils.vulKalender(CaissaConstants.JSON_TAG_KALENDER_RONDE,
@@ -273,6 +278,28 @@ public final class Toernooioverzicht extends Batchjob {
               + DoosUtils.nullToEmpty(deelnemer.getTelefoon()) + " & "
               + DoosUtils.nullToEmpty(deelnemer.getEmail()) + " " + LTX_EOL);
       output.write("    " + LTX_HLINE);
+    }
+  }
+
+  private static void maakInhaaloverzicht() throws BestandException {
+    if (jsonInhalen.isEmpty()) {
+      output.write("    \\multicolumn{5}{c}"
+                    + resourceBundle.getString("message.geen.inhaalpartijen"));
+      return;
+    }
+
+    var wit   = new Spelerinfo();
+    var zwart = new Spelerinfo();
+    for (var i = 0; i < jsonInhalen.size() ; i++) {
+      var item  = (JSONObject) jsonInhalen.get(i);
+      wit.setNaam((String) item.get("wit"));
+      zwart.setNaam((String) item.get("zwart"));
+      output.write(MessageFormat.format("    {0} & {1} & {2} & - & {3} {4}",
+                                        item.get("ronde"),
+                                        item.get("datum"),
+                                        wit.getVolledigenaam(),
+                                        zwart.getVolledigenaam(),
+                                        LTX_EOL));
     }
   }
 
@@ -565,6 +592,9 @@ public final class Toernooioverzicht extends Batchjob {
               maakDeelnemerslijst();
             }
             break;
+          case TAG_INHALEN:
+            maakInhaaloverzicht();
+            break;
           case TAG_KALENDER:
             if (!spelers.isEmpty()) {
               maakKalender();
@@ -657,6 +687,9 @@ public final class Toernooioverzicht extends Batchjob {
       case "deelnemers":
         status  = KYW_DEELNEMERS;
         break;
+      case TAG_INHALEN:
+        status  = KYW_INHALEN;
+        break;
       case TAG_KALENDER:
         status  = KYW_KALENDER;
         break;
@@ -706,5 +739,9 @@ public final class Toernooioverzicht extends Batchjob {
                                         .replace("</b>", "}"));
     params.put(TAG_KALENDER, resourceBundle.getString("label.kalender"));
     params.put("notRanked", resourceBundle.getString("message.notranked"));
+    params.put("ronde", resourceBundle.getString("label.ronde"));
+    params.put("tespelenop", resourceBundle.getString("label.tespelenop"));
+    params.put("wit", resourceBundle.getString("label.wit"));
+    params.put("zwart", resourceBundle.getString("label.zwart"));
   }
 }
