@@ -71,6 +71,7 @@ public final class PgnToHtml extends Batchjob {
   public static final String  HTML_TABLE_HEAD             = "table.head.";
   public static final String  HTML_TABLE_HEAD_BEGIN       = "table.head.begin.";
   public static final String  HTML_TABLE_HEAD_BEGIN_M     = "table.head.begin";
+  public static final String  HTML_TABLE_HEAD_DATUM       = "table.head.datum";
   public static final String  HTML_TABLE_HEAD_DUBBEL      = "table.head.dubbel";
   public static final String  HTML_TABLE_HEAD_DUBBEL2     =
       "table.head.dubbel2";
@@ -83,20 +84,39 @@ public final class PgnToHtml extends Batchjob {
   public static final String  HTML_TABLE_HEAD_PARTIJEN    =
       "table.head.partijen";
   public static final String  HTML_TABLE_HEAD_PUNTEN      = "table.head.punten";
+  public static final String  HTML_TABLE_HEAD_RONDE       = "table.head.ronde";
   public static final String  HTML_TABLE_HEAD_SB          = "table.head.sb";
+  public static final String  HTML_TABLE_HEAD_SCHEIDING   =
+      "table.head.scheiding";
+  public static final String  HTML_TABLE_HEAD_WIT         = "table.head.wit";
+  public static final String  HTML_TABLE_HEAD_ZWART       = "table.head.zwart";
   public static final String  HTML_TABLE_ROW              = "table.row";
   public static final String  HTML_TABLE_ROW_BEGIN        = "table.row.begin";
+  public static final String  HTML_TABLE_ROW_BEGIN_V      =
+      "table.row.begin.volgende";
   public static final String  HTML_TABLE_ROW_DATUM        = "table.row.datum";
   public static final String  HTML_TABLE_ROW_EIND         = "table.row.eind";
+  public static final String  HTML_TABLE_ROW_GEENINHAAL   =
+      "table.row.geen.inhaal";
   public static final String  HTML_TABLE_ROW_NAAM         = "table.row.naam";
   public static final String  HTML_TABLE_ROW_NR           = "table.row.nr";
   public static final String  HTML_TABLE_ROW_PARTIJEN     =
       "table.row.partijen";
   public static final String  HTML_TABLE_ROW_PUNTEN       = "table.row.punten";
+  public static final String  HTML_TABLE_ROW_RONDE        = "table.row.ronde";
   public static final String  HTML_TABLE_ROW_SB           = "table.row.sb";
+  public static final String  HTML_TABLE_ROW_SCHEIDING    =
+      "table.row.scheiding";
   public static final String  HTML_TABLE_ROW_WIT          = "table.row.wit";
   public static final String  HTML_TABLE_ROW_ZELF         = "table.row.zelf";
   public static final String  HTML_TABLE_ROW_ZWART        = "table.row.zwart";
+
+  public static final String  LBL_RONDE     = "label.ronde";
+  public static final String  LBL_TESPELEN  = "label.tespelenop";
+  public static final String  LBL_WIT       = "label.wit";
+  public static final String  LBL_ZWART     = "label.zwart";
+
+  public static final String  MSG_GEENINHAAL  = "message.geen.inhaalpartijen";
 
   public static final String  TAG_ACTIVITEIT  = "label.activiteit";
   public static final String  TAG_DATUM       = "label.datum";
@@ -117,6 +137,7 @@ public final class PgnToHtml extends Batchjob {
       ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                Locale.getDefault());
 
+  private static  JSONArray         inhalen;
   private static  JSONArray         kalender;
   private static  double[][]        matrix;
   private static  TekstBestand      output;
@@ -155,6 +176,11 @@ public final class PgnToHtml extends Batchjob {
                          .build();
       partijen    =
           CaissaUtils.laadPgnBestand(invoer);
+      if (competitie.containsKey(CaissaConstants.JSON_TAG_INHALEN)) {
+        inhalen   = competitie.getArray(CaissaConstants.JSON_TAG_INHALEN);
+      } else {
+        inhalen   = new JSONArray();
+      }
       if (competitie.containsKey(CaissaConstants.JSON_TAG_KALENDER)) {
         kalender  = competitie.getArray(CaissaConstants.JSON_TAG_KALENDER);
       } else {
@@ -225,6 +251,8 @@ public final class PgnToHtml extends Batchjob {
     if (!kalender.isEmpty()) {
       maakKalender();
     }
+
+    maakInhalen();
 
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
@@ -329,6 +357,18 @@ public final class PgnToHtml extends Batchjob {
     return "" + ((Double) score).intValue() + Utilities.kwart(score);
   }
 
+  private static void laadSkelet(String resource) throws IOException {
+      skelet.load(PgnToHtml.class.getClassLoader()
+                           .getResourceAsStream(resource));
+
+      if (skelet.containsKey(PROP_INDENT)) {
+        prefix  = DoosUtils.stringMetLengte("",
+            Integer.valueOf(skelet.getProperty(PROP_INDENT)));
+      } else {
+        prefix  = "";
+      }
+  }
+
   private static void maakIndex() {
     var noSpelers = spelers.size();
 
@@ -340,15 +380,7 @@ public final class PgnToHtml extends Batchjob {
                           .setBestand(paramBundle.getString(PAR_UITVOERDIR)
                                         + DoosUtils.getFileSep() + "index.html")
                           .setLezen(false).build();
-      skelet.load(PgnToHtml.class.getClassLoader()
-                           .getResourceAsStream("index.properties"));
-
-      if (skelet.containsKey(PROP_INDENT)) {
-        prefix  = DoosUtils.stringMetLengte("",
-            Integer.valueOf(skelet.getProperty(PROP_INDENT)));
-      } else {
-        prefix  = "";
-      }
+      laadSkelet("index.properties");
 
       schrijfUitvoer(HTML_TABLE_BEGIN);
       schrijfUitvoer(HTML_TABLE_COLGROUP);
@@ -417,6 +449,96 @@ public final class PgnToHtml extends Batchjob {
     output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_EIND));
   }
 
+  private static void maakInhalen() {
+    try {
+      output    =
+          new TekstBestand.Builder()
+                          .setBestand(paramBundle.getString(PAR_UITVOERDIR)
+                                        + DoosUtils.getFileSep()
+                                        + "inhalen.html")
+                          .setLezen(false).build();
+      laadSkelet("inhalen.properties");
+
+      schrijfUitvoer(HTML_TABLE_BEGIN);
+      schrijfUitvoer(HTML_TABLE_COLGROUP);
+
+      schrijfUitvoer(HTML_TABLE_HEAD_BEGIN);
+      output.write(prefix
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_RONDE),
+                               resourceBundle.getString(LBL_RONDE)));
+      output.write(prefix
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_DATUM),
+                               resourceBundle.getString(LBL_TESPELEN)));
+      output.write(prefix
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_WIT),
+                               resourceBundle.getString(LBL_WIT)));
+      output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_SCHEIDING));
+      output.write(prefix
+        + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_ZWART),
+                               resourceBundle.getString(LBL_ZWART)));
+      schrijfUitvoer(HTML_TABLE_HEAD_EIND);
+
+      schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
+
+      if (inhalen.isEmpty()) {
+        output.write(prefix
+          + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_GEENINHAAL),
+                                 resourceBundle.getString(MSG_GEENINHAAL)));
+      } else {
+        var datum             =
+            ((JSONObject) inhalen.get(0))
+                .get(CaissaConstants.JSON_TAG_KALENDER_DATUM).toString();
+        for (var i = 0; i < inhalen.size(); i++) {
+          maakInhalenBody((JSONObject) inhalen.get(i), datum);
+        }
+      }
+
+      schrijfUitvoer(HTML_TABLE_BODY_EIND);
+
+      schrijfUitvoer(HTML_TABLE_EIND);
+    } catch (BestandException | IOException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+    } finally {
+      try {
+        if (output != null) {
+          output.close();
+        }
+      } catch (BestandException ex) {
+        DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
+      }
+    }
+  }
+
+  private static void maakInhalenBody(JSONObject item, String volgende)
+      throws BestandException {
+    var datum = item.get("datum").toString();
+    var ronde = item.get("ronde").toString();
+    var wit   = new Spelerinfo();
+    wit.setNaam(item.get("wit").toString());
+    var zwart = new Spelerinfo();
+    zwart.setNaam(item.get("zwart").toString());
+
+    if (datum.equals(volgende)) {
+      output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_BEGIN_V));
+    } else {
+      output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_BEGIN));
+    }
+
+    output.write(prefix +
+        MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_RONDE), ronde));
+    output.write(prefix +
+        MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_DATUM), datum));
+    output.write(prefix +
+        MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_WIT),
+                             wit.getVolledigenaam()));
+    output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_SCHEIDING));
+    output.write(prefix +
+        MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_ZWART),
+                             zwart.getVolledigenaam()));
+
+    output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_EIND));
+  }
+
   private static void maakKalender() {
     var datum             =
         ((JSONObject) kalender.get(0))
@@ -437,15 +559,7 @@ public final class PgnToHtml extends Batchjob {
                                         + DoosUtils.getFileSep()
                                         + "kalender.html")
                           .setLezen(false).build();
-      skelet.load(PgnToHtml.class.getClassLoader()
-                           .getResourceAsStream("kalender.properties"));
-
-      if (skelet.containsKey(PROP_INDENT)) {
-        prefix  = DoosUtils.stringMetLengte("",
-            Integer.valueOf(skelet.getProperty(PROP_INDENT)));
-      } else {
-        prefix  = "";
-      }
+      laadSkelet("kalender.properties");
 
       schrijfUitvoer(HTML_TABLE_BEGIN);
       schrijfUitvoer(HTML_TABLE_COLGROUP);
@@ -541,14 +655,7 @@ public final class PgnToHtml extends Batchjob {
                                         + DoosUtils.getFileSep()
                                         + "matrix.html")
                           .setLezen(false).build();
-      skelet.load(PgnToHtml.class.getClassLoader()
-                           .getResourceAsStream("matrix.properties"));
-
-      prefix  = "";
-      if (skelet.containsKey(PROP_INDENT)) {
-        prefix  = DoosUtils.stringMetLengte("",
-            Integer.valueOf(skelet.getProperty(PROP_INDENT)));
-      }
+      laadSkelet("matrix.properties");
 
       // Start de tabel
       schrijfUitvoer(HTML_TABLE_BEGIN);
