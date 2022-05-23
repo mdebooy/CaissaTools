@@ -75,6 +75,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_ENKELRONDIG         = "enkelrondig";
   public static final String  PAR_ENKELZETTEN         = "enkelzetten";
   public static final String  PAR_EVENT               = "event";
+  public static final String  PAR_EXTRA               = "extra";
   public static final String  PAR_EXTRAINFO           = "extraInfo";
   public static final String  PAR_GESCHIEDENISBESTAND = "geschiedenisBestand";
   public static final String  PAR_HALVE               = "halve";

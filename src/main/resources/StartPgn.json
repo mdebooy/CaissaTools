@@ -15,6 +15,15 @@
       "verplicht": true
     },
     {
+      "parameter": "extra",
+      "extensie": "pgn",
+      "kort": "e",
+      "lang": "extra",
+      "help": "Het bestand met extra informatie over partijen in PGN formaat.",
+      "type": "bestand",
+      "verplicht": false
+    },
+    {
       "parameter": "schema",
       "extensie": "json",
       "lang": "schema",

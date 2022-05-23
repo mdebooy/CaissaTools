@@ -18,7 +18,9 @@ package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
+import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Spelerinfo;
+import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.Datum;
@@ -31,6 +33,7 @@ import eu.debooy.doosutils.exception.BestandException;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
 import java.util.ResourceBundle;
@@ -40,6 +43,10 @@ import org.json.simple.JSONObject;
 
 /**
  * @author Marco de Booij
+ *
+ * Genereer een PGN met behulp van een JSON. Vul de eventuele niet
+ *  'Seven Tag Roster' tags en zetten aan vanuit de 'extra' PGN.
+ * Schrijf de verkregen PGN weg.
  */
 public final class StartPgn extends Batchjob {
   private static final  ResourceBundle  resourceBundle  =
@@ -50,11 +57,11 @@ public final class StartPgn extends Batchjob {
   private static  List<String>      speeldata;
   private static  List<Spelerinfo>  spelers;
   private static  String            eventDate;
-  private static  boolean           enkel;
   private static  String            event;
   private static  int               noSpelers;
   private static  TekstBestand      output;
   private static  String            site;
+  private static  int               toernooitype;
 
   protected StartPgn() {}
 
@@ -85,13 +92,16 @@ public final class StartPgn extends Batchjob {
       return;
     }
 
-    eventDate = schema.get(CaissaConstants.PGNTAG_EVENTDATE).toString();
-    enkel     = true;
-    if (schema.containsKey(CaissaTools.PAR_ENKELRONDIG)) {
-      enkel   = (boolean) schema.get(CaissaTools.PAR_ENKELRONDIG);
+    eventDate = schema.get(CaissaConstants.JSON_TAG_EVENTDATE).toString();
+    if (schema.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
+      toernooitype  =
+          ((Long) schema.get(CaissaConstants.JSON_TAG_TOERNOOITYPE))
+              .intValue();
+    } else {
+      toernooitype  = CaissaConstants.TOERNOOI_MATCH;
     }
-    event     = schema.get(CaissaConstants.PGNTAG_EVENT).toString();
-    site      = schema.get(CaissaConstants.PGNTAG_SITE).toString();
+    event     = schema.get(CaissaTools.PAR_EVENT).toString();
+    site      = schema.get(CaissaTools.PAR_SITE).toString();
     speeldata = new ArrayList<>();
     spelers   = new ArrayList<>();
 
@@ -106,12 +116,25 @@ public final class StartPgn extends Batchjob {
 
     noSpelers = spelers.size();
     rondes    = CaissaUtils.bergertabel(spelers.size());
-    if (speeldata.size() != rondes.length * (enkel ? 1 : 2)) {
+    if (speeldata.size() != rondes.length * toernooitype) {
       DoosUtils.foutNaarScherm(
           MessageFormat.format(
               resourceBundle.getString(CaissaTools.ERR_KALENDER),
-              speeldata.size(), rondes.length * (enkel ? 1 : 2)));
+              speeldata.size(), rondes.length * toernooitype));
       return;
+    }
+
+    Collection<PGN> extra;
+    if (paramBundle.containsArgument(CaissaTools.PAR_EXTRA)) {
+      try {
+        extra = CaissaUtils.laadPgnBestand(
+                    paramBundle.getBestand(CaissaTools.PAR_EXTRA));
+      } catch (PgnException e) {
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+        return;
+      }
+    } else {
+      extra = new ArrayList<>();
     }
 
     try {
@@ -120,7 +143,7 @@ public final class StartPgn extends Batchjob {
                           .setBestand(paramBundle
                                           .getBestand(CaissaTools.PAR_BESTAND))
                           .setLezen(false).build();
-    schrijfToernooi();
+    schrijfToernooi(extra);
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {
@@ -147,60 +170,71 @@ public final class StartPgn extends Batchjob {
     DoosUtils.naarScherm();
   }
 
-  private static void schrijfToernooi() throws BestandException {
-    verwerkRondes(0, 0, 1);
+  private static void schrijfPartij(String date, String ronde,
+                                    int wit, int zwart, PGN extra)
+      throws BestandException, PgnException {
+    if (wit >= noSpelers
+        || zwart >= noSpelers) {
+      return;
+    }
 
-    if (!enkel) {
-      verwerkRondes(rondes.length, 1, 0);
+    PGN partij;
+    if (null == extra) {
+      partij  = new PGN();
+      partij.setTag(CaissaConstants.PGNTAG_WHITE, spelers.get(wit).getNaam());
+      partij.setTag(CaissaConstants.PGNTAG_BLACK, spelers.get(zwart).getNaam());
+      partij.setTag(CaissaConstants.PGNTAG_RESULT,
+                    CaissaConstants.PARTIJ_BEZIG);
+    } else {
+      partij  = new PGN(extra);
+    }
+
+    partij.setTag(CaissaConstants.PGNTAG_DATE, date);
+    partij.setTag(CaissaConstants.PGNTAG_EVENT, event);
+    partij.setTag(CaissaConstants.PGNTAG_EVENTDATE, eventDate);
+    partij.setTag(CaissaConstants.PGNTAG_ROUND, ronde);
+    partij.setTag(CaissaConstants.PGNTAG_SITE, site);
+
+    output.write(partij.toString());
+  }
+
+  private static void schrijfToernooi(Collection<PGN> extra)
+      throws BestandException {
+    verwerkRondes(0, 0, 1, extra);
+
+    if (toernooitype != CaissaConstants.TOERNOOI_ENKEL) {
+      verwerkRondes(rondes.length, 1, 0, extra);
     }
   }
 
-  private static void schrijfPartij(String date, String ronde,
-                                    int wit, int zwart)
-      throws BestandException {
-      if (wit >= noSpelers
-          || zwart >= noSpelers) {
-        return;
-      }
-
-    var witspeler   = spelers.get(wit).getNaam();
-    var zwartspeler = spelers.get(zwart).getNaam();
-
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_EVENT, event));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_SITE, site));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_DATE, date));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_ROUND, ronde));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_WHITE, witspeler));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_BLACK,
-                                      zwartspeler));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_RESULT,
-                                      CaissaConstants.PARTIJ_BEZIG));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_EVENTDATE,
-                                      eventDate));
-    output.write("");
-    output.write(CaissaConstants.PARTIJ_BEZIG);
-    output.write("");
-  }
-
-  private static void verwerkRondes(Integer round, int wit, int zwart)
+  private static void verwerkRondes(Integer round, int wit, int zwart,
+                                    Collection<PGN> partijen)
       throws BestandException {
     for (var ronde : rondes) {
       round++;
       for (var partij : ronde.split(" ")) {
         var paring  = partij.split("-");
-        schrijfPartij(speeldata.get(round - 1), round.toString(),
-                      Integer.valueOf(paring[wit]) - 1,
-                      Integer.valueOf(paring[zwart]) - 1);
+        var pwit    = Integer.valueOf(paring[wit]) - 1;
+        var pzwart  = Integer.valueOf(paring[zwart]) - 1;
+        var extra   = vindPartij(pwit, pzwart, partijen);
+        try {
+          schrijfPartij(speeldata.get(round - 1), round.toString(),
+                        pwit, pzwart, extra);
+        } catch (PgnException e) {
+          DoosUtils.foutNaarScherm(ronde + " " + e.getLocalizedMessage());
+        }
       }
     }
+  }
+
+  private static PGN vindPartij(int wit, int zwart, Collection<PGN> partijen) {
+    return
+        partijen.stream()
+                .filter(pgn -> pgn.getWhite()
+                                  .equals(spelers.get(wit).getNaam()))
+                .filter(pgn -> pgn.getBlack()
+                                  .equals(spelers.get(zwart).getNaam()))
+                .findFirst().orElse(null);
   }
 
   private static void vulSpeeldata(JSONArray kalender) throws ParseException {
