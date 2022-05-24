@@ -16,7 +16,6 @@
 \definecolor{headingtekstkleur}{HTML}{FFFFFF}
 
 \arrayrulecolor{headingkleur}
-\newcolumntype{C}[1]{>{\centering\let\newline\\\arraybackslash\hspace{0pt}}m{#1}}
 
 \geometry{
   paperwidth=210mm,
@@ -78,7 +77,7 @@ contents={%
    \newpage
 %@Include Uitslagen
    \arrayrulecolor{white}%
-   \begin{tabular}{ | p{32mm} C{2mm} p{32mm} | C{5mm} | }
+   \begin{tabular}{ | b{32mm} m{2mm} b{32mm} | m{5mm} | }
     & & & \\
     \multicolumn{4}{>{\columncolor{headingkleur!15}}l}{@notRanked@} \\
     \multicolumn{4}{l}{@forfait@} \\
@@ -87,7 +86,7 @@ contents={%
 %@IncludeStart Inhalen
    \newpage
    \arrayrulecolor{white}%
-   \begin{tabular}{ C{8mm} C{18mm} p{32mm} C{2mm} p{32mm} }
+   \begin{tabular}{ m{8mm} m{18mm} b{32mm} m{2mm} b{32mm} }
     \rowcolor{headingkleur}
     \color{headingtekstkleur}@ronde@ & \color{headingtekstkleur}@tespelenop@ & \color{headingtekstkleur}@wit@ & & \color{headingtekstkleur}@zwart@ \\
 %@Include Inhalen

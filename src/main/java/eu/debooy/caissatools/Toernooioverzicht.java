@@ -283,8 +283,9 @@ public final class Toernooioverzicht extends Batchjob {
 
   private static void maakInhaaloverzicht() throws BestandException {
     if (jsonInhalen.isEmpty()) {
-      output.write("    \\multicolumn{5}{c}"
-                    + resourceBundle.getString("message.geen.inhaalpartijen"));
+      output.write("    \\multicolumn{5}{c}{"
+                    + resourceBundle.getString("message.geen.inhaalpartijen")
+                    + "}");
       return;
     }
 
@@ -348,7 +349,7 @@ public final class Toernooioverzicht extends Batchjob {
     var lijn  = new StringBuilder();
 
     // Header
-    lijn.append("   \\begin{tabular} { | c l | ");
+    lijn.append("   \\resizebox{\\columnwidth}{!}{\\begin{tabular} { | c l | ");
     if (matrixEerst) {
       matrixEerst(lijn, kolommen, noSpelers);
     } else {
@@ -381,7 +382,7 @@ public final class Toernooioverzicht extends Batchjob {
       output.write(lijn.toString());
       output.write("    " + LTX_HLINE);
     }
-    output.write("   " + LTX_END_TABULAR);
+    output.write("   " + LTX_END_TABULAR + "}");
   }
 
   private static void maakLatexMatrixBodyMat(StringBuilder lijn, int rij,
@@ -467,7 +468,7 @@ public final class Toernooioverzicht extends Batchjob {
 
   private static void maakRondeheading(int ronde, String datum)
       throws BestandException {
-    output.write("   \\begin{tabular}{ | p{32mm} C{2mm} p{32mm} | C{5mm} | }");
+    output.write("   \\begin{tabular}{ | b{32mm} m{2mm} b{32mm} | m{5mm} | }");
     output.write("    " + LTX_HLINE);
     output.write("    \\rowcolor{headingkleur}");
     output.write("    \\multicolumn{2}{l}{\\color{headingtekstkleur}"
