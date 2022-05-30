@@ -274,10 +274,13 @@ public final class Toernooioverzicht extends Batchjob {
 
   private static void maakDeelnemerslijst() throws BestandException {
     for (Spelerinfo deelnemer : deelnemers) {
-      output.write("    " + deelnemer.getVolledigenaam() + " & "
-              + DoosUtils.nullToEmpty(deelnemer.getTelefoon()) + " & "
-              + DoosUtils.nullToEmpty(deelnemer.getEmail()) + " " + LTX_EOL);
-      output.write("    " + LTX_HLINE);
+      if (!deelnemer.getVolledigenaam()
+                    .equalsIgnoreCase(CaissaConstants.BYE)) {
+        output.write("    " + deelnemer.getVolledigenaam() + " & "
+                + DoosUtils.nullToEmpty(deelnemer.getTelefoon()) + " & "
+                + DoosUtils.nullToEmpty(deelnemer.getEmail()) + " " + LTX_EOL);
+        output.write("    " + LTX_HLINE);
+      }
     }
   }
 
@@ -468,7 +471,7 @@ public final class Toernooioverzicht extends Batchjob {
 
   private static void maakRondeheading(int ronde, String datum)
       throws BestandException {
-    output.write("   \\begin{tabular}{ | b{32mm} m{2mm} b{32mm} | m{5mm} | }");
+    output.write("   \\begin{tabular}{ | b{32mm} C{2mm} b{32mm} | C{5mm} | }");
     output.write("    " + LTX_HLINE);
     output.write("    \\rowcolor{headingkleur}");
     output.write("    \\multicolumn{2}{l}{\\color{headingtekstkleur}"
