@@ -1,13 +1,13 @@
 \documentclass[twocolumn,a4paper,10pt]{report}
 
+\usepackage[T1]{fontenc}
+\usepackage[dutch]{babel}
 \usepackage{skak}
 \usepackage{texmate}
-\usepackage[dutch]{babel}
 \usepackage{color}
 \usepackage{colortbl}
-\usepackage[T1]{fontenc}
-\usepackage[pdftex]{graphicx}
-\usepackage{pdflscape}
+\usepackage{graphicx}
+\usepackage{lscape}
 
 \topmargin =0.mm
 \oddsidemargin =0.mm
@@ -56,13 +56,6 @@
 \author{Caissa Tools}
 \date{\today{}}
 
-\ifpdf
-\pdfinfo{
-   /Author (Caissa Tools)
-   /Title  (Testing 97/98)
-}
-\fi
-
 \begin{document}
 \begin{titlepage}
   \begin{center}
@@ -77,7 +70,7 @@
 \topmargin =-15.mm
 \begin{landscape}
   \begin{center}
-    \begin{tabular} { | c | l | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | r | r | r | }
+    \resizebox{\columnwidth}{!}{\begin{tabular} { | c | l | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | c | r | r | r | }
     \hline
     \multicolumn{2}{|c|}{}  & \multicolumn{2}{c|}{1}  & \multicolumn{2}{c|}{2}  & \multicolumn{2}{c|}{3}  & \multicolumn{2}{c|}{4}  & \multicolumn{2}{c|}{5}  & \multicolumn{2}{c|}{6}  & \multicolumn{2}{c|}{7}  & \multicolumn{2}{c|}{8}  & \multicolumn{2}{c|}{9}  & \multicolumn{2}{c|}{10}  & \multicolumn{2}{c|}{11}  & \multicolumn{2}{c|}{12}  & \multicolumn{2}{c|}{13} & Punten & Partijen & SB \\
     \cline{3-28}
@@ -109,7 +102,7 @@
     \hline
 13 & Speler, 13 & 1 & \multicolumn{1}{>{\columncolor[rgb]{0.8,0.8,0.8}}c|}{0} & 0 & \multicolumn{1}{>{\columncolor[rgb]{0.8,0.8,0.8}}c|}{0} & 0 & \multicolumn{1}{>{\columncolor[rgb]{0.8,0.8,0.8}}c|}{1} & 1 & \multicolumn{1}{>{\columncolor[rgb]{0.8,0.8,0.8}}c|}{1} & 1 & \multicolumn{1}{>{\columncolor[rgb]{0.8,0.8,0.8}}c|}{0} & 1 & \multicolumn{1}{>{\columncolor[rgb]{0.8,0.8,0.8}}c|}{1} & 0 & \multicolumn{1}{>{\columncolor[rgb]{0.8,0.8,0.8}}c|}{\textonehalf} & 1 & \multicolumn{1}{>{\columncolor[rgb]{0.8,0.8,0.8}}c|}{\textonehalf} & 0 & \multicolumn{1}{>{\columncolor[rgb]{0.8,0.8,0.8}}c|}{} & 1 & \multicolumn{1}{>{\columncolor[rgb]{0.8,0.8,0.8}}c|}{1} & 0 & \multicolumn{1}{>{\columncolor[rgb]{0.8,0.8,0.8}}c|}{0} & 1 & \multicolumn{1}{>{\columncolor[rgb]{0.8,0.8,0.8}}c|}{1} & \multicolumn{1}{>{\columncolor[rgb]{0,0,0}}c|}{} & \multicolumn{1}{>{\columncolor[rgb]{0,0,0}}c|}{} & 13 & 23 & 122\textonehalf \\
     \hline
-    \end{tabular}
+    \end{tabular}}
   \end{center}
 \end{landscape}
 \newpage

@@ -178,7 +178,6 @@ public class PgnToLatexTest extends BatchTest {
     assertEquals(getTemp() + File.separator + BST_COMPETITIE2_TEX,
                  out.get(14).split(":")[1].trim());
     assertEquals("214", out.get(15).split(":")[1].trim());
-
     assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(getTemp() + File.separator

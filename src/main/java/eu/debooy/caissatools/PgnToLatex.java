@@ -356,7 +356,7 @@ public final class PgnToLatex extends Batchjob {
   private static void maakMatrix(int kolommen, int noSpelers)
       throws BestandException {
     var lijn  = new StringBuilder();
-    lijn.append("    \\begin{tabular} { | c | l | ");
+    lijn.append("    \\resizebox{\\columnwidth}{!}{\\begin{tabular} { | c | l | ");
     for (var i = 0; i < kolommen; i++) {
       lijn.append("c | ");
     }
@@ -442,7 +442,7 @@ public final class PgnToLatex extends Batchjob {
       lijn  = new StringBuilder();
       output.write("    " + HLINE);
     }
-    output.write("    \\end{tabular}");
+    output.write("    \\end{tabular}}");
   }
 
   private static String replaceParameters(String regel,

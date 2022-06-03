@@ -1,13 +1,13 @@
 \documentclass[twocolumn,a4paper,10pt]{report}
 
+\usepackage[T1]{fontenc}
+\usepackage[dutch]{babel}
 \usepackage{skak}
 \usepackage{texmate}
-\usepackage[dutch]{babel}
 \usepackage{color}
 \usepackage{colortbl}
-\usepackage[T1]{fontenc}
-\usepackage[pdftex]{graphicx}
-\usepackage{pdflscape}
+\usepackage{graphicx}
+\usepackage{lscape}
 
 \topmargin =0.mm
 \oddsidemargin =0.mm
@@ -55,16 +55,6 @@
 \title{@Titel@}
 \author{@Auteur@}
 \date{\today{}}
-
-\ifpdf
-\pdfinfo{
-   /Author (@Auteur@)
-   /Title  (@Titel@)
-%@IncludeStart Keywords
-   /Keywords (@keywords@)
-%@IncludeEind Keywords
-}
-\fi
 
 \begin{document}
 %@IncludeStart Logo
