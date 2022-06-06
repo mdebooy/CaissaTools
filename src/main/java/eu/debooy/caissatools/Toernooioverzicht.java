@@ -86,9 +86,6 @@ public final class Toernooioverzicht extends Batchjob {
 
   private static final  String  NORMAAL         = "N";
 
-  private static final  String  TAG_INHALEN     = "inhalen";
-  private static final  String  TAG_KALENDER    = "kalender";
-
   private static final  String  KLEUR           = "\\columncolor{headingkleur}";
   private static final  String  KLEURLICHT      =
       "\\columncolor{headingkleur!25}";
@@ -190,7 +187,7 @@ public final class Toernooioverzicht extends Batchjob {
       deelnemers.addAll(spelers);
       deelnemers.sort(new Spelerinfo.ByNaamComparator());
 
-      jsonInhalen   = competitie.getArray("inhalen");
+      jsonInhalen   = competitie.getArray(CaissaConstants.JSON_TAG_INHALEN);
 
       jsonKalender  = competitie.getArray(CaissaConstants.JSON_TAG_KALENDER);
       kalender      =
@@ -596,10 +593,10 @@ public final class Toernooioverzicht extends Batchjob {
               maakDeelnemerslijst();
             }
             break;
-          case TAG_INHALEN:
+          case CaissaConstants.JSON_TAG_INHALEN:
             maakInhaaloverzicht();
             break;
-          case TAG_KALENDER:
+          case CaissaConstants.JSON_TAG_KALENDER:
             if (!spelers.isEmpty()) {
               maakKalender();
             }
@@ -691,10 +688,10 @@ public final class Toernooioverzicht extends Batchjob {
       case "deelnemers":
         status  = KYW_DEELNEMERS;
         break;
-      case TAG_INHALEN:
+      case CaissaConstants.JSON_TAG_INHALEN:
         status  = KYW_INHALEN;
         break;
-      case TAG_KALENDER:
+      case CaissaConstants.JSON_TAG_KALENDER:
         status  = KYW_KALENDER;
         break;
       case "logo":
@@ -741,7 +738,8 @@ public final class Toernooioverzicht extends Batchjob {
                                         .toLowerCase()
                                         .replace("<b>", "\\textbf{")
                                         .replace("</b>", "}"));
-    params.put(TAG_KALENDER, resourceBundle.getString("label.kalender"));
+    params.put(CaissaConstants.JSON_TAG_KALENDER,
+               resourceBundle.getString("label.kalender"));
     params.put("notRanked", resourceBundle.getString("message.notranked"));
     params.put("ronde", resourceBundle.getString("label.ronde"));
     params.put("tespelenop", resourceBundle.getString("label.tespelenop"));
