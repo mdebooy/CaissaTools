@@ -35,6 +35,7 @@ import java.io.IOException;
 import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
+import java.time.temporal.TemporalAdjusters;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -176,16 +177,8 @@ public final class PgnToHtml extends Batchjob {
                          .build();
       partijen    =
           CaissaUtils.laadPgnBestand(invoer);
-      if (competitie.containsKey(CaissaConstants.JSON_TAG_INHALEN)) {
-        inhalen   = competitie.getArray(CaissaConstants.JSON_TAG_INHALEN);
-      } else {
-        inhalen   = new JSONArray();
-      }
-      if (competitie.containsKey(CaissaConstants.JSON_TAG_KALENDER)) {
-        kalender  = competitie.getArray(CaissaConstants.JSON_TAG_KALENDER);
-      } else {
-        kalender  = new JSONArray();
-      }
+      inhalen     = competitie.getArray(CaissaConstants.JSON_TAG_INHALEN);
+      kalender    = competitie.getArray(CaissaConstants.JSON_TAG_KALENDER);
     } catch (BestandException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
@@ -285,7 +278,7 @@ public final class PgnToHtml extends Batchjob {
   private static void genereerRondeheading(int ronde, String datum)
       throws BestandException {
     genereerTabelheading();
-    schrijfUitvoer(HTML_TABLE_HEAD, resourceBundle.getString("label.ronde"),
+    schrijfUitvoer(HTML_TABLE_HEAD, resourceBundle.getString(LBL_RONDE),
                    ronde, datum);
     schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
   }
@@ -540,16 +533,21 @@ public final class PgnToHtml extends Batchjob {
   }
 
   private static void maakKalender() {
-    var datum             =
+    var     datum     =
         ((JSONObject) kalender.get(0))
             .get(CaissaConstants.JSON_TAG_KALENDER_DATUM).toString();
-    var formatter         = DateTimeFormatter.ofPattern(DoosConstants.DATUM);
-    var speeldag          = LocalDate.parse(datum, formatter)
-                                     .getDayOfWeek().getValue();
-    var vandaag           = LocalDate.now();
-    var volgendeSpeeldag  = vandaag.plusDays(7L - vandaag.getDayOfWeek()
-                                                         .getValue() + speeldag)
-                                   .format(formatter);
+    var     formatter = DateTimeFormatter.ofPattern(DoosConstants.DATUM);
+    var     speeldag  = LocalDate.parse(datum, formatter).getDayOfWeek();
+    var     vandaag   = LocalDate.now();
+
+    String  volgendeSpeeldag;
+    if (vandaag.getDayOfWeek().equals(speeldag)) {
+      volgendeSpeeldag  = vandaag.format(
+                            DateTimeFormatter.ofPattern(DoosConstants.DATUM));
+    } else {
+      volgendeSpeeldag  = vandaag.with(TemporalAdjusters.next(speeldag))
+                                 .format(formatter);
+    }
 
     skelet  = new Properties();
     try {
