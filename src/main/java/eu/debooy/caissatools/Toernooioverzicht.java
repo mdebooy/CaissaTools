@@ -257,6 +257,8 @@ public final class Toernooioverzicht extends Batchjob {
       DoosUtils.foutNaarScherm(ex.getLocalizedMessage());
     }
 
+    maakVCards();
+
     DoosUtils.naarScherm(
       MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
                            paramBundle.getBestand(CaissaTools.PAR_BESTAND,
@@ -518,6 +520,43 @@ public final class Toernooioverzicht extends Batchjob {
 
     output.write("    " + LTX_HLINE);
     output.write("   " + LTX_END_TABULAR);
+  }
+
+  private static void maakVCards() {
+    try (var vcards = new TekstBestand.Builder()
+                                      .setBestand(
+                              paramBundle.getBestand(CaissaTools.PAR_UITVOER,
+                                                     ".vcf"))
+                                      .setLezen(false).build()) {
+      spelers.sort(new Spelerinfo.ByNaamComparator());
+      spelers.forEach(speler -> {
+        try {
+          vcards.write("BEGIN:VCARD");
+          vcards.write("VERSION:2.1");
+          vcards.write(String.format("N:%s;%s;;;",
+                                     speler.getVoornaam(),
+                                     speler.getAchternaam()));
+          vcards.write(String.format("FN:%s %s",
+                                     speler.getAchternaam().toUpperCase(),
+                                     speler.getVoornaam()));
+          for (var telefoon : speler.getTelefoon().trim().split(" - ")) {
+            if (!telefoon.startsWith("+")) {
+              telefoon  = "+32" + telefoon.substring(1);
+            }
+            vcards.write(String.format("TEL;HOME:+%s",
+                    telefoon.replaceAll("[^\\d]", "")));
+          }
+          for (var email : speler.getEmail().trim().split(" - ")) {
+            vcards.write(String.format("EMAIL;HOME:%s",email));
+          }
+          vcards.write("END:VCARD");
+        } catch (BestandException e) {
+          DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+        }
+      });
+    } catch (BestandException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+    }
   }
 
   private static void matrixEerst(StringBuilder lijn, int kolommen,
