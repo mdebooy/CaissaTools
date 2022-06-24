@@ -543,7 +543,7 @@ public final class Toernooioverzicht extends Batchjob {
             if (!telefoon.startsWith("+")) {
               telefoon  = "+32" + telefoon.substring(1);
             }
-            vcards.write(String.format("TEL;HOME:+%s",
+            vcards.write(String.format("TEL;CELL:+%s",
                     telefoon.replaceAll("[^\\d]", "")));
           }
           for (var email : speler.getEmail().trim().split(" - ")) {
