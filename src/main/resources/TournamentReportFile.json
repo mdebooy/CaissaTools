@@ -1,0 +1,35 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 18,
+  "applicatie": "StartPgn",
+  "help": "Maakt een PGN bestand aan met alle partijen die tussen de opgegeven spelers gespeeld (moeten) worden.",
+  "banner": "Start PGN",
+  "parameters": [
+    {
+      "parameter": "bestand",
+      "extensie": "pgn",
+      "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de partijen in PGN formaat.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "trfbestand",
+      "extensie": "trf",
+      "kort": "t",
+      "lang": "trfbestand",
+      "help": "Het bestand met de tournooi-informatie is TRF formaat.",
+      "standaard": "_@bestand@_",
+      "type": "bestand"
+    },
+    {
+      "parameter": "schema",
+      "extensie": "json",
+      "lang": "schema",
+      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender). Standaard gelijk aan de naam van <bestand>.",
+      "standaard": "_@bestand@_",
+      "type": "bestand"
+    }
+  ]
+}

@@ -112,6 +112,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_TITEL               = "titel";
   public static final String  PAR_TOERNOOIBESTAND     = "toernooiBestand";
   public static final String  PAR_TOERNOOITYPE        = "toernooitype";
+  public static final String  PAR_TRFBESTAND          = "trfbestand";
   public static final String  PAR_TYPE                = "type";
   public static final String  PAR_TSEMAIL             = "tsemail";
   public static final String  PAR_UITVOER             = "uitvoer";
@@ -132,6 +133,8 @@ public final class CaissaTools extends Batchjob {
       "StartCorrespondentie";
   protected static final  String  TOOL_STARTPGN           = "StartPgn";
   protected static final  String  TOOL_TOERNOOIOVERZICHT  = "Toernooioverzicht";
+  protected static final  String  TOOL_TRF                =
+      "TournamentReportFile";
   protected static final  String  TOOL_VERTAALPGN         = "VertaalPgn";
 
   protected static final  List<String>  tools =
