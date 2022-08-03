@@ -141,7 +141,8 @@ public final class CaissaTools extends Batchjob {
       Arrays.asList(TOOL_ANALYSETEX, TOOL_CHESSTHEATRE, TOOL_ELOBEREKENAAR,
                     TOOL_PGNCLEANER, TOOL_PGNTOHTML, TOOL_PGNTOJSON,
                     TOOL_PGNTOLATEX, TOOL_SPELERSTATISTIEK, TOOL_STARTCORRESP,
-                    TOOL_STARTPGN, TOOL_TOERNOOIOVERZICHT, TOOL_VERTAALPGN);
+                    TOOL_STARTPGN, TOOL_TOERNOOIOVERZICHT, TOOL_TRF,
+                    TOOL_VERTAALPGN);
 
   public static final String  TXT_BANNER  = "Caissa Tools";
 
@@ -194,6 +195,9 @@ public final class CaissaTools extends Batchjob {
         break;
       case "toernooioverzicht":
         Toernooioverzicht.execute(commandoArgs);
+        break;
+      case "tournamentreportfile":
+        TournamentReportFile.execute(commandoArgs);
         break;
       case "vertaalpgn":
         VertaalPgn.execute(commandoArgs);

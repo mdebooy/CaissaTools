@@ -1,9 +1,9 @@
 {
   "_jar": "CaissaTools.jar",
   "_prefixlengte": 18,
-  "applicatie": "StartPgn",
-  "help": "Maakt een PGN bestand aan met alle partijen die tussen de opgegeven spelers gespeeld (moeten) worden.",
-  "banner": "Start PGN",
+  "applicatie": "TournamentReportFile",
+  "help": "Maakt een TournamentReportFile aan. Dit kan gebruikt worden voor toernooien met het Zwitsers Systeem.",
+  "banner": "Maak Tournament Report File",
   "parameters": [
     {
       "parameter": "bestand",
@@ -17,9 +17,8 @@
     {
       "parameter": "trfbestand",
       "extensie": "trf",
-      "kort": "t",
       "lang": "trfbestand",
-      "help": "Het bestand met de tournooi-informatie is TRF formaat.",
+      "help": "Het bestand met de tournooi-informatie is TRF formaat. Standaard gelijk aan de naam van <bestand>.",
       "standaard": "_@bestand@_",
       "type": "bestand"
     },
