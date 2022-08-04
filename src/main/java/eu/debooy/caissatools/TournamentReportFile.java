@@ -68,13 +68,11 @@ public class TournamentReportFile extends Batchjob {
     }
 
     // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
-    int toernooitype;
+    int toernooitype  = CaissaConstants.TOERNOOI_MATCH;
     if (competitie.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
       toernooitype  =
           ((Long) competitie.get(CaissaConstants.JSON_TAG_TOERNOOITYPE))
               .intValue();
-    } else {
-      toernooitype  = CaissaConstants.TOERNOOI_MATCH;
     }
 
     List<Spelerinfo>  spelers   = new ArrayList<>();
@@ -119,6 +117,24 @@ public class TournamentReportFile extends Batchjob {
     DoosUtils.naarScherm();
   }
 
+  private static String getPunten(Partij partij, String winst, String remise,
+                                  String verlies, String bye) {
+    switch (partij.getUitslag()) {
+      case CaissaConstants.PARTIJ_WIT_WINT:
+        return winst;
+      case CaissaConstants.PARTIJ_REMISE:
+        return remise;
+      case CaissaConstants.PARTIJ_ZWART_WINT:
+        return verlies;
+      default:
+        if (partij.isBye()) {
+          return bye;
+        } else {
+          return verlies;
+        }
+    }
+  }
+
   protected static void schrijfTrfBestand(JsonBestand schema, int rondes,
                                           StringBuilder[] spelerstrf) {
     try  (var trf = new TekstBestand.Builder()
@@ -132,7 +148,7 @@ public class TournamentReportFile extends Batchjob {
                               schema.get(CaissaTools.PAR_EVENT).toString()));
       trf.write(String.format("023 %s",
                               schema.get(CaissaTools.PAR_SITE).toString()));
-      for (StringBuilder spelertrf : spelerstrf) {
+      for (var spelertrf : spelerstrf) {
         trf.write(spelertrf.toString());
       }
     } catch (BestandException e) {
@@ -142,65 +158,34 @@ public class TournamentReportFile extends Batchjob {
 
   protected static void verwerkPartij(Partij partij, List<Spelerinfo> spelers,
                                       StringBuilder[] spelerstrf) {
-    String  punten;
-    int     witseq    = 0;
-    int     zwartseq  = 0;
+    var wit       = vindSpeler(partij.getWitspeler().getNaam(), spelers);
+    var witseq    = 0;
+    var zwart     = vindSpeler(partij.getZwartspeler().getNaam(), spelers);
+    var zwartseq  = 0;
 
-    var uitslag = partij.getUitslag();
-    var wit     = vindSpeler(partij.getWitspeler().getNaam(), spelers);
-    var zwart   = vindSpeler(partij.getZwartspeler().getNaam(), spelers);
+    if (zwart != -1) {
+      zwartseq  = spelers.get(zwart).getSpelerSeq();
+    }
 
     if (wit != -1) {
-      witseq = spelers.get(wit).getSpelerSeq();
-      switch (uitslag) {
-        case CaissaConstants.PARTIJ_WIT_WINT:
-          punten  = "1";
-          break;
-        case CaissaConstants.PARTIJ_REMISE:
-          punten  = "=";
-          break;
-        case CaissaConstants.PARTIJ_ZWART_WINT:
-          punten  = "0";
-          break;
-        default:
-          if (partij.isBye()) {
-            punten  = "Z";
-          } else {
-            punten  = "0";
-          }
-          break;
-      }
-      if (zwart != -1) {
-        zwartseq = spelers.get(zwart).getSpelerSeq();
-      }
-      spelerstrf[wit].append(String.format("  %04d %s %s", zwartseq,
-                                            partij.isBye() ? "-" : "w",
-                                            partij.isRanked() ? punten : "0"));
+      witseq    = spelers.get(wit).getSpelerSeq();
+      spelerstrf[wit].append(
+          String.format("  %04d %s %s",
+                        zwartseq,
+                        partij.isBye() ? "-" : "w",
+                        partij.isRanked() ? getPunten(partij,
+                                                      "1", "=", "0", "Z")
+                                          : "0"));
     }
 
     if (zwart != -1) {
-      switch (uitslag) {
-        case CaissaConstants.PARTIJ_WIT_WINT:
-          punten  = "0";
-          break;
-        case CaissaConstants.PARTIJ_REMISE:
-          punten  = "=";
-          break;
-        case CaissaConstants.PARTIJ_ZWART_WINT:
-          punten  = "1";
-          break;
-        default:
-          if (partij.isBye()) {
-            punten  = "Z";
-          } else {
-            punten  = "0";
-          }
-          break;
-      }
-      spelerstrf[zwart].append(String.format("  %04d %s %s",
-                                             witseq,
-                                             partij.isBye() ? "-" : "b",
-                                             partij.isRanked() ? punten : "0"));
+      spelerstrf[zwart].append(
+          String.format("  %04d %s %s",
+                        witseq,
+                        partij.isBye() ? "-" : "b",
+                        partij.isRanked() ? getPunten(partij,
+                                                      "0", "=", "1", "Z")
+                                          : "0"));
     }
   }
 
@@ -218,7 +203,7 @@ public class TournamentReportFile extends Batchjob {
   }
 
   protected static StringBuilder[] vulBasisTrf(List<Spelerinfo> spelers) {
-    StringBuilder[] spelerstrf  = new StringBuilder[spelers.size()];
+    var spelerstrf  = new StringBuilder[spelers.size()];
 
     for (var i = 0; i < spelerstrf.length; i++) {
       var speler    = spelers.get(i);
