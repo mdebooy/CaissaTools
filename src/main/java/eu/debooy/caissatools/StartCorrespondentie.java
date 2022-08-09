@@ -16,9 +16,11 @@
  */
 package eu.debooy.caissatools;
 
-import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
+import eu.debooy.caissa.Competitie;
+import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Spelerinfo;
+import eu.debooy.caissa.exceptions.CompetitieException;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.Datum;
@@ -27,7 +29,6 @@ import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MailData;
 import eu.debooy.doosutils.ParameterBundle;
 import eu.debooy.doosutils.access.BestandConstants;
-import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import java.text.MessageFormat;
@@ -58,6 +59,7 @@ public class StartCorrespondentie extends Batchjob {
       ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                Locale.getDefault());
 
+  private static  Competitie        competitie;
   private static  List<String>      email;
   private static  List<String>      emailparams;
   private static  List<String>      nieuwespelers;
@@ -83,7 +85,6 @@ public class StartCorrespondentie extends Batchjob {
     email         = new ArrayList<>();
     emailparams   = new ArrayList<>();
     nieuwespelers = new ArrayList<>();
-    spelers       = new ArrayList<>();
 
     var subject   = leesBericht();
 
@@ -93,42 +94,31 @@ public class StartCorrespondentie extends Batchjob {
                                   .split(";")));
     }
 
-    JsonBestand competitie;
     try {
       competitie  =
-          new JsonBestand.Builder()
-                         .setBestand(paramBundle
-                                        .getBestand(CaissaTools.PAR_SCHEMA))
-                         .build();
-    } catch (BestandException e) {
+          new Competitie(paramBundle.getBestand(CaissaTools.PAR_SCHEMA));
+      if (!competitie.containsKey(Competitie.JSON_TAG_SITE)) {
+        DoosUtils.foutNaarScherm(
+            competitie.getMissingTag(Competitie.JSON_TAG_SITE));
+        return;
+      }
+    } catch (CompetitieException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
 
-    var date    = competitie.get(CaissaConstants.JSON_TAG_EVENTDATE).toString();
+    var date    = competitie.get(Competitie.JSON_TAG_EVENTDATE).toString();
     var datum   = getDatum(date);
-    var enkel   = true;
-    if (competitie.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
-      enkel = (Long) competitie.get(CaissaConstants.JSON_TAG_TOERNOOITYPE)
-                  == CaissaConstants.TOERNOOI_ENKEL;
-    }
-    var event   = competitie.get(CaissaTools.PAR_EVENT).toString();
-    var site    = competitie.get(CaissaTools.PAR_SITE).toString();
 
     initEmailparams(13);
-    emailparams.add(0, event);
-    emailparams.add(1, site);
+    emailparams.add(0, competitie.getEvent());
+    emailparams.add(1, competitie.get(CaissaTools.PAR_SITE).toString());
     emailparams.add(2, datum);
 
-    CaissaUtils.vulSpelers(spelers,
-                    competitie.getArray(CaissaConstants.JSON_TAG_SPELERS));
-    var noSpelers = spelers.size();
+    spelers = competitie.getSpelers();
+    rondes  = CaissaUtils.bergertabel(spelers.size());
 
-    var uitvoer   = paramBundle.getBestand(CaissaTools.PAR_BESTAND,
-                                           BestandConstants.EXT_PGN);
-
-    rondes  = CaissaUtils.bergertabel(noSpelers);
-    maakToernooi(event, site, date, enkel, uitvoer);
+    maakToernooi();
 
     if (paramBundle.containsParameter(CaissaTools.PAR_SMTPSERVER)) {
       if (Boolean.TRUE
@@ -142,7 +132,8 @@ public class StartCorrespondentie extends Batchjob {
 
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
-                             uitvoer));
+                             paramBundle.getBestand(CaissaTools.PAR_BESTAND,
+                                                    BestandConstants.EXT_PGN)));
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getMelding(MSG_KLAAR));
     DoosUtils.naarScherm();
@@ -174,8 +165,7 @@ public class StartCorrespondentie extends Batchjob {
   private static String getDatum(String date) {
     String  datum;
     try {
-      datum  = Datum.fromDate(Datum.toDate(date,
-                                           CaissaConstants.PGN_DATUM_FORMAAT),
+      datum  = Datum.fromDate(Datum.toDate(date, PGN.PGN_DATUM_FORMAAT),
                               DoosConstants.DATUM);
     } catch (ParseException e) {
       datum = date;
@@ -434,15 +424,15 @@ public class StartCorrespondentie extends Batchjob {
     return resultaat.toString();
   }
 
-  private static void maakToernooi(String event, String site, String date,
-                                   boolean enkel, String uitvoer) {
-    var           noSpelers = spelers.size();
-    TekstBestand  output    = null;
+  private static void maakToernooi() {
+    var noSpelers = spelers.size();
 
-    try {
-      output  = new TekstBestand.Builder()
-                                .setBestand(uitvoer)
-                                .setLezen(false).build();
+    try (var output  =
+          new TekstBestand.Builder()
+                          .setBestand(
+                              paramBundle.getBestand(CaissaTools.PAR_BESTAND,
+                                                     BestandConstants.EXT_PGN))
+                                .setLezen(false).build()) {
       for (var ronde : rondes) {
         for (var partij : ronde.split(" ")) {
           var paring  = partij.split("-");
@@ -452,47 +442,35 @@ public class StartCorrespondentie extends Batchjob {
               && zwart != noSpelers) {
             var witspeler   = spelers.get(wit).getNaam();
             var zwartspeler = spelers.get(zwart).getNaam();
-            schrijfPartij(output, event, site, date, witspeler, zwartspeler);
-            if (!enkel) {
-              schrijfPartij(output, event, site, date, zwartspeler, witspeler);
+            schrijfPartij(output,  witspeler, zwartspeler);
+            if (competitie.isDubbel()) {
+              schrijfPartij(output, zwartspeler, witspeler);
             }
           }
         }
       }
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    } finally {
-      try {
-        if (output != null) {
-          output.close();
-        }
-      } catch (BestandException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      }
     }
   }
 
-  private static void schrijfPartij(TekstBestand output, String event,
-                                    String site, String date, String witspeler,
+  private static void schrijfPartij(TekstBestand output, String witspeler,
                                     String zwartspeler)
       throws BestandException {
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_EVENT, event));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_SITE, site));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_DATE, date));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_ROUND, "-"));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_WHITE, witspeler));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_BLACK,
-                                      zwartspeler));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_RESULT, "*"));
-    output.write(MessageFormat.format(CaissaConstants.FMT_PGNTAG,
-                                      CaissaConstants.PGNTAG_EVENTDATE, date));
+    output.write(PGN.formatTag(PGN.PGNTAG_EVENT, competitie.getEvent()));
+    output.write(PGN.formatTag(PGN.PGNTAG_SITE,
+                               competitie.get(Competitie.JSON_TAG_SITE)
+                                         .toString()));
+    output.write(PGN.formatTag(PGN.PGNTAG_DATE,
+                               competitie.get(Competitie.JSON_TAG_EVENTDATE)
+                                         .toString()));
+    output.write(PGN.formatTag(PGN.PGNTAG_ROUND, "-"));
+    output.write(PGN.formatTag(PGN.PGNTAG_WHITE, witspeler));
+    output.write(PGN.formatTag(PGN.PGNTAG_BLACK, zwartspeler));
+    output.write(PGN.formatTag(PGN.PGNTAG_RESULT, "*"));
+    output.write(PGN.formatTag(PGN.PGNTAG_EVENTDATE,
+                               competitie.get(Competitie.JSON_TAG_EVENTDATE)
+                                         .toString()));
     output.write("");
     output.write("*");
     output.write("");

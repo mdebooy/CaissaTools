@@ -18,17 +18,19 @@ package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
+import eu.debooy.caissa.Competitie;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Partij;
 import eu.debooy.caissa.Spelerinfo;
+import eu.debooy.caissa.exceptions.CompetitieException;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
+import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.ParameterBundle;
 import eu.debooy.doosutils.access.BestandConstants;
-import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
@@ -44,7 +46,6 @@ import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeSet;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 
@@ -58,10 +59,8 @@ public final class Toernooioverzicht extends Batchjob {
       ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                Locale.getDefault());
 
+  private static  Competitie        competitie;
   private static  List<Spelerinfo>  deelnemers;
-  private static  JSONArray         jsonInhalen;
-  private static  JSONArray         jsonKalender;
-  private static  String[]          kalender;
   private static  double[][]        matrix;
   private static  TekstBestand      output;
   private static  Set<Partij>       schema;
@@ -96,8 +95,7 @@ public final class Toernooioverzicht extends Batchjob {
 
   Toernooioverzicht() {}
 
-  private static void bepaalTexInvoer()
-      throws BestandException {
+  private static void bepaalTexInvoer() throws BestandException {
     if (paramBundle.containsParameter(CaissaTools.PAR_TEMPLATE)) {
       texInvoer =
           new TekstBestand.Builder()
@@ -162,45 +160,31 @@ public final class Toernooioverzicht extends Batchjob {
       }
     }
 
-    Collection<PGN> partijen    = new TreeSet<>(new PGN.ByEventComparator());
-    try (var competitie    =
-          new JsonBestand.Builder()
-                         .setBestand(
-                            paramBundle.getBestand(CaissaTools.PAR_SCHEMA))
-                         .build()) {
+    try {
+      competitie  =
+          new Competitie(paramBundle.getBestand(CaissaTools.PAR_SCHEMA));
+    } catch (CompetitieException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+      return;
+    }
+
+    Collection<PGN> partijen  = new TreeSet<>(new PGN.ByEventComparator());
+    try {
       partijen.addAll(
           CaissaUtils.laadPgnBestand(
               paramBundle.getBestand(CaissaTools.PAR_BESTAND,
                                      BestandConstants.EXT_PGN)));
-      spelers         = new ArrayList<>();
-      if (competitie.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
-        toernooitype  =
-            ((Long) competitie.get(CaissaConstants.JSON_TAG_TOERNOOITYPE))
-                .intValue();
-      } else {
-        toernooitype  = CaissaConstants.TOERNOOI_DUBBEL;
-      }
-      CaissaUtils.vulSpelers(spelers,
-                      competitie.getArray(CaissaConstants.JSON_TAG_SPELERS));
+      spelers     = competitie.getSpelers();
+      deelnemers  = new ArrayList<>();
 
-      deelnemers    = new ArrayList<>();
       deelnemers.addAll(spelers);
       deelnemers.sort(new Spelerinfo.ByNaamComparator());
-
-      jsonInhalen   = competitie.getArray(CaissaConstants.JSON_TAG_INHALEN);
-
-      jsonKalender  = competitie.getArray(CaissaConstants.JSON_TAG_KALENDER);
-      kalender      =
-          CaissaUtils.vulKalender(CaissaConstants.JSON_TAG_KALENDER_RONDE,
-                                  spelers.size(), toernooitype, jsonKalender);
-    } catch (PgnException | BestandException e) {
+    } catch (PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     }
 
     var noSpelers = spelers.size();
-    var kolommen  =
-        (toernooitype == CaissaConstants.TOERNOOI_MATCH
-                              ? partijen.size() : noSpelers * toernooitype);
+    var kolommen  = competitie.getRondes();
     matrix    = null;
     var namen = new String[noSpelers];
 
@@ -211,12 +195,11 @@ public final class Toernooioverzicht extends Batchjob {
     }
     Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
 
-    if (toernooitype != CaissaConstants.TOERNOOI_MATCH) {
-      // Sortering terug zetten voor opmaken schema.
-      spelers.sort(new Spelerinfo.BySpelerSeqComparator());
-      var enkelrondig = (toernooitype == CaissaConstants.TOERNOOI_ENKEL);
-      schema      =
-          CaissaUtils.genereerSpeelschema(spelers, enkelrondig, partijen);
+    if (competitie.isMatch()) {
+      schema  =
+          CaissaUtils.genereerSpeelschema(spelers,
+                                          competitie.isEnkel(),
+                                          partijen);
     } else {
       schema  = new TreeSet<>();
     }
@@ -284,6 +267,8 @@ public final class Toernooioverzicht extends Batchjob {
   }
 
   private static void maakInhaaloverzicht() throws BestandException {
+    var jsonInhalen = competitie.getInhaalpartijen();
+
     if (jsonInhalen.isEmpty()) {
       output.write("    \\multicolumn{5}{c}{"
                     + resourceBundle.getString("message.geen.inhaalpartijen")
@@ -307,36 +292,38 @@ public final class Toernooioverzicht extends Batchjob {
   }
 
   private static void maakKalender() throws BestandException {
+    var jsonKalender  = competitie.getKalender();
+
     for (var i = 0; i < jsonKalender.size(); i++) {
       var item  = (JSONObject) jsonKalender.get(i);
       var lijn  = new StringBuilder();
-      if (item.containsKey(CaissaConstants.JSON_TAG_KALENDER_EXTRA)) {
-        lijn.append(item.get(CaissaConstants.JSON_TAG_KALENDER_DATUM)
+      if (item.containsKey(Competitie.JSON_TAG_KALENDER_EXTRA)) {
+        lijn.append(item.get(Competitie.JSON_TAG_KALENDER_DATUM)
                         .toString())
             .append(" & ")
-            .append(item.get(CaissaConstants.JSON_TAG_KALENDER_EXTRA)
+            .append(item.get(Competitie.JSON_TAG_KALENDER_EXTRA)
                         .toString())
             .append(" ").append(LTX_EOL);
       }
-      if (item.containsKey(CaissaConstants.JSON_TAG_KALENDER_INHAAL)) {
+      if (item.containsKey(Competitie.JSON_TAG_KALENDER_INHAAL)) {
         output.write(RIJKLEURLICHTER);
-        lijn.append(item.get(CaissaConstants.JSON_TAG_KALENDER_DATUM)
+        lijn.append(item.get(Competitie.JSON_TAG_KALENDER_DATUM)
                         .toString())
             .append(" & ")
             .append(MessageFormat.format(
                         resourceBundle.getString("label.latex.inhaal"),
-                        item.get(CaissaConstants.JSON_TAG_KALENDER_INHAAL)
+                        item.get(Competitie.JSON_TAG_KALENDER_INHAAL)
                             .toString()))
             .append(" ").append(LTX_EOL);
       }
-      if (item.containsKey(CaissaConstants.JSON_TAG_KALENDER_RONDE)) {
+      if (item.containsKey(Competitie.JSON_TAG_KALENDER_RONDE)) {
         output.write(RIJKLEURLICHT);
-        lijn.append(item.get(CaissaConstants.JSON_TAG_KALENDER_DATUM)
+        lijn.append(item.get(Competitie.JSON_TAG_KALENDER_DATUM)
                         .toString())
             .append(" & ")
             .append(MessageFormat.format(
                         resourceBundle.getString("label.latex.ronde"),
-                        item.get(CaissaConstants.JSON_TAG_KALENDER_RONDE)
+                        item.get(Competitie.JSON_TAG_KALENDER_RONDE)
                             .toString()))
             .append(" ").append(LTX_EOL);
       }
@@ -481,13 +468,14 @@ public final class Toernooioverzicht extends Batchjob {
     output.write("    " + LTX_HLINE);
   }
 
-  private static void maakUitslagentabel()
-      throws BestandException {
-    var iter    = schema.iterator();
-    var partij  = iter.next();
-    var vorige  = Integer.parseInt(partij.getRonde().getRound()
+  private static void maakUitslagentabel() throws BestandException {
+    var kalender  = competitie.getSpeeldata();
+    var iter      = schema.iterator();
+    var partij    = iter.next();
+    var vorige    = Integer.parseInt(partij.getRonde().getRound()
                                                     .split("\\.")[0]);
-    maakRondeheading(vorige, DoosUtils.nullToEmpty(kalender[vorige]));
+    maakRondeheading(vorige,
+         DoosUtils.nullToEmpty(Datum.fromDate(kalender.get(vorige))));
 
     do {
       var ronde = Integer.parseInt(partij.getRonde().getRound()
@@ -495,7 +483,8 @@ public final class Toernooioverzicht extends Batchjob {
       if (ronde != vorige) {
         output.write("    " + LTX_HLINE);
         output.write("   " + LTX_END_TABULAR);
-        maakRondeheading(ronde, DoosUtils.nullToEmpty(kalender[ronde]));
+        maakRondeheading(ronde,
+            DoosUtils.nullToEmpty(Datum.fromDate(kalender.get(vorige))));
         vorige  = ronde;
       }
 
@@ -632,10 +621,10 @@ public final class Toernooioverzicht extends Batchjob {
               maakDeelnemerslijst();
             }
             break;
-          case CaissaConstants.JSON_TAG_INHALEN:
+          case Competitie.JSON_TAG_INHALEN:
             maakInhaaloverzicht();
             break;
-          case CaissaConstants.JSON_TAG_KALENDER:
+          case Competitie.JSON_TAG_KALENDER:
             if (!spelers.isEmpty()) {
               maakKalender();
             }
@@ -727,10 +716,10 @@ public final class Toernooioverzicht extends Batchjob {
       case "deelnemers":
         status  = KYW_DEELNEMERS;
         break;
-      case CaissaConstants.JSON_TAG_INHALEN:
+      case Competitie.JSON_TAG_INHALEN:
         status  = KYW_INHALEN;
         break;
-      case CaissaConstants.JSON_TAG_KALENDER:
+      case Competitie.JSON_TAG_KALENDER:
         status  = KYW_KALENDER;
         break;
       case "logo":
@@ -777,7 +766,7 @@ public final class Toernooioverzicht extends Batchjob {
                                         .toLowerCase()
                                         .replace("<b>", "\\textbf{")
                                         .replace("</b>", "}"));
-    params.put(CaissaConstants.JSON_TAG_KALENDER,
+    params.put(Competitie.JSON_TAG_KALENDER,
                resourceBundle.getString("label.kalender"));
     params.put("notRanked", resourceBundle.getString("message.notranked"));
     params.put("ronde", resourceBundle.getString("label.ronde"));

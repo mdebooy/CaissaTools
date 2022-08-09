@@ -311,15 +311,15 @@ public final class PgnToJson extends Batchjob {
         new LinkedHashMap<>();
     Map<String, List<Integer>>  trajecten =
         new LinkedHashMap<>();
-    if (pgn.hasTag(CaissaConstants.PGNTAG_FEN)) {
-      fen = new FEN(pgn.getTag(CaissaConstants.PGNTAG_FEN));
+    if (pgn.hasTag(PGN.PGNTAG_FEN)) {
+      fen = new FEN(pgn.getTag(PGN.PGNTAG_FEN));
     } else {
       fen = new FEN();
     }
 
-    if (!pgn.hasTag(CaissaConstants.PGNTAG_ECO)
+    if (!pgn.hasTag(PGN.PGNTAG_ECO)
         && DoosUtils.isNotBlankOrNull(defaultEco)) {
-      pgn.addTag(CaissaConstants.PGNTAG_ECO, defaultEco);
+      pgn.addTag(PGN.PGNTAG_ECO, defaultEco);
     }
 
     var bord  = fen.getBord();

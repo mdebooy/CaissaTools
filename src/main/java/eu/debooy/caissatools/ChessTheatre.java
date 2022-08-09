@@ -16,7 +16,6 @@
  */
 package eu.debooy.caissatools;
 
-import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
@@ -131,8 +130,8 @@ public final class ChessTheatre extends Batchjob {
       var partijNummer  = 0;
       var iter          = partijen.iterator();
       var partij        = iter.next();
-      var vorigEvent    = partij.getTag(CaissaConstants.PGNTAG_EVENT);
-      var vorigRound    = partij.getTag(CaissaConstants.PGNTAG_ROUND);
+      var vorigEvent    = partij.getTag(PGN.PGNTAG_EVENT);
+      var vorigRound    = partij.getTag(PGN.PGNTAG_ROUND);
 
       headers.write("  <tourney event=\"" + vorigEvent + "\">");
       headers.write("    " + HTML_ROUND_START + vorigRound + "\">");
@@ -157,40 +156,40 @@ public final class ChessTheatre extends Batchjob {
           gameFile++;
         }
         partijNummer++;
-        if (!partij.getTag(CaissaConstants.PGNTAG_EVENT).equals(vorigEvent)) {
+        if (!partij.getTag(PGN.PGNTAG_EVENT).equals(vorigEvent)) {
           headers.write("    " + HTML_ROUND_EINDE);
           headers.write("  </tourney>");
 
           headers.write("  <tourney event=\""
-                        + partij.getTag(CaissaConstants.PGNTAG_EVENT) + "\">");
+                        + partij.getTag(PGN.PGNTAG_EVENT) + "\">");
           headers.write("    " + HTML_ROUND_START
-                        + partij.getTag(CaissaConstants.PGNTAG_ROUND)+ "\">");
+                        + partij.getTag(PGN.PGNTAG_ROUND)+ "\">");
         } else {
-          if (!partij.getTag(CaissaConstants.PGNTAG_ROUND).equals(vorigRound)) {
+          if (!partij.getTag(PGN.PGNTAG_ROUND).equals(vorigRound)) {
             headers.write("    " + HTML_ROUND_EINDE);
 
-            vorigRound  = partij.getTag(CaissaConstants.PGNTAG_ROUND);
+            vorigRound  = partij.getTag(PGN.PGNTAG_ROUND);
             headers.write("    " + HTML_ROUND_START
-                          + partij.getTag(CaissaConstants.PGNTAG_ROUND)
+                          + partij.getTag(PGN.PGNTAG_ROUND)
                           + "\">");
           }
         }
 
         var fen = new FEN();
-        if (partij.hasTag(CaissaConstants.PGNTAG_FEN)) {
-          fen.setFen(partij.getTag(CaissaConstants.PGNTAG_FEN));
+        if (partij.hasTag(PGN.PGNTAG_FEN)) {
+          fen.setFen(partij.getTag(PGN.PGNTAG_FEN));
         }
         headers.write("      <game id=\"" + partijNummer + "\" "
                       + "whiteplayer=\""
-                        + partij.getTag(CaissaConstants.PGNTAG_WHITE) + "\" "
+                        + partij.getTag(PGN.PGNTAG_WHITE) + "\" "
                       + "blackplayer=\""
-                        + partij.getTag(CaissaConstants.PGNTAG_BLACK) + "\" "
+                        + partij.getTag(PGN.PGNTAG_BLACK) + "\" "
                       + "result=\""
-                        + partij.getTag(CaissaConstants.PGNTAG_RESULT) + "\" "
+                        + partij.getTag(PGN.PGNTAG_RESULT) + "\" "
                       + "site=\""
-                        + partij.getTag(CaissaConstants.PGNTAG_SITE) + "\" "
+                        + partij.getTag(PGN.PGNTAG_SITE) + "\" "
                       + "tourneydate=\""
-                        + partij.getTag(CaissaConstants.PGNTAG_DATE) + "\" />");
+                        + partij.getTag(PGN.PGNTAG_DATE) + "\" />");
 
         gamedata.write("  <game id=\"" + partijNummer + "\">");
         gamedata.write(
@@ -212,8 +211,8 @@ public final class ChessTheatre extends Batchjob {
         gamedata.write("  </game>");
 
         if (iter.hasNext()) {
-          vorigEvent  = partij.getTag(CaissaConstants.PGNTAG_EVENT);
-          vorigRound  = partij.getTag(CaissaConstants.PGNTAG_ROUND);
+          vorigEvent  = partij.getTag(PGN.PGNTAG_EVENT);
+          vorigRound  = partij.getTag(PGN.PGNTAG_ROUND);
           partij      = iter.next();
         } else {
           partij  = null;

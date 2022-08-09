@@ -16,7 +16,8 @@
  */
 package eu.debooy.caissatools;
 
-import eu.debooy.doosutils.DoosConstants;
+import eu.debooy.caissa.CaissaConstants;
+import eu.debooy.caissa.Competitie;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.test.BatchTest;
@@ -64,14 +65,14 @@ public class StartPgnTest extends BatchTest {
   @BeforeClass
   public static void beforeClass() throws BestandException {
     Locale.setDefault(new Locale(TestConstants.TST_TAAL));
-    resourceBundle  = ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
+    resourceBundle  = ResourceBundle.getBundle(CaissaConstants.RESOURCEBUNDLE,
                                                Locale.getDefault());
 
     errTekort  =
-      MessageFormat.format(resourceBundle.getString(CaissaTools.ERR_KALENDER),
+      MessageFormat.format(resourceBundle.getString(Competitie.ERR_KALENDER),
                            9, 10);
     errTelang  =
-      MessageFormat.format(resourceBundle.getString(CaissaTools.ERR_KALENDER),
+      MessageFormat.format(resourceBundle.getString(Competitie.ERR_KALENDER),
                            11, 10);
     try {
       kopieerBestand(CLASSLOADER,

@@ -20,7 +20,6 @@ import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.PgnException;
-import static eu.debooy.caissatools.CaissaTools.PAR_SCHAAKNOTATIE;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.DoosConstants;
@@ -75,7 +74,7 @@ public class AnalyseToLatex extends Batchjob {
     try (var texInvoer      = getTemplate();
          var schaaknotatie  =
           new CsvBestand.Builder()
-                        .setBestand(PAR_SCHAAKNOTATIE)
+                        .setBestand(CaissaTools.PAR_SCHAAKNOTATIE)
                         .setClassLoader(CLASSLOADER)
                         .build()) {
       uitvoer =
@@ -245,7 +244,7 @@ public class AnalyseToLatex extends Batchjob {
     char[]  data  = partij.getZetten().toCharArray();
     verwerkDeel(data, 0, data.length);
 
-    verwerkPartijEind(partij.getTag(CaissaConstants.PGNTAG_RESULT));
+    verwerkPartijEind(partij.getTag(PGN.PGNTAG_RESULT));
   }
 
   private static void verwerkPartijEind(String resultaat)
@@ -271,8 +270,8 @@ public class AnalyseToLatex extends Batchjob {
     uitvoer.write("\\whitename{" + partij.getWhite() + "}");
     uitvoer.write("\\blackname{" + partij.getBlack() + "}");
     uitvoer.write("\\chessevent{"
-                    + partij.getTag(CaissaConstants.PGNTAG_EVENT) + "}");
-    String  eco = partij.getTag(CaissaConstants.PGNTAG_ECO);
+                    + partij.getTag(PGN.PGNTAG_EVENT) + "}");
+    String  eco = partij.getTag(PGN.PGNTAG_ECO);
     if (DoosUtils.isNotBlankOrNull(eco)) {
       uitvoer.write("\\chessopening{"
                       + ecoBundle.getString(eco.substring(0, 3)) + "}");

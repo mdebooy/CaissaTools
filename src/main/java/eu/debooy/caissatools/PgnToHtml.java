@@ -18,6 +18,7 @@ package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
+import eu.debooy.caissa.Competitie;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Partij;
 import eu.debooy.caissa.Spelerinfo;
@@ -177,8 +178,8 @@ public final class PgnToHtml extends Batchjob {
                          .build();
       partijen    =
           CaissaUtils.laadPgnBestand(invoer);
-      inhalen     = competitie.getArray(CaissaConstants.JSON_TAG_INHALEN);
-      kalender    = competitie.getArray(CaissaConstants.JSON_TAG_KALENDER);
+      inhalen     = competitie.getArray(Competitie.JSON_TAG_INHALEN);
+      kalender    = competitie.getArray(Competitie.JSON_TAG_KALENDER);
     } catch (BestandException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
@@ -187,15 +188,15 @@ public final class PgnToHtml extends Batchjob {
     var beeindigd = partijen.stream().filter(PGN::isBeeindigd).count();
     spelers       = new ArrayList<>();
     CaissaUtils.vulSpelers(spelers,
-                    competitie.getArray(CaissaConstants.JSON_TAG_SPELERS));
+                    competitie.getArray(Competitie.JSON_TAG_SPELERS));
 
     // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
-    if (competitie.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
+    if (competitie.containsKey(Competitie.JSON_TAG_TOERNOOITYPE)) {
       toernooitype  =
-          ((Long) competitie.get(CaissaConstants.JSON_TAG_TOERNOOITYPE))
+          ((Long) competitie.get(Competitie.JSON_TAG_TOERNOOITYPE))
               .intValue();
     } else {
-      toernooitype  = CaissaConstants.TOERNOOI_MATCH;
+      toernooitype  = Competitie.TOERNOOI_MATCH;
     }
 
     // Maak de Matrix.
@@ -220,23 +221,23 @@ public final class PgnToHtml extends Batchjob {
     }
 
     // Maak het uitslagen.html bestand.
-    if (toernooitype != CaissaConstants.TOERNOOI_MATCH) {
+    if (toernooitype != Competitie.TOERNOOI_MATCH) {
       // Opnieuw lezen om niet actieve spelers terug te krijgen.
       spelers.clear();
       CaissaUtils.vulSpelers(spelers,
-                      competitie.getArray(CaissaConstants.JSON_TAG_SPELERS));
+                      competitie.getArray(Competitie.JSON_TAG_SPELERS));
 
       // Sortering terug zetten voor opmaken schema.
       spelers.sort(new Spelerinfo.BySpelerSeqComparator());
-      var enkelrondig = (toernooitype == CaissaConstants.TOERNOOI_ENKEL);
+      var enkelrondig = (toernooitype == Competitie.TOERNOOI_ENKEL);
       var schema      =
           CaissaUtils.genereerSpeelschema(spelers, enkelrondig, partijen);
       if (!schema.isEmpty()) {
         var data      =
-            CaissaUtils.vulKalender(CaissaConstants.JSON_TAG_KALENDER_RONDE,
+            CaissaUtils.vulKalender(Competitie.JSON_TAG_KALENDER_RONDE,
                                     spelers.size(), toernooitype,
                                     competitie.getArray(
-                                        CaissaConstants.JSON_TAG_KALENDER));
+                                        Competitie.JSON_TAG_KALENDER));
         maakUitslagen(schema, data);
       }
     }
@@ -480,7 +481,7 @@ public final class PgnToHtml extends Batchjob {
       } else {
         var datum             =
             ((JSONObject) inhalen.get(0))
-                .get(CaissaConstants.JSON_TAG_KALENDER_DATUM).toString();
+                .get(Competitie.JSON_TAG_KALENDER_DATUM).toString();
         for (var i = 0; i < inhalen.size(); i++) {
           maakInhalenBody((JSONObject) inhalen.get(i), datum);
         }
@@ -535,7 +536,7 @@ public final class PgnToHtml extends Batchjob {
   private static void maakKalender() {
     var     datum     =
         ((JSONObject) kalender.get(0))
-            .get(CaissaConstants.JSON_TAG_KALENDER_DATUM).toString();
+            .get(Competitie.JSON_TAG_KALENDER_DATUM).toString();
     var     formatter = DateTimeFormatter.ofPattern(DoosConstants.DATUM);
     var     speeldag  = LocalDate.parse(datum, formatter).getDayOfWeek();
     var     vandaag   = LocalDate.now();
@@ -672,7 +673,7 @@ public final class PgnToHtml extends Batchjob {
       // De thead
       schrijfUitvoer(HTML_TABLE_HEAD_BEGIN);
       output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN_M));
-      if (toernooitype == CaissaConstants.TOERNOOI_ENKEL) {
+      if (toernooitype == Competitie.TOERNOOI_ENKEL) {
         enkeltekst  = skelet.getProperty(HTML_TABLE_HEAD_ENKEL);
       } else {
         enkeltekst  = skelet.getProperty(HTML_TABLE_HEAD_DUBBEL);
@@ -689,7 +690,7 @@ public final class PgnToHtml extends Batchjob {
       output.write(prefix
           + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_SB),
                                  resourceBundle.getString(TAG_SB)));
-      if (toernooitype == CaissaConstants.TOERNOOI_DUBBEL) {
+      if (toernooitype == Competitie.TOERNOOI_DUBBEL) {
         maakMatchMatrix(noSpelers);
       }
       schrijfUitvoer(HTML_TABLE_HEAD_EIND);

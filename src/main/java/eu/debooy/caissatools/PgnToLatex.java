@@ -18,6 +18,7 @@ package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
+import eu.debooy.caissa.Competitie;
 import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Spelerinfo;
@@ -93,7 +94,7 @@ public final class PgnToLatex extends Batchjob {
     var   titelDatum  = new StringBuilder();
     Date  datum;
     try {
-      datum = Datum.toDate(startDatum, CaissaConstants.PGN_DATUM_FORMAAT);
+      datum = Datum.toDate(startDatum, PGN.PGN_DATUM_FORMAAT);
       titelDatum.append(Datum.fromDate(datum));
     } catch (ParseException e) {
       DoosUtils.foutNaarScherm(resourceBundle.getString("label.startdatum")
@@ -103,7 +104,7 @@ public final class PgnToLatex extends Batchjob {
 
     if (!startDatum.equals(eindDatum)) {
       try {
-        datum = Datum.toDate(eindDatum, CaissaConstants.PGN_DATUM_FORMAAT);
+        datum = Datum.toDate(eindDatum, PGN.PGN_DATUM_FORMAAT);
         titelDatum.append(" - ").append(Datum.fromDate(datum));
       } catch (ParseException e) {
         DoosUtils.foutNaarScherm(resourceBundle.getString("label.einddatum")
@@ -189,12 +190,12 @@ public final class PgnToLatex extends Batchjob {
         partijen.addAll(
             CaissaUtils.laadPgnBestand(getInvoerbestand(bestand[i],
                                        BestandConstants.EXT_PGN)));
-        if (competitie.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
+        if (competitie.containsKey(Competitie.JSON_TAG_TOERNOOITYPE)) {
           toernooitype =
-              ((Long) competitie.get(CaissaConstants.JSON_TAG_TOERNOOITYPE))
+              ((Long) competitie.get(Competitie.JSON_TAG_TOERNOOITYPE))
                   .intValue();
         } else {
-          toernooitype = CaissaConstants.TOERNOOI_MATCH;
+          toernooitype = Competitie.TOERNOOI_MATCH;
         }
       } catch (BestandException | PgnException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -203,14 +204,14 @@ public final class PgnToLatex extends Batchjob {
 
       spelers       = new ArrayList<>();
       CaissaUtils.vulSpelers(spelers,
-                      competitie.getArray(CaissaConstants.JSON_TAG_SPELERS));
+                      competitie.getArray(Competitie.JSON_TAG_SPELERS));
 
       partijen.forEach(PgnToLatex::verwerkPartij);
 
       try {
         var noSpelers = spelers.size();
         var kolommen  =
-            (toernooitype == CaissaConstants.TOERNOOI_MATCH
+            (toernooitype == Competitie.TOERNOOI_MATCH
                                   ? partijen.size() : noSpelers * toernooitype);
         matrix    = null;
         var namen = new String[noSpelers];
@@ -243,7 +244,7 @@ public final class PgnToLatex extends Batchjob {
         params.put("Auteur", auteur);
         params.put("Datum",
                    Datum.fromDate(paramBundle.getDate(CaissaTools.PAR_DATUM),
-                                  CaissaConstants.PGN_DATUM_FORMAAT));
+                                  PGN.PGN_DATUM_FORMAAT));
         if (paramBundle.containsArgument(CaissaTools.PAR_KEYWORDS)) {
           params.put(CaissaTools.PAR_KEYWORDS,
                      paramBundle.getString(CaissaTools.PAR_KEYWORDS));
@@ -546,14 +547,14 @@ public final class PgnToLatex extends Batchjob {
   }
 
   private static void verwerkPartij(PGN partij) {
-    bepaalMinMaxDatum(partij.getTag(CaissaConstants.PGNTAG_EVENTDATE));
-    bepaalMinMaxDatum(partij.getTag(CaissaConstants.PGNTAG_DATE));
+    bepaalMinMaxDatum(partij.getTag(PGN.PGNTAG_EVENTDATE));
+    bepaalMinMaxDatum(partij.getTag(PGN.PGNTAG_DATE));
 
     if (DoosUtils.isBlankOrNull(auteur)) {
-      auteur  = partij.getTag(CaissaConstants.PGNTAG_SITE);
+      auteur  = partij.getTag(PGN.PGNTAG_SITE);
     }
     if (DoosUtils.isBlankOrNull(titel)) {
-      titel   = partij.getTag(CaissaConstants.PGNTAG_EVENT);
+      titel   = partij.getTag(PGN.PGNTAG_EVENT);
     }
   }
 
@@ -566,14 +567,14 @@ public final class PgnToLatex extends Batchjob {
       try {
         var fen       = new FEN();
         var regel     = "";
-        var resultaat = partij.getTag(CaissaConstants.PGNTAG_RESULT)
+        var resultaat = partij.getTag(PGN.PGNTAG_RESULT)
                 .replace("1/2", Utilities.kwart(0.5));
         var zetten    = partij.getZuivereZetten().replace("#", "\\\\#");
-        if (partij.hasTag(CaissaConstants.PGNTAG_FEN)) {
-          fen = new FEN(partij.getTag(CaissaConstants.PGNTAG_FEN));
+        if (partij.hasTag(PGN.PGNTAG_FEN)) {
+          fen = new FEN(partij.getTag(PGN.PGNTAG_FEN));
         }
         if (DoosUtils.isNotBlankOrNull(zetten)) {
-          if (partij.hasTag(CaissaConstants.PGNTAG_FEN)) {
+          if (partij.hasTag(PGN.PGNTAG_FEN)) {
             regel = texPartij.get("fenpartij");
           } else {
             if (partij.getZetten().isEmpty()) {
@@ -595,12 +596,12 @@ public final class PgnToLatex extends Batchjob {
             var tag = regel.substring(i+1, j);
             if (partij.hasTag(tag)) {
               switch (tag) {
-                case CaissaConstants.PGNTAG_RESULT:
+                case PGN.PGNTAG_RESULT:
                   regel = regel.replace("@" + tag + "@",
                           partij.getTag(tag)
                                 .replace("1/2", Utilities.kwart(0.5)));
                   break;
-                case CaissaConstants.PGNTAG_ECO:
+                case PGN.PGNTAG_ECO:
                   var extra = "";
                   if (!partij.isRanked()) {
                     extra =
@@ -616,7 +617,7 @@ public final class PgnToLatex extends Batchjob {
               }
             } else {
               switch (tag) {
-                case CaissaConstants.PGNTAG_ECO:
+                case PGN.PGNTAG_ECO:
                   var extra = "";
                   if (!partij.isRanked()) {
                     extra =

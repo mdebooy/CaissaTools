@@ -16,7 +16,6 @@
  */
 package eu.debooy.caissatools;
 
-import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.PgnException;
@@ -67,7 +66,7 @@ public final class SpelerStatistiek extends Batchjob {
     var   titelDatum  = new StringBuilder();
     Date  datum;
     try {
-      datum = Datum.toDate(startdatum, CaissaConstants.PGN_DATUM_FORMAAT);
+      datum = Datum.toDate(startdatum, PGN.PGN_DATUM_FORMAAT);
       titelDatum.append(Datum.fromDate(datum));
     } catch (ParseException e) {
       DoosUtils.foutNaarScherm(resourceBundle.getString("label.startdatum")
@@ -77,7 +76,7 @@ public final class SpelerStatistiek extends Batchjob {
 
     if (!startdatum.equals(einddatum)) {
       try {
-        datum = Datum.toDate(einddatum, CaissaConstants.PGN_DATUM_FORMAAT);
+        datum = Datum.toDate(einddatum, PGN.PGN_DATUM_FORMAAT);
         titelDatum.append(" - ").append(Datum.fromDate(datum));
       } catch (ParseException e) {
         DoosUtils.foutNaarScherm(resourceBundle.getString("label.einddatum")
@@ -345,9 +344,9 @@ public final class SpelerStatistiek extends Batchjob {
                                     String speler, String statistiektag) {
     String  hulpdatum;
     String  sleutel;
-    var     uitslag   = partij.getTag(CaissaConstants.PGNTAG_RESULT);
-    var     wit       = partij.getTag(CaissaConstants.PGNTAG_WHITE);
-    var     zwart     = partij.getTag(CaissaConstants.PGNTAG_BLACK);
+    var     uitslag   = partij.getTag(PGN.PGNTAG_RESULT);
+    var     wit       = partij.getTag(PGN.PGNTAG_WHITE);
+    var     zwart     = partij.getTag(PGN.PGNTAG_BLACK);
     var     i         = 0;
     for (var s: UITSLAGEN) {
       if (s.equals(uitslag)) {
@@ -359,7 +358,7 @@ public final class SpelerStatistiek extends Batchjob {
     if (speler.equals(wit) || speler.equals(zwart)) {
       verwerkt++;
       // Verwerk de 'datums'
-      hulpdatum = partij.getTag(CaissaConstants.PGNTAG_EVENTDATE);
+      hulpdatum = partij.getTag(PGN.PGNTAG_EVENTDATE);
       if (DoosUtils.isNotBlankOrNull(hulpdatum)
           && hulpdatum.indexOf('?') < 0) {
         if (hulpdatum.compareTo(startdatum) < 0 ) {
@@ -369,7 +368,7 @@ public final class SpelerStatistiek extends Batchjob {
           einddatum   = hulpdatum;
         }
       }
-      hulpdatum = partij.getTag(CaissaConstants.PGNTAG_DATE);
+      hulpdatum = partij.getTag(PGN.PGNTAG_DATE);
       if (DoosUtils.isNotBlankOrNull(hulpdatum)
           && hulpdatum.indexOf('?') < 0) {
         if (hulpdatum.compareTo(startdatum) < 0 ) {

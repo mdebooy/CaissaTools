@@ -18,18 +18,18 @@ package eu.debooy.caissatools;
 
 import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
+import eu.debooy.caissa.Competitie;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Partij;
 import eu.debooy.caissa.Spelerinfo;
+import eu.debooy.caissa.exceptions.CompetitieException;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.ParameterBundle;
-import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
 import java.util.Locale;
@@ -40,6 +40,8 @@ import java.util.TreeSet;
   @author Marco de Booij
  */
 public class TournamentReportFile extends Batchjob {
+  private static  Competitie  competitie;
+
   public static void execute(String[] args) {
     setParameterBundle(new ParameterBundle.Builder()
                                   .setBaseName(CaissaTools.TOOL_TRF)
@@ -55,32 +57,22 @@ public class TournamentReportFile extends Batchjob {
       return;
     }
 
-    JsonBestand competitie;
     try {
-      competitie  =
-          new JsonBestand.Builder()
-                         .setBestand(paramBundle
-                                        .getBestand(CaissaTools.PAR_SCHEMA))
-                         .build();
-    } catch (BestandException e) {
+      competitie =
+          new Competitie(paramBundle.getBestand(CaissaTools.PAR_SCHEMA));
+      if (!competitie.containsKey(Competitie.JSON_TAG_SITE)) {
+        DoosUtils.foutNaarScherm(
+            competitie.getMissingTag(Competitie.JSON_TAG_SITE));
+        return;
+      }
+    } catch (CompetitieException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
 
-    // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
-    int toernooitype  = CaissaConstants.TOERNOOI_MATCH;
-    if (competitie.containsKey(CaissaConstants.JSON_TAG_TOERNOOITYPE)) {
-      toernooitype  =
-          ((Long) competitie.get(CaissaConstants.JSON_TAG_TOERNOOITYPE))
-              .intValue();
-    }
-
-    List<Spelerinfo>  spelers   = new ArrayList<>();
-
-    CaissaUtils.vulSpelers(spelers,
-                           competitie.getArray(
-                                CaissaConstants.JSON_TAG_SPELERS));
-    var matrix  = new double[spelers.size()][spelers.size() * toernooitype];
+    var spelers   = competitie.getSpelers();
+    var matrix    = new double[spelers.size()][spelers.size() *
+                                               competitie.getHeenTerug()];
 
     Collection<PGN> partijen  = new TreeSet<>(new PGN.ByEventComparator());
     try {
@@ -98,9 +90,9 @@ public class TournamentReportFile extends Batchjob {
     spelers.sort(new Spelerinfo.BySpelerSeqComparator());
 
     var spelerstrf  = vulBasisTrf(spelers);
-    var enkelrondig = (toernooitype == CaissaConstants.TOERNOOI_ENKEL);
     var schema      =
-        CaissaUtils.genereerSpeelschema(spelers, enkelrondig, partijen);
+        CaissaUtils.genereerSpeelschema(spelers, competitie.isEnkel(),
+                                        partijen);
 
     var rondes      = 0;
     for (Partij partij : schema) {
@@ -110,7 +102,7 @@ public class TournamentReportFile extends Batchjob {
       verwerkPartij(partij, spelers, spelerstrf);
     }
 
-    schrijfTrfBestand(competitie, rondes, spelerstrf);
+    schrijfTrfBestand(rondes, spelerstrf);
 
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getMelding(MSG_KLAAR));
@@ -135,7 +127,7 @@ public class TournamentReportFile extends Batchjob {
     }
   }
 
-  protected static void schrijfTrfBestand(JsonBestand schema, int rondes,
+  protected static void schrijfTrfBestand(int rondes,
                                           StringBuilder[] spelerstrf) {
     try  (var trf = new TekstBestand.Builder()
                           .setBestand(paramBundle.getBestand(
@@ -144,10 +136,9 @@ public class TournamentReportFile extends Batchjob {
       trf.write("XXC white1");
       trf.write(String.format("XXR %d", rondes));
       trf.write("XXS W=1 D=0.5 L=0 FL=0 ZPB=0 PAB=1");
-      trf.write(String.format("012 %s",
-                              schema.get(CaissaTools.PAR_EVENT).toString()));
-      trf.write(String.format("023 %s",
-                              schema.get(CaissaTools.PAR_SITE).toString()));
+      trf.write(String.format("012 %s", competitie.getEvent()));
+      trf.write(String.format("023 %s", competitie.get(Competitie.JSON_TAG_SITE)
+                                                  .toString()));
       for (var spelertrf : spelerstrf) {
         trf.write(spelertrf.toString());
       }
