@@ -22,6 +22,7 @@ import eu.debooy.caissa.Competitie;
 import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Spelerinfo;
+import eu.debooy.caissa.exceptions.CompetitieException;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
@@ -30,7 +31,6 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.ParameterBundle;
 import eu.debooy.doosutils.access.BestandConstants;
-import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
@@ -59,6 +59,7 @@ public final class PgnToLatex extends Batchjob {
                                Locale.getDefault());
 
   private static  String            auteur;
+  private static  Competitie        competitie;
   private static  String            eindDatum;
   private static  double[][]        matrix;
   private static  TekstBestand      output;
@@ -66,7 +67,6 @@ public final class PgnToLatex extends Batchjob {
   private static  List<Spelerinfo>  spelers;
   private static  String            startDatum;
   private static  String            titel;
-  private static  int               toernooitype;
 
   private static final String HLINE         = "\\hline";
   private static final String KEYWORDS      = "K";
@@ -180,39 +180,26 @@ public final class PgnToLatex extends Batchjob {
       partijen  = new TreeSet<>(new PGN.ByEventComparator());
       Map<String, String> texPartij = new HashMap<>();
 
-      JsonBestand competitie;
       try {
-        competitie    =
-            new JsonBestand.Builder()
-                           .setBestand(getInvoerbestand(schema[i],
-                                       BestandConstants.EXT_JSON))
-                           .build();
+        competitie    = new Competitie(getInvoerbestand(schema[i],
+                                       BestandConstants.EXT_JSON));
         partijen.addAll(
             CaissaUtils.laadPgnBestand(getInvoerbestand(bestand[i],
                                        BestandConstants.EXT_PGN)));
-        if (competitie.containsKey(Competitie.JSON_TAG_TOERNOOITYPE)) {
-          toernooitype =
-              ((Long) competitie.get(Competitie.JSON_TAG_TOERNOOITYPE))
-                  .intValue();
-        } else {
-          toernooitype = Competitie.TOERNOOI_MATCH;
-        }
-      } catch (BestandException | PgnException e) {
+      } catch (CompetitieException | PgnException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
         return;
       }
 
-      spelers       = new ArrayList<>();
-      CaissaUtils.vulSpelers(spelers,
-                      competitie.getArray(Competitie.JSON_TAG_SPELERS));
+      spelers       = competitie.getSpelers();
 
       partijen.forEach(PgnToLatex::verwerkPartij);
 
       try {
         var noSpelers = spelers.size();
         var kolommen  =
-            (toernooitype == Competitie.TOERNOOI_MATCH
-                                  ? partijen.size() : noSpelers * toernooitype);
+            (competitie.isMatch() ? partijen.size()
+                                  : noSpelers * competitie.getType());
         matrix    = null;
         var namen = new String[noSpelers];
         // Maak de Matrix
@@ -225,7 +212,8 @@ public final class PgnToLatex extends Batchjob {
 
           // Bepaal de score en weerstandspunten.
           matrix  = new double[noSpelers][kolommen];
-          CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix, toernooitype,
+          CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix,
+                                        competitie.getType(),
                                         paramBundle
                                           .getBoolean(
                                               CaissaTools.PAR_MATRIXOPSTAND),
@@ -233,7 +221,8 @@ public final class PgnToLatex extends Batchjob {
           if (Boolean.FALSE
                      .equals(paramBundle.getBoolean(CaissaTools.PAR_ALLEN))) {
             matrix    =
-                CaissaUtils.verwijderNietActief(spelers, matrix, toernooitype);
+                CaissaUtils.verwijderNietActief(spelers, matrix,
+                                                competitie.getType());
           }
           kolommen  = matrix[0].length;
           noSpelers = spelers.size();
@@ -278,12 +267,6 @@ public final class PgnToLatex extends Batchjob {
         aantalPartijen  += partijen.size();
       } catch (BestandException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      } finally {
-        try {
-          competitie.close();
-        } catch (BestandException e) {
-          DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-        }
       }
     }
 
@@ -366,15 +349,15 @@ public final class PgnToLatex extends Batchjob {
     lijn  = new StringBuilder();
     output.write("    " + HLINE);
     lijn.append("    \\multicolumn{2}{|c|}{} ");
-    for (var i = 0; i < (toernooitype == 0 ? kolommen : noSpelers); i++) {
-      if (toernooitype < 2) {
+    for (var i = 0; i < (competitie.isMatch() ? kolommen : noSpelers); i++) {
+      if (competitie.isEnkel()) {
         lijn.append(" & ").append((i + 1));
       } else {
         lijn.append(" & \\multicolumn{2}{c|}{").append((i + 1)).append("} ");
       }
     }
     lijn.append("& ").append(resourceBundle.getString("tag.punten"));
-    if (toernooitype > 0) {
+    if (!competitie.isMatch()) {
       lijn.append(" & ").append(resourceBundle.getString("tag.partijen"))
           .append(" & ").append(resourceBundle.getString("tag.sb"));
     }
@@ -382,7 +365,7 @@ public final class PgnToLatex extends Batchjob {
     output.write(lijn.toString());
     lijn  = new StringBuilder();
     output.write("    \\cline{3-" + (2 + kolommen) + "}");
-    if (toernooitype == 2) {
+    if (competitie.isRoundrobin() && competitie.isDubbel()) {
       lijn.append("    \\multicolumn{2}{|c|}{} & ");
       for (var i = 0; i < noSpelers; i++) {
         lijn.append(resourceBundle.getString("tag.wit")).append(" & ")
@@ -394,7 +377,7 @@ public final class PgnToLatex extends Batchjob {
     }
     output.write("    " + HLINE);
     for (var i = 0; i < noSpelers; i++) {
-      if (toernooitype == 0) {
+      if (competitie.isMatch()) {
         lijn.append("\\multicolumn{2}{|l|}{").append(spelers.get(i).getNaam())
             .append("} & ");
       } else {
@@ -402,13 +385,14 @@ public final class PgnToLatex extends Batchjob {
             .append(" & ");
       }
       for (var j = 0; j < kolommen; j++) {
-        if (toernooitype > 0) {
-          if (i == j / toernooitype) {
+        if (!competitie.isMatch()) {
+          if (i == j / competitie.getHeenTerug()) {
             lijn.append("\\multicolumn{1}"
                         + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ");
             continue;
           }
-          if ((j / toernooitype) * toernooitype != j ) {
+          if ((j / competitie.getHeenTerug())
+                 * competitie.getHeenTerug() != j ) {
             lijn.append("\\multicolumn{1}"
                         + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{");
           }
@@ -421,7 +405,9 @@ public final class PgnToLatex extends Batchjob {
           lijn.append(((Double)matrix[i][j]).intValue())
               .append(Utilities.kwart(matrix[i][j]));
         }
-        if (toernooitype > 0 && (j / toernooitype) * toernooitype != j ) {
+        if (!competitie.isMatch()
+            && (j / competitie.getHeenTerug())
+                  * competitie.getHeenTerug() != j ) {
           lijn.append("}");
         }
         lijn.append(" & ");
@@ -431,7 +417,7 @@ public final class PgnToLatex extends Batchjob {
       lijn.append(
           ((pntn == 0 && "".equals(decim)) || pntn >= 1 ?
               pntn : "")).append(decim);
-      if (toernooitype > 0) {
+      if (!competitie.isMatch()) {
         var wpntn   = spelers.get(i).getTieBreakScore().intValue();
         var wdecim  = Utilities.kwart(spelers.get(i).getTieBreakScore());
         lijn.append(" & ").append(spelers.get(i).getPartijen()).append(" & ");

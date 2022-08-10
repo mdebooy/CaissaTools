@@ -70,9 +70,9 @@ public class TournamentReportFile extends Batchjob {
       return;
     }
 
-    var spelers   = competitie.getSpelers();
-    var matrix    = new double[spelers.size()][spelers.size() *
-                                               competitie.getHeenTerug()];
+    var spelers = competitie.getSpelers();
+    var matrix  = new double[spelers.size()][spelers.size() *
+                                              competitie.getHeenTerug()];
 
     Collection<PGN> partijen  = new TreeSet<>(new PGN.ByEventComparator());
     try {

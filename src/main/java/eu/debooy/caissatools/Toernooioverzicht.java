@@ -65,8 +65,6 @@ public final class Toernooioverzicht extends Batchjob {
   private static  TekstBestand      output;
   private static  Set<Partij>       schema;
   private static  List<Spelerinfo>  spelers;
-  private static  TekstBestand      texInvoer;
-  private static  int               toernooitype;
 
   private static final  String  DEF_TEMPLATE  = "Overzicht.tex";
 
@@ -95,15 +93,15 @@ public final class Toernooioverzicht extends Batchjob {
 
   Toernooioverzicht() {}
 
-  private static void bepaalTexInvoer() throws BestandException {
+  private static TekstBestand bepaalTexInvoer() throws BestandException {
     if (paramBundle.containsParameter(CaissaTools.PAR_TEMPLATE)) {
-      texInvoer =
+      return
           new TekstBestand.Builder()
                           .setBestand(
                               paramBundle.getBestand(CaissaTools.PAR_TEMPLATE))
                           .build();
     } else {
-      texInvoer =
+      return
           new TekstBestand.Builder()
                           .setBestand(DEF_TEMPLATE)
                           .setClassLoader(classloader)
@@ -126,7 +124,7 @@ public final class Toernooioverzicht extends Batchjob {
       return;
     }
 
-    output        = null;
+    output  = null;
 
     try {
       bepaalTexInvoer();
@@ -138,32 +136,24 @@ public final class Toernooioverzicht extends Batchjob {
     }
 
     List<String>  template  = new ArrayList<>();
-    try {
+    try (var texInvoer = bepaalTexInvoer()) {
       while (texInvoer.hasNext()) {
         template.add(texInvoer.next());
       }
+    } catch (BestandException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+      return;
+    }
 
+    try {
       output  =
           new TekstBestand.Builder()
                           .setBestand(
                               paramBundle.getBestand(CaissaTools.PAR_UITVOER))
                           .setLezen(false).build();
-    } catch (BestandException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    } finally {
-      try {
-        if (null != texInvoer) {
-          texInvoer.close();
-        }
-      } catch (BestandException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-      }
-    }
-
-    try {
       competitie  =
           new Competitie(paramBundle.getBestand(CaissaTools.PAR_SCHEMA));
-    } catch (CompetitieException e) {
+    } catch (BestandException | CompetitieException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
@@ -185,8 +175,8 @@ public final class Toernooioverzicht extends Batchjob {
 
     var noSpelers = spelers.size();
     var kolommen  = competitie.getRondes();
-    matrix    = null;
-    var namen = new String[noSpelers];
+    matrix        = null;
+    var namen     = new String[noSpelers];
 
     // Maak de Matrix
     var i = 0;
@@ -208,13 +198,14 @@ public final class Toernooioverzicht extends Batchjob {
     matrix    = new double[noSpelers][kolommen];
     CaissaUtils.vulToernooiMatrix(partijen,
                                   spelers,
-                                  matrix, toernooitype,
+                                  matrix, competitie.getType(),
                                   paramBundle
                                     .getBoolean(CaissaTools.PAR_MATRIXOPSTAND),
                                   CaissaConstants.TIEBREAK_SB);
     if (Boolean.FALSE
                .equals(paramBundle.getBoolean(CaissaTools.PAR_ALLEN))) {
-      matrix  = CaissaUtils.verwijderNietActief(spelers, matrix, toernooitype);
+      matrix  = CaissaUtils.verwijderNietActief(spelers, matrix,
+                                                competitie.getType());
     }
     kolommen  = matrix[0].length;
     noSpelers = spelers.size();
@@ -349,7 +340,7 @@ public final class Toernooioverzicht extends Batchjob {
     for (var i = 0; i < noSpelers; i++) {
       lijn  = new StringBuilder();
 
-      if (toernooitype == 0) {
+      if (competitie.isMatch()) {
         lijn.append("\\multicolumn{2}{|l|}{")
             .append(spelers.get(i).getVolledigenaam())
             .append("} ");
@@ -378,19 +369,21 @@ public final class Toernooioverzicht extends Batchjob {
                                              int kolommen) {
     for (var j = 0; j < kolommen; j++) {
       lijn.append("& ");
-      if (toernooitype > 0) {
-        if (rij == j / toernooitype) {
+      if (!competitie.isMatch()) {
+        if (rij == j / competitie.getHeenTerug()) {
           lijn.append("\\multicolumn{1}"
                       + "{>{").append(KLEUR).append("}c|}{} ");
           continue;
         }
-        if ((j / toernooitype) * toernooitype != j ) {
+        if ((j / competitie.getHeenTerug()) * competitie.getHeenTerug() != j ) {
           lijn.append("\\multicolumn{1}"
                       + "{>{").append(KLEURLICHT).append("}c|}{");
         }
       }
       lijn.append(score(matrix[rij][j]));
-      if (toernooitype > 0 && (j / toernooitype) * toernooitype != j ) {
+      if (competitie.getType() > 0
+          && (j / competitie.getHeenTerug())
+                * competitie.getHeenTerug() != j ) {
         lijn.append("}");
       }
       lijn.append(" ");
@@ -403,7 +396,7 @@ public final class Toernooioverzicht extends Batchjob {
       lijn.append("& ").append(
           ((pntn == 0 && "".equals(decim)) || pntn >= 1 ?
               pntn : "")).append(decim);
-      if (toernooitype > 0) {
+      if (!competitie.isMatch()) {
         var wpntn   = spelers.get(rij).getTieBreakScore().intValue();
         var wdecim  = Utilities.kwart(spelers.get(rij).getTieBreakScore());
         lijn.append(" & ").append(spelers.get(rij).getPartijen()).append(" & ");
@@ -422,8 +415,8 @@ public final class Toernooioverzicht extends Batchjob {
 
   private static void maakLatexMatrixHead2Mat(StringBuilder lijn,
                                               int kolommen, int noSpelers) {
-    for (var i = 0; i < (toernooitype == 0 ? kolommen : noSpelers); i++) {
-      if (toernooitype < 2) {
+    for (var i = 0; i < (competitie.isMatch() ? kolommen : noSpelers); i++) {
+      if (competitie.isEnkel()) {
         lijn.append("& ").append(TEKSTKLEUR).append((i + 1)).append(" ");
       } else {
         lijn.append(" & \\multicolumn{2}{c|}{").append(TEKSTKLEUR)
@@ -446,7 +439,7 @@ public final class Toernooioverzicht extends Batchjob {
   private static void maakLatexMatrixHead2Pnt(StringBuilder lijn) {
     lijn.append("& ").append(TEKSTKLEUR)
         .append(resourceBundle.getString("tag.punten"));
-    if (toernooitype > 0) {
+    if (!competitie.isMatch()) {
       lijn.append(" & ").append(TEKSTKLEUR)
           .append(resourceBundle.getString("tag.partijen"))
           .append(" & ").append(TEKSTKLEUR)
@@ -560,7 +553,7 @@ public final class Toernooioverzicht extends Batchjob {
     maakLatexMatrixHead2Mat(lijn, kolommen, noSpelers);
     maakLatexMatrixHead2Pnt(lijn);
     lijn.append(LTX_EOL);
-    if (toernooitype == 2) {
+    if (competitie.isRoundrobin() && competitie.isDubbel()) {
       output.write(lijn.toString());
       output.write("    \\cline{3-" + (2 + kolommen) + "}");
       output.write("    " + RIJKLEUR);
@@ -585,7 +578,7 @@ public final class Toernooioverzicht extends Batchjob {
     maakLatexMatrixHead2Pnt(lijn);
     maakLatexMatrixHead2Mat(lijn, kolommen, noSpelers);
     lijn.append(LTX_EOL);
-    if (toernooitype == 2) {
+    if (competitie.isRoundrobin() && competitie.isDubbel()) {
       output.write(lijn.toString());
       output.write("    \\cline{6-" + (5 + kolommen) + "}");
       output.write("    " + RIJKLEUR);

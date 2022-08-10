@@ -22,13 +22,14 @@ import eu.debooy.caissa.Competitie;
 import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.Partij;
 import eu.debooy.caissa.Spelerinfo;
+import eu.debooy.caissa.exceptions.CompetitieException;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
+import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.ParameterBundle;
-import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.html.Utilities;
@@ -37,7 +38,6 @@ import java.text.MessageFormat;
 import java.time.LocalDate;
 import java.time.format.DateTimeFormatter;
 import java.time.temporal.TemporalAdjusters;
-import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -45,7 +45,6 @@ import java.util.Locale;
 import java.util.Properties;
 import java.util.ResourceBundle;
 import java.util.Set;
-import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
 
 
@@ -139,14 +138,12 @@ public final class PgnToHtml extends Batchjob {
       ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                Locale.getDefault());
 
-  private static  JSONArray         inhalen;
-  private static  JSONArray         kalender;
+  private static  Competitie        competitie;
   private static  double[][]        matrix;
   private static  TekstBestand      output;
   private static  String            prefix  = "";
   private static  Properties        skelet;
   private static  List<Spelerinfo>  spelers;
-  private static  int               toernooitype;
 
   protected PgnToHtml() {}
 
@@ -168,49 +165,34 @@ public final class PgnToHtml extends Batchjob {
     var invoer        = paramBundle.getBestand(CaissaTools.PAR_BESTAND);
     var matrixOpStand = paramBundle.getBoolean(CaissaTools.PAR_MATRIXOPSTAND);
 
-    JsonBestand     competitie;
     Collection<PGN> partijen;
     try {
       competitie  =
-          new JsonBestand.Builder()
-                         .setBestand(
-                            paramBundle.getBestand(CaissaTools.PAR_SCHEMA))
-                         .build();
+          new Competitie(paramBundle.getBestand(CaissaTools.PAR_SCHEMA));
       partijen    =
           CaissaUtils.laadPgnBestand(invoer);
-      inhalen     = competitie.getArray(Competitie.JSON_TAG_INHALEN);
-      kalender    = competitie.getArray(Competitie.JSON_TAG_KALENDER);
-    } catch (BestandException | PgnException e) {
+    } catch (CompetitieException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
 
     var beeindigd = partijen.stream().filter(PGN::isBeeindigd).count();
-    spelers       = new ArrayList<>();
-    CaissaUtils.vulSpelers(spelers,
-                    competitie.getArray(Competitie.JSON_TAG_SPELERS));
-
-    // enkel: 0 = Tweekamp, 1 = Enkelrondig, 2 = Dubbelrondig
-    if (competitie.containsKey(Competitie.JSON_TAG_TOERNOOITYPE)) {
-      toernooitype  =
-          ((Long) competitie.get(Competitie.JSON_TAG_TOERNOOITYPE))
-              .intValue();
-    } else {
-      toernooitype  = Competitie.TOERNOOI_MATCH;
-    }
+    spelers       = competitie.getSpelers();
 
     // Maak de Matrix.
     var noSpelers = spelers.size();
-    matrix        = new double[noSpelers][noSpelers * toernooitype];
+    matrix        = new double[noSpelers][noSpelers * competitie.getType()];
 
     // Bepaal de score en SB score.
-    CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix, toernooitype,
+    CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix,
+                                  competitie.getType(),
                                   matrixOpStand, CaissaConstants.TIEBREAK_SB);
 
     if (beeindigd > 0
         && Boolean.FALSE
                   .equals(paramBundle.getBoolean(CaissaTools.PAR_ALLEN))) {
-      matrix  = CaissaUtils.verwijderNietActief(spelers, matrix, toernooitype);
+      matrix  = CaissaUtils.verwijderNietActief(spelers, matrix,
+                                                competitie.getType());
     }
     if (matrix.length > 0) {
       // Maak het matrix.html bestand.
@@ -221,28 +203,21 @@ public final class PgnToHtml extends Batchjob {
     }
 
     // Maak het uitslagen.html bestand.
-    if (toernooitype != Competitie.TOERNOOI_MATCH) {
+    if (!competitie.isMatch()) {
       // Opnieuw lezen om niet actieve spelers terug te krijgen.
-      spelers.clear();
-      CaissaUtils.vulSpelers(spelers,
-                      competitie.getArray(Competitie.JSON_TAG_SPELERS));
+      spelers = competitie.getSpelers();
 
       // Sortering terug zetten voor opmaken schema.
       spelers.sort(new Spelerinfo.BySpelerSeqComparator());
-      var enkelrondig = (toernooitype == Competitie.TOERNOOI_ENKEL);
       var schema      =
-          CaissaUtils.genereerSpeelschema(spelers, enkelrondig, partijen);
+          CaissaUtils.genereerSpeelschema(spelers, competitie.isEnkel(),
+                                          partijen);
       if (!schema.isEmpty()) {
-        var data      =
-            CaissaUtils.vulKalender(Competitie.JSON_TAG_KALENDER_RONDE,
-                                    spelers.size(), toernooitype,
-                                    competitie.getArray(
-                                        Competitie.JSON_TAG_KALENDER));
-        maakUitslagen(schema, data);
+        maakUitslagen(schema);
       }
     }
 
-    if (!kalender.isEmpty()) {
+    if (!competitie.getKalender().isEmpty()) {
       maakKalender();
     }
 
@@ -289,20 +264,21 @@ public final class PgnToHtml extends Batchjob {
     schrijfUitvoer(HTML_TABLE_COLGROUP);
   }
 
-  private static void genereerUitslagtabel(Set<Partij> schema, String[] data)
+  private static void genereerUitslagtabel(Set<Partij> schema)
       throws BestandException {
-    var iter    = schema.iterator();
-    var partij  = iter.next();
-    var vorige  = Integer.parseInt(partij.getRonde().getRound()
-                                                    .split("\\.")[0]);
-    genereerRondeheading(vorige, DoosUtils.nullToEmpty(data[vorige]));
+    var speeldata = competitie.getSpeeldata();
+    var iter      = schema.iterator();
+    var partij    = iter.next();
+    var vorige    = Integer.parseInt(partij.getRonde().getRound()
+                                                      .split("\\.")[0]);
+    genereerRondeheading(vorige, Datum.fromDate(speeldata.get(vorige-1)));
 
     do {
       var ronde = Integer.parseInt(partij.getRonde().getRound()
                                          .split("\\.")[0]);
       if (ronde != vorige) {
         genereerRondefooting();
-        genereerRondeheading(ronde, DoosUtils.nullToEmpty(data[ronde]));
+        genereerRondeheading(ronde, Datum.fromDate(speeldata.get(ronde-1)));
         vorige  = ronde;
       }
 
@@ -444,6 +420,7 @@ public final class PgnToHtml extends Batchjob {
   }
 
   private static void maakInhalen() {
+    var inhalen = competitie.getInhaalpartijen();
     try {
       output    =
           new TekstBestand.Builder()
@@ -534,6 +511,7 @@ public final class PgnToHtml extends Batchjob {
   }
 
   private static void maakKalender() {
+    var     kalender  = competitie.getKalender();
     var     datum     =
         ((JSONObject) kalender.get(0))
             .get(Competitie.JSON_TAG_KALENDER_DATUM).toString();
@@ -661,7 +639,7 @@ public final class PgnToHtml extends Batchjob {
       // De colgroup
       String  enkeltekst;
       schrijfUitvoer(HTML_TABLE_COLGROUP_BEGIN);
-      if (toernooitype == 1) {
+      if (competitie.isRoundrobin() && competitie.isEnkel()) {
         enkeltekst  = HTML_TABLE_COLGROUP_ENKEL;
       } else {
         enkeltekst  = HTML_TABLE_COLGROUP_DUBBEL;
@@ -673,7 +651,7 @@ public final class PgnToHtml extends Batchjob {
       // De thead
       schrijfUitvoer(HTML_TABLE_HEAD_BEGIN);
       output.write(prefix + skelet.getProperty(HTML_TABLE_HEAD_BEGIN_M));
-      if (toernooitype == Competitie.TOERNOOI_ENKEL) {
+      if (competitie.isRoundrobin() && competitie.isEnkel()) {
         enkeltekst  = skelet.getProperty(HTML_TABLE_HEAD_ENKEL);
       } else {
         enkeltekst  = skelet.getProperty(HTML_TABLE_HEAD_DUBBEL);
@@ -690,7 +668,7 @@ public final class PgnToHtml extends Batchjob {
       output.write(prefix
           + MessageFormat.format(skelet.getProperty(HTML_TABLE_HEAD_SB),
                                  resourceBundle.getString(TAG_SB)));
-      if (toernooitype == Competitie.TOERNOOI_DUBBEL) {
+      if (competitie.isRoundrobin() && competitie.isDubbel()) {
         maakMatchMatrix(noSpelers);
       }
       schrijfUitvoer(HTML_TABLE_HEAD_EIND);
@@ -726,14 +704,14 @@ public final class PgnToHtml extends Batchjob {
                                swapNaam(speler.getNaam())));
     var lijn  = new StringBuilder();
     for (var j = 0; j < kolommen; j++) {
-      if ((j / toernooitype) * toernooitype == j) {
+      if ((j / competitie.getHeenTerug()) * competitie.getHeenTerug() == j) {
         lijn.append(prefix).append("      ");
       }
-      if (i == j / toernooitype) {
+      if (i == j / competitie.getHeenTerug()) {
         lijn.append(skelet.getProperty(HTML_TABLE_ROW_ZELF));
       } else {
         // -1 is een niet gespeelde partij.
-        if ((j / toernooitype) * toernooitype == j) {
+        if ((j / competitie.getHeenTerug()) * competitie.getHeenTerug() == j) {
           lijn.append(
               MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_WIT),
                                    getScore(matrix[i][j])));
@@ -743,7 +721,7 @@ public final class PgnToHtml extends Batchjob {
                                    getScore(matrix[i][j])));
         }
       }
-      if ((j / toernooitype) * toernooitype != j) {
+      if ((j / competitie.getHeenTerug()) * competitie.getHeenTerug() != j) {
         output.write(lijn.toString());
         lijn  = new StringBuilder();
       }
@@ -765,7 +743,7 @@ public final class PgnToHtml extends Batchjob {
     output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_EIND));
   }
 
-  private static void maakUitslagen(Set<Partij> schema, String[] data) {
+  private static void maakUitslagen(Set<Partij> schema) {
     skelet  = new Properties();
     try {
       output  =
@@ -783,7 +761,7 @@ public final class PgnToHtml extends Batchjob {
         prefix  = "";
       }
 
-      genereerUitslagtabel(schema, data);
+      genereerUitslagtabel(schema);
     } catch (BestandException | IOException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     } finally {

@@ -33,6 +33,7 @@ public final class TestConstants extends BatchTest {
   public static final String  BST_GESCHIEDENIS_CSV  = "geschiedenis.csv";
   public static final String  BST_INDEX_HTML        = "index.html";
   public static final String  BST_INHALEN_HTML      = "inhalen.html";
+  public static final String  BST_KALENDER_HTML     = "kalender.html";
   public static final String  BST_MATRIX_HTML       = "matrix.html";
   public static final String  BST_PARTIJ_PGN        = "partij.pgn";
   public static final String  BST_SCHEMA1_JSON      = "schema1.json";

@@ -51,7 +51,10 @@ public class PgnToHtmlTest extends BatchTest {
                                      BST_MATRIX1, BST_MATRIX2,
                                      TestConstants.BST_COMPETITIE1_PGN,
                                      TestConstants.BST_SCHEMA1_JSON,
-                                     TestConstants.BST_UITSLAGEN_HTML});
+                                     TestConstants.BST_UITSLAGEN_HTML,
+                                     TestConstants.BST_KALENDER_HTML,
+                                     TestConstants.BST_INHALEN_HTML
+                       });
   }
 
   @Before
@@ -119,6 +122,24 @@ public class PgnToHtmlTest extends BatchTest {
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + TestConstants.BST_MATRIX_HTML),
             Bestand.openInvoerBestand(CLASSLOADER, BST_MATRIX1)));
+    assertTrue(
+        Bestand.equals(
+            Bestand.openInvoerBestand(getTemp() + File.separator
+                                      + TestConstants.BST_UITSLAGEN_HTML),
+            Bestand.openInvoerBestand(CLASSLOADER,
+                                      TestConstants.BST_UITSLAGEN_HTML)));
+    assertTrue(
+        Bestand.equals(
+            Bestand.openInvoerBestand(getTemp() + File.separator
+                                      + TestConstants.BST_KALENDER_HTML),
+            Bestand.openInvoerBestand(CLASSLOADER,
+                                      TestConstants.BST_KALENDER_HTML)));
+    assertTrue(
+        Bestand.equals(
+            Bestand.openInvoerBestand(getTemp() + File.separator
+                                      + TestConstants.BST_INHALEN_HTML),
+            Bestand.openInvoerBestand(CLASSLOADER,
+                                      TestConstants.BST_INHALEN_HTML)));
   }
 
   @Test
@@ -155,5 +176,17 @@ public class PgnToHtmlTest extends BatchTest {
                                       + TestConstants.BST_UITSLAGEN_HTML),
             Bestand.openInvoerBestand(CLASSLOADER,
                                       TestConstants.BST_UITSLAGEN_HTML)));
+    assertTrue(
+        Bestand.equals(
+            Bestand.openInvoerBestand(getTemp() + File.separator
+                                      + TestConstants.BST_KALENDER_HTML),
+            Bestand.openInvoerBestand(CLASSLOADER,
+                                      TestConstants.BST_KALENDER_HTML)));
+    assertTrue(
+        Bestand.equals(
+            Bestand.openInvoerBestand(getTemp() + File.separator
+                                      + TestConstants.BST_INHALEN_HTML),
+            Bestand.openInvoerBestand(CLASSLOADER,
+                                      TestConstants.BST_INHALEN_HTML)));
   }
 }

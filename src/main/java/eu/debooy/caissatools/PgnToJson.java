@@ -236,40 +236,42 @@ public final class PgnToJson extends Batchjob {
     for (var i = 9; i > 1; i--) {
       for (var j = 1; j < 9; j++) {
         var positie = i*10+j;
-        if (bord[positie] != 0) {
-          if (DoosUtils.isBlankOrNull(getKey(ids, getCoordinaat(positie)))) {
-            var stuk  = String.valueOf(CaissaUtils.getStuk(bord[positie]));
-            if (verplaatst.containsKey(stuk)) {
-              if (ids.get(verplaatst.get(stuk)).equals(OUT)) {
-                ids.put(verplaatst.get(stuk), getCoordinaat(positie));
-              }
-            } else {
-              var plies     = trajecten.values().iterator().next().size();
-              var promotie  = "";
-              if (verplaatst.containsKey("P")) {
-                promotie  = verplaatst.get("P");
-              }
-              if (verplaatst.containsKey("p")) {
-                promotie  = verplaatst.get("P");
-              }
-              if (voorNico) {
-                ids.put(promotie, 100 + getCoordinaat(positie));
-              } else {
-                ids.put(promotie, PROMOTIE);
-              }
-              var           id      = stuk + promotie.substring(1);
-              List<Integer> traject = new ArrayList<>();
-              while (plies > 0) {
-                traject.add(EXTRA);
-                plies--;
-              }
-              if (voorNico) {
-                ids.put(id, 200 + getCoordinaat(positie));
-              } else {
-                ids.put(id, getCoordinaat(positie));
-              }
-              trajecten.put(id, traject);
+        if (bord[positie] == 0) {
+          continue;
+        }
+
+        if (DoosUtils.isBlankOrNull(getKey(ids, getCoordinaat(positie)))) {
+          var stuk  = String.valueOf(CaissaUtils.getStuk(bord[positie]));
+          if (verplaatst.containsKey(stuk)) {
+            if (ids.get(verplaatst.get(stuk)).equals(OUT)) {
+              ids.put(verplaatst.get(stuk), getCoordinaat(positie));
             }
+          } else {
+            var plies     = trajecten.values().iterator().next().size();
+            var promotie  = "";
+            if (verplaatst.containsKey("P")) {
+              promotie  = verplaatst.get("P");
+            }
+            if (verplaatst.containsKey("p")) {
+              promotie  = verplaatst.get("P");
+            }
+            if (voorNico) {
+              ids.put(promotie, 100 + getCoordinaat(positie));
+            } else {
+              ids.put(promotie, PROMOTIE);
+            }
+            var           id      = stuk + promotie.substring(1);
+            List<Integer> traject = new ArrayList<>();
+            while (plies > 0) {
+              traject.add(EXTRA);
+              plies--;
+            }
+            if (voorNico) {
+              ids.put(id, 200 + getCoordinaat(positie));
+            } else {
+              ids.put(id, getCoordinaat(positie));
+            }
+            trajecten.put(id, traject);
           }
         }
       }

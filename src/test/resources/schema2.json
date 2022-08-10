@@ -1,7 +1,7 @@
   {
-    "Event": "Testing 97/98",
-    "Site": "Caissa Tools",
-    "EventDate": "1997.10.03",
+    "event": "Testing 97/98",
+    "site": "Caissa Tools",
+    "eventdate": "1997.10.03",
     "toernooitype": 2,
     "spelers": [
       {"naam": "Speler, 01",
@@ -47,16 +47,6 @@
       { "datum": "23/02/1998", "ronde": 16},
       { "datum": "02/03/1998", "ronde": 17},
       { "datum": "09/03/1998", "ronde": 18},
-      { "datum": "16/03/1998", "extra": "Inhaalwedstrijd"},
-      { "datum": "03/04/1998", "ronde": 19},
-      { "datum": "10/04/1998", "ronde": 20},
-      { "datum": "17/04/1998", "ronde": 21},
-      { "datum": "24/04/1998", "ronde": 22},
-      { "datum": "08/05/1998", "extra": "Inhaalwedstrijd"},
-      { "datum": "15/05/1998", "ronde": 23},
-      { "datum": "22/05/1998", "ronde": 24},
-      { "datum": "29/05/1998", "ronde": 25},
-      { "datum": "05/06/1998", "ronde": 26},
       { "datum": "13/06/1998", "extra": "Inhaalwedstrijd"}
     ]
   }
