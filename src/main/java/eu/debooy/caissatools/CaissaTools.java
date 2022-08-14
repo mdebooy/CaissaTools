@@ -16,9 +16,9 @@
  */
 package eu.debooy.caissatools;
 
-import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
 import java.text.MessageFormat;
 import java.util.Arrays;
@@ -36,14 +36,12 @@ public final class CaissaTools extends Batchjob {
   public static final String  ERR_FOUTEDATUM    = "error.foutedatum";
   public static final String  ERR_FOUTEDATUMIN  = "error.foutedatumin";
   public static final String  ERR_GEENINVOER    = "error.geen.invoer";
-  public static final String  ERR_HALVE         = "error.halve.verboden";
   public static final String  ERR_KALENDER      = "error.kalender";
 
-  public static final String  ERR_MAAKNIEUWBESTAND  = "error.maaknieuwbestand";
-  public static final String  ERR_MAXVERSCHIL       = "error.maxverschil";
-  public static final String  ERR_TALENGELIJK       = "error.talen.gelijk";
-  public static final String  ERR_TEMPLATE          = "error.template";
-  public static final String  ERR_TSEMAIL           = "error.tsemail";
+  public static final String  ERR_MAXVERSCHIL   = "error.maxverschil";
+  public static final String  ERR_TALENGELIJK   = "error.talen.gelijk";
+  public static final String  ERR_TEMPLATE      = "error.template";
+  public static final String  ERR_TSEMAIL       = "error.tsemail";
 
   public static final String  HLP_BESTAND       = "help.bestand";
   public static final String  HLP_MATRIXOPSTAND = "help.matrixopstand";
@@ -67,18 +65,14 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_AUTEUR              = "auteur";
   public static final String  PAR_BERICHT             = "bericht";
   public static final String  PAR_BESTAND             = "bestand";
-  public static final String  PAR_DATE                = "date";
   public static final String  PAR_DATUM               = "datum";
   public static final String  PAR_DEFAULTECO          = "defaulteco";
   public static final String  PAR_EINDDATUM           = "eindDatum";
-  public static final String  PAR_ENKEL               = "enkel";
-  public static final String  PAR_ENKELRONDIG         = "enkelrondig";
   public static final String  PAR_ENKELZETTEN         = "enkelzetten";
   public static final String  PAR_EVENT               = "event";
   public static final String  PAR_EXTRA               = "extra";
   public static final String  PAR_EXTRAINFO           = "extraInfo";
   public static final String  PAR_GESCHIEDENISBESTAND = "geschiedenisBestand";
-  public static final String  PAR_HALVE               = "halve";
   public static final String  PAR_INCLUDELEGE         = "includelege";
   public static final String  PAR_JSON                = "json";
   public static final String  PAR_KEYWORDS            = "keywords";
@@ -103,7 +97,6 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_SMTPSERVER          = "smtpserver";
   public static final String  PAR_SPELER              = "speler";
   public static final String  PAR_SPELERBESTAND       = "spelerBestand";
-  public static final String  PAR_SPELERS             = "spelers";
   public static final String  PAR_STARTDATUM          = "startDatum";
   public static final String  PAR_STARTELO            = "startELO";
   public static final String  PAR_SUBTITEL            = "subtitel";
@@ -111,9 +104,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_TEMPLATE            = "template";
   public static final String  PAR_TITEL               = "titel";
   public static final String  PAR_TOERNOOIBESTAND     = "toernooiBestand";
-  public static final String  PAR_TOERNOOITYPE        = "toernooitype";
   public static final String  PAR_TRFBESTAND          = "trfbestand";
-  public static final String  PAR_TYPE                = "type";
   public static final String  PAR_TSEMAIL             = "tsemail";
   public static final String  PAR_UITVOER             = "uitvoer";
   public static final String  PAR_VANTAAL             = "vantaal";
@@ -153,13 +144,13 @@ public final class CaissaTools extends Batchjob {
 
   public static void main(String[] args) {
     if (args.length == 0) {
-      Banner.printMarcoBanner(TXT_BANNER);
+      new MarcoBanner().print(TXT_BANNER);
       help();
       return;
     }
 
-    var commando      = args[0];
-    var commandoArgs  = new String[args.length-1];
+    var       commando      = args[0];
+    String[]  commandoArgs  = new String[args.length-1];
     System.arraycopy(args, 1, commandoArgs, 0, args.length-1);
 
     switch (commando.toLowerCase()) {
@@ -203,7 +194,7 @@ public final class CaissaTools extends Batchjob {
         VertaalPgn.execute(commandoArgs);
         break;
       default:
-        Banner.printMarcoBanner(TXT_BANNER);
+        new MarcoBanner().print(TXT_BANNER);
         help();
         DoosUtils.foutNaarScherm(
             MessageFormat.format(getMelding(ERR_TOOLONBEKEND), commando));
