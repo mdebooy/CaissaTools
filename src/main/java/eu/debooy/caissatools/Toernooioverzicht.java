@@ -24,11 +24,11 @@ import eu.debooy.caissa.Partij;
 import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.CompetitieException;
 import eu.debooy.caissa.exceptions.PgnException;
-import eu.debooy.doosutils.Banner;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
+import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
 import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.TekstBestand;
@@ -110,17 +110,15 @@ public final class Toernooioverzicht extends Batchjob {
   }
 
   public static void execute(String[] args) {
-    setParameterBundle(new ParameterBundle.Builder()
+    setParameterBundle(
+        new ParameterBundle.Builder()
+                           .setArgs(args)
+                           .setBanner(new MarcoBanner())
                            .setBaseName(CaissaTools.TOOL_TOERNOOIOVERZICHT)
                            .setValidator(new BestandDefaultParameters())
                            .build());
 
-    Banner.printMarcoBanner(DoosUtils.nullToEmpty(paramBundle.getBanner()));
-
-    if (!paramBundle.isValid()
-        || !paramBundle.setArgs(args)) {
-      help();
-      printFouten();
+    if (!paramBundle.isValid()) {
       return;
     }
 

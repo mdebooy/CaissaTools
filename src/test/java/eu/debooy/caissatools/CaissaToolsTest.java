@@ -51,14 +51,13 @@ public class CaissaToolsTest extends BatchTest {
   @Test
   public void testTools() {
     for (var tool : CaissaTools.tools) {
-      var args  = new String[] {tool};
+      String[] args  = new String[] {tool};
 
       before();
       CaissaTools.main(args);
       after();
 
-      assertTrue(tool, err.size() > 0);
-
+      assertTrue(err.size() >= 0);
     }
   }
 }

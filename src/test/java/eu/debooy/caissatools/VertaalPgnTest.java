@@ -84,7 +84,8 @@ public class VertaalPgnTest extends BatchTest {
         resourceBundle.getString(CaissaTools.ERR_GEENINVOER),
         MessageFormat.format(
           resourceBundle.getString(CaissaTools.ERR_TALENGELIJK),
-          vanTaal, naarTaal)};
+                             vanTaal, naarTaal)
+};
 
     before();
     VertaalPgn.execute(args);
@@ -132,7 +133,6 @@ public class VertaalPgnTest extends BatchTest {
   @Test
   public void testBestand() throws PgnException {
     var args  = new String[] {
-        "--" + CaissaTools.PAR_BESTAND,
         TestConstants.PAR_BESTAND3,
         "--" + CaissaTools.PAR_VANTAAL, VANTAAL,
         "--" + CaissaTools.PAR_NAARTAAL, NAARTAAL};
