@@ -6,10 +6,10 @@
   "banner": "PGN to LaTeX",
   "parameters": [
     {
-      "parameter": "allen",
+      "parameter": "aktief",
       "kort": "a",
-      "lang": "allen",
-      "help": "Alle spelers. Ook die nog niet gespeeld hebben.",
+      "lang": "aktief",
+      "help": "Enkel de spelers die al gespeeld hebben.",
       "type": "boolean"
     },
     {

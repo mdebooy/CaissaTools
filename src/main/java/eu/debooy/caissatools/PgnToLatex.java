@@ -216,8 +216,7 @@ public final class PgnToLatex extends Batchjob {
                                           .getBoolean(
                                               CaissaTools.PAR_MATRIXOPSTAND),
                                         CaissaConstants.TIEBREAK_SB);
-          if (Boolean.FALSE
-                     .equals(paramBundle.getBoolean(CaissaTools.PAR_ALLEN))) {
+          if (paramBundle.getBoolean(CaissaTools.PAR_AKTIEF)) {
             matrix    =
                 CaissaUtils.verwijderNietActief(spelers, matrix,
                                                 competitie.getType());

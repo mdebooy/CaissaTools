@@ -186,9 +186,7 @@ public final class PgnToHtml extends Batchjob {
                                   competitie.getType(),
                                   matrixOpStand, CaissaConstants.TIEBREAK_SB);
 
-    if (beeindigd > 0
-        && Boolean.FALSE
-                  .equals(paramBundle.getBoolean(CaissaTools.PAR_ALLEN))) {
+    if (paramBundle.getBoolean(CaissaTools.PAR_AKTIEF)) {
       matrix  = CaissaUtils.verwijderNietActief(spelers, matrix,
                                                 competitie.getType());
     }
