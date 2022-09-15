@@ -183,7 +183,7 @@ public final class Toernooioverzicht extends Batchjob {
     }
     Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
 
-    if (competitie.isMatch()) {
+    if (!competitie.isMatch()) {
       schema  =
           CaissaUtils.genereerSpeelschema(spelers,
                                           competitie.isEnkel(),
