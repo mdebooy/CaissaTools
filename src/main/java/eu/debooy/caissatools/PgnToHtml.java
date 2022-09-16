@@ -174,7 +174,6 @@ public final class PgnToHtml extends Batchjob {
       return;
     }
 
-    var beeindigd = partijen.stream().filter(PGN::isBeeindigd).count();
     spelers       = competitie.getSpelers();
 
     // Maak de Matrix.
@@ -186,7 +185,7 @@ public final class PgnToHtml extends Batchjob {
                                   competitie.getType(),
                                   matrixOpStand, CaissaConstants.TIEBREAK_SB);
 
-    if (paramBundle.getBoolean(CaissaTools.PAR_AKTIEF)) {
+    if (Boolean.TRUE.equals(paramBundle.getBoolean(CaissaTools.PAR_AKTIEF))) {
       matrix  = CaissaUtils.verwijderNietActief(spelers, matrix,
                                                 competitie.getType());
     }
@@ -785,8 +784,8 @@ public final class PgnToHtml extends Batchjob {
     var k = 1;
     while (skelet.containsKey(parameter + k)) {
       output.write(
-          MessageFormat.format(prefix + skelet.getProperty(parameter + k),
-          params));
+          prefix + MessageFormat.format(skelet.getProperty(parameter + k),
+                                        params));
       k++;
     }
   }

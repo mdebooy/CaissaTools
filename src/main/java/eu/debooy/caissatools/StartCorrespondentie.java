@@ -279,43 +279,21 @@ public class StartCorrespondentie extends Batchjob {
 
     for (var lijn : email) {
       lijn  = getTekst(lijn);
-      if (DoosUtils.isNotBlankOrNull(lijn)) {
-        if (DoosUtils.telTeken(lijn, '@') > 1) {
-          var hulplijn = new StringBuilder();
-          while (DoosUtils.telTeken(lijn, '@') > 1) {
-            var at      = lijn.indexOf('@');
-            hulplijn.append(lijn.substring(0, at));
-            lijn        = lijn.substring(at+1);
-            at          = lijn.indexOf('@');
-            var sublijn = lijn.substring(0, at);
-            if (sublijn.contains("_")) {
-              var delen = sublijn.split("_");
-              switch (delen[0].toLowerCase()) {
-                case "metwit":
-                  hulplijn.append(maakMessageMetwit(speler, delen[1]));
-                  break;
-                case "metzwart":
-                  hulplijn.append(maakMessageMetzwart(speler, delen[1]));
-                  break;
-                case "partijen":
-                  hulplijn.append(maakMessagePartijen(delen[1]));
-                  break;
-                case "spelers":
-                  hulplijn.append(maakMessageSpelers(delen[1]));
-                  break;
-                default:
-                  break;
-              }
-            } else {
-              hulplijn.append(formatLijn(sublijn));
-            }
-            message.append(formatLijn(hulplijn.toString()));
-            lijn  = lijn.substring(at+1);
-          }
-          message.append(lijn);
-        } else {
-          message.append(formatLijn(lijn));
+      if (DoosUtils.isNotBlankOrNull(lijn)
+          && DoosUtils.telTeken(lijn, '@') > 1) {
+        var hulplijn = new StringBuilder();
+        while (DoosUtils.telTeken(lijn, '@') > 1) {
+          var at  = lijn.indexOf('@');
+          hulplijn.append(lijn.substring(0, at));
+          lijn    = lijn.substring(at+1);
+          at      = lijn.indexOf('@');
+          hulplijn.append(verwerkSublijn(lijn.substring(0, at), speler));
+          message.append(formatLijn(hulplijn.toString()));
+          lijn    = lijn.substring(at+1);
         }
+        message.append(lijn);
+      } else {
+        message.append(formatLijn(lijn));
       }
     }
 
@@ -612,5 +590,32 @@ public class StartCorrespondentie extends Batchjob {
     }
 
     return aantalPartijen;
+  }
+
+  private static String verwerkSublijn(String sublijn, String speler) {
+    var resultaat = "";
+    if (sublijn.contains("_")) {
+      var delen = sublijn.split("_");
+      switch (delen[0].toLowerCase()) {
+        case "metwit":
+          resultaat = maakMessageMetwit(speler, delen[1]);
+          break;
+        case "metzwart":
+          resultaat = maakMessageMetzwart(speler, delen[1]);
+          break;
+        case "partijen":
+          resultaat = maakMessagePartijen(delen[1]);
+          break;
+        case "spelers":
+          resultaat = maakMessageSpelers(delen[1]);
+          break;
+        default:
+          break;
+      }
+    } else {
+      resultaat = formatLijn(sublijn);
+    }
+
+    return resultaat;
   }
 }

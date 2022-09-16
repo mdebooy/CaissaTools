@@ -149,8 +149,8 @@ public final class CaissaTools extends Batchjob {
       return;
     }
 
-    var       commando      = args[0];
-    String[]  commandoArgs  = new String[args.length-1];
+    var commando      = args[0];
+    var commandoArgs  = new String[args.length-1];
     System.arraycopy(args, 1, commandoArgs, 0, args.length-1);
 
     switch (commando.toLowerCase()) {

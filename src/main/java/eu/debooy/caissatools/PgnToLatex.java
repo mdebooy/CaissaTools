@@ -216,13 +216,18 @@ public final class PgnToLatex extends Batchjob {
                                           .getBoolean(
                                               CaissaTools.PAR_MATRIXOPSTAND),
                                         CaissaConstants.TIEBREAK_SB);
-          if (paramBundle.getBoolean(CaissaTools.PAR_AKTIEF)) {
+          if (Boolean.TRUE
+                     .equals(paramBundle.getBoolean(CaissaTools.PAR_AKTIEF))) {
             matrix    =
                 CaissaUtils.verwijderNietActief(spelers, matrix,
                                                 competitie.getType());
+            if (matrix.length > 0) {
+              kolommen  = matrix[0].length;
+            } else {
+              kolommen  = 0;
+            }
+            noSpelers = spelers.size();
           }
-          kolommen  = matrix[0].length;
-          noSpelers = spelers.size();
         }
 
         // Zet de te vervangen waardes.
@@ -470,14 +475,10 @@ public final class PgnToLatex extends Batchjob {
       default:
         switch (status) {
           case KEYWORDS:
-            if (parameters.containsKey(CaissaTools.PAR_KEYWORDS)) {
-              output.write(replaceParameters(regel, parameters));
-            }
+            schrijfParameter(CaissaTools.PAR_KEYWORDS, regel, parameters);
             break;
           case KYW_LOGO:
-            if (parameters.containsKey(CaissaTools.PAR_LOGO)) {
-              output.write(replaceParameters(regel, parameters));
-            }
+            schrijfParameter(CaissaTools.PAR_LOGO, regel, parameters);
             break;
           case KYW_MATRIX:
             if (null != matrix) {
@@ -489,9 +490,7 @@ public final class PgnToLatex extends Batchjob {
             texPartij.put(splits[0], splits[1]);
             break;
           case KYW_PERIODE:
-            if (parameters.containsKey("Periode")) {
-              output.write(replaceParameters(regel, parameters));
-            }
+            schrijfParameter("Periode", regel, parameters);
             break;
           default:
             output.write(replaceParameters(regel, parameters));
@@ -501,6 +500,14 @@ public final class PgnToLatex extends Batchjob {
     }
 
     return status;
+  }
+
+  private static void schrijfParameter(String param, String regel,
+                                       Map<String, String> parameters)
+      throws BestandException {
+    if (parameters.containsKey(param)) {
+      output.write(replaceParameters(regel, parameters));
+    }
   }
 
   private static String setStatus(String keyword) {

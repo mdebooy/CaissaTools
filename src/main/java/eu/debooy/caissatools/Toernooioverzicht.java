@@ -200,12 +200,16 @@ public final class Toernooioverzicht extends Batchjob {
                                   paramBundle
                                     .getBoolean(CaissaTools.PAR_MATRIXOPSTAND),
                                   CaissaConstants.TIEBREAK_SB);
-    if (paramBundle.getBoolean(CaissaTools.PAR_AKTIEF)) {
+    if (Boolean.TRUE.equals(paramBundle.getBoolean(CaissaTools.PAR_AKTIEF))) {
       matrix  = CaissaUtils.verwijderNietActief(spelers, matrix,
                                                 competitie.getType());
+      if (matrix.length > 0) {
+        kolommen  = matrix[0].length;
+      } else {
+        kolommen  = 0;
+      }
+      noSpelers = spelers.size();
     }
-    kolommen  = matrix[0].length;
-    noSpelers = spelers.size();
 
     // Zet de te vervangen waardes.
     Map<String, String> params  = new HashMap<>();
