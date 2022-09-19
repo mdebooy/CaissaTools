@@ -469,7 +469,7 @@ public final class Toernooioverzicht extends Batchjob {
     var vorige    = Integer.parseInt(partij.getRonde().getRound()
                                                     .split("\\.")[0]);
     maakRondeheading(vorige,
-         DoosUtils.nullToEmpty(Datum.fromDate(kalender.get(vorige))));
+         DoosUtils.nullToEmpty(Datum.fromDate(kalender.get(vorige-1))));
 
     do {
       var ronde = Integer.parseInt(partij.getRonde().getRound()
@@ -478,7 +478,7 @@ public final class Toernooioverzicht extends Batchjob {
         output.write("    " + LTX_HLINE);
         output.write("   " + LTX_END_TABULAR);
         maakRondeheading(ronde,
-            DoosUtils.nullToEmpty(Datum.fromDate(kalender.get(vorige))));
+            DoosUtils.nullToEmpty(Datum.fromDate(kalender.get(ronde-1))));
         vorige  = ronde;
       }
 
