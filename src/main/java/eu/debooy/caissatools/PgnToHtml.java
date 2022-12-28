@@ -328,7 +328,7 @@ public final class PgnToHtml extends Batchjob {
 
       if (skelet.containsKey(PROP_INDENT)) {
         prefix  = DoosUtils.stringMetLengte("",
-            Integer.valueOf(skelet.getProperty(PROP_INDENT)));
+            Integer.parseInt(skelet.getProperty(PROP_INDENT)));
       } else {
         prefix  = "";
       }
@@ -670,7 +670,7 @@ public final class PgnToHtml extends Batchjob {
 
       schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
       for (var i = 0; i < noSpelers; i++) {
-        maakMatrixBody(spelers.get(i), i, kolommen);
+        maakMatrixBody(spelers.get(i), i, kolommen, competitie.isDubbel());
       }
       schrijfUitvoer(HTML_TABLE_BODY_EIND);
 
@@ -688,7 +688,8 @@ public final class PgnToHtml extends Batchjob {
     }
   }
 
-  private static void maakMatrixBody(Spelerinfo speler, int i, int kolommen)
+  private static void maakMatrixBody(Spelerinfo speler, int i, int kolommen,
+                                     boolean dubbelrondig)
       throws BestandException {
     output.write(prefix + skelet.getProperty(HTML_TABLE_ROW_BEGIN));
     output.write(prefix
@@ -697,29 +698,31 @@ public final class PgnToHtml extends Batchjob {
     output.write(prefix
         + MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_NAAM),
                                swapNaam(speler.getNaam())));
+    var j     = 0;
     var lijn  = new StringBuilder();
-    for (var j = 0; j < kolommen; j++) {
-      if ((j / competitie.getHeenTerug()) * competitie.getHeenTerug() == j) {
-        lijn.append(prefix).append("      ");
-      }
-      if (i == j / competitie.getHeenTerug()) {
+    while (j < kolommen) {
+      lijn.append(prefix).append("      ");
+      if ((dubbelrondig ? 2 : 1) * i == j) {
         lijn.append(skelet.getProperty(HTML_TABLE_ROW_ZELF));
+        if (dubbelrondig) {
+          j++;
+          lijn.append(skelet.getProperty(HTML_TABLE_ROW_ZELF));
+        }
       } else {
         // -1 is een niet gespeelde partij.
-        if ((j / competitie.getHeenTerug()) * competitie.getHeenTerug() == j) {
-          lijn.append(
-              MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_WIT),
-                                   getScore(matrix[i][j])));
-        } else {
+        lijn.append(
+            MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_WIT),
+                                 getScore(matrix[i][j])));
+        if (dubbelrondig) {
+          j++;
           lijn.append(
               MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_ZWART),
                                    getScore(matrix[i][j])));
         }
       }
-      if ((j / competitie.getHeenTerug()) * competitie.getHeenTerug() != j) {
-        output.write(lijn.toString());
-        lijn  = new StringBuilder();
-      }
+      output.write(lijn.toString());
+      lijn  = new StringBuilder();
+      j++;
     }
     var pntn  = speler.getPunten().intValue();
     var decim = Utilities.kwart(speler.getPunten());
@@ -751,7 +754,7 @@ public final class PgnToHtml extends Batchjob {
 
       if (skelet.containsKey(PROP_INDENT)) {
         prefix  = DoosUtils.stringMetLengte("",
-            Integer.valueOf(skelet.getProperty(PROP_INDENT)));
+            Integer.parseInt(skelet.getProperty(PROP_INDENT)));
       } else {
         prefix  = "";
       }
