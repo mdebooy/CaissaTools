@@ -11,18 +11,18 @@
       {"naam": "Speler, 05"}
     ],
     "kalender": [
-      { "datum": "01-10-1999", "ronde": 1},
-      { "datum": "08-10-1999", "ronde": 2},
-      { "datum": "15-10-1999", "ronde": 3},
-      { "datum": "22-10-1999", "extra": "Inhaalwedstrijd"},
-      { "datum": "29-10-1999", "ronde": 4},
-      { "datum": "05-11-1999", "ronde": 5},
-      { "datum": "12-11-1999", "ronde": 6},
-      { "datum": "19-11-1999", "extra": "Inhaalwedstrijd"},
-      { "datum": "26-11-1999", "ronde": 7},
-      { "datum": "03-12-1999", "ronde": 8},
-      { "datum": "10-11-1999", "ronde": 9},
-      { "datum": "24-12-1999", "extra": "Inhaalwedstrijd"},
-      { "datum": "31-12-1999", "extra": "Inhaalwedstrijd"}
+      { "datum": "01/10/1999", "ronde": 1},
+      { "datum": "08/10/1999", "ronde": 2},
+      { "datum": "15/10/1999", "ronde": 3},
+      { "datum": "22/10/1999", "extra": "Inhaalwedstrijd"},
+      { "datum": "29/10/1999", "ronde": 4},
+      { "datum": "05/11/1999", "ronde": 5},
+      { "datum": "12/11/1999", "ronde": 6},
+      { "datum": "19/11/1999", "extra": "Inhaalwedstrijd"},
+      { "datum": "26/11/1999", "ronde": 7},
+      { "datum": "03/12/1999", "ronde": 8},
+      { "datum": "10/11/1999", "ronde": 9},
+      { "datum": "24/12/1999", "extra": "Inhaalwedstrijd"},
+      { "datum": "31/12/1999", "extra": "Inhaalwedstrijd"}
     ]
   }

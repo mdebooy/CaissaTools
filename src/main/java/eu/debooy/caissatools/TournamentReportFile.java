@@ -68,8 +68,6 @@ public class TournamentReportFile extends Batchjob {
     }
 
     var spelers = competitie.getSpelers();
-    var matrix  = new double[spelers.size()][spelers.size() *
-                                              competitie.getHeenTerug()];
 
     Collection<PGN> partijen  = new TreeSet<>(new PGN.ByEventComparator());
     try {
@@ -81,21 +79,19 @@ public class TournamentReportFile extends Batchjob {
       return;
     }
 
-    CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix, 0, false,
-                                  CaissaConstants.TIEBREAK_SB);
+    CaissaUtils.vulToernooiMatrix(partijen, competitie, false);
 
     spelers.sort(new Spelerinfo.BySpelerSeqComparator());
 
     var spelerstrf  = vulBasisTrf(spelers);
     var schema      =
-        CaissaUtils.genereerSpeelschema(spelers, competitie.isEnkel(),
-                                        partijen);
+        CaissaUtils.genereerSpeelschema(competitie, partijen);
 
     var rondes      = 0;
     for (Partij partij : schema) {
       rondes = Math.max(rondes,
-                        Integer.valueOf(partij.getRonde()
-                                              .getRound().split("\\.")[0]));
+                        Integer.parseInt(partij.getRonde()
+                                               .getRound().split("\\.")[0]));
       verwerkPartij(partij, spelers, spelerstrf);
     }
 

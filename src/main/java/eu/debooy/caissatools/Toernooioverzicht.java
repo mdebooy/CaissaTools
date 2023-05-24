@@ -185,24 +185,17 @@ public final class Toernooioverzicht extends Batchjob {
 
     if (!competitie.isMatch()) {
       schema  =
-          CaissaUtils.genereerSpeelschema(spelers,
-                                          competitie.isEnkel(),
-                                          partijen);
+          CaissaUtils.genereerSpeelschema(competitie, partijen);
     } else {
       schema  = new TreeSet<>();
     }
 
     // Bepaal de score en weerstandspunten.
-    matrix    = new double[noSpelers][kolommen];
-    CaissaUtils.vulToernooiMatrix(partijen,
-                                  spelers,
-                                  matrix, competitie.getType(),
-                                  paramBundle
-                                    .getBoolean(CaissaTools.PAR_MATRIXOPSTAND),
-                                  CaissaConstants.TIEBREAK_SB);
+    var opStand = paramBundle.getBoolean(CaissaTools.PAR_MATRIXOPSTAND);
+    matrix      =  CaissaUtils.vulToernooiMatrix(partijen, competitie,
+                                                 opStand);
     if (Boolean.TRUE.equals(paramBundle.getBoolean(CaissaTools.PAR_AKTIEF))) {
-      matrix  = CaissaUtils.verwijderNietActief(spelers, matrix,
-                                                competitie.getType());
+      matrix    = CaissaUtils.verwijderNietActief(matrix, competitie);
       if (matrix.length > 0) {
         kolommen  = matrix[0].length;
       } else {

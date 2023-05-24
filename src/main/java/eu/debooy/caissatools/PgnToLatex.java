@@ -21,8 +21,8 @@ import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.Competitie;
 import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
-import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.CompetitieException;
+import eu.debooy.caissa.exceptions.FenException;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.Datum;
@@ -37,7 +37,6 @@ import eu.debooy.doosutils.latex.Utilities;
 import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.HashMap;
@@ -62,9 +61,9 @@ public final class PgnToLatex extends Batchjob {
   private static  Competitie        competitie;
   private static  String            eindDatum;
   private static  double[][]        matrix;
+  private static  boolean           metMatrix;
   private static  TekstBestand      output;
   private static  Collection<PGN>   partijen;
-  private static  List<Spelerinfo>  spelers;
   private static  String            startDatum;
   private static  String            titel;
 
@@ -95,7 +94,8 @@ public final class PgnToLatex extends Batchjob {
     Date  datum;
     try {
       datum = Datum.toDate(startDatum, PGN.PGN_DATUM_FORMAAT);
-      titelDatum.append(Datum.fromDate(datum));
+      titelDatum.append(Datum.fromDate(datum,
+                                       CaissaConstants.DEF_DATUMFORMAAT));
     } catch (ParseException e) {
       DoosUtils.foutNaarScherm(resourceBundle.getString("label.startdatum")
                                + " " + e.getLocalizedMessage() + " ["
@@ -105,7 +105,9 @@ public final class PgnToLatex extends Batchjob {
     if (!startDatum.equals(eindDatum)) {
       try {
         datum = Datum.toDate(eindDatum, PGN.PGN_DATUM_FORMAAT);
-        titelDatum.append(" - ").append(Datum.fromDate(datum));
+        titelDatum.append(" - ")
+                  .append(Datum.fromDate(datum,
+                                         CaissaConstants.DEF_DATUMFORMAAT));
       } catch (ParseException e) {
         DoosUtils.foutNaarScherm(resourceBundle.getString("label.einddatum")
                                  + " " + e.getLocalizedMessage() + " ["
@@ -146,8 +148,7 @@ public final class PgnToLatex extends Batchjob {
                    .replace(BestandConstants.EXT_JSON, "").split(";");
 
     auteur        = paramBundle.getString(CaissaTools.PAR_AUTEUR);
-    var metMatrix =
-        paramBundle.getBoolean(CaissaTools.PAR_MATRIX);
+    metMatrix     = paramBundle.getBoolean(CaissaTools.PAR_MATRIX);
     titel         = paramBundle.getString(CaissaTools.PAR_TITEL);
 
     var beginBody = -1;
@@ -189,44 +190,21 @@ public final class PgnToLatex extends Batchjob {
         return;
       }
 
-      spelers       = competitie.getSpelers();
-
       partijen.forEach(PgnToLatex::verwerkPartij);
 
       try {
-        var noSpelers = spelers.size();
-        var kolommen  =
-            (competitie.isMatch() ? partijen.size()
-                                  : noSpelers * competitie.getType());
-        matrix    = null;
-        var namen = new String[noSpelers];
         // Maak de Matrix
         if (Boolean.TRUE.equals(metMatrix)) {
-          var j = 0;
-          for (var speler  : spelers) {
-            namen[j++]  = speler.getNaam();
-          }
-          Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
-
+          competitie.sorteerOpNaam();
           // Bepaal de score en weerstandspunten.
-          matrix  = new double[noSpelers][kolommen];
-          CaissaUtils.vulToernooiMatrix(partijen, spelers, matrix,
-                                        competitie.getType(),
-                                        paramBundle
-                                          .getBoolean(
-                                              CaissaTools.PAR_MATRIXOPSTAND),
-                                        CaissaConstants.TIEBREAK_SB);
+          var opStand   = paramBundle.getBoolean(CaissaTools.PAR_MATRIXOPSTAND);
+          matrix  = CaissaUtils.vulToernooiMatrix(partijen, competitie,
+                                                  opStand);
           if (Boolean.TRUE
                      .equals(paramBundle.getBoolean(CaissaTools.PAR_AKTIEF))) {
+            System.out.println("enkel aktief");
             matrix    =
-                CaissaUtils.verwijderNietActief(spelers, matrix,
-                                                competitie.getType());
-            if (matrix.length > 0) {
-              kolommen  = matrix[0].length;
-            } else {
-              kolommen  = 0;
-            }
-            noSpelers = spelers.size();
+                CaissaUtils.verwijderNietActief(matrix, competitie);
           }
         }
 
@@ -252,18 +230,18 @@ public final class PgnToLatex extends Batchjob {
         var status  = NORMAAL;
         if (i == 0) {
           for (var j = 0; j < beginBody; j++) {
-            status  = schrijf(template.get(j), status, kolommen, noSpelers,
-                              texPartij, params);
+            status  = schrijf(template.get(j), status, competitie, texPartij,
+                              params);
           }
         }
         for (var j = beginBody; j < eindeBody; j++) {
-          status  = schrijf(template.get(j), status, kolommen, noSpelers,
-                            texPartij, params);
+          status  = schrijf(template.get(j), status, competitie, texPartij,
+                              params);
         }
         if (i == bestand.length - 1) {
           for (var j = eindeBody + 1; j < template.size(); j++) {
-            status  = schrijf(template.get(j), status, kolommen, noSpelers,
-                              texPartij, params);
+            status  = schrijf(template.get(j), status, competitie, texPartij,
+                              params);
           }
         }
         aantalPartijen  += partijen.size();
@@ -339,11 +317,18 @@ public final class PgnToLatex extends Batchjob {
     return bestand + extensie;
   }
 
-  private static void maakMatrix(int kolommen, int noSpelers)
+  private static void maakMatrix(int kolommen, int noSpelers, boolean metBye)
       throws BestandException {
+    if (Boolean.FALSE.equals(metMatrix)) {
+      return;
+    }
+
     var lijn  = new StringBuilder();
     lijn.append("    \\resizebox{\\columnwidth}{!}{\\begin{tabular} { | c | l | ");
     for (var i = 0; i < kolommen; i++) {
+      lijn.append("c | ");
+    }
+    if (metBye) {
       lijn.append("c | ");
     }
     lijn.append("r | r | r | }");
@@ -358,6 +343,9 @@ public final class PgnToLatex extends Batchjob {
         lijn.append(" & \\multicolumn{2}{c|}{").append((i + 1)).append("} ");
       }
     }
+    if (metBye) {
+      lijn.append("& ").append(resourceBundle.getString("label.bye"));
+    }
     lijn.append("& ").append(resourceBundle.getString("tag.punten"));
     if (!competitie.isMatch()) {
       lijn.append(" & ").append(resourceBundle.getString("tag.partijen"))
@@ -367,11 +355,14 @@ public final class PgnToLatex extends Batchjob {
     output.write(lijn.toString());
     lijn  = new StringBuilder();
     output.write("    \\cline{3-" + (2 + kolommen) + "}");
-    if (competitie.isRoundrobin() && competitie.isDubbel()) {
+    if (competitie.isDubbel()) {
       lijn.append("    \\multicolumn{2}{|c|}{} & ");
       for (var i = 0; i < noSpelers; i++) {
         lijn.append(resourceBundle.getString("tag.wit")).append(" & ")
             .append(resourceBundle.getString("tag.zwart")).append(" & ");
+      }
+      if (metBye) {
+        lijn.append("& ");
       }
       lijn.append("& & \\\\");
       output.write(lijn.toString());
@@ -379,11 +370,12 @@ public final class PgnToLatex extends Batchjob {
     }
     output.write("    " + HLINE);
     for (var i = 0; i < noSpelers; i++) {
+      var speler  = competitie.getSpeler(i);
       if (competitie.isMatch()) {
-        lijn.append("\\multicolumn{2}{|l|}{").append(spelers.get(i).getNaam())
+        lijn.append("\\multicolumn{2}{|l|}{").append(speler.getNaam())
             .append("} & ");
       } else {
-        lijn.append((i + 1)).append(" & ").append(spelers.get(i).getNaam())
+        lijn.append((i + 1)).append(" & ").append(speler.getNaam())
             .append(" & ");
       }
       for (var j = 0; j < kolommen; j++) {
@@ -414,15 +406,18 @@ public final class PgnToLatex extends Batchjob {
         }
         lijn.append(" & ");
       }
-      var pntn  = spelers.get(i).getPunten().intValue();
-      var decim = Utilities.kwart(spelers.get(i).getPunten());
+      if (metBye) {
+        lijn.append(speler.getByeScore().intValue()).append(" & ");
+      }
+      var pntn  = speler.getPunten().intValue();
+      var decim = Utilities.kwart(speler.getPunten());
       lijn.append(
           ((pntn == 0 && "".equals(decim)) || pntn >= 1 ?
               pntn : "")).append(decim);
       if (!competitie.isMatch()) {
-        var wpntn   = spelers.get(i).getTieBreakScore().intValue();
-        var wdecim  = Utilities.kwart(spelers.get(i).getTieBreakScore());
-        lijn.append(" & ").append(spelers.get(i).getPartijen()).append(" & ");
+        var wpntn   = speler.getTieBreakScore().intValue();
+        var wdecim  = Utilities.kwart(speler.getTieBreakScore());
+        lijn.append(" & ").append(speler.getPartijen()).append(" & ");
         lijn.append(((wpntn == 0 && "".equals(wdecim))
                      || wpntn >= 1 ? wpntn : "")).append(wdecim);
       }
@@ -447,16 +442,20 @@ public final class PgnToLatex extends Batchjob {
   }
 
   private static String schrijf(String regel, String status,
-                                int kolommen, int noSpelers,
+                                Competitie competitie,
                                 Map<String, String> texPartij,
                                 Map<String, String> parameters)
       throws BestandException {
-    var start = regel.split(" ")[0];
+    var kolommen  = null == matrix ? 0 : matrix[0].length;
+    var noSpelers = competitie.getSpelers().size();
+    var metBye    = competitie.metBye();
+    var start     = regel.split(" ")[0];
+
     switch(start) {
       case "%@Include":
         if ("matrix".equalsIgnoreCase(regel.split(" ")[1])
             && null != matrix) {
-          maakMatrix(kolommen, noSpelers);
+          maakMatrix(kolommen, noSpelers, metBye);
         }
         break;
       case "%@IncludeStart":
@@ -481,7 +480,7 @@ public final class PgnToLatex extends Batchjob {
             schrijfParameter(CaissaTools.PAR_LOGO, regel, parameters);
             break;
           case KYW_MATRIX:
-            if (null != matrix) {
+            if (Boolean.TRUE.equals(metMatrix)) {
               output.write(replaceParameters(regel, parameters));
             }
             break;
@@ -643,7 +642,7 @@ public final class PgnToLatex extends Batchjob {
           i = regel.indexOf('@', j+1);
         }
         output.write(regel);
-      } catch (BestandException e) {
+      } catch (BestandException | FenException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     });

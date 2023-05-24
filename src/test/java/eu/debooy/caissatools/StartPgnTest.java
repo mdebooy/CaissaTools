@@ -53,7 +53,6 @@ public class StartPgnTest extends BatchTest {
   private static final  String  PAR_TELANG  = "--schema=" + getTemp()
                                                 + File.separator + "telang";
 
-
   @AfterClass
   public static void afterClass() throws BestandException {
     Bestand.delete(getTemp() + File.separator

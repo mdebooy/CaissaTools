@@ -20,6 +20,7 @@ import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.FEN;
 import eu.debooy.caissa.PGN;
+import eu.debooy.caissa.exceptions.FenException;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.DoosConstants;
@@ -155,7 +156,11 @@ public final class PgnToJson extends Batchjob {
       for (var pgn: partijen) {
         if (Boolean.TRUE.equals(includeLege)
             || DoosUtils.isNotBlankOrNull(pgn.getZuivereZetten())) {
-          lijst.add(verwerkPartij(pgn, partijnr));
+          try {
+            lijst.add(verwerkPartij(pgn, partijnr));
+          } catch (FenException e) {
+            DoosUtils.foutNaarScherm("Partij " + partijnr + " " + e.getLocalizedMessage());
+          }
           partijnr++;
         }
       }
@@ -302,7 +307,7 @@ public final class PgnToJson extends Batchjob {
   }
 
   private static Map<String, Object> verwerkPartij(PGN pgn, int partijnr)
-      throws PgnException {
+      throws PgnException, FenException {
     FEN fen;
 
     Map<String, Integer>        ids       =
