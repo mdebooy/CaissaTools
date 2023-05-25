@@ -36,8 +36,8 @@ import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
 import java.text.MessageFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -60,11 +60,9 @@ public final class Toernooioverzicht extends Batchjob {
                                Locale.getDefault());
 
   private static  Competitie        competitie;
-  private static  List<Spelerinfo>  deelnemers;
   private static  double[][]        matrix;
   private static  TekstBestand      output;
   private static  Set<Partij>       schema;
-  private static  List<Spelerinfo>  spelers;
 
   private static final  String  DEF_TEMPLATE  = "Overzicht.tex";
 
@@ -151,6 +149,7 @@ public final class Toernooioverzicht extends Batchjob {
                           .setLezen(false).build();
       competitie  =
           new Competitie(paramBundle.getBestand(CaissaTools.PAR_SCHEMA));
+      competitie.sorteerOpNaam();
     } catch (BestandException | CompetitieException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
@@ -162,27 +161,14 @@ public final class Toernooioverzicht extends Batchjob {
           CaissaUtils.laadPgnBestand(
               paramBundle.getBestand(CaissaTools.PAR_BESTAND,
                                      BestandConstants.EXT_PGN)));
-      spelers     = competitie.getSpelers();
-      deelnemers  = new ArrayList<>();
-
-      deelnemers.addAll(spelers);
-      deelnemers.sort(new Spelerinfo.ByNaamComparator());
     } catch (PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     }
 
-    var noSpelers = spelers.size();
-    var kolommen  = competitie.getRondes();
+    var noSpelers = competitie.getSpelers().size();
     matrix        = null;
-    var namen     = new String[noSpelers];
 
     // Maak de Matrix
-    var i = 0;
-    for (var speler  : spelers) {
-      namen[i++]  = speler.getNaam();
-    }
-    Arrays.sort(namen, String.CASE_INSENSITIVE_ORDER);
-
     if (!competitie.isMatch()) {
       schema  =
           CaissaUtils.genereerSpeelschema(competitie, partijen);
@@ -196,13 +182,8 @@ public final class Toernooioverzicht extends Batchjob {
                                                  opStand);
     if (Boolean.TRUE.equals(paramBundle.getBoolean(CaissaTools.PAR_AKTIEF))) {
       matrix    = CaissaUtils.verwijderNietActief(matrix, competitie);
-      if (matrix.length > 0) {
-        kolommen  = matrix[0].length;
-      } else {
-        kolommen  = 0;
-      }
-      noSpelers = spelers.size();
     }
+    var kolommen  = null == matrix ? 0 : matrix[0].length;
 
     // Zet de te vervangen waardes.
     Map<String, String> params  = new HashMap<>();
@@ -240,12 +221,16 @@ public final class Toernooioverzicht extends Batchjob {
   }
 
   private static void maakDeelnemerslijst() throws BestandException {
-    for (Spelerinfo deelnemer : deelnemers) {
-      if (!deelnemer.getVolledigenaam()
+    var spelers   = competitie.getSpelers();
+
+    Collections.sort(spelers);
+
+    for (var speler : spelers) {
+      if (!speler.getVolledigenaam()
                     .equalsIgnoreCase(CaissaConstants.BYE)) {
-        output.write("    " + deelnemer.getVolledigenaam() + " & "
-                + DoosUtils.nullToEmpty(deelnemer.getTelefoon()) + " & "
-                + DoosUtils.nullToEmpty(deelnemer.getEmail()) + " " + LTX_EOL);
+        output.write("    " + speler.getVolledigenaam() + " & "
+                + DoosUtils.nullToEmpty(speler.getTelefoon()) + " & "
+                + DoosUtils.nullToEmpty(speler.getEmail()) + " " + LTX_EOL);
         output.write("    " + LTX_HLINE);
       }
     }
@@ -336,11 +321,11 @@ public final class Toernooioverzicht extends Batchjob {
 
       if (competitie.isMatch()) {
         lijn.append("\\multicolumn{2}{|l|}{")
-            .append(spelers.get(i).getVolledigenaam())
+            .append(competitie.getSpeler(i).getVolledigenaam())
             .append("} ");
       } else {
         lijn.append((i + 1)).append(" & ")
-            .append(spelers.get(i).getVolledigenaam())
+            .append(competitie.getSpeler(i).getVolledigenaam())
             .append(" ");
       }
 
@@ -382,18 +367,25 @@ public final class Toernooioverzicht extends Batchjob {
       }
       lijn.append(" ");
     }
+    if (competitie.metBye()) {
+      lijn.append("& ")
+          .append(competitie.getSpeler(rij).getByeScore().intValue())
+          .append(" ");
+    }
   }
 
   private static void maakLatexMatrixBodyPnt(StringBuilder lijn, int rij) {
-      var pntn  = spelers.get(rij).getPunten().intValue();
-      var decim = Utilities.kwart(spelers.get(rij).getPunten());
+    var speler  = competitie.getSpeler(rij);
+
+    var pntn  = speler.getPunten().intValue();
+      var decim = Utilities.kwart(speler.getPunten());
       lijn.append("& ").append(
           ((pntn == 0 && "".equals(decim)) || pntn >= 1 ?
               pntn : "")).append(decim);
       if (!competitie.isMatch()) {
-        var wpntn   = spelers.get(rij).getTieBreakScore().intValue();
-        var wdecim  = Utilities.kwart(spelers.get(rij).getTieBreakScore());
-        lijn.append(" & ").append(spelers.get(rij).getPartijen()).append(" & ");
+        var wpntn   = speler.getTieBreakScore().intValue();
+        var wdecim  = Utilities.kwart(speler.getTieBreakScore());
+        lijn.append(" & ").append(speler.getPartijen()).append(" & ");
         lijn.append(((wpntn == 0 && "".equals(wdecim))
                      || wpntn >= 1 ? wpntn : "")).append(wdecim);
       }
@@ -403,6 +395,9 @@ public final class Toernooioverzicht extends Batchjob {
   private static void maakLatexMatrixHead1Mat(StringBuilder lijn,
                                               int kolommen) {
     for (var i = 0; i < kolommen; i++) {
+      lijn.append("c | ");
+    }
+    if (competitie.metBye()) {
       lijn.append("c | ");
     }
   }
@@ -417,6 +412,10 @@ public final class Toernooioverzicht extends Batchjob {
             .append((i + 1)).append("} ");
       }
     }
+    if (competitie.metBye()) {
+      lijn.append("& \\multicolumn{1}{c|}{").append(TEKSTKLEUR)
+          .append(resourceBundle.getString("tag.bye")).append("} ");;
+    }
   }
 
   private static void maakLatexMatrixHead3Mat(StringBuilder lijn,
@@ -427,6 +426,9 @@ public final class Toernooioverzicht extends Batchjob {
           .append(" & ").append(TEKSTKLEUR)
           .append(resourceBundle.getString("tag.zwart"))
           .append(" ");
+    }
+    if (competitie.metBye()) {
+      lijn.append("& ");
     }
   }
 
@@ -482,7 +484,7 @@ public final class Toernooioverzicht extends Batchjob {
       var wit     = partij.getWitspeler().getVolledigenaam();
       var zwart   = partij.getZwartspeler().getVolledigenaam();
       if (!partij.isRanked()
-          || partij.isBye()) {
+          || (partij.isBye() && ! competitie.metBye())) {
         output.write("    \\rowcolor{headingkleur!15}");
       }
       output.write("    " + wit + " & - & "
@@ -504,6 +506,8 @@ public final class Toernooioverzicht extends Batchjob {
                               paramBundle.getBestand(CaissaTools.PAR_UITVOER,
                                                      ".vcf"))
                                       .setLezen(false).build()) {
+      var spelers   = competitie.getSpelers();
+
       spelers.sort(new Spelerinfo.ByNaamComparator());
       spelers.forEach(speler -> {
         try {
@@ -547,7 +551,7 @@ public final class Toernooioverzicht extends Batchjob {
     maakLatexMatrixHead2Mat(lijn, kolommen, noSpelers);
     maakLatexMatrixHead2Pnt(lijn);
     lijn.append(LTX_EOL);
-    if (competitie.isRoundrobin() && competitie.isDubbel()) {
+    if (!competitie.isMatch() && competitie.isDubbel()) {
       output.write(lijn.toString());
       output.write("    \\cline{3-" + (2 + kolommen) + "}");
       output.write("    " + RIJKLEUR);
@@ -572,7 +576,7 @@ public final class Toernooioverzicht extends Batchjob {
     maakLatexMatrixHead2Pnt(lijn);
     maakLatexMatrixHead2Mat(lijn, kolommen, noSpelers);
     lijn.append(LTX_EOL);
-    if (competitie.isRoundrobin() && competitie.isDubbel()) {
+    if (!competitie.isMatch() && competitie.isDubbel()) {
       output.write(lijn.toString());
       output.write("    \\cline{6-" + (5 + kolommen) + "}");
       output.write("    " + RIJKLEUR);
@@ -604,7 +608,7 @@ public final class Toernooioverzicht extends Batchjob {
       case "%@Include":
         switch (regel.split(" ")[1].toLowerCase()) {
           case "deelnemers":
-            if (!spelers.isEmpty()) {
+            if (!competitie.getSpelers().isEmpty()) {
               maakDeelnemerslijst();
             }
             break;
@@ -612,7 +616,7 @@ public final class Toernooioverzicht extends Batchjob {
             maakInhaaloverzicht();
             break;
           case Competitie.JSON_TAG_KALENDER:
-            if (!spelers.isEmpty()) {
+            if (!competitie.getSpelers().isEmpty()) {
               maakKalender();
             }
             break;
