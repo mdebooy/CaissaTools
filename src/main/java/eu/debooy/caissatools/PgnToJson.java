@@ -136,16 +136,16 @@ public final class PgnToJson extends Batchjob {
                                            .toUpperCase())
                        .getStukcodes();
 
-    var invoer    = paramBundle.getBestand(CaissaTools.PAR_BESTAND,
-                                           BestandConstants.EXT_PGN);
-    var mapper    = new ObjectMapper();
+    var invoer      = paramBundle.getBestand(CaissaTools.PAR_BESTAND,
+                                             BestandConstants.EXT_PGN);
+    var mapper      = new ObjectMapper();
     List<Map<String, Object>>
-                    lijst     = new ArrayList<>();
-    var uitvoer   = paramBundle.getBestand(CaissaTools.PAR_JSON,
+        lijst       = new ArrayList<>();
+    var uitvoer     = paramBundle.getBestand(CaissaTools.PAR_JSON,
                                            BestandConstants.EXT_JSON);
 
     Collection<PGN> partijen  = null;
-    var             partijnr  = 1;
+    var             partijnr  = 0;
     try (var output  =
           new TekstBestand.Builder()
                           .setBestand(uitvoer)
@@ -153,17 +153,7 @@ public final class PgnToJson extends Batchjob {
       partijen =
           CaissaUtils.laadPgnBestand(invoer);
 
-      for (var pgn: partijen) {
-        if (Boolean.TRUE.equals(includeLege)
-            || DoosUtils.isNotBlankOrNull(pgn.getZuivereZetten())) {
-          try {
-            lijst.add(verwerkPartij(pgn, partijnr));
-          } catch (FenException e) {
-            DoosUtils.foutNaarScherm("Partij " + partijnr + " " + e.getLocalizedMessage());
-          }
-          partijnr++;
-        }
-      }
+      partijnr  = verwerkPartijen(partijen, includeLege, lijst);
 
       output.write(mapper.writeValueAsString(lijst));
     } catch (BestandException | IOException | PgnException e) {
@@ -183,7 +173,7 @@ public final class PgnToJson extends Batchjob {
                              uitvoer));
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_PARTIJEN),
-                             (partijnr - 1)));
+                             (partijnr)));
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getMelding(MSG_KLAAR));
     DoosUtils.naarScherm();
@@ -353,6 +343,27 @@ public final class PgnToJson extends Batchjob {
     return partij;
   }
 
+  private static int verwerkPartijen(Collection<PGN> partijen,
+                                     Boolean includeLege,
+                                     List<Map<String, Object>> lijst)
+      throws PgnException {
+    var partijnr  = 1;
+    for (var pgn: partijen) {
+      if (Boolean.TRUE.equals(includeLege)
+          || DoosUtils.isNotBlankOrNull(pgn.getZuivereZetten())) {
+        try {
+          lijst.add(verwerkPartij(pgn, partijnr));
+        } catch (FenException e) {
+          DoosUtils.foutNaarScherm(String.format("Partij %d %s",
+                                                 partijnr,
+                                                 e.getLocalizedMessage()));
+        }
+        partijnr++;
+      }
+    }
+
+    return partijnr - 1;
+  }
   private static void verwerkZuivereZetten(Map<String, Object> partij,
                                            String zuivereZetten, FEN fen,
                                            Map<String, Integer> ids,

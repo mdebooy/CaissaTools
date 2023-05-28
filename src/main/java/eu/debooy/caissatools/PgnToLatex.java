@@ -202,7 +202,6 @@ public final class PgnToLatex extends Batchjob {
                                                   opStand);
           if (Boolean.TRUE
                      .equals(paramBundle.getBoolean(CaissaTools.PAR_AKTIEF))) {
-            System.out.println("enkel aktief");
             matrix    =
                 CaissaUtils.verwijderNietActief(matrix, competitie);
           }
@@ -283,6 +282,12 @@ public final class PgnToLatex extends Batchjob {
     return bestand + extensie;
   }
 
+  private static String getPunten(int pntn, String decim) {
+    return ((pntn == 0
+              && "".equals(decim))
+              || pntn >= 1 ? String.valueOf(pntn) : "");
+  }
+
   private static TekstBestand getTemplate()
       throws BestandException {
     TekstBestand  texInvoer;
@@ -323,37 +328,9 @@ public final class PgnToLatex extends Batchjob {
       return;
     }
 
+    maakMatrixHeading(kolommen, noSpelers, metBye);
+
     var lijn  = new StringBuilder();
-    lijn.append("    \\resizebox{\\columnwidth}{!}{\\begin{tabular} { | c | l | ");
-    for (var i = 0; i < kolommen; i++) {
-      lijn.append("c | ");
-    }
-    if (metBye) {
-      lijn.append("c | ");
-    }
-    lijn.append("r | r | r | }");
-    output.write(lijn.toString());
-    lijn  = new StringBuilder();
-    output.write("    " + HLINE);
-    lijn.append("    \\multicolumn{2}{|c|}{} ");
-    for (var i = 0; i < (competitie.isMatch() ? kolommen : noSpelers); i++) {
-      if (competitie.isEnkel()) {
-        lijn.append(" & ").append((i + 1));
-      } else {
-        lijn.append(" & \\multicolumn{2}{c|}{").append((i + 1)).append("} ");
-      }
-    }
-    if (metBye) {
-      lijn.append("& ").append(resourceBundle.getString("label.bye"));
-    }
-    lijn.append("& ").append(resourceBundle.getString("tag.punten"));
-    if (!competitie.isMatch()) {
-      lijn.append(" & ").append(resourceBundle.getString("tag.partijen"))
-          .append(" & ").append(resourceBundle.getString("tag.sb"));
-    }
-    lijn.append(" \\\\");
-    output.write(lijn.toString());
-    lijn  = new StringBuilder();
     output.write("    \\cline{3-" + (2 + kolommen) + "}");
     if (competitie.isDubbel()) {
       lijn.append("    \\multicolumn{2}{|c|}{} & ");
@@ -378,48 +355,18 @@ public final class PgnToLatex extends Batchjob {
         lijn.append((i + 1)).append(" & ").append(speler.getNaam())
             .append(" & ");
       }
-      for (var j = 0; j < kolommen; j++) {
-        if (!competitie.isMatch()) {
-          if (i == j / competitie.getHeenTerug()) {
-            lijn.append("\\multicolumn{1}"
-                        + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ");
-            continue;
-          }
-          if ((j / competitie.getHeenTerug())
-                 * competitie.getHeenTerug() != j ) {
-            lijn.append("\\multicolumn{1}"
-                        + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{");
-          }
-        }
-        if (matrix[i][j] == 0.0) {
-          lijn.append("0");
-        } else if (matrix[i][j] == 0.5) {
-          lijn.append(Utilities.kwart(0.5));
-        } else if (matrix[i][j] >= 1.0) {
-          lijn.append(((Double)matrix[i][j]).intValue())
-              .append(Utilities.kwart(matrix[i][j]));
-        }
-        if (!competitie.isMatch()
-            && (j / competitie.getHeenTerug())
-                  * competitie.getHeenTerug() != j ) {
-          lijn.append("}");
-        }
-        lijn.append(" & ");
-      }
+      lijn.append(schrijfResultaten(i, kolommen));
       if (metBye) {
         lijn.append(speler.getByeScore().intValue()).append(" & ");
       }
       var pntn  = speler.getPunten().intValue();
       var decim = Utilities.kwart(speler.getPunten());
-      lijn.append(
-          ((pntn == 0 && "".equals(decim)) || pntn >= 1 ?
-              pntn : "")).append(decim);
+      lijn.append(getPunten(pntn, decim)).append(decim);
       if (!competitie.isMatch()) {
         var wpntn   = speler.getTieBreakScore().intValue();
         var wdecim  = Utilities.kwart(speler.getTieBreakScore());
-        lijn.append(" & ").append(speler.getPartijen()).append(" & ");
-        lijn.append(((wpntn == 0 && "".equals(wdecim))
-                     || wpntn >= 1 ? wpntn : "")).append(wdecim);
+        lijn.append(" & ").append(speler.getPartijen()).append(" & ")
+            .append(getPunten(wpntn, wdecim)).append(wdecim);
       }
       lijn.append(" \\\\");
       output.write(lijn.toString());
@@ -427,6 +374,44 @@ public final class PgnToLatex extends Batchjob {
       output.write("    " + HLINE);
     }
     output.write("    \\end{tabular}}");
+  }
+
+  private static void maakMatrixHeading(int kolommen, int noSpelers,
+                                        boolean metBye)
+      throws BestandException {
+    var lijn  = new StringBuilder();
+    int cols  = competitie.isMatch() ? kolommen : noSpelers;
+
+    lijn.append("    \\resizebox{\\columnwidth}{!}")
+        .append("{\\begin{tabular} { | c | l | ");
+    for (var i = 0; i < kolommen; i++) {
+      lijn.append("c | ");
+    }
+    if (metBye) {
+      lijn.append("c | ");
+    }
+    lijn.append("r | r | r | }");
+    output.write(lijn.toString());
+    lijn  = new StringBuilder();
+    output.write("    " + HLINE);
+    lijn.append("    \\multicolumn{2}{|c|}{} ");
+    for (var i = 0; i < cols; i++) {
+      if (competitie.isEnkel()) {
+        lijn.append(" & ").append((i + 1));
+      } else {
+        lijn.append(" & \\multicolumn{2}{c|}{").append((i + 1)).append("} ");
+      }
+    }
+    if (metBye) {
+      lijn.append("& ").append(resourceBundle.getString("label.bye"));
+    }
+    lijn.append("& ").append(resourceBundle.getString("tag.punten"));
+    if (!competitie.isMatch()) {
+      lijn.append(" & ").append(resourceBundle.getString("tag.partijen"))
+          .append(" & ").append(resourceBundle.getString("tag.sb"));
+    }
+    lijn.append(" \\\\");
+    output.write(lijn.toString());
   }
 
   private static String replaceParameters(String regel,
@@ -507,6 +492,41 @@ public final class PgnToLatex extends Batchjob {
     if (parameters.containsKey(param)) {
       output.write(replaceParameters(regel, parameters));
     }
+  }
+
+  private static String schrijfResultaten(int speler, int kolommen) {
+    var lijn  = new StringBuilder();
+
+    for (var j = 0; j < kolommen; j++) {
+      if (!competitie.isMatch()) {
+        if (speler == j / competitie.getHeenTerug()) {
+          lijn.append("\\multicolumn{1}"
+                      + "{>{\\columncolor[rgb]{0,0,0}}c|}{} & ");
+          continue;
+        }
+        if ((j / competitie.getHeenTerug())
+               * competitie.getHeenTerug() != j ) {
+          lijn.append("\\multicolumn{1}"
+                      + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{");
+        }
+      }
+      if (matrix[speler][j] == 0.0) {
+        lijn.append("0");
+      } else if (matrix[speler][j] == 0.5) {
+        lijn.append(Utilities.kwart(0.5));
+      } else if (matrix[speler][j] >= 1.0) {
+        lijn.append(((Double)matrix[speler][j]).intValue())
+            .append(Utilities.kwart(matrix[speler][j]));
+      }
+      if (!competitie.isMatch()
+          && (j / competitie.getHeenTerug())
+                * competitie.getHeenTerug() != j ) {
+        lijn.append("}");
+      }
+      lijn.append(" & ");
+    }
+
+    return lijn.toString();
   }
 
   private static String setStatus(String keyword) {

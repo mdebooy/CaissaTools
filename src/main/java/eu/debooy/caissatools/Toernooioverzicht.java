@@ -414,7 +414,7 @@ public final class Toernooioverzicht extends Batchjob {
     }
     if (competitie.metBye()) {
       lijn.append("& \\multicolumn{1}{c|}{").append(TEKSTKLEUR)
-          .append(resourceBundle.getString("tag.bye")).append("} ");;
+          .append(resourceBundle.getString("tag.bye")).append("} ");
     }
   }
 
