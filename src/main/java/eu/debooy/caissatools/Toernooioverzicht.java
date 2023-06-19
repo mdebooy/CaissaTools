@@ -519,15 +519,11 @@ public final class Toernooioverzicht extends Batchjob {
           vcards.write(String.format("FN:%s %s",
                                      speler.getAchternaam().toUpperCase(),
                                      speler.getVoornaam()));
-          for (var telefoon : speler.getTelefoon().trim().split(" - ")) {
-            if (!telefoon.startsWith("+")) {
-              telefoon  = "+32" + telefoon.substring(1);
-            }
-            vcards.write(String.format("TEL;CELL:+%s",
-                    telefoon.replaceAll("[^\\d]", "")));
+          if (DoosUtils.isNotBlankOrNull(speler.getTelefoon())) {
+            schrijfVcardTelefoon(speler.getTelefoon(), vcards);
           }
-          for (var email : speler.getEmail().trim().split(" - ")) {
-            vcards.write(String.format("EMAIL;HOME:%s",email));
+          if (DoosUtils.isNotBlankOrNull(speler.getEmail())) {
+            schrijfVcardEmail(speler.getEmail(), vcards);
           }
           vcards.write("END:VCARD");
         } catch (BestandException e) {
@@ -687,6 +683,25 @@ public final class Toernooioverzicht extends Batchjob {
         output.write(replaceParameters(regel, params));
         break;
       }
+  }
+
+  private static void schrijfVcardEmail(String emails, TekstBestand vcards)
+      throws BestandException {
+    for (var email : emails.trim().split(" - ")) {
+      vcards.write(String.format("EMAIL;HOME:%s",email));
+    }
+  }
+
+  private static void schrijfVcardTelefoon(String telefoons,
+                                           TekstBestand vcards)
+      throws BestandException {
+    for (var telefoon : telefoons.trim().split(" - ")) {
+      if (!telefoon.startsWith("+")) {
+        telefoon  = "+32" + telefoon.substring(1);
+      }
+      vcards.write(String.format("TEL;CELL:+%s",
+                   telefoon.replaceAll("[^\\d]", "")));
+    }
   }
 
   private static String score(double score) {
