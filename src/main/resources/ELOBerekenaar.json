@@ -40,7 +40,7 @@
     {
       "parameter": "startDatum",
       "lang": "startDatum",
-      "help": "De datum (deze meegeteld) vanaf wanneer de partijen meetellen (yyyy.mm.dd)."
+      "help": "De datum (deze meegeteld) vanaf wanneer de partijen mogen meetellen (yyyy.mm.dd). De partij zal ook niet meetellen als die voor de laatst gespeelde partij van één van de spelers is gespeeld."
     },
     {
       "parameter": "startELO",

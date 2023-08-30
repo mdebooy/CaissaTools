@@ -35,7 +35,6 @@ import java.text.MessageFormat;
 import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
@@ -97,30 +96,33 @@ public final class ELOBerekenaar extends Batchjob {
     } else {
       eindDatum   = CaissaConstants.DEF_EINDDATUM;
     }
-    extraInfo   = paramBundle.getBoolean(CaissaTools.PAR_EXTRAINFO);
+    extraInfo     = paramBundle.getBoolean(CaissaTools.PAR_EXTRAINFO);
     if (paramBundle.containsArgument(CaissaTools.PAR_VASTEKFACTOR)) {
-      kFactor   = paramBundle.getLong(CaissaTools.PAR_VASTEKFACTOR).intValue();
+      kFactor     = paramBundle.getInteger(CaissaTools.PAR_VASTEKFACTOR);
     } else {
-      kFactor   = null;
+      kFactor     = null;
     }
-    maxVerschil = paramBundle.getLong(CaissaTools.PAR_MAXVERSCHIL).intValue();
-    startElo    = paramBundle.getLong(CaissaTools.PAR_STARTELO).intValue();
-    startDatum  = paramBundle.getString(CaissaTools.PAR_STARTDATUM);
-    verwerkt    = 0;
+    maxVerschil   = paramBundle.getInteger(CaissaTools.PAR_MAXVERSCHIL);
+    startElo      = paramBundle.getInteger(CaissaTools.PAR_STARTELO);
+    if (paramBundle.containsArgument(CaissaTools.PAR_STARTDATUM)) {
+      startDatum  = paramBundle.getString(CaissaTools.PAR_STARTDATUM);
+    } else {
+      startDatum  = CaissaConstants.DEF_STARTDATUM;
+    }
+    verwerkt      = 0;
 
-    startDatum  =
-        leesSpelers(paramBundle.getBestand(CaissaTools.PAR_SPELERBESTAND,
-                                           BestandConstants.EXT_CSV));
+    leesSpelers(paramBundle.getBestand(CaissaTools.PAR_SPELERBESTAND));
     var aantalPartijen  = verwerkToernooi();
 
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
                              paramBundle
-                                 .getBestand(CaissaTools.PAR_SPELERBESTAND,
-                                             BestandConstants.EXT_CSV)));
-    DoosUtils.naarScherm(
-        MessageFormat.format(resourceBundle.getString("label.startdatum"),
-                             startDatum));
+                                 .getBestand(CaissaTools.PAR_SPELERBESTAND)));
+    if (!CaissaConstants.DEF_STARTDATUM.equals(startDatum)) {
+      DoosUtils.naarScherm(
+          MessageFormat.format(resourceBundle.getString("label.startdatum"),
+                               startDatum));
+    }
     if (!CaissaConstants.DEF_EINDDATUM.equals(eindDatum)) {
       DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.einddatum"),
@@ -145,15 +147,10 @@ public final class ELOBerekenaar extends Batchjob {
     DoosUtils.naarScherm();
   }
 
-  private static String leesSpelers(String spelerBestand) {
-    var laatsteDatum  =
-        DoosUtils.nullToValue(paramBundle.getString(CaissaTools.PAR_STARTDATUM),
-                              CaissaConstants.DEF_STARTDATUM);
-
+  private static void leesSpelers(String spelerBestand) {
     try (var invoer  = new CsvBestand.Builder()
                               .setBestand(spelerBestand)
                               .build()) {
-      var calendar  = Calendar.getInstance();
       while (invoer.hasNext()) {
         var veld        = invoer.next();
         var spelerId    = spelers.size();
@@ -179,12 +176,6 @@ public final class ELOBerekenaar extends Batchjob {
         spelerinfo.setSpelerId(spelerId);
         spelerinfos.add(spelerId, spelerinfo);
         spelers.put(veld[0], spelerId);
-        if (veld[5].compareTo(laatsteDatum) >= 0) {
-          calendar.setTime(spelerinfo.getLaatstePartij());
-          calendar.add(Calendar.DATE, 1);
-          laatsteDatum  = Datum.fromDate(calendar.getTime(),
-                                         PGN.PGN_DATUM_FORMAAT);
-        }
       }
     } catch (BestandException e) {
       DoosUtils.naarScherm(
@@ -196,8 +187,34 @@ public final class ELOBerekenaar extends Batchjob {
               resourceBundle.getString(CaissaTools.ERR_FOUTEDATUMIN),
               spelerBestand) + " [" + e.getLocalizedMessage() + "]");
     }
+  }
 
-    return laatsteDatum;
+  private static boolean partijAfwijzen(String datum, Date eloDatum,
+                                        int uitslag, Date laatsteWit,
+                                        Date laatsteZwart) {
+    if (startDatum.compareTo(datum) > 0
+        || eindDatum.compareTo(datum) < 0) {
+      return true;
+    }
+
+    if (uitslag > 2) {
+      return true;
+    }
+
+    if (null == laatsteWit
+        && null == laatsteZwart) {
+      return false;
+    }
+
+    if (null == laatsteWit) {
+      return !eloDatum.after(laatsteZwart);
+    }
+
+    if (null == laatsteZwart) {
+      return !eloDatum.after(laatsteWit);
+    }
+
+    return !eloDatum.after(Datum.max(laatsteWit, laatsteZwart));
   }
 
   private static void pasSpelerAan(int id, List<Spelerinfo> spelerinfos,
@@ -237,6 +254,37 @@ public final class ELOBerekenaar extends Batchjob {
     }
   }
 
+  private static void schrijfSpeler(CsvBestand csvBestand, Integer spelerId)
+      throws BestandException {
+    var velden  = new Object[KOLOMMEN.length];
+
+    velden[0] = spelerinfos.get(spelerId).getNaam();
+    velden[1] = spelerinfos.get(spelerId).getElo();
+    velden[2] = spelerinfos.get(spelerId).getElogroei();
+    velden[3] = spelerinfos.get(spelerId).getPartijen();
+    velden[4] = Datum.fromDate(spelerinfos.get(spelerId).getEerstePartij(),
+                               PGN.PGN_DATUM_FORMAAT);
+    velden[5] = Datum.fromDate(spelerinfos.get(spelerId).getLaatstePartij(),
+                               PGN.PGN_DATUM_FORMAAT);
+    if (spelerinfos.get(spelerId).getPartijen() < ELO.MIN_PARTIJEN) {
+      velden[6]   = "";
+      velden[7]   = "";
+      velden[8]   = "";
+      velden[9]   = "";
+      velden[10]  = "";
+    } else {
+      velden[6]   = Datum.fromDate(spelerinfos.get(spelerId).getOfficieel(),
+                                   PGN.PGN_DATUM_FORMAAT);
+      velden[7]   = spelerinfos.get(spelerId).getMinElo();
+      velden[8]   = Datum.fromDate(spelerinfos.get(spelerId).getMinDatum(),
+                                   PGN.PGN_DATUM_FORMAAT);
+      velden[9]   = spelerinfos.get(spelerId).getMaxElo();
+      velden[10]  = Datum.fromDate(spelerinfos.get(spelerId).getMaxDatum(),
+                                   PGN.PGN_DATUM_FORMAAT);
+    }
+    csvBestand.write(velden);
+  }
+
   private static void schrijfSpelers(Map<String, Integer> spelers,
                                      List<Spelerinfo> spelerinfos) {
     try (var csvBestand  =
@@ -248,33 +296,10 @@ public final class ELOBerekenaar extends Batchjob {
                           .setLezen(false)
                           .setKolomNamen(KOLOMMEN)
                           .build()) {
-      var velden  = new Object[KOLOMMEN.length];
       for (Integer spelerId  : spelers.values()) {
-        velden[0] = spelerinfos.get(spelerId).getNaam();
-        velden[1] = spelerinfos.get(spelerId).getElo();
-        velden[2] = spelerinfos.get(spelerId).getElogroei();
-        velden[3] = spelerinfos.get(spelerId).getPartijen();
-        velden[4] = Datum.fromDate(spelerinfos.get(spelerId).getEerstePartij(),
-                                   PGN.PGN_DATUM_FORMAAT);
-        velden[5] = Datum.fromDate(spelerinfos.get(spelerId).getLaatstePartij(),
-                                   PGN.PGN_DATUM_FORMAAT);
-        if (spelerinfos.get(spelerId).getPartijen() < ELO.MIN_PARTIJEN) {
-          velden[6]   = "";
-          velden[7]   = "";
-          velden[8]   = "";
-          velden[9]   = "";
-          velden[10]  = "";
-        } else {
-          velden[6]   = Datum.fromDate(spelerinfos.get(spelerId).getOfficieel(),
-                                       PGN.PGN_DATUM_FORMAAT);
-          velden[7]   = spelerinfos.get(spelerId).getMinElo();
-          velden[8]   = Datum.fromDate(spelerinfos.get(spelerId).getMinDatum(),
-                                       PGN.PGN_DATUM_FORMAAT);
-          velden[9]   = spelerinfos.get(spelerId).getMaxElo();
-          velden[10]  = Datum.fromDate(spelerinfos.get(spelerId).getMaxDatum(),
-                                       PGN.PGN_DATUM_FORMAAT);
+        if (null != spelerinfos.get(spelerId).getLaatstePartij()) {
+          schrijfSpeler(csvBestand, spelerId);
         }
-        csvBestand.write(velden);
       }
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -285,16 +310,6 @@ public final class ELOBerekenaar extends Batchjob {
       throws BestandException {
     var   datum     = partij.getTag(PGN.PGNTAG_DATE);
     Date  eloDatum;
-
-    if (startDatum.compareTo(datum) > 0
-        || eindDatum.compareTo(datum) < 0) {
-      return 0;
-    }
-
-    var wit       = partij.getTag(PGN.PGNTAG_WHITE);
-    var zwart     = partij.getTag(PGN.PGNTAG_BLACK);
-    var resultaat = partij.getTag(PGN.PGNTAG_RESULT);
-    var uitslag   = UITSLAGEN.indexOf(resultaat);
     try {
       eloDatum  =
           Datum.toDate(datum, PGN.PGN_DATUM_FORMAAT);
@@ -303,18 +318,26 @@ public final class ELOBerekenaar extends Batchjob {
           MessageFormat.format(
               resourceBundle.getString(CaissaTools.ERR_FOUTEDATUM),
               datum) + " [" + e.getLocalizedMessage() + "].");
-      eloDatum  = null;
-    }
-
-    if (uitslag > 2) {
       return 0;
     }
+
+    var wit         = partij.getTag(PGN.PGNTAG_WHITE);
+    var zwart       = partij.getTag(PGN.PGNTAG_BLACK);
 
     voegSpelerToe(wit, eloDatum);
     voegSpelerToe(zwart, eloDatum);
 
-    var witId     = spelers.get(wit);
-    var zwartId   = spelers.get(zwart);
+    var resultaat   = partij.getTag(PGN.PGNTAG_RESULT);
+    var uitslag     = UITSLAGEN.indexOf(resultaat);
+    var witId       = spelers.get(wit);
+    var zwartId     = spelers.get(zwart);
+
+    if (partijAfwijzen(datum, eloDatum, uitslag,
+                       spelerinfos.get(witId).getLaatstePartij(),
+                       spelerinfos.get(zwartId).getLaatstePartij())) {
+      return 0;
+    }
+
     var witElo    = spelerinfos.get(witId).getElo();
     var zwartElo  = spelerinfos.get(zwartId).getElo();
     pasSpelerAan(witId,   spelerinfos, eloDatum, zwartElo, uitslag);

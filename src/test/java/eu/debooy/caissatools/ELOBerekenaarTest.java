@@ -16,7 +16,6 @@
  */
 package eu.debooy.caissatools;
 
-import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
@@ -154,11 +153,9 @@ public class ELOBerekenaarTest extends BatchTest {
     assertEquals(0, err.size());
     assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(14).split(":")[1].trim());
-    assertEquals(CaissaConstants.DEF_STARTDATUM,
-                 out.get(15).split(":")[1].trim());
-    assertEquals(DATUM2, out.get(16).split(":")[1].trim());
-    assertEquals(TestConstants.TOT_PARTIJEN, out.get(17).split(":")[1].trim());
-    assertEquals("52", out.get(18).split(":")[1].trim());
+    assertEquals(DATUM2, out.get(15).split(":")[1].trim());
+    assertEquals(TestConstants.TOT_PARTIJEN, out.get(16).split(":")[1].trim());
+    assertEquals("52", out.get(17).split(":")[1].trim());
     assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_CSV),
@@ -177,9 +174,8 @@ public class ELOBerekenaarTest extends BatchTest {
     assertEquals(0, err.size());
     assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(13).split(":")[1].trim());
-    assertEquals(DATUM1, out.get(14).split(":")[1].trim());
-    assertEquals(DATUM2, out.get(15).split(":")[1].trim());
-    assertEquals(TestConstants.TOT_PARTIJEN, out.get(16).split(":")[1].trim());
+    assertEquals(DATUM2, out.get(14).split(":")[1].trim());
+    assertEquals(TestConstants.TOT_PARTIJEN, out.get(15).split(":")[1].trim());
     assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_CSV),
@@ -201,9 +197,8 @@ public class ELOBerekenaarTest extends BatchTest {
     assertEquals(0, err.size());
     assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(13).split(":")[1].trim());
-    assertEquals(DATUM1, out.get(14).split(":")[1].trim());
-    assertEquals(TestConstants.TOT_PARTIJEN, out.get(15).split(":")[1].trim());
-    assertEquals("98", out.get(16).split(":")[1].trim());
+    assertEquals(TestConstants.TOT_PARTIJEN, out.get(14).split(":")[1].trim());
+    assertEquals("98", out.get(15).split(":")[1].trim());
     assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
@@ -228,12 +223,10 @@ public class ELOBerekenaarTest extends BatchTest {
     assertEquals(0, err.size());
     assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(14).split(":")[1].trim());
-    assertEquals(CaissaConstants.DEF_STARTDATUM,
+    assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(15).split(":")[1].trim());
     assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(16).split(":")[1].trim());
-    assertEquals(TestConstants.TOT_PARTIJEN,
-                 out.get(17).split(":")[1].trim());
     assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
@@ -252,8 +245,7 @@ public class ELOBerekenaarTest extends BatchTest {
     assertEquals(0, err.size());
     assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(13).split(":")[1].trim());
-    assertEquals(DATUM3, out.get(14).split(":")[1].trim());
-    assertEquals(TestConstants.TOT_PARTIJEN, out.get(15).split(":")[1].trim());
+    assertEquals(TestConstants.TOT_PARTIJEN, out.get(14).split(":")[1].trim());
     assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
@@ -282,12 +274,10 @@ public class ELOBerekenaarTest extends BatchTest {
                  out.get(13).trim());
     assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(14).split(":")[1].trim());
-    assertEquals(CaissaConstants.DEF_STARTDATUM,
+    assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(15).split(":")[1].trim());
     assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(16).split(":")[1].trim());
-    assertEquals(TestConstants.TOT_PARTIJEN,
-                 out.get(17).split(":")[1].trim());
     assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
@@ -345,12 +335,10 @@ public class ELOBerekenaarTest extends BatchTest {
     assertEquals(0, err.size());
     assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(14).split(":")[1].trim());
-    assertEquals(CaissaConstants.DEF_STARTDATUM,
+    assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(15).split(":")[1].trim());
     assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(16).split(":")[1].trim());
-    assertEquals(TestConstants.TOT_PARTIJEN,
-                 out.get(17).split(":")[1].trim());
     assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMP_TOT_CSV),
@@ -372,9 +360,8 @@ public class ELOBerekenaarTest extends BatchTest {
     assertEquals(0, err.size());
     assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(13).split(":")[1].trim());
-    assertEquals(DATUM3, out.get(14).split(":")[1].trim());
-    assertEquals("64", out.get(15).split(":")[1].trim());
-    assertEquals("62", out.get(16).split(":")[1].trim());
+    assertEquals("64", out.get(14).split(":")[1].trim());
+    assertEquals("62", out.get(15).split(":")[1].trim());
     assertTrue(
         Bestand.equals(
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMPD_CSV),
