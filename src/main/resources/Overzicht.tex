@@ -74,11 +74,16 @@ contents={%
 %@IncludeStart Matrix
 %@Include Matrix
 %@IncludeEind Matrix
+%@IncludeStart Kleuren
+   \newpage
+%@Include Kleuren
+   \end{tabular}
+%@IncludeEind Kleuren
 %@IncludeStart Uitslagen
    \newpage
 %@Include Uitslagen
    \arrayrulecolor{white}%
-   \begin{tabular}{ | b{32mm} C{2mm} b{32mm} | C{5mm} | }
+   \begin{tabular}[t]{ | b{32mm} C{2mm} b{32mm} | C{5mm} | }
     & & & \\
     \multicolumn{4}{>{\columncolor{headingkleur!15}}l}{@notRanked@} \\
     \multicolumn{4}{l}{@forfait@} \\

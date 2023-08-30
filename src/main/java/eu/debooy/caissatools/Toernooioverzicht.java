@@ -73,8 +73,10 @@ public final class Toernooioverzicht extends Batchjob {
   private static final  String  KYW_DEELNEMERS  = "D";
   private static final  String  KYW_INHALEN     = "I";
   private static final  String  KYW_KALENDER    = "K";
+  private static final  String  KYW_KLEUREN     = "C";
   private static final  String  KYW_LOGO        = "L";
   private static final  String  KYW_MATRIX      = "M";
+  private static final  String  KYW_SKIP        = "X";
   private static final  String  KYW_SUBTITEL    = "S";
   private static final  String  KYW_TITEL       = "T";
   private static final  String  KYW_UITSLAGEN   = "U";
@@ -89,7 +91,7 @@ public final class Toernooioverzicht extends Batchjob {
   private static final  String  RIJKLEURLICHTER = "\\rowcolor{headingkleur!10}";
   private static final  String  TEKSTKLEUR      = "\\color{headingtekstkleur}";
 
-  Toernooioverzicht() {}
+  protected Toernooioverzicht() {}
 
   private static TekstBestand bepaalTexInvoer() throws BestandException {
     if (paramBundle.containsParameter(CaissaTools.PAR_TEMPLATE)) {
@@ -220,6 +222,22 @@ public final class Toernooioverzicht extends Batchjob {
     DoosUtils.naarScherm();
   }
 
+  private static void gespeeldekleur(Partij partij, char[][] kleuren,
+                                     char metwit, char metzwart) {
+    if (partij.isBye() || partij.isForfait()) {
+      return;
+    }
+
+    var wit   = competitie.getSpeler(partij.getWitspeler().getNaam())
+                          .getSpelerSeq() - 1;
+    var zwart = competitie.getSpeler(partij.getZwartspeler().getNaam())
+                          .getSpelerSeq() - 1;
+    var ronde = Integer.parseInt(partij.getRonde().getRound()
+                                         .split("\\.")[0]);
+    kleuren[wit][ronde-1]   = metwit;
+    kleuren[zwart][ronde-1] = metzwart;
+  }
+
   private static void maakDeelnemerslijst() throws BestandException {
     var spelers   = competitie.getSpelers();
 
@@ -236,7 +254,81 @@ public final class Toernooioverzicht extends Batchjob {
     }
   }
 
+  private static void maakGespeeldeKleuren() throws BestandException {
+    if (!competitie.isZwitsers()) {
+      return;
+    }
+
+    var metwit    = resourceBundle.getString("tag.wit").charAt(0);
+    var metzwart  = resourceBundle.getString("tag.zwart").charAt(0);
+    var rondes    = competitie.getRondes();
+    var spelers   = competitie.getSpelers().size();
+    var kleuren   = new char[spelers][rondes];
+
+    for (var i = 0; i < spelers; i++) {
+      for (var j = 0; j < rondes; j++) {
+        kleuren[i][j] = ' ';
+      }
+    }
+
+    schema.forEach(partij -> gespeeldekleur(partij, kleuren, metwit, metzwart));
+
+    var lijn  = new StringBuilder();
+    lijn.append("   \\begin{tabular} { | l |");
+    for (var i = 0; i < competitie.getRondes(); i++) {
+      lijn.append(" c |");
+    }
+    lijn.append(" c | }");
+    output.write(lijn.toString());
+    output.write("    \\rowcolor{headingkleur}");
+    lijn  = new StringBuilder();
+    lijn.append("    \\multicolumn{").append(2+rondes)
+        .append("}{c}{\\large\\color{headingtekstkleur}")
+        .append(resourceBundle.getString("label.kleuren.gespeeld"))
+        .append("} ").append(LTX_EOL);
+    output.write(lijn.toString());
+    output.write("    \\rowcolor{headingkleur}");
+    lijn  = new StringBuilder();
+    lijn.append("    &");
+    for (var i = 0; i < competitie.getRondes(); i++) {
+      lijn.append(" \\color{headingtekstkleur}").append(i+1).append(" &");
+    }
+    lijn.append(" ").append(LTX_EOL);
+    output.write(lijn.toString());
+    for (var i = 0; i < competitie.getSpelers().size(); i++) {
+      var evenwicht = 0;
+      var seq       = competitie.getSpeler(i).getSpelerSeq() - 1;
+      lijn          = new StringBuilder();
+      lijn.append("    ").append(competitie.getSpeler(i).getVolledigenaam())
+          .append(" &");
+      for (var j = 0; j < competitie.getRondes(); j++) {
+        lijn.append(" ").append(kleuren[seq][j]).append(" &");
+        if (kleuren[seq][j] == metwit) {
+          evenwicht++;
+        }
+        if (kleuren[seq][j] == metzwart) {
+          evenwicht--;
+        }
+      }
+      lijn.append(" ").append("\\multicolumn{1}{>{")
+          .append(KLEURLICHT).append("}c|}{");
+      if (evenwicht < 0) {
+        lijn.append(metwit);
+      }
+      if (evenwicht > 0) {
+        lijn.append(metzwart);
+      }
+      lijn.append("} ").append(LTX_EOL);
+      output.write(lijn.toString());
+      output.write("    " + LTX_HLINE);
+    }
+  }
+
   private static void maakInhaaloverzicht() throws BestandException {
+    if (competitie.isZwitsers()) {
+      return;
+    }
+
     var jsonInhalen = competitie.getInhaalpartijen();
 
     if (jsonInhalen.isEmpty()) {
@@ -262,6 +354,10 @@ public final class Toernooioverzicht extends Batchjob {
   }
 
   private static void maakKalender() throws BestandException {
+    if (competitie.getKalender().isEmpty()) {
+      return;
+    }
+
     var jsonKalender  = competitie.getKalender();
 
     for (var i = 0; i < jsonKalender.size(); i++) {
@@ -446,7 +542,8 @@ public final class Toernooioverzicht extends Batchjob {
 
   private static void maakRondeheading(int ronde, String datum)
       throws BestandException {
-    output.write("   \\begin{tabular}{ | b{32mm} C{2mm} b{32mm} | C{5mm} | }");
+    output.write("   \\begin{tabular}[t]{ | b{32mm} C{2mm} b{32mm} |"
+                  + " C{5mm} | }");
     output.write("    " + LTX_HLINE);
     output.write("    \\rowcolor{headingkleur}");
     output.write("    \\multicolumn{2}{l}{\\color{headingtekstkleur}"
@@ -616,6 +713,9 @@ public final class Toernooioverzicht extends Batchjob {
               maakKalender();
             }
             break;
+          case "kleuren":
+            maakGespeeldeKleuren();
+            break;
           case "matrix":
             if (null != matrix) {
               maakLatexMatrix(kolommen, noSpelers,
@@ -654,6 +754,9 @@ public final class Toernooioverzicht extends Batchjob {
       case KYW_DEELNEMERS:
         output.write(replaceParameters(regel, params));
         break;
+      case KYW_KLEUREN:
+        output.write(replaceParameters(regel, params));
+        break;
       case KYW_LOGO:
         if (paramBundle.containsParameter(CaissaTools.PAR_LOGO)) {
           output.write(replaceParameters(regel, params));
@@ -663,6 +766,8 @@ public final class Toernooioverzicht extends Batchjob {
         if (null != matrix) {
           output.write(replaceParameters(regel, params));
         }
+        break;
+      case KYW_SKIP:
         break;
       case KYW_SUBTITEL:
         if (paramBundle.containsParameter(CaissaTools.PAR_SUBTITEL)) {
@@ -723,10 +828,21 @@ public final class Toernooioverzicht extends Batchjob {
         status  = KYW_DEELNEMERS;
         break;
       case Competitie.JSON_TAG_INHALEN:
-        status  = KYW_INHALEN;
+        if (competitie.isZwitsers()) {
+          status  = KYW_SKIP;
+        } else {
+          status  = KYW_INHALEN;
+        }
         break;
       case Competitie.JSON_TAG_KALENDER:
         status  = KYW_KALENDER;
+        break;
+      case "kleuren":
+        if (competitie.isZwitsers()) {
+          status  = KYW_KLEUREN;
+        } else {
+          status  = KYW_SKIP;
+        }
         break;
       case "logo":
         status  = KYW_LOGO;
