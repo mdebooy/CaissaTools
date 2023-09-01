@@ -223,7 +223,7 @@ public final class Toernooioverzicht extends Batchjob {
   }
 
   private static void gespeeldekleur(Partij partij, char[][] kleuren,
-                                     char metwit, char metzwart) {
+                                     char metWit, char metZwart) {
     if (partij.isBye() || partij.isForfait()) {
       return;
     }
@@ -234,8 +234,8 @@ public final class Toernooioverzicht extends Batchjob {
                           .getSpelerSeq() - 1;
     var ronde = Integer.parseInt(partij.getRonde().getRound()
                                          .split("\\.")[0]);
-    kleuren[wit][ronde-1]   = metwit;
-    kleuren[zwart][ronde-1] = metzwart;
+    kleuren[wit][ronde-1]   = metWit;
+    kleuren[zwart][ronde-1] = metZwart;
   }
 
   private static void maakDeelnemerslijst() throws BestandException {
@@ -259,8 +259,8 @@ public final class Toernooioverzicht extends Batchjob {
       return;
     }
 
-    var metwit    = resourceBundle.getString("tag.wit").charAt(0);
-    var metzwart  = resourceBundle.getString("tag.zwart").charAt(0);
+    var metWit    = resourceBundle.getString("tag.wit").charAt(0);
+    var metZwart  = resourceBundle.getString("tag.zwart").charAt(0);
     var rondes    = competitie.getRondes();
     var spelers   = competitie.getSpelers().size();
     var kleuren   = new char[spelers][rondes];
@@ -271,7 +271,7 @@ public final class Toernooioverzicht extends Batchjob {
       }
     }
 
-    schema.forEach(partij -> gespeeldekleur(partij, kleuren, metwit, metzwart));
+    schema.forEach(partij -> gespeeldekleur(partij, kleuren, metWit, metZwart));
 
     var lijn  = new StringBuilder();
     lijn.append("   \\begin{tabular} { | l |");
@@ -280,14 +280,14 @@ public final class Toernooioverzicht extends Batchjob {
     }
     lijn.append(" c | }");
     output.write(lijn.toString());
-    output.write("    \\rowcolor{headingkleur}");
+    output.write("    " + RIJKLEUR);
     lijn  = new StringBuilder();
     lijn.append("    \\multicolumn{").append(2+rondes)
         .append("}{c}{\\large\\color{headingtekstkleur}")
         .append(resourceBundle.getString("label.kleuren.gespeeld"))
         .append("} ").append(LTX_EOL);
     output.write(lijn.toString());
-    output.write("    \\rowcolor{headingkleur}");
+    output.write("    " + RIJKLEUR);
     lijn  = new StringBuilder();
     lijn.append("    &");
     for (var i = 0; i < competitie.getRondes(); i++) {
@@ -295,33 +295,8 @@ public final class Toernooioverzicht extends Batchjob {
     }
     lijn.append(" ").append(LTX_EOL);
     output.write(lijn.toString());
-    for (var i = 0; i < competitie.getSpelers().size(); i++) {
-      var evenwicht = 0;
-      var seq       = competitie.getSpeler(i).getSpelerSeq() - 1;
-      lijn          = new StringBuilder();
-      lijn.append("    ").append(competitie.getSpeler(i).getVolledigenaam())
-          .append(" &");
-      for (var j = 0; j < competitie.getRondes(); j++) {
-        lijn.append(" ").append(kleuren[seq][j]).append(" &");
-        if (kleuren[seq][j] == metwit) {
-          evenwicht++;
-        }
-        if (kleuren[seq][j] == metzwart) {
-          evenwicht--;
-        }
-      }
-      lijn.append(" ").append("\\multicolumn{1}{>{")
-          .append(KLEURLICHT).append("}c|}{");
-      if (evenwicht < 0) {
-        lijn.append(metwit);
-      }
-      if (evenwicht > 0) {
-        lijn.append(metzwart);
-      }
-      lijn.append("} ").append(LTX_EOL);
-      output.write(lijn.toString());
-      output.write("    " + LTX_HLINE);
-    }
+
+    schrijfGespeeldeKleurenTabel(kleuren, metWit, metZwart);
   }
 
   private static void maakInhaaloverzicht() throws BestandException {
@@ -545,7 +520,7 @@ public final class Toernooioverzicht extends Batchjob {
     output.write("   \\begin{tabular}[t]{ | b{32mm} C{2mm} b{32mm} |"
                   + " C{5mm} | }");
     output.write("    " + LTX_HLINE);
-    output.write("    \\rowcolor{headingkleur}");
+    output.write("    " + RIJKLEUR);
     output.write("    \\multicolumn{2}{l}{\\color{headingtekstkleur}"
                   + MessageFormat.format(
                         resourceBundle.getString("tabel.ronde"), ronde)
@@ -582,7 +557,7 @@ public final class Toernooioverzicht extends Batchjob {
       var zwart   = partij.getZwartspeler().getVolledigenaam();
       if (!partij.isRanked()
           || (partij.isBye() && ! competitie.metBye())) {
-        output.write("    \\rowcolor{headingkleur!15}");
+        output.write("    " + RIJKLEURLICHTER);
       }
       output.write("    " + wit + " & - & "
                           + zwart + " & " + uitslag + " " + LTX_EOL);
@@ -744,6 +719,39 @@ public final class Toernooioverzicht extends Batchjob {
     }
 
     return status;
+  }
+
+  private static void schrijfGespeeldeKleurenTabel(char[][] kleuren,
+                                                   char metWit, char metZwart)
+      throws BestandException {
+    var lijn        = new StringBuilder();
+    for (var i = 0; i < competitie.getSpelers().size(); i++) {
+      var evenwicht = 0;
+      var seq       = competitie.getSpeler(i).getSpelerSeq() - 1;
+      lijn.append("    ").append(competitie.getSpeler(i).getVolledigenaam())
+          .append(" &");
+      for (var j = 0; j < competitie.getRondes(); j++) {
+        lijn.append(" ").append(kleuren[seq][j]).append(" &");
+        if (kleuren[seq][j] == metWit) {
+          evenwicht++;
+        }
+        if (kleuren[seq][j] == metZwart) {
+          evenwicht--;
+        }
+      }
+      lijn.append(" ").append("\\multicolumn{1}{>{")
+          .append(KLEURLICHT).append("}c|}{");
+      if (evenwicht < 0) {
+        lijn.append(metWit);
+      }
+      if (evenwicht > 0) {
+        lijn.append(metZwart);
+      }
+      lijn.append("} ").append(LTX_EOL);
+      output.write(lijn.toString());
+      output.write("    " + LTX_HLINE);
+      lijn      = new StringBuilder();
+    }
   }
 
   private static void schrijfUitTemplate(String regel,

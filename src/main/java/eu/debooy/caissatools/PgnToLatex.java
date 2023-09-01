@@ -494,6 +494,18 @@ public final class PgnToLatex extends Batchjob {
     }
   }
 
+  private static void schrijfResultaat(StringBuilder lijn, int speler,
+                                       int resultaat) {
+    if (matrix[speler][resultaat] == 0.0) {
+      lijn.append("0");
+    } else if (matrix[speler][resultaat] == 0.5) {
+      lijn.append(Utilities.kwart(0.5));
+    } else if (matrix[speler][resultaat] >= 1.0) {
+      lijn.append(((Double)matrix[speler][resultaat]).intValue())
+          .append(Utilities.kwart(matrix[speler][resultaat]));
+    }
+  }
+
   private static String schrijfResultaten(int speler, int kolommen) {
     var lijn  = new StringBuilder();
 
@@ -510,14 +522,9 @@ public final class PgnToLatex extends Batchjob {
                       + "{>{\\columncolor[rgb]{0.8,0.8,0.8}}c|}{");
         }
       }
-      if (matrix[speler][j] == 0.0) {
-        lijn.append("0");
-      } else if (matrix[speler][j] == 0.5) {
-        lijn.append(Utilities.kwart(0.5));
-      } else if (matrix[speler][j] >= 1.0) {
-        lijn.append(((Double)matrix[speler][j]).intValue())
-            .append(Utilities.kwart(matrix[speler][j]));
-      }
+
+      schrijfResultaat(lijn, speler, j);
+
       if (!competitie.isMatch()
           && (j / competitie.getHeenTerug())
                 * competitie.getHeenTerug() != j ) {
