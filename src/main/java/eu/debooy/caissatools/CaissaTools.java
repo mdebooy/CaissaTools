@@ -85,6 +85,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_METFEN              = "metFEN";
   public static final String  PAR_METPGNVIEWER        = "metPgnviewer";
   public static final String  PAR_METTRAJECTEN        = "metTrajecten";
+  public static final String  PAR_METVOLGORDE         = "metVolgorde";
   public static final String  PAR_MINPARTIJEN         = "minPartijen";
   public static final String  PAR_NAARTAAL            = "naartaal";
   public static final String  PAR_NIEUWESPELERS       = "nieuweSpelers";

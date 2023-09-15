@@ -29,6 +29,9 @@ public final class TestConstants extends BatchTest {
   public static final String  BST_COMPETITIE_JSON   = "competitie.json";
   public static final String  BST_COMPETITIE1_PGN   = "competitie1.pgn";
   public static final String  BST_COMPETITIE2_PGN   = "competitie2.pgn";
+  public static final String  BST_COMPETITIE51_JSON = "competitie5-1.json";
+  public static final String  BST_COMPETITIE5H_JSON = "competitie5H.json";
+  public static final String  BST_COMPETITIE5T_JSON = "competitie5T.json";
   public static final String  BST_COMPETITIEH_CSV   = "competitieH.csv";
   public static final String  BST_GESCHIEDENIS_CSV  = "geschiedenis.csv";
   public static final String  BST_INDEX_HTML        = "index.html";

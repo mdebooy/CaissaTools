@@ -23,6 +23,12 @@
       "type": "bestand"
     },
     {
+      "parameter": "metVolgorde",
+      "lang": "metvolgorde",
+      "help": "Rondes in formaat <ronde>.<volgorde> in plaats van <ronde>.",
+      "type": "boolean"
+    },
+    {
       "parameter": "schema",
       "extensie": "json",
       "kort": "s",
