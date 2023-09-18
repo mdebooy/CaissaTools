@@ -17,7 +17,7 @@
       "extensie": "pgn",
       "kort": "b",
       "lang": "bestand",
-      "help": "Het bestand met de partijen in PGN formaat. Kan ook een lijst met bestanden zijn (gescheiden door een ;).",
+      "help": "Het bestand met de partijen in PGN formaat.",
       "type": "bestand",
       "verplicht": true
     },
@@ -33,7 +33,7 @@
       "extensie": "json",
       "kort": "s",
       "lang": "schema",
-      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender). Kan ook een lijst met bestanden zijn (gescheiden door een ;). In dat geval moet het aantal schema''s gelijk zijn aan het aantal bestanden. Standaard gelijk aan de naam van <bestand>.",
+      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender). Standaard gelijk aan de naam van <bestand>.",
       "standaard": "_@bestand@_",
       "type": "bestand"
     },
