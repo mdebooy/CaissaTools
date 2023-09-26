@@ -65,6 +65,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_AUTEUR              = "auteur";
   public static final String  PAR_BERICHT             = "bericht";
   public static final String  PAR_BESTAND             = "bestand";
+  public static final String  PAR_CLUBSTATISTIEK      = "statistiek";
   public static final String  PAR_DATUM               = "datum";
   public static final String  PAR_DEFAULTECO          = "defaulteco";
   public static final String  PAR_EINDDATUM           = "eindDatum";
@@ -98,6 +99,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_SMTPSERVER          = "smtpserver";
   public static final String  PAR_SPELER              = "speler";
   public static final String  PAR_SPELERBESTAND       = "spelerBestand";
+  public static final String  PAR_SPELERS             = "spelers";
   public static final String  PAR_STARTDATUM          = "startDatum";
   public static final String  PAR_STARTELO            = "startELO";
   public static final String  PAR_SUBTITEL            = "subtitel";
@@ -115,6 +117,7 @@ public final class CaissaTools extends Batchjob {
 
   protected static final  String  TOOL_ANALYSETEX         = "AnalyseToLatex";
   protected static final  String  TOOL_CHESSTHEATRE       = "ChessTheatre";
+  protected static final  String  TOOL_CLUBSTATISTIEK     = "Clubstatistiek";
   protected static final  String  TOOL_ELOBEREKENAAR      = "ELOBerekenaar";
   protected static final  String  TOOL_PGNCLEANER         = "PgnCleaner";
   protected static final  String  TOOL_PGNTOHTML          = "PgnToHtml";
@@ -130,11 +133,11 @@ public final class CaissaTools extends Batchjob {
   protected static final  String  TOOL_VERTAALPGN         = "VertaalPgn";
 
   protected static final  List<String>  tools =
-      Arrays.asList(TOOL_ANALYSETEX, TOOL_CHESSTHEATRE, TOOL_ELOBEREKENAAR,
-                    TOOL_PGNCLEANER, TOOL_PGNTOHTML, TOOL_PGNTOJSON,
-                    TOOL_PGNTOLATEX, TOOL_SPELERSTATISTIEK, TOOL_STARTCORRESP,
-                    TOOL_STARTPGN, TOOL_TOERNOOIOVERZICHT, TOOL_TRF,
-                    TOOL_VERTAALPGN);
+      Arrays.asList(TOOL_ANALYSETEX, TOOL_CHESSTHEATRE, TOOL_CLUBSTATISTIEK,
+                    TOOL_ELOBEREKENAAR, TOOL_PGNCLEANER, TOOL_PGNTOHTML,
+                    TOOL_PGNTOJSON, TOOL_PGNTOLATEX, TOOL_SPELERSTATISTIEK,
+                    TOOL_STARTCORRESP, TOOL_STARTPGN, TOOL_TOERNOOIOVERZICHT,
+                    TOOL_TRF, TOOL_VERTAALPGN);
 
   public static final String  TXT_BANNER  = "Caissa Tools";
 
@@ -160,6 +163,9 @@ public final class CaissaTools extends Batchjob {
         break;
       case "chesstheatre":
         ChessTheatre.execute(commandoArgs);
+        break;
+      case "clubstatistiek":
+        Clubstatistiek.execute(commandoArgs);
         break;
       case "eloberekenaar":
         ELOBerekenaar.execute(commandoArgs);

@@ -1,0 +1,35 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 18,
+  "applicatie": "Clubstatistiek",
+  "help": "Maakt een statistiek van de prestaties van de spelers toe aan het statistiek bestand.",
+  "banner": "Clubstatistieken",
+  "parameters": [
+    {
+      "parameter": "bestand",
+      "extensie": "pgn",
+      "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de partijen in PGN formaat.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "schema",
+      "extensie": "json",
+      "kort": "s",
+      "lang": "schema",
+      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender). Standaard gelijk aan de naam van <bestand>.",
+      "standaard": "_@bestand@_",
+      "type": "bestand"
+    },
+    {
+      "parameter": "statistiek",
+      "extensie": "json",
+      "lang": "statistiek",
+      "help": "JSON bestand met de statistische informatie.",
+      "type": "bestand",
+      "verplicht": true
+    }
+  ]
+}
