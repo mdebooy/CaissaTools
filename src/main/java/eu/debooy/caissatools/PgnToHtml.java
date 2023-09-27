@@ -332,7 +332,7 @@ public final class PgnToHtml extends Batchjob {
   }
 
   private static void maakIndex() {
-    var spelers   = competitie.getSpelers();
+    var spelers   = competitie.getDeelnemers();
     var noSpelers = spelers.size();
 
     Collections.sort(spelers);
@@ -597,7 +597,8 @@ public final class PgnToHtml extends Batchjob {
 
   private static void maakMatrix() {
     var kolommen  = matrix[0].length;
-    var noSpelers = competitie.getSpelers().size();
+    var spelers   = competitie.getDeelnemers();
+    var noSpelers = spelers.size();
 
     skelet  = new Properties();
     try {
@@ -638,7 +639,7 @@ public final class PgnToHtml extends Batchjob {
       // De body
       schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
       for (var i = 0; i < noSpelers; i++) {
-        maakMatrixBody(competitie.getSpeler(i), i, kolommen,
+        maakMatrixBody(spelers.get(i), i, kolommen,
                        competitie.isDubbel(), competitie.metBye());
       }
       schrijfUitvoer(HTML_TABLE_BODY_EIND);

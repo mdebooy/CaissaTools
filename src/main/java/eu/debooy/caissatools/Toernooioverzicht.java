@@ -167,7 +167,7 @@ public final class Toernooioverzicht extends Batchjob {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     }
 
-    var noSpelers = competitie.getSpelers().size();
+    var noSpelers = competitie.getDeelnemers().size();
     matrix        = null;
 
     // Maak de Matrix
@@ -387,24 +387,26 @@ public final class Toernooioverzicht extends Batchjob {
     }
 
     // Body
+    var deelnemers  = competitie.getDeelnemers();
     for (var i = 0; i < noSpelers; i++) {
       lijn  = new StringBuilder();
+      var speler  = deelnemers.get(i);
 
       if (competitie.isMatch()) {
         lijn.append("\\multicolumn{2}{|l|}{")
-            .append(competitie.getSpeler(i).getVolledigenaam())
+            .append(speler.getVolledigenaam())
             .append("} ");
       } else {
         lijn.append((i + 1)).append(" & ")
-            .append(competitie.getSpeler(i).getVolledigenaam())
+            .append(speler.getVolledigenaam())
             .append(" ");
       }
 
       if (matrixEerst) {
         maakLatexMatrixBodyMat(lijn, i, kolommen);
-        maakLatexMatrixBodyPnt(lijn, i);
+        maakLatexMatrixBodyPnt(lijn, speler);
       } else {
-        maakLatexMatrixBodyPnt(lijn, i);
+        maakLatexMatrixBodyPnt(lijn, speler);
         maakLatexMatrixBodyMat(lijn, i, kolommen);
       }
 
@@ -440,14 +442,13 @@ public final class Toernooioverzicht extends Batchjob {
     }
     if (competitie.metBye()) {
       lijn.append("& ")
-          .append(competitie.getSpeler(rij).getByeScore().intValue())
+          .append(competitie.getDeelnemers().get(rij).getByeScore().intValue())
           .append(" ");
     }
   }
 
-  private static void maakLatexMatrixBodyPnt(StringBuilder lijn, int rij) {
-    var speler  = competitie.getSpeler(rij);
-
+  private static void maakLatexMatrixBodyPnt(StringBuilder lijn,
+                                             Spelerinfo speler) {
     var pntn  = speler.getPunten().intValue();
       var decim = Utilities.kwart(speler.getPunten());
       lijn.append("& ").append(
@@ -578,7 +579,7 @@ public final class Toernooioverzicht extends Batchjob {
                               paramBundle.getBestand(CaissaTools.PAR_UITVOER,
                                                      ".vcf"))
                                       .setLezen(false).build()) {
-      var spelers   = competitie.getSpelers();
+      var spelers   = competitie.getDeelnemers();
 
       spelers.sort(new Spelerinfo.ByNaamComparator());
       spelers.forEach(speler -> {
@@ -676,7 +677,7 @@ public final class Toernooioverzicht extends Batchjob {
       case "%@Include":
         switch (regel.split(" ")[1].toLowerCase()) {
           case "deelnemers":
-            if (!competitie.getSpelers().isEmpty()) {
+            if (!competitie.getDeelnemers().isEmpty()) {
               maakDeelnemerslijst();
             }
             break;
@@ -684,7 +685,7 @@ public final class Toernooioverzicht extends Batchjob {
             maakInhaaloverzicht();
             break;
           case Competitie.JSON_TAG_KALENDER:
-            if (!competitie.getSpelers().isEmpty()) {
+            if (!competitie.getDeelnemers().isEmpty()) {
               maakKalender();
             }
             break;
@@ -725,10 +726,11 @@ public final class Toernooioverzicht extends Batchjob {
                                                    char metWit, char metZwart)
       throws BestandException {
     var lijn        = new StringBuilder();
-    for (var i = 0; i < competitie.getSpelers().size(); i++) {
+    var deelnemers  = competitie.getDeelnemers();
+    for (var i = 0; i < deelnemers.size(); i++) {
       var evenwicht = 0;
-      var seq       = competitie.getSpeler(i).getSpelerSeq() - 1;
-      lijn.append("    ").append(competitie.getSpeler(i).getVolledigenaam())
+      var seq       = deelnemers.get(i).getSpelerSeq() - 1;
+      lijn.append("    ").append(deelnemers.get(i).getVolledigenaam())
           .append(" &");
       for (var j = 0; j < competitie.getRondes(); j++) {
         lijn.append(" ").append(kleuren[seq][j]).append(" &");

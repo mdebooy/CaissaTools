@@ -347,7 +347,7 @@ public final class PgnToLatex extends Batchjob {
     }
     output.write("    " + HLINE);
     for (var i = 0; i < noSpelers; i++) {
-      var speler  = competitie.getSpeler(i);
+      var speler  = competitie.getDeelnemers().get(i);
       if (competitie.isMatch()) {
         lijn.append("\\multicolumn{2}{|l|}{").append(speler.getNaam())
             .append("} & ");
@@ -432,7 +432,7 @@ public final class PgnToLatex extends Batchjob {
                                 Map<String, String> parameters)
       throws BestandException {
     var kolommen  = null == matrix ? 0 : matrix[0].length;
-    var noSpelers = competitie.getSpelers().size();
+    var noSpelers = competitie.getDeelnemers().size();
     var metBye    = competitie.metBye();
     var start     = regel.split(" ")[0];
 
