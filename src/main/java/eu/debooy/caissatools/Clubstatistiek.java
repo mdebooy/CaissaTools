@@ -115,11 +115,14 @@ public class Clubstatistiek extends Batchjob {
   }
 
   private static void verwerkToernooi() {
+    competitie.sorteerOpStand();
+
     var clubspelers   = new JSONObject();
     if (club.containsKey(CaissaTools.PAR_SPELERS)) {
-      clubspelers = (JSONObject) club.get(CaissaTools.PAR_SPELERS);
+      clubspelers     = (JSONObject) club.get(CaissaTools.PAR_SPELERS);
     }
 
+    var plaats        = 1;
     for (var speler : competitie.getSpelers()) {
       var naam        = speler.getNaam();
       if (naam.equals(CaissaConstants.BYE)) {
@@ -131,12 +134,16 @@ public class Clubstatistiek extends Batchjob {
         clubspeler    = (JSONObject) clubspelers.get(naam);
       }
       var stat        = new JSONObject();
+      stat.put("plaats", plaats);
       stat.put("punten", speler.getPunten());
       stat.put("partijen", speler.getPartijen());
       stat.put("SB", speler.getTieBreakScore());
-      clubspeler.put(competitie.getEvent(), stat);
+      stat.put("event", competitie.getEvent());
+      stat.put("eventdate", competitie.getEventdate());
+      clubspeler.put(competitie.getEventdate(), stat);
 
       clubspelers.put(naam, clubspeler);
+      plaats++;
     }
     club.put(CaissaTools.PAR_SPELERS, clubspelers);
   }
