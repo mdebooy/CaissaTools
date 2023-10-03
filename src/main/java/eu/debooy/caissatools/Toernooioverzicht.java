@@ -241,7 +241,7 @@ public final class Toernooioverzicht extends Batchjob {
   private static void maakDeelnemerslijst() throws BestandException {
     var spelers   = competitie.getSpelers();
 
-    Collections.sort(spelers);
+    Collections.sort(spelers, new Spelerinfo.ByNaamComparator());
 
     for (var speler : spelers) {
       if (!speler.getVolledigenaam()
