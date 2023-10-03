@@ -162,8 +162,9 @@ public final class StartPgn extends Batchjob {
       try {
         schrijfPartij(output, Datum.fromDate(speeldata.get(ronde - 1),
                                              PGN.PGN_DATUM_FORMAAT),
-                      metVolgorde ? round : ronde.toString(), wit, zwart,
-                      extra);
+                      Boolean.TRUE.equals(metVolgorde) ? round
+                                                       : ronde.toString(),
+                      wit, zwart, extra);
       } catch (PgnException e) {
         DoosUtils.foutNaarScherm(ronde + " " + e.getLocalizedMessage());
       }
