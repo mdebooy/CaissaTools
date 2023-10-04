@@ -1,0 +1,17 @@
+  {
+    "event": "Testing 2023",
+    "site": "Caissa Tools",
+    "eventdate": "2023.10.04",
+    "toernooitype": 1,
+    "spelers": [
+      {"naam": "Speler, Alice"},
+      {"naam": "Speler, Bob"},
+      {"naam": "Speler, Carol"},
+      {"naam": "Speler, Dave"}
+    ],
+    "kalender": [
+      { "datum": "10/09/1997", "ronde": 1},
+      { "datum": "17/09/1997", "ronde": 2},
+      { "datum": "03/10/1997", "ronde": 3}
+    ]
+  }

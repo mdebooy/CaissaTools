@@ -1,0 +1,66 @@
+[Event "Testing 2023"]
+[Site "Caissa Tools"]
+[Date "1997.09.10"]
+[Round "1"]
+[White "Speler, Bob"]
+[Black "Speler, Carol"]
+[Result "1-0"]
+[EventDate "2023.10.04"]
+
+1-0
+
+[Event "Testing 2023"]
+[Site "Caissa Tools"]
+[Date "1997.09.10"]
+[Round "1"]
+[White "Speler, Alice"]
+[Black "Speler, Dave"]
+[Result "1/2-1/2"]
+[EventDate "2023.10.04"]
+
+1/2-1/2
+
+[Event "Testing 2023"]
+[Site "Caissa Tools"]
+[Date "1997.09.17"]
+[Round "2"]
+[White "Speler, Alice"]
+[Black "Speler, Bob"]
+[Result "0-1"]
+[EventDate "2023.10.04"]
+
+0-1
+
+[Event "Testing 2023"]
+[Site "Caissa Tools"]
+[Date "1997.09.17"]
+[Round "2"]
+[White "Speler, Dave"]
+[Black "Speler, Carol"]
+[Result "0-1"]
+[EventDate "2023.10.04"]
+
+0-1
+
+[Event "Testing 2023"]
+[Site "Caissa Tools"]
+[Date "1997.10.03"]
+[Round "3"]
+[White "Speler, Carol"]
+[Black "Speler, Alice"]
+[Result "1/2-1/2"]
+[EventDate "2023.10.04"]
+
+1/2-1/2
+
+[Event "Testing 2023"]
+[Site "Caissa Tools"]
+[Date "1997.10.03"]
+[Round "3"]
+[White "Speler, Bob"]
+[Black "Speler, Dave"]
+[Result "1-0"]
+[EventDate "2023.10.04"]
+
+1-0
+

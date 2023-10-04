@@ -27,6 +27,7 @@ import java.util.ResourceBundle;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
+import static org.junit.Assert.fail;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -39,8 +40,15 @@ public class PgnToHtmlTest extends BatchTest {
   protected static final  ClassLoader CLASSLOADER =
       PgnToHtmlTest.class.getClassLoader();
 
-  private static final  String  BST_MATRIX1 = "matrix1.html";
-  private static final  String  BST_MATRIX2 = "matrix2.html";
+  private static final  String  BST_BESTANDE  = "schemaE.pgn";
+  private static final  String  BST_INDEXE    = "indexE.html";
+  private static final  String  BST_MATRIX1   = "matrix1.html";
+  private static final  String  BST_MATRIX2   = "matrix2.html";
+  private static final  String  BST_MATRIXE   = "matrixE.html";
+  private static final  String  BST_SCHEMAE   = "schemaE.json";
+
+  private static final  String  PAR_BESTANDE  =
+      "--bestand=" + getTemp() + File.separator + "schemaE.pgn";
 
   @AfterClass
   public static void afterClass() {
@@ -51,6 +59,7 @@ public class PgnToHtmlTest extends BatchTest {
                                      BST_MATRIX1, BST_MATRIX2,
                                      TestConstants.BST_COMPETITIE1_PGN,
                                      TestConstants.BST_SCHEMA1_JSON,
+                                     BST_BESTANDE, BST_SCHEMAE,
                                      TestConstants.BST_UITSLAGEN_HTML,
                                      TestConstants.BST_KALENDER_HTML,
                                      TestConstants.BST_INHALEN_HTML
@@ -72,6 +81,10 @@ public class PgnToHtmlTest extends BatchTest {
                                                Locale.getDefault());
 
     try {
+      kopieerBestand(CLASSLOADER, BST_BESTANDE,
+                     getTemp() + File.separator + BST_BESTANDE);
+      kopieerBestand(CLASSLOADER, BST_SCHEMAE,
+                     getTemp() + File.separator + BST_SCHEMAE);
       kopieerBestand(CLASSLOADER, TestConstants.BST_COMPETITIE1_PGN,
                      getTemp() + File.separator
                       + TestConstants.BST_COMPETITIE1_PGN);
@@ -81,6 +94,32 @@ public class PgnToHtmlTest extends BatchTest {
     } catch (IOException e) {
       System.out.println(e.getLocalizedMessage());
       throw new BestandException(e);
+    }
+  }
+
+  @Test
+  public void testEnkelrondig() {
+    String[]  args  = new String[] {PAR_BESTANDE,
+                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+
+    before();
+    PgnToHtml.execute(args);
+    after();
+
+    assertEquals(0, err.size());
+    try {
+      assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_INDEX_HTML),
+              Bestand.openInvoerBestand(CLASSLOADER, BST_INDEXE)));
+      assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_MATRIX_HTML),
+              Bestand.openInvoerBestand(CLASSLOADER,  BST_MATRIXE)));
+    } catch (BestandException e) {
+      fail(e.getLocalizedMessage());
     }
   }
 
@@ -96,54 +135,7 @@ public class PgnToHtmlTest extends BatchTest {
   }
 
   @Test
-  public void testPgnToHtml() throws BestandException {
-    String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
-                                    TestConstants.PAR_SCHEMA1,
-                                    TestConstants.PAR_UITVOERDIR + getTemp()};
-
-    before();
-    PgnToHtml.execute(args);
-    after();
-
-    assertEquals(0, err.size());
-    assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE1_PGN,
-                 out.get(13).split(":")[1].trim());
-    assertEquals(TestConstants.TOT_PARTIJEN,
-                 out.get(14).split(":")[1].trim());
-    assertEquals(getTemp(), out.get(15).split(":")[1].trim());
-    assertTrue(
-        Bestand.equals(
-            Bestand.openInvoerBestand(getTemp() + File.separator
-                                      + TestConstants.BST_INDEX_HTML),
-            Bestand.openInvoerBestand(CLASSLOADER,
-                                      TestConstants.BST_INDEX_HTML)));
-    assertTrue(
-        Bestand.equals(
-            Bestand.openInvoerBestand(getTemp() + File.separator
-                                      + TestConstants.BST_MATRIX_HTML),
-            Bestand.openInvoerBestand(CLASSLOADER, BST_MATRIX1)));
-    assertTrue(
-        Bestand.equals(
-            Bestand.openInvoerBestand(getTemp() + File.separator
-                                      + TestConstants.BST_UITSLAGEN_HTML),
-            Bestand.openInvoerBestand(CLASSLOADER,
-                                      TestConstants.BST_UITSLAGEN_HTML)));
-    assertTrue(
-        Bestand.equals(
-            Bestand.openInvoerBestand(getTemp() + File.separator
-                                      + TestConstants.BST_KALENDER_HTML),
-            Bestand.openInvoerBestand(CLASSLOADER,
-                                      TestConstants.BST_KALENDER_HTML)));
-    assertTrue(
-        Bestand.equals(
-            Bestand.openInvoerBestand(getTemp() + File.separator
-                                      + TestConstants.BST_INHALEN_HTML),
-            Bestand.openInvoerBestand(CLASSLOADER,
-                                      TestConstants.BST_INHALEN_HTML)));
-  }
-
-  @Test
-  public void testOpStand() throws BestandException {
+  public void testOpStand() {
     String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
                                     TestConstants.PAR_MATRIX_OP_STAND,
                                     TestConstants.PAR_SCHEMA1,
@@ -159,34 +151,89 @@ public class PgnToHtmlTest extends BatchTest {
     assertEquals(TestConstants.TOT_PARTIJEN,
                  out.get(14).split(":")[1].trim());
     assertEquals(getTemp(), out.get(15).split(":")[1].trim());
-    assertTrue(
-        Bestand.equals(
-            Bestand.openInvoerBestand(getTemp() + File.separator
-                                      + TestConstants.BST_INDEX_HTML),
-            Bestand.openInvoerBestand(CLASSLOADER,
-                                      TestConstants.BST_INDEX_HTML)));
-    assertTrue(
-        Bestand.equals(
-            Bestand.openInvoerBestand(getTemp() + File.separator
-                                      + TestConstants.BST_MATRIX_HTML),
-            Bestand.openInvoerBestand(CLASSLOADER, BST_MATRIX2)));
-    assertTrue(
-        Bestand.equals(
-            Bestand.openInvoerBestand(getTemp() + File.separator
-                                      + TestConstants.BST_UITSLAGEN_HTML),
-            Bestand.openInvoerBestand(CLASSLOADER,
-                                      TestConstants.BST_UITSLAGEN_HTML)));
-    assertTrue(
-        Bestand.equals(
-            Bestand.openInvoerBestand(getTemp() + File.separator
-                                      + TestConstants.BST_KALENDER_HTML),
-            Bestand.openInvoerBestand(CLASSLOADER,
-                                      TestConstants.BST_KALENDER_HTML)));
-    assertTrue(
-        Bestand.equals(
-            Bestand.openInvoerBestand(getTemp() + File.separator
-                                      + TestConstants.BST_INHALEN_HTML),
-            Bestand.openInvoerBestand(CLASSLOADER,
-                                      TestConstants.BST_INHALEN_HTML)));
+    try {
+      assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_INDEX_HTML),
+              Bestand.openInvoerBestand(CLASSLOADER,
+                                        TestConstants.BST_INDEX_HTML)));
+      assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_MATRIX_HTML),
+              Bestand.openInvoerBestand(CLASSLOADER, BST_MATRIX2)));
+      assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_UITSLAGEN_HTML),
+              Bestand.openInvoerBestand(CLASSLOADER,
+                                        TestConstants.BST_UITSLAGEN_HTML)));
+      assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_KALENDER_HTML),
+              Bestand.openInvoerBestand(CLASSLOADER,
+                                        TestConstants.BST_KALENDER_HTML)));
+      assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_INHALEN_HTML),
+              Bestand.openInvoerBestand(CLASSLOADER,
+                                        TestConstants.BST_INHALEN_HTML)));
+    } catch (BestandException e) {
+      fail(e.getLocalizedMessage());
+    }
+  }
+
+  @Test
+  public void testPgnToHtml() {
+    String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
+                                    TestConstants.PAR_SCHEMA1,
+                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+
+    before();
+    PgnToHtml.execute(args);
+    after();
+
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE1_PGN,
+                 out.get(13).split(":")[1].trim());
+    assertEquals(TestConstants.TOT_PARTIJEN,
+                 out.get(14).split(":")[1].trim());
+    assertEquals(getTemp(), out.get(15).split(":")[1].trim());
+    try {
+      assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_INDEX_HTML),
+              Bestand.openInvoerBestand(CLASSLOADER,
+                                        TestConstants.BST_INDEX_HTML)));
+      assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_MATRIX_HTML),
+              Bestand.openInvoerBestand(CLASSLOADER, BST_MATRIX1)));
+      assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_UITSLAGEN_HTML),
+              Bestand.openInvoerBestand(CLASSLOADER,
+                                        TestConstants.BST_UITSLAGEN_HTML)));
+      assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_KALENDER_HTML),
+              Bestand.openInvoerBestand(CLASSLOADER,
+                                        TestConstants.BST_KALENDER_HTML)));
+      assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_INHALEN_HTML),
+              Bestand.openInvoerBestand(CLASSLOADER,
+                                        TestConstants.BST_INHALEN_HTML)));
+    } catch (BestandException e) {
+      fail(e.getLocalizedMessage());
+    }
   }
 }
