@@ -878,14 +878,18 @@ public final class Toernooioverzicht extends Batchjob {
   }
 
   private static void vulParams(Map<String, String> params) {
-    if (paramBundle.containsParameter(CaissaTools.PAR_SUBTITEL)) {
-      params.put(CaissaTools.PAR_SUBTITEL,
-                 paramBundle.getString(CaissaTools.PAR_SUBTITEL));
-    }
+    params.put(CaissaTools.PAR_KLEUR,
+               paramBundle.getString(CaissaTools.PAR_KLEUR));
     if (paramBundle.containsParameter(CaissaTools.PAR_LOGO)) {
       params.put(CaissaTools.PAR_LOGO,
                  paramBundle.getString(CaissaTools.PAR_LOGO));
     }
+    if (paramBundle.containsParameter(CaissaTools.PAR_SUBTITEL)) {
+      params.put(CaissaTools.PAR_SUBTITEL,
+                 paramBundle.getString(CaissaTools.PAR_SUBTITEL));
+    }
+    params.put(CaissaTools.PAR_TEKSTKLEUR,
+               paramBundle.getString(CaissaTools.PAR_TEKSTKLEUR));
     if (paramBundle.containsParameter(CaissaTools.PAR_TITEL)) {
       params.put(CaissaTools.PAR_TITEL,
                  paramBundle.getString(CaissaTools.PAR_TITEL));

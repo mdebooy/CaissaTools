@@ -22,6 +22,12 @@
       "verplicht": true
     },
     {
+      "parameter": "kleur",
+      "lang": "kleur",
+      "help": "De kleur voor de heading in RGB. De standaardkleur is {0}.",
+      "standaard": "004488"
+    },
+    {
       "parameter": "logo",
       "kort": "l",
       "lang": "logo",
@@ -58,6 +64,12 @@
       "parameter": "subtitel",
       "lang": "subtitel",
       "help": "Subtitel van het overzicht."
+    },
+    {
+      "parameter": "tekstkleur",
+      "lang": "tekstkleur",
+      "help": "De kleur voor de tekst in de heading in RGB. De standaardkleur is {0}.",
+      "standaard": "FFFFFF"
     },
     {
       "parameter": "template",
