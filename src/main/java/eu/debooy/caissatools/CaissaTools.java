@@ -20,9 +20,12 @@ import eu.debooy.doosutils.Batchjob;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
+import eu.debooy.doosutils.access.TekstBestand;
+import eu.debooy.doosutils.exception.BestandException;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 
 
 /**
@@ -77,6 +80,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_INCLUDELEGE         = "includelege";
   public static final String  PAR_JSON                = "json";
   public static final String  PAR_KEYWORDS            = "keywords";
+  public static final String  PAR_KLEUR               = "kleur";
   public static final String  PAR_LOGO                = "logo";
   public static final String  PAR_MATRIX              = "matrix";
   public static final String  PAR_MATRIXEERST         = "matrixeerst";
@@ -104,6 +108,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_STARTELO            = "startELO";
   public static final String  PAR_SUBTITEL            = "subtitel";
   public static final String  PAR_TAG                 = "tag";
+  public static final String  PAR_TEKSTKLEUR          = "tekstkleur";
   public static final String  PAR_TEMPLATE            = "template";
   public static final String  PAR_TITEL               = "titel";
   public static final String  PAR_TOERNOOIBESTAND     = "toernooiBestand";
@@ -210,6 +215,28 @@ public final class CaissaTools extends Batchjob {
     }
   }
 
+  protected static TekstBestand getTemplate(ParameterBundle params,
+                                            String classtemplate)
+      throws BestandException {
+    TekstBestand  texInvoer;
+      if (params.containsArgument(CaissaTools.PAR_TEMPLATE)) {
+        texInvoer =
+            new TekstBestand.Builder()
+                            .setBestand(
+                                params.getBestand(
+                                    CaissaTools.PAR_TEMPLATE))
+                            .build();
+      } else {
+        texInvoer =
+            new TekstBestand.Builder()
+                            .setBestand(classtemplate)
+                            .setClassLoader(PgnToLatex.class.getClassLoader())
+                            .build();
+      }
+
+      return texInvoer;
+  }
+
   public static void help() {
     tools.forEach(tool -> {
       var parameterBundle = new ParameterBundle.Builder()
@@ -221,5 +248,26 @@ public final class CaissaTools extends Batchjob {
       DoosUtils.naarScherm(DoosUtils.stringMetLengte("_", 80, "_"));
       DoosUtils.naarScherm();
     });
+  }
+
+  protected static String replaceParameters(String regel,
+                                            Map<String, String> parameters) {
+    var resultaat = regel;
+    for (Map.Entry<String, String> parameter : parameters.entrySet()) {
+      resultaat =
+          resultaat.replace("@"+parameter.getKey()+"@",
+                            parameter.getValue());
+    }
+
+    return resultaat;
+  }
+
+  protected static void schrijfParameter(String param, String regel,
+                                         Map<String, String> parameters,
+                                         TekstBestand output)
+      throws BestandException {
+    if (parameters.containsKey(param)) {
+      output.write(replaceParameters(regel, parameters));
+    }
   }
 }

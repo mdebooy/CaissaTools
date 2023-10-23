@@ -1,6 +1,6 @@
 {
   "_jar": "CaissaTools.jar",
-  "_prefixlengte": 18,
+  "_prefixlengte": 14,
   "applicatie": "SpelerStatistiek",
   "help": "Maakt een statistiek van alle partijen van de opgegeven speler.",
   "banner": "Speler Statistieken",
@@ -13,6 +13,12 @@
       "help": "Het bestand met de partijen in PGN formaat.",
       "type": "bestand",
       "verplicht": true
+    },
+    {
+      "parameter": "kleur",
+      "lang": "kleur",
+      "help": "De kleur voor de heading in RGB. De standaardkleur is {0}.",
+      "standaard": "004488"
     },
     {
       "parameter": "logo",
@@ -32,6 +38,19 @@
       "kort": "t",
       "lang": "tag",
       "help": "De PGN tag waarop de statistieken gebaseerd zijn. Zonder deze parameter zijn het de tegenstanders. Bij de tag \"date\" wordt het het jaar."
+    },
+    {
+      "parameter": "tekstkleur",
+      "lang": "tekstkleur",
+      "help": "De kleur voor de tekst in de heading in RGB. De standaardkleur is {0}.",
+      "standaard": "FFFFFF"
+    },
+    {
+      "parameter": "template",
+      "extensie": "tex",
+      "lang": "template",
+      "help": "Een template voor het uitvoer TEX bestand.",
+      "type": "bestand"
     }
   ]
 }

@@ -1,0 +1,81 @@
+\documentclass[a4paper]{scrreprt}
+
+\usepackage[T1]{fontenc}
+\usepackage[dutch]{babel}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{longtable}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{lscape}
+
+\definecolor{headingkleur}{HTML}{@Kleur@}
+\definecolor{headingtekstkleur}{HTML}{@Tekstkleur@}
+
+\geometry{
+  paperwidth=210mm,
+  paperheight=296mm,
+  twoside,
+  left=10mm,
+  top=10mm,
+  marginpar=23mm,
+  headsep=1pc,
+  marginparsep=1em,
+  footskip=9ex
+}
+\geometry{
+  textwidth = 190mm,
+  textheight = 260mm
+}
+
+% Penalties
+\pretolerance=60
+\tolerance=2000
+\widowpenalty=9999
+\interdisplaylinepenalty=100
+\interfootnotelinepenalty=1000
+\predisplaypenalty=50
+
+\renewcommand{\familydefault}{\sfdefault}
+
+\begin{document}
+%@IncludeStart Logo
+  \DeclareGraphicsExtensions{.pdf,.png,.gif,.jpg}
+%@IncludeEind Logo
+  \begin{titlepage}
+    \begin{center}
+      \huge \color{headingkleur}@Titel@ \\
+      \vspace{1in}
+      \large \color{headingkleur}@Speler@ \\
+%@IncludeStart Logo
+      \vspace{2in}
+      \includegraphics[width=6cm]{@logo@} \\
+%@IncludeEind Logo
+%@IncludeStart Periode
+      \vspace{1in}
+      \large \color{headingkleur}@Periode@ \\
+%@IncludeEind Periode
+    \end{center}
+  \end{titlepage}
+%@IncludeStart Body
+%@IncludeStart Statistiek
+  \footnotesize
+  \begin{center}
+    \arrayrulecolor{white}
+    \begin{longtable} { | l | r | r | r | r | r | r | r | r | r | r | r | r | r | r | r | }
+      \hline
+      \rowcolor{headingkleur}
+ & \multicolumn{5}{c|}{ \color{headingtekstkleur}Wit } & \multicolumn{5}{c|}{ \color{headingtekstkleur}Zwart } & \multicolumn{5}{c|}{ \color{headingtekstkleur}Totaal } \\
+      \cline{2-16}
+      \rowcolor{headingkleur}
+ & \color{headingtekstkleur}W & \color{headingtekstkleur}R & \color{headingtekstkleur}V & \color{headingtekstkleur}T & \color{headingtekstkleur}pct. & \color{headingtekstkleur}W & \color{headingtekstkleur}R & \color{headingtekstkleur}V & \color{headingtekstkleur}T & \color{headingtekstkleur}pct. & \color{headingtekstkleur}W & \color{headingtekstkleur}R & \color{headingtekstkleur}V & \color{headingtekstkleur}T & \color{headingtekstkleur}pct. \\
+      \hline
+      \endhead
+      \arrayrulecolor{headingkleur}
+%@Include Statistiek
+%@IncludeEind Statistiek
+    \end{longtable}
+  \end{center}
+%@IncludeEind Body
+\end{document}
