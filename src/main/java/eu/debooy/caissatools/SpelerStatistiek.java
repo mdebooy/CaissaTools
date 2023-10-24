@@ -71,6 +71,29 @@ public final class SpelerStatistiek extends Batchjob {
 
   protected SpelerStatistiek() {}
 
+  protected static void bepaalPeriode(PGN partij) {
+    var hulpdatum   = partij.getTag(PGN.PGNTAG_EVENTDATE);
+    if (DoosUtils.isNotBlankOrNull(hulpdatum)
+        && hulpdatum.indexOf('?') < 0) {
+      if (hulpdatum.compareTo(startdatum) < 0 ) {
+        startdatum  = hulpdatum;
+      }
+      if (hulpdatum.compareTo(einddatum) > 0 ) {
+        einddatum   = hulpdatum;
+      }
+    }
+    hulpdatum       = partij.getTag(PGN.PGNTAG_DATE);
+    if (DoosUtils.isNotBlankOrNull(hulpdatum)
+        && hulpdatum.indexOf('?') < 0) {
+      if (hulpdatum.compareTo(startdatum) < 0 ) {
+        startdatum  = hulpdatum;
+      }
+      if (hulpdatum.compareTo(einddatum) > 0 ) {
+        einddatum   = hulpdatum;
+      }
+    }
+  }
+
   protected static String datumInTitel(String startdatum, String einddatum) {
     var   titelDatum  = new StringBuilder();
     Date  datum;
@@ -109,7 +132,7 @@ public final class SpelerStatistiek extends Batchjob {
       return;
     }
 
-    items             = new TreeMap<>( );
+    items             = new TreeMap<>(String.CASE_INSENSITIVE_ORDER);
     var speler        = paramBundle.getString(CaissaTools.PAR_SPELER);
     var statistiektag = paramBundle.getString(CaissaTools.PAR_TAG);
 
@@ -143,10 +166,6 @@ public final class SpelerStatistiek extends Batchjob {
         }
         template.add(regel);
       }
-//
-//      if (!paramBundle.containsArgument(CaissaTools.PAR_TAG)) {
-//        Collections.sort(items, String.CASE_INSENSITIVE_ORDER);
-//      }
 
       schrijfLatex(template, beginBody, eindeBody);
     } catch (BestandException e) {
@@ -168,6 +187,36 @@ public final class SpelerStatistiek extends Batchjob {
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getMelding(MSG_KLAAR));
     DoosUtils.naarScherm();
+  }
+
+  protected static String getSleutel(String speler, PGN partij,
+                                     String statistiektag) {
+    String  sleutel;
+    var     datum   = partij.getTag(PGN.PGNTAG_DATE);
+    var     wit     = partij.getWhite();
+    var     zwart   = partij.getBlack();
+
+    if (DoosUtils.isNotBlankOrNull(statistiektag)) {
+      if (PGN.PGNTAG_DATE.equalsIgnoreCase(statistiektag)) {
+        var punt  = datum.indexOf('.');
+        if (punt < 1) {
+          sleutel = "????";
+        } else {
+          sleutel = datum.substring(0, punt);
+        }
+      } else {
+        sleutel = DoosUtils.nullToEmpty(partij.getTag(statistiektag));
+      }
+      return sleutel;
+    }
+
+    if (speler.equals(wit)) {
+      sleutel = zwart;
+    } else {
+      sleutel = wit;
+    }
+
+    return sleutel;
   }
 
   protected static int[] getStatistiek(String sleutel) {
@@ -366,7 +415,6 @@ public final class SpelerStatistiek extends Batchjob {
       return;
     }
 
-    String  sleutel;
     var     uitslag   = partij.getTag(PGN.PGNTAG_RESULT);
     var     i         = 0;
     for (var s: UITSLAGEN) {
@@ -377,46 +425,9 @@ public final class SpelerStatistiek extends Batchjob {
     }
 
     verwerkt++;
-    // Verwerk de 'datums'
-    var hulpdatum   = partij.getTag(PGN.PGNTAG_EVENTDATE);
-    if (DoosUtils.isNotBlankOrNull(hulpdatum)
-        && hulpdatum.indexOf('?') < 0) {
-      if (hulpdatum.compareTo(startdatum) < 0 ) {
-        startdatum  = hulpdatum;
-      }
-      if (hulpdatum.compareTo(einddatum) > 0 ) {
-        einddatum   = hulpdatum;
-      }
-    }
-    hulpdatum       = partij.getTag(PGN.PGNTAG_DATE);
-    if (DoosUtils.isNotBlankOrNull(hulpdatum)
-        && hulpdatum.indexOf('?') < 0) {
-      if (hulpdatum.compareTo(startdatum) < 0 ) {
-        startdatum  = hulpdatum;
-      }
-      if (hulpdatum.compareTo(einddatum) > 0 ) {
-        einddatum   = hulpdatum;
-      }
-    }
+    bepaalPeriode(partij);
+    var sleutel = getSleutel(speler, partij, statistiektag);
 
-    if (DoosUtils.isNotBlankOrNull(statistiektag)) {
-      if (PGN.PGNTAG_DATE.equalsIgnoreCase(statistiektag)) {
-        var punt  = hulpdatum.indexOf('.');
-        if (punt < 1) {
-          sleutel = "????";
-        } else {
-          sleutel = hulpdatum.substring(0, punt);
-        }
-      } else {
-        sleutel = DoosUtils.nullToEmpty(partij.getTag(statistiektag));
-      }
-    } else {
-      if (speler.equals(wit)) {
-        sleutel = zwart;
-      } else {
-        sleutel = wit;
-      }
-    }
 
     int[] statistiek  = getStatistiek(sleutel);
     if (speler.equals(wit)) {
