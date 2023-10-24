@@ -333,8 +333,7 @@ public final class SpelerStatistiek extends Batchjob {
   }
 
   private static String schrijfStatistiekDeel(int winst, int remise,
-                                              int verlies, String prefix)
-      throws BestandException {
+                                              int verlies, String prefix) {
     var format    = new DecimalFormat("0.00");
     Double punten = Double.valueOf(winst) + Double.valueOf(remise) / 2;
     var gespeeld  = winst + remise + verlies;
