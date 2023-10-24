@@ -140,7 +140,10 @@ public class PgnToJsonTest extends BatchTest {
     PgnToJson.execute(args);
     after();
 
-    assertEquals(0, err.size());
+    if (!err.isEmpty()) {
+      debug();
+    }
+    assertTrue(err.isEmpty());
     assertEquals("2", out.get(14).split(":")[1].trim());
     assertEquals("2", out.get(16).split(":")[1].trim());
 

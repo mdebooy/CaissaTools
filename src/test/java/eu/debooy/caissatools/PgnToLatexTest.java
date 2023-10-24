@@ -172,7 +172,10 @@ public class PgnToLatexTest extends BatchTest {
     PgnToLatex.execute(args);
     after();
 
-    assertEquals(0, err.size());
+    if (!err.isEmpty()) {
+      debug();
+    }
+    assertTrue(err.isEmpty());
     assertEquals(getTemp() + File.separator + BST_COMPETITIE1_TEX,
                  out.get(13).split(":")[1].trim());
     assertEquals(getTemp() + File.separator + BST_COMPETITIE2_TEX,
