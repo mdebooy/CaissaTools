@@ -43,7 +43,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.TreeSet;
 
@@ -414,18 +413,6 @@ public final class PgnToLatex extends Batchjob {
     output.write(lijn.toString());
   }
 
-  private static String replaceParameters(String regel,
-                                          Map<String, String> parameters) {
-    var resultaat = regel;
-    for (Entry<String, String> parameter : parameters.entrySet()) {
-      resultaat =
-          resultaat.replace("@"+parameter.getKey()+"@",
-                            parameter.getValue());
-    }
-
-    return resultaat;
-  }
-
   private static String schrijf(String regel, String status,
                                 Competitie competitie,
                                 Map<String, String> texPartij,
@@ -459,14 +446,16 @@ public final class PgnToLatex extends Batchjob {
       default:
         switch (status) {
           case KEYWORDS:
-            schrijfParameter(CaissaTools.PAR_KEYWORDS, regel, parameters);
+            CaissaTools.schrijfParameter(CaissaTools.PAR_KEYWORDS, regel,
+                                         parameters, output);
             break;
           case KYW_LOGO:
-            schrijfParameter(CaissaTools.PAR_LOGO, regel, parameters);
+            CaissaTools.schrijfParameter(CaissaTools.PAR_LOGO, regel,
+                                         parameters, output);
             break;
           case KYW_MATRIX:
             if (Boolean.TRUE.equals(metMatrix)) {
-              output.write(replaceParameters(regel, parameters));
+              output.write(CaissaTools.replaceParameters(regel, parameters));
             }
             break;
           case KYW_PARTIJEN:
@@ -474,24 +463,16 @@ public final class PgnToLatex extends Batchjob {
             texPartij.put(splits[0], splits[1]);
             break;
           case KYW_PERIODE:
-            schrijfParameter("Periode", regel, parameters);
+            CaissaTools.schrijfParameter("Periode", regel, parameters, output);
             break;
           default:
-            output.write(replaceParameters(regel, parameters));
+            output.write(CaissaTools.replaceParameters(regel, parameters));
             break;
           }
         break;
     }
 
     return status;
-  }
-
-  private static void schrijfParameter(String param, String regel,
-                                       Map<String, String> parameters)
-      throws BestandException {
-    if (parameters.containsKey(param)) {
-      output.write(replaceParameters(regel, parameters));
-    }
   }
 
   private static void schrijfResultaat(StringBuilder lijn, int speler,

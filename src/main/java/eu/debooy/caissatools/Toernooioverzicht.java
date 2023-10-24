@@ -42,7 +42,6 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeSet;
@@ -658,17 +657,6 @@ public final class Toernooioverzicht extends Batchjob {
     output.write("    " + LTX_HLINE);
   }
 
-  private static String replaceParameters(String regel,
-                                          Map<String, String> parameters) {
-    var resultaat = regel;
-    for (Entry<String, String> parameter : parameters.entrySet()) {
-      resultaat = resultaat.replace("@"+parameter.getKey()+"@",
-                                    parameter.getValue());
-    }
-
-    return resultaat;
-  }
-
   private static String schrijf(String regel, String status, int kolommen,
                                 int noSpelers, Map<String, String> parameters)
       throws BestandException {
@@ -762,40 +750,40 @@ public final class Toernooioverzicht extends Batchjob {
       throws BestandException {
     switch (status) {
       case KYW_DEELNEMERS:
-        output.write(replaceParameters(regel, params));
+        output.write(CaissaTools.replaceParameters(regel, params));
         break;
       case KYW_KLEUREN:
-        output.write(replaceParameters(regel, params));
+        output.write(CaissaTools.replaceParameters(regel, params));
         break;
       case KYW_LOGO:
         if (paramBundle.containsParameter(CaissaTools.PAR_LOGO)) {
-          output.write(replaceParameters(regel, params));
+          output.write(CaissaTools.replaceParameters(regel, params));
         }
         break;
       case KYW_MATRIX:
         if (null != matrix) {
-          output.write(replaceParameters(regel, params));
+          output.write(CaissaTools.replaceParameters(regel, params));
         }
         break;
       case KYW_SKIP:
         break;
       case KYW_SUBTITEL:
         if (paramBundle.containsParameter(CaissaTools.PAR_SUBTITEL)) {
-          output.write(replaceParameters(regel, params));
+          output.write(CaissaTools.replaceParameters(regel, params));
         }
         break;
       case KYW_TITEL:
         if (paramBundle.containsParameter(CaissaTools.PAR_TITEL)) {
-          output.write(replaceParameters(regel, params));
+          output.write(CaissaTools.replaceParameters(regel, params));
         }
         break;
       case KYW_UITSLAGEN:
         if (null != schema) {
-          output.write(replaceParameters(regel, params));
+          output.write(CaissaTools.replaceParameters(regel, params));
         }
         break;
       default:
-        output.write(replaceParameters(regel, params));
+        output.write(CaissaTools.replaceParameters(regel, params));
         break;
       }
   }
