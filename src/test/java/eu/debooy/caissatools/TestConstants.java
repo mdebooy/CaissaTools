@@ -60,6 +60,7 @@ public final class TestConstants extends BatchTest {
   public static final String  PAR_GESCHIEDENIS      =
       "--geschiedenisBestand=" + getTemp() + File.separator + "geschiedenis";
   public static final String  PAR_INVOERDIR         = "--invoermap=";
+  public static final String  PAR_DATUM             = "--datum=21/12/2112";
   public static final String  PAR_MATRIX_OP_STAND   = "--opstand";
   public static final String  PAR_SCHEMA1           =
       "--schema=" + getTemp() + File.separator + "schema1";

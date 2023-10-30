@@ -209,9 +209,14 @@ public final class PgnToLatex extends Batchjob {
         // Zet de te vervangen waardes.
         Map<String, String> params  = new HashMap<>();
         params.put("Auteur", auteur);
-        params.put("Datum",
-                   Datum.fromDate(paramBundle.getDate(CaissaTools.PAR_DATUM),
-                                  PGN.PGN_DATUM_FORMAAT));
+        if (paramBundle.containsArgument(CaissaTools.PAR_DATUM)) {
+          params.put("Datum",
+                     Datum.fromDate(paramBundle.getDate(CaissaTools.PAR_DATUM),
+                                    PGN.PGN_DATUM_FORMAAT));
+        } else {
+          params.put("Datum", "\\today{}");
+        }
+
         if (paramBundle.containsArgument(CaissaTools.PAR_KEYWORDS)) {
           params.put(CaissaTools.PAR_KEYWORDS,
                      paramBundle.getString(CaissaTools.PAR_KEYWORDS));

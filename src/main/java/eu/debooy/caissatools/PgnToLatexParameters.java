@@ -21,7 +21,6 @@ import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.IParameterBundleValidator;
 import eu.debooy.doosutils.Parameter;
 import java.util.ArrayList;
-import java.util.Date;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
@@ -40,10 +39,6 @@ public class PgnToLatexParameters implements IParameterBundleValidator {
   public List<String> valideer(Map<String, Parameter> params,
                                List<String> argumenten) {
     List<String>  fouten  = new ArrayList<>();
-
-    if (!argumenten.contains(CaissaTools.PAR_DATUM)) {
-      params.get(CaissaTools.PAR_DATUM).setWaarde(new Date());
-    }
 
     if (!argumenten.contains(CaissaTools.PAR_BESTAND)) {
       return fouten;

@@ -38,11 +38,12 @@ public class PgnToLatexTest extends BatchTest {
   protected static final  ClassLoader CLASSLOADER =
       PgnToLatexTest.class.getClassLoader();
 
-  private static final  String  BST_COMPETITIE1_TEX = "competitie1.tex";
-  private static final  String  BST_COMPETITIE2_TEX = "competitie2.tex";
-  private static final  String  BST_COMPETITIE3_TEX = "competitie3.tex";
-  private static final  String  BST_COMPETITIE4_TEX = "competitie4.tex";
-  private static final  String  BST_COMPETITIE5_TEX = "competitie5.tex";
+  private static final  String  BST_COMPETITIE1_TEX   = "competitie1.tex";
+  private static final  String  BST_COMPETITIE1A_TEX  = "competitie1a.tex";
+  private static final  String  BST_COMPETITIE2_TEX   = "competitie2.tex";
+  private static final  String  BST_COMPETITIE3_TEX   = "competitie3.tex";
+  private static final  String  BST_COMPETITIE4_TEX   = "competitie4.tex";
+  private static final  String  BST_COMPETITIE5_TEX   = "competitie5.tex";
 
   private static final  String  PAR_AUTEUR    = "--auteur=Caissa Tools";
   private static final  String  PAR_BESTAND1  =
@@ -84,6 +85,22 @@ public class PgnToLatexTest extends BatchTest {
   }
 
   @Test
+  public void testFouten() {
+    String[]  args  = new String[] {PAR_BESTAND1,
+                                    TestConstants.PAR_SCHEMA1};
+    String[]  verwacht  = new String[] {
+        resourceBundle.getString(CaissaTools.ERR_BEST_ONGELIJK),
+        resourceBundle.getString(CaissaTools.ERR_BIJBESTAND)};
+
+    before();
+    PgnToLatex.execute(args);
+    after();
+
+    assertEquals(2, err.size());
+    assertArrayEquals(verwacht, err.toArray());
+  }
+
+  @Test
   public void testLeeg() {
     String[]  args  = new String[] {};
 
@@ -92,6 +109,37 @@ public class PgnToLatexTest extends BatchTest {
     after();
 
     assertEquals(1, err.size());
+  }
+
+  @Test
+  public void testMetDatum() throws BestandException {
+    String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
+                                    TestConstants.PAR_DATUM,
+                                    TestConstants.PAR_INVOERDIR + getTemp(),
+                                    PAR_MATRIX,
+                                    TestConstants.PAR_SCHEMA1,
+                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+
+    try {
+      Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
+    } catch (BestandException e) {
+    }
+
+    before();
+    PgnToLatex.execute(args);
+    after();
+
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + BST_COMPETITIE1_TEX,
+                 out.get(13).split(":")[1].trim());
+    assertEquals("150", out.get(14).split(":")[1].trim());
+    assertTrue(
+        Bestand.equals(
+            Bestand.openInvoerBestand(getTemp() + File.separator
+                                      + BST_COMPETITIE1_TEX),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPETITIE1A_TEX)));
+
+    Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
   }
 
   @Test
@@ -110,19 +158,34 @@ public class PgnToLatexTest extends BatchTest {
   }
 
   @Test
-  public void testFouten() {
-    String[]  args  = new String[] {PAR_BESTAND1,
-                                    TestConstants.PAR_SCHEMA1};
-    String[]  verwacht  = new String[] {
-        resourceBundle.getString(CaissaTools.ERR_BEST_ONGELIJK),
-        resourceBundle.getString(CaissaTools.ERR_BIJBESTAND)};
+  public void testOpStand() throws BestandException {
+    String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
+                                    TestConstants.PAR_INVOERDIR + getTemp(),
+                                    PAR_MATRIX,
+                                    TestConstants.PAR_MATRIX_OP_STAND,
+                                    TestConstants.PAR_SCHEMA1,
+                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+
+    try {
+      Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
+    } catch (BestandException e) {
+    }
 
     before();
     PgnToLatex.execute(args);
     after();
 
-    assertEquals(2, err.size());
-    assertArrayEquals(verwacht, err.toArray());
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + BST_COMPETITIE1_TEX,
+                 out.get(13).split(":")[1].trim());
+    assertEquals("150", out.get(14).split(":")[1].trim());
+    assertTrue(
+        Bestand.equals(
+            Bestand.openInvoerBestand(getTemp() + File.separator
+                                      + BST_COMPETITIE1_TEX),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPETITIE2_TEX)));
+
+    Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
   }
 
   @Test
@@ -186,37 +249,6 @@ public class PgnToLatexTest extends BatchTest {
             Bestand.openInvoerBestand(getTemp() + File.separator
                                       + BST_COMPETITIE1_TEX),
             Bestand.openInvoerBestand(CLASSLOADER, BST_COMPETITIE4_TEX)));
-    Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
-  }
-
-  @Test
-  public void testOpStand() throws BestandException {
-    String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
-                                    TestConstants.PAR_INVOERDIR + getTemp(),
-                                    PAR_MATRIX,
-                                    TestConstants.PAR_MATRIX_OP_STAND,
-                                    TestConstants.PAR_SCHEMA1,
-                                    TestConstants.PAR_UITVOERDIR + getTemp()};
-
-    try {
-      Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
-    } catch (BestandException e) {
-    }
-
-    before();
-    PgnToLatex.execute(args);
-    after();
-
-    assertEquals(0, err.size());
-    assertEquals(getTemp() + File.separator + BST_COMPETITIE1_TEX,
-                 out.get(13).split(":")[1].trim());
-    assertEquals("150", out.get(14).split(":")[1].trim());
-    assertTrue(
-        Bestand.equals(
-            Bestand.openInvoerBestand(getTemp() + File.separator
-                                      + BST_COMPETITIE1_TEX),
-            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPETITIE2_TEX)));
-
     Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
   }
 
