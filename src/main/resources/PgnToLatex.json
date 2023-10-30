@@ -1,6 +1,6 @@
 {
   "_jar": "CaissaTools.jar",
-  "_prefixlengte": 18,
+  "_prefixlengte": 16,
   "applicatie": "PgnToLatex",
   "help": "Zet een PGN bestand met partijen uit een toernooi om in een .tex bestand.",
   "banner": "PGN to LaTeX",
@@ -29,8 +29,8 @@
     {
       "parameter": "datum",
       "lang": "datum",
-      "formaat": "dd/MM/yyyy",
-      "help": "Datum van het toernooi (dd/mm/yyyy).",
+      "format": "dd/MM/yyyy",
+      "help": "Datum van aanmaak (dd/mm/yyyy). Als de parameter niet is opgegeven dan is het de datum waarop de PDF wordt gemaakt.",
       "type": "date"
     },
     {
