@@ -141,6 +141,20 @@ public class ELOBerekenaarTest extends BatchTest {
   }
 
   @Test
+  public void testMaxVerschil() {
+    String[]  args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
+                                    TestConstants.PAR_SPELERBESTAND,
+                                    "--" + CaissaTools.PAR_MAXVERSCHIL, "600",
+                                    "--" + CaissaTools.PAR_VASTEKFACTOR, "3"};
+
+    before();
+    ELOBerekenaar.execute(args);
+    after();
+
+    assertTrue(err.isEmpty());
+  }
+
+  @Test
   public void testMetEindDatum() throws BestandException {
     String[]  args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
                                     TestConstants.PAR_SPELERBESTAND,

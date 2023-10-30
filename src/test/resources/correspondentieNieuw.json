@@ -1,0 +1,12 @@
+{
+  "event": "Testing",
+  "site": "Caissa Tools",
+  "eventdate": "2022.01.??",
+  "toernooitype": 2,
+  "spelers": [
+    { "naam": "Speler, Alice", "email": "alice@caissa.eu", "alias": "Alice01" },
+    { "naam": "Speler, Bob", "email": "bob@caissa.eu", "alias": "Bob02" },
+    { "naam": "Speler, Carol", "email": "carol@caissa.eu", "alias": "Carol03" },
+    { "naam": "Speler, Dave", "email": "dave@caissa.eu", "alias": "Dave04"}
+  ]
+}

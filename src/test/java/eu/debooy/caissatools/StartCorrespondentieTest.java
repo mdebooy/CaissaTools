@@ -33,14 +33,21 @@ import org.junit.Test;
  * @author Marco de Booij
  */
 public class StartCorrespondentieTest extends BatchTest {
-  private static final  String  CORRESPONDENTIE_JSON  = "correspondentie.json";
-  private static final  String  CORRESPONDENTIE_PGN   = "correspondentie.pgn";
+  private static final  String  CORRESPONDENTIE_JSON    =
+      "correspondentie.json";
+  private static final  String  CORRESPONDENTIE_PGN     = "correspondentie.pgn";
+  private static final  String  CORRESPONDENTIEN_JSON   =
+      "correspondentieNieuw.json";
+  private static final  String  CORRESPONDENTIEN_PGN    =
+      "correspondentieNieuw.pgn";
 
   @AfterClass
   public static void afterClass() throws BestandException {
     verwijderBestanden(getTemp() + File.separator,
                        new String[] {CORRESPONDENTIE_JSON,
-                                     CORRESPONDENTIE_PGN});
+                                     CORRESPONDENTIE_PGN,
+                                     CORRESPONDENTIEN_JSON,
+                                     CORRESPONDENTIEN_PGN});
   }
 
   @BeforeClass
@@ -48,6 +55,10 @@ public class StartCorrespondentieTest extends BatchTest {
     try {
       kopieerBestand(CLASSLOADER, CORRESPONDENTIE_JSON,
                      getTemp() + File.separator + CORRESPONDENTIE_JSON);
+      kopieerBestand(CLASSLOADER, CORRESPONDENTIE_PGN,
+                     getTemp() + File.separator + CORRESPONDENTIE_PGN);
+      kopieerBestand(CLASSLOADER, CORRESPONDENTIEN_JSON,
+                     getTemp() + File.separator + CORRESPONDENTIEN_JSON);
     } catch (IOException e) {
       System.out.println(e.getLocalizedMessage());
       throw new BestandException(e);
@@ -82,5 +93,47 @@ public class StartCorrespondentieTest extends BatchTest {
 
     assertEquals(1, err.size());
     assertEquals("PAR-0001", err.get(0).split(" ")[0]);
+  }
+
+  @Test
+  public void testNieuweSpeler1() throws BestandException {
+    String[]  args  =
+        new String[] {"--schema", getTemp() + File.separator
+                        + CORRESPONDENTIEN_JSON,
+                      "-b", getTemp() + File.separator + CORRESPONDENTIEN_PGN};
+
+    before();
+    StartCorrespondentie.execute(args);
+    after();
+
+    assertTrue(err.isEmpty());
+    assertTrue(
+        Bestand.equals(
+            Bestand.openInvoerBestand(StartPgnTest.class.getClassLoader(),
+                                      CORRESPONDENTIEN_PGN),
+            Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + CORRESPONDENTIEN_PGN)));
+  }
+
+  @Test
+  public void testNieuweSpeler2() throws BestandException {
+    String[]  args  =
+        new String[] {"--schema",
+                      getTemp() + File.separator + CORRESPONDENTIEN_JSON,
+                      "-b",
+                      getTemp() + File.separator + CORRESPONDENTIEN_PGN,
+                      "--nieuwespelers=\"Speler, Dave\""};
+
+    before();
+    StartCorrespondentie.execute(args);
+    after();
+
+    assertTrue(err.isEmpty());
+    assertTrue(
+        Bestand.equals(
+            Bestand.openInvoerBestand(StartPgnTest.class.getClassLoader(),
+                                      CORRESPONDENTIEN_PGN),
+            Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + CORRESPONDENTIEN_PGN)));
   }
 }
