@@ -74,7 +74,7 @@ public final class PgnToLatex extends Batchjob {
   private static final String KYW_PERIODE   = "Q";
   private static final String NORMAAL       = "N";
 
-  PgnToLatex() {}
+  private PgnToLatex() {}
 
   private static void bepaalMinMaxDatum(String datum) {
     if (DoosUtils.isNotBlankOrNull(datum)
@@ -548,7 +548,76 @@ public final class PgnToLatex extends Batchjob {
     return status;
   }
 
+  private static String verwerkAanwezigeTag(String regel, String tag,
+                                            PGN partij) {
+    switch (tag) {
+      case PGN.PGNTAG_RESULT:
+        regel = regel.replace("@" + tag + "@",
+                partij.getTag(tag)
+                      .replace("1/2", Utilities.kwart(0.5)));
+        break;
+      case PGN.PGNTAG_ECO:
+        var extra = "";
+        if (!partij.isRanked()) {
+          extra =
+              " "
+                + resourceBundle.getString("tekst.buitencompetitie");
+        }
+        regel = regel.replace("@" + tag + "@",
+                partij.getTag(tag) + extra);
+        break;
+      default:
+        regel = regel.replace("@" + tag + "@", partij.getTag(tag));
+        break;
+    }
+
+    return regel;
+  }
+
+  private static String verwerkAfwezigeTag(String tag, String regel,
+                                           FEN fen, PGN partij) {
+    switch (tag) {
+      case PGN.PGNTAG_ECO:
+        var extra = "";
+        if (!partij.isRanked()) {
+          extra =
+              " "
+                + resourceBundle.getString("tekst.buitencompetitie");
+        }
+        regel = regel.replace("@" + tag + "@", extra);
+        break;
+      case "_EnkelZetten":
+        regel = regel.replace("@_EnkelZetten@",
+                partij.getZuivereZetten()
+                        .replace("#", "\\mate"));
+        break;
+      case "_Start":
+        regel = regel.replace("@_Start@",
+                fen.getAanZet()+" "+ fen.getZetnummer());
+        break;
+      case "_Stelling":
+        regel = regel.replace("@_Stelling@", fen.getPositie());
+        break;
+      case "_Zetten":
+        regel = regel.replace("@_Zetten@",
+                partij.getZetten()
+                        .replace("#", "\\mate"));
+        break;
+      default:
+        regel = regel.replace("@" + tag + "@", tag);
+        break;
+    }
+
+    return regel;
+  }
+
   private static void verwerkPartij(PGN partij) {
+    if (!partij.isBeeindigd()
+        || partij.isBye()
+        || !partij.isRanked()) {
+      return;
+    }
+
     bepaalMinMaxDatum(partij.getTag(PGN.PGNTAG_EVENTDATE));
     bepaalMinMaxDatum(partij.getTag(PGN.PGNTAG_DATE));
 
@@ -564,18 +633,16 @@ public final class PgnToLatex extends Batchjob {
                                       Map<String, String> texPartij,
                                       TekstBestand output) {
     partijen.stream()
-            .filter(partij -> !partij.isBye())
+            .filter(partij -> !partij.isBye() && partij.isBeeindigd())
             .forEach(partij -> {
       try {
-        var fen       = new FEN();
-        var regel     = "";
-        var resultaat = partij.getTag(PGN.PGNTAG_RESULT)
-                .replace("1/2", Utilities.kwart(0.5));
-        var zetten    = partij.getZuivereZetten().replace("#", "\\\\#");
+        var fen   = new FEN();
+        var regel = "";
+
         if (partij.hasTag(PGN.PGNTAG_FEN)) {
           fen = new FEN(partij.getTag(PGN.PGNTAG_FEN));
         }
-        if (DoosUtils.isNotBlankOrNull(zetten)) {
+        if (!partij.getZuivereZetten().isEmpty()) {
           if (partij.hasTag(PGN.PGNTAG_FEN)) {
             regel = texPartij.get("fenpartij");
           } else {
@@ -587,73 +654,26 @@ public final class PgnToLatex extends Batchjob {
           }
         } else {
           // Partij zonder zetten.
-          if (!resultaat.equals("*")) {
+          if (partij.isBeeindigd()) {
             regel = texPartij.get("legepartij");
           }
         }
-        int i = regel.indexOf('@');
+
+        var i     = regel.indexOf('@');
         while (i >= 0) {
-          int j = regel.indexOf('@', i+1);
+          var j = regel.indexOf('@', i+1);
           if (j > i) {
             var tag = regel.substring(i+1, j);
             if (partij.hasTag(tag)) {
-              switch (tag) {
-                case PGN.PGNTAG_RESULT:
-                  regel = regel.replace("@" + tag + "@",
-                          partij.getTag(tag)
-                                .replace("1/2", Utilities.kwart(0.5)));
-                  break;
-                case PGN.PGNTAG_ECO:
-                  var extra = "";
-                  if (!partij.isRanked()) {
-                    extra =
-                        " "
-                          + resourceBundle.getString("tekst.buitencompetitie");
-                  }
-                  regel = regel.replace("@" + tag + "@",
-                          partij.getTag(tag) + extra);
-                  break;
-                default:
-                  regel = regel.replace("@" + tag + "@", partij.getTag(tag));
-                  break;
-              }
+              regel = verwerkAanwezigeTag(regel, tag, partij);
             } else {
-              switch (tag) {
-                case PGN.PGNTAG_ECO:
-                  var extra = "";
-                  if (!partij.isRanked()) {
-                    extra =
-                        " "
-                          + resourceBundle.getString("tekst.buitencompetitie");
-                  }
-                  regel = regel.replace("@" + tag + "@", extra);
-                  break;
-                case "_EnkelZetten":
-                  regel = regel.replace("@_EnkelZetten@",
-                          partij.getZuivereZetten()
-                                  .replace("#", "\\mate"));
-                  break;
-                case "_Start":
-                  regel = regel.replace("@_Start@",
-                          fen.getAanZet()+" "+ fen.getZetnummer());
-                  break;
-                case "_Stelling":
-                  regel = regel.replace("@_Stelling@", fen.getPositie());
-                  break;
-                case "_Zetten":
-                  regel = regel.replace("@_Zetten@",
-                          partij.getZetten()
-                                  .replace("#", "\\mate"));
-                  break;
-                default:
-                  regel = regel.replace("@" + tag + "@", tag);
-                  break;
-              }
+              regel = verwerkAfwezigeTag(tag, regel, fen, partij);
             }
             j = i;
           }
           i = regel.indexOf('@', j+1);
         }
+
         output.write(regel);
       } catch (BestandException | FenException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());

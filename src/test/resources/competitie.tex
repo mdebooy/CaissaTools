@@ -1,0 +1,73 @@
+\documentclass[twocolumn,a4paper,10pt]{report}
+
+\usepackage[T1]{fontenc}
+\usepackage[dutch]{babel}
+\usepackage{skak}
+\usepackage{texmate}
+\usepackage{color}
+\usepackage{colortbl}
+\usepackage{graphicx}
+\usepackage{lscape}
+
+\topmargin =0.mm
+\oddsidemargin =0.mm
+\evensidemargin =0.mm
+\headheight =0.mm
+\headsep =0.mm
+\textheight =265.mm
+\textwidth =165.mm
+\parindent =0.mm
+
+\newcommand{\chessgame}[7]{
+  $\circ$ \textbf{#1} \hfill Ronde {#4}\\
+  $\bullet$ \textbf{#2}\\
+  {#3} \hfill {#6} \hfill {#5}\\
+  \styleB
+  \newgame
+  \mainline{#7} {\bf #5}
+  \[\showboard\]
+  \begin{center} \hrule \end{center}
+}
+
+\newcommand{\fengame}[9]{
+  $\circ$ \textbf{#1} \hfill Ronde {#4}\\
+  $\bullet$ \textbf{#2}\\
+  {#3} \hfill {#6} \hfill {#5}\\
+  \styleB
+  \newgame
+  \position[{#8}] {#9}
+  \[\showboard\]
+  \mainline{#7} {\bf #5}
+  \[\showboard\]
+  \begin{center} \hrule \end{center}
+}
+
+\newcommand{\chessempty}[6]{
+  $\circ$ \textbf{#1} \hfill Ronde {#4}\\
+  $\bullet$ \textbf{#2}\\
+  {#3} \hfill {#6} \hfill {#5}\\
+  \begin{center} \hrule \end{center}
+}
+
+% Zorgt ervoor dat een partij niet over 2 kolommen of pagina's wordt gesplitst.
+\raggedbottom \topskip 1\topskip plus1000pt % like \raggedbottom; moreso \def\need#1{\vskip #1\penalty0 \vskip-#1\relax}
+
+\title{Testing 97/98}
+\author{Caissa Tools}
+\date{\today{}}
+
+\begin{document}
+\begin{titlepage}
+  \begin{center}
+    \huge Testing 97/98 \\
+    \vspace{1in}
+    \large Caissa Tools \\
+    \vspace{1in}
+    \large 01/10/1999 - 08/10/1999 \\
+  \end{center}
+\end{titlepage}
+
+\begin{chessgame}{Speler, 02}{Speler, 05}{1999.10.01}{1}{\textonehalf-\textonehalf}{}{1.e4 e5 2.Nf3 Nf6}\end{chessgame}
+\begin{chessempty}{Speler, 03}{Speler, 04}{1999.10.01}{1}{1-0}{}\end{chessempty}
+\begin{chessempty}{Speler, 01}{Speler, 02}{1999.10.08}{2}{0-1}{}\end{chessempty}
+\end{document}

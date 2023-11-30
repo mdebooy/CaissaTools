@@ -52,6 +52,8 @@ import org.json.simple.JSONObject;
  */
 public final class PgnToHtml extends Batchjob {
   public static final String  HTML_LEGENDA                = "table.legenda.";
+  public static final String  HTML_LEGENDA_INHAAL         =
+      "table.legenda.inhalen.";
   public static final String  HTML_TABLE_BEGIN            = "table.begin.";
   public static final String  HTML_TABLE_BODY             = "table.body.";
   public static final String  HTML_TABLE_BODY_BEGIN       = "table.body.begin.";
@@ -220,11 +222,15 @@ public final class PgnToHtml extends Batchjob {
     klaar();
   }
 
-  private static void genereerLegenda() throws BestandException {
-    var forfait   = resourceBundle.getString("message.forfait");
-    var notRanked = resourceBundle.getString("message.notranked");
+  private static void genereerLegenda(Boolean metInhaaldatum) throws BestandException {
+    var forfait     = resourceBundle.getString("message.forfait");
+    var notRanked   = resourceBundle.getString("message.notranked");
+    var inhaaldatum = resourceBundle.getString("message.met.inhaaldatum");
     genereerTabelheading();
     schrijfUitvoer(HTML_TABLE_BODY_BEGIN);
+    if (Boolean.TRUE.equals(metInhaaldatum)) {
+      schrijfUitvoer(HTML_LEGENDA_INHAAL, inhaaldatum);
+    }
     schrijfUitvoer(HTML_LEGENDA, notRanked, forfait);
     schrijfUitvoer(HTML_TABLE_BODY_EIND);
     schrijfUitvoer(HTML_TABLE_EIND);
@@ -251,11 +257,13 @@ public final class PgnToHtml extends Batchjob {
 
   private static void genereerUitslagtabel(Set<Partij> schema)
       throws BestandException {
-    var speeldata = competitie.getSpeeldata();
-    var iter      = schema.iterator();
-    var partij    = iter.next();
-    var vorige    = Integer.parseInt(partij.getRonde().getRound()
-                                                      .split("\\.")[0]);
+    var iter            = schema.iterator();
+    var metInhaaldatum  =
+            paramBundle.getBoolean(CaissaTools.PAR_METINHAALDATUM);
+    var partij          = iter.next();
+    var speeldata       = competitie.getSpeeldata();
+    var vorige          = Integer.parseInt(partij.getRonde().getRound()
+                                                            .split("\\.")[0]);
     genereerRondeheading(vorige,
                          Datum.fromDate(speeldata.get(vorige-1),
                                         CaissaConstants.DEF_DATUMFORMAAT));
@@ -271,17 +279,26 @@ public final class PgnToHtml extends Batchjob {
         vorige  = ronde;
       }
 
-      var klasse  =
+      var klasse        =
           (partij.isRanked()
            && (!partij.isBye()
                || competitie.metBye())) ? "" : " class=\"btncmp\"";
+      var nietgespeeld  = "-";
+      var uitslagklasse = "aligncenter";
+      if (metInhaaldatum && !partij.isGespeeld()) {
+        nietgespeeld    = competitie.getInhaaldatum(partij);
+        if (!nietgespeeld.equals("-")) {
+          uitslagklasse = "inhaal";
+        }
+      }
       var uitslag = competitie.getUitslag(partij.getUitslag(), partij.isBye())
                           .replace("1/2", "&frac12;")
-                          .replace('-', (partij.isForfait() ? 'F' : '-'))
-                          .replace('*', '-');
+                          .replace("-", (partij.isForfait() ? "<b>F</b>" : "-"))
+                          .replace("*", nietgespeeld);
       var wit     = partij.getWitspeler().getVolledigenaam();
       var zwart   = partij.getZwartspeler().getVolledigenaam();
-      schrijfUitvoer(HTML_TABLE_BODY, klasse, wit, zwart, uitslag);
+      schrijfUitvoer(HTML_TABLE_BODY, klasse, wit, zwart, uitslag,
+                     uitslagklasse);
       if (iter.hasNext()) {
         partij  = iter.next();
       } else {
@@ -290,7 +307,7 @@ public final class PgnToHtml extends Batchjob {
     } while (null != partij);
 
     genereerRondefooting();
-    genereerLegenda();
+    genereerLegenda(metInhaaldatum);
   }
 
   private static String getDecimalen(int punten, String decimalen) {

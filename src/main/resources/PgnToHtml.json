@@ -29,6 +29,12 @@
       "type": "boolean"
     },
     {
+      "parameter": "metInhaaldatum",
+      "lang": "metInhaaldatum",
+      "help": "Geeft de inhaaldatum (dag/maand), indien de partij nog gespeeld moet worden, weer bij uitslag.",
+      "type": "boolean"
+    },
+    {
       "parameter": "schema",
       "extensie": "json",
       "kort": "s",

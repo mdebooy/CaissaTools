@@ -1,0 +1,219 @@
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.10.01"]
+[Round "1"]
+[White "Speler, 03"]
+[Black "Speler, 04"]
+[Result "1-0"]
+[EventDate "1999.10.01"]
+
+1-0
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.10.01"]
+[Round "1"]
+[White "Speler, 02"]
+[Black "Speler, 05"]
+[Result "1/2-1/2"]
+[EventDate "1999.10.01"]
+
+1.e4 e5 2.Nf3 Nf6 1/2-1/2
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.10.08"]
+[Round "2"]
+[White "Speler, 01"]
+[Black "Speler, 02"]
+[Result "0-1"]
+[EventDate "1999.10.01"]
+
+0-1
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.10.08"]
+[Round "2"]
+[White "Speler, 05"]
+[Black "Speler, 03"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.10.15"]
+[Round "3"]
+[White "Speler, 04"]
+[Black "Speler, 05"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.10.15"]
+[Round "3"]
+[White "Speler, 03"]
+[Black "Speler, 01"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.10.29"]
+[Round "4"]
+[White "Speler, 02"]
+[Black "Speler, 03"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.10.29"]
+[Round "4"]
+[White "Speler, 01"]
+[Black "Speler, 04"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.11.05"]
+[Round "5"]
+[White "Speler, 05"]
+[Black "Speler, 01"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.11.05"]
+[Round "5"]
+[White "Speler, 04"]
+[Black "Speler, 02"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.11.12"]
+[Round "6"]
+[White "Speler, 04"]
+[Black "Speler, 03"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.11.12"]
+[Round "6"]
+[White "Speler, 05"]
+[Black "Speler, 02"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.11.26"]
+[Round "7"]
+[White "Speler, 02"]
+[Black "Speler, 01"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.11.26"]
+[Round "7"]
+[White "Speler, 03"]
+[Black "Speler, 05"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.12.03"]
+[Round "8"]
+[White "Speler, 05"]
+[Black "Speler, 04"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.12.03"]
+[Round "8"]
+[White "Speler, 01"]
+[Black "Speler, 03"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.11.10"]
+[Round "9"]
+[White "Speler, 03"]
+[Black "Speler, 02"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.11.10"]
+[Round "9"]
+[White "Speler, 04"]
+[Black "Speler, 01"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.12.17"]
+[Round "10"]
+[White "Speler, 01"]
+[Black "Speler, 05"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*
+
+[Event "Testing 97/98"]
+[Site "Caissa Tools"]
+[Date "1999.12.17"]
+[Round "10"]
+[White "Speler, 02"]
+[Black "Speler, 04"]
+[Result "*"]
+[EventDate "1999.10.01"]
+
+*

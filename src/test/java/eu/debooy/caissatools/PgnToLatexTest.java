@@ -38,6 +38,7 @@ public class PgnToLatexTest extends BatchTest {
   protected static final  ClassLoader CLASSLOADER =
       PgnToLatexTest.class.getClassLoader();
 
+  private static final  String  BST_COMPETITIE_TEX    = "competitie.tex";
   private static final  String  BST_COMPETITIE1_TEX   = "competitie1.tex";
   private static final  String  BST_COMPETITIE1A_TEX  = "competitie1a.tex";
   private static final  String  BST_COMPETITIE2_TEX   = "competitie2.tex";
@@ -58,8 +59,10 @@ public class PgnToLatexTest extends BatchTest {
   @AfterClass
   public static void afterClass() {
     verwijderBestanden(getTemp() + File.separator,
-                       new String[] {TestConstants.BST_COMPETITIE1_PGN,
+                       new String[] {TestConstants.BST_COMPETITIE_PGN,
+                                     TestConstants.BST_COMPETITIE1_PGN,
                                      TestConstants.BST_COMPETITIE2_PGN,
+                                     TestConstants.BST_COMPETITIE_JSON,
                                      TestConstants.BST_SCHEMA1_JSON,
                                      TestConstants.BST_SCHEMA2_JSON,
                                      BST_COMPETITIE1_TEX});
@@ -71,8 +74,10 @@ public class PgnToLatexTest extends BatchTest {
     resourceBundle  = ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                                Locale.getDefault());
 
-    for (String bestand : new String[] {TestConstants.BST_COMPETITIE1_PGN,
+    for (String bestand : new String[] {TestConstants.BST_COMPETITIE_PGN,
+                                        TestConstants.BST_COMPETITIE1_PGN,
                                         TestConstants.BST_COMPETITIE2_PGN,
+                                        TestConstants.BST_COMPETITIE_JSON,
                                         TestConstants.BST_SCHEMA1_JSON,
                                         TestConstants.BST_SCHEMA2_JSON}) {
       try {
@@ -82,6 +87,35 @@ public class PgnToLatexTest extends BatchTest {
         throw new BestandException(e);
       }
     }
+  }
+
+  @Test
+  public void testBezig() throws BestandException {
+    String[]  args  = new String[] {TestConstants.PAR_BESTAND,
+                                    TestConstants.PAR_INVOERDIR + getTemp(),
+                                    TestConstants.PAR_COMPETITIE,
+                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+
+    try {
+      Bestand.delete(getTemp() + File.separator + BST_COMPETITIE_TEX);
+    } catch (BestandException e) {
+    }
+
+    before();
+    PgnToLatex.execute(args);
+    after();
+
+    assertEquals(0, err.size());
+    assertEquals(getTemp() + File.separator + BST_COMPETITIE_TEX,
+                 out.get(13).split(":")[1].trim());
+    assertEquals("20", out.get(14).split(":")[1].trim());
+    assertTrue(
+        Bestand.equals(
+            Bestand.openInvoerBestand(getTemp() + File.separator
+                                      + BST_COMPETITIE_TEX),
+            Bestand.openInvoerBestand(CLASSLOADER, BST_COMPETITIE_TEX)));
+
+    Bestand.delete(getTemp() + File.separator + BST_COMPETITIE_TEX);
   }
 
   @Test

@@ -88,6 +88,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_MAXBESTANDEN        = "maxBestanden";
   public static final String  PAR_MAXVERSCHIL         = "maxVerschil";
   public static final String  PAR_METFEN              = "metFEN";
+  public static final String  PAR_METINHAALDATUM      = "metInhaaldatum";
   public static final String  PAR_METPGNVIEWER        = "metPgnviewer";
   public static final String  PAR_METTRAJECTEN        = "metTrajecten";
   public static final String  PAR_METVOLGORDE         = "metVolgorde";

@@ -58,10 +58,10 @@ public final class Toernooioverzicht extends Batchjob {
       ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                Locale.getDefault());
 
-  private static  Competitie        competitie;
-  private static  double[][]        matrix;
-  private static  TekstBestand      output;
-  private static  Set<Partij>       schema;
+  private static  Competitie    competitie;
+  private static  double[][]    matrix;
+  private static  TekstBestand  output;
+  private static  Set<Partij>   schema;
 
   private static final  String  DEF_TEMPLATE  = "Overzicht.tex";
 
@@ -211,8 +211,7 @@ public final class Toernooioverzicht extends Batchjob {
 
     DoosUtils.naarScherm(
       MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
-                           paramBundle.getBestand(CaissaTools.PAR_BESTAND,
-                                                  BestandConstants.EXT_TEX)));
+                           paramBundle.getBestand(CaissaTools.PAR_UITVOER)));
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_PARTIJEN),
                              partijen.size()));
@@ -517,8 +516,8 @@ public final class Toernooioverzicht extends Batchjob {
 
   private static void maakRondeheading(int ronde, String datum)
       throws BestandException {
-    output.write("   \\begin{tabular}[t]{ | b{32mm} C{2mm} b{32mm} |"
-                  + " C{5mm} | }");
+    output.write("   \\begin{tabular}[t]{ | b{31mm} C{2mm} b{31mm} |"
+                  + " C{7mm} | }");
     output.write("    " + LTX_HLINE);
     output.write("    " + RIJKLEUR);
     output.write("    \\multicolumn{2}{l}{\\color{headingtekstkleur}"
@@ -530,11 +529,13 @@ public final class Toernooioverzicht extends Batchjob {
   }
 
   private static void maakUitslagentabel() throws BestandException {
-    var kalender  = competitie.getSpeeldata();
-    var iter      = schema.iterator();
-    var partij    = iter.next();
-    var vorige    = Integer.parseInt(partij.getRonde().getRound()
-                                                    .split("\\.")[0]);
+    var iter            = schema.iterator();
+    var kalender        = competitie.getSpeeldata();
+    var metInhaaldatum  =
+            paramBundle.getBoolean(CaissaTools.PAR_METINHAALDATUM);
+    var partij          = iter.next();
+    var vorige          = Integer.parseInt(partij.getRonde().getRound()
+                                                 .split("\\.")[0]);
     maakRondeheading(vorige,
          DoosUtils.nullToEmpty(Datum.fromDate(kalender.get(vorige-1))));
 
@@ -549,18 +550,25 @@ public final class Toernooioverzicht extends Batchjob {
         vorige  = ronde;
       }
 
+      var nietgespeeld  = "-";
+      if (metInhaaldatum && !partij.isGespeeld()) {
+        nietgespeeld    = competitie.getInhaaldatum(partij);
+        if (!nietgespeeld.equals("-")) {
+          nietgespeeld  = "\\tiny " + nietgespeeld;
+        }
+      }
       var uitslag = partij.getUitslag().replace("1/2", Utilities.kwart(0.5))
                           .replace("-", (partij.isForfait() ? "\\textbf{f}"
                                                             : "-"))
-                          .replace('*', '-');
+                          .replace("*", nietgespeeld);
       var wit     = partij.getWitspeler().getVolledigenaam();
       var zwart   = partij.getZwartspeler().getVolledigenaam();
       if (!partij.isRanked()
           || (partij.isBye() && ! competitie.metBye())) {
         output.write("    " + RIJKLEURLICHTER);
       }
-      output.write("    " + wit + " & - & "
-                          + zwart + " & " + uitslag + " " + LTX_EOL);
+      output.write(String.format("    %s & - & %s & %s %s",
+                                 wit, zwart, uitslag, LTX_EOL));
       if (iter.hasNext()) {
         partij  = iter.next();
       } else {
