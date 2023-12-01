@@ -287,6 +287,38 @@ public class PgnToLatexTest extends BatchTest {
   }
 
   @Test
+  public void testPgnToLatex3() throws BestandException {
+    String[]  args      = new String[] {
+        PAR_BESTAND2, TestConstants.PAR_INVOERDIR + getTemp(), PAR_SCHEMA2,
+        PAR_TITEL, TestConstants.PAR_UITVOERDIR + getTemp(), PAR_MATRIX};
+    String[]  verwacht  = new String[] {
+        resourceBundle.getString(CaissaTools.ERR_BIJBESTAND)};
+
+    before();
+    PgnToLatex.execute(args);
+    after();
+
+    assertEquals(1, err.size());
+    assertArrayEquals(verwacht, err.toArray());
+  }
+
+  @Test
+  public void testPgnToLatex4() throws BestandException {
+    String[]  args      = new String[] {
+        PAR_AUTEUR, PAR_BESTAND2, TestConstants.PAR_INVOERDIR + getTemp(),
+        PAR_SCHEMA2, TestConstants.PAR_UITVOERDIR + getTemp(), PAR_MATRIX};
+    String[]  verwacht  = new String[] {
+        resourceBundle.getString(CaissaTools.ERR_BIJBESTAND)};
+
+    before();
+    PgnToLatex.execute(args);
+    after();
+
+    assertEquals(1, err.size());
+    assertArrayEquals(verwacht, err.toArray());
+  }
+
+  @Test
   public void testZonderMatrix() throws BestandException {
     String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
                                     TestConstants.PAR_INVOERDIR + getTemp(),

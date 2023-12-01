@@ -142,9 +142,9 @@ public class AnalyseToLatex extends Batchjob {
     notaties.forEach((k,v) -> replaceAll(texmatezetten, k, v));
 
     return texmatezetten.toString()
-                        .replaceAll("^[1-9][0-9]*\\.", "")
+                        .replaceAll("^[1-9]\\d*\\.", "")
                         .replace("\\.\\.", "")
-                        .replaceAll(" [1-9][0-9]*\\.", " ")
+                        .replaceAll(" [1-9]\\d*\\.", " ")
                         .replace("  ", " ").trim();
   }
 

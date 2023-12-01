@@ -400,6 +400,7 @@ public class StartCorrespondentie extends Batchjob {
     return resultaat.toString();
   }
 
+  @SuppressWarnings("java:S2234")
   private static void maakToernooi() {
     var noSpelers = spelers.size();
 

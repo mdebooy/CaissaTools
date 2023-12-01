@@ -284,26 +284,20 @@ public final class PgnToHtml extends Batchjob {
            && (!partij.isBye()
                || competitie.metBye())) ? "" : " class=\"btncmp\"";
       var nietgespeeld  = "-";
-      var uitslagklasse = "aligncenter";
-      if (metInhaaldatum && !partij.isGespeeld()) {
+      if (Boolean.TRUE.equals(metInhaaldatum) && !partij.isGespeeld()) {
         nietgespeeld    = competitie.getInhaaldatum(partij);
-        if (!nietgespeeld.equals("-")) {
-          uitslagklasse = "inhaal";
-        }
       }
-      var uitslag = competitie.getUitslag(partij.getUitslag(), partij.isBye())
-                          .replace("1/2", "&frac12;")
-                          .replace("-", (partij.isForfait() ? "<b>F</b>" : "-"))
-                          .replace("*", nietgespeeld);
-      var wit     = partij.getWitspeler().getVolledigenaam();
-      var zwart   = partij.getZwartspeler().getVolledigenaam();
+      var uitslagklasse = nietgespeeld.equals("-") ? "aligncenter" : "inhaal";
+      var uitslag       =
+              competitie.getUitslag(partij.getUitslag(), partij.isBye())
+                        .replace("1/2", "&frac12;")
+                        .replace("-", (partij.isForfait() ? "<b>F</b>" : "-"))
+                        .replace("*", nietgespeeld);
+      var wit           = partij.getWitspeler().getVolledigenaam();
+      var zwart         = partij.getZwartspeler().getVolledigenaam();
       schrijfUitvoer(HTML_TABLE_BODY, klasse, wit, zwart, uitslag,
                      uitslagklasse);
-      if (iter.hasNext()) {
-        partij  = iter.next();
-      } else {
-        partij  = null;
-      }
+      partij            = iter.hasNext() ? iter.next() : null;
     } while (null != partij);
 
     genereerRondefooting();
@@ -584,13 +578,13 @@ public final class PgnToHtml extends Batchjob {
 
   private static void maakKalenderBody(JSONObject item, String volgende)
       throws BestandException {
-    var datum = item.get("datum").toString();
-    var type  = "ronde";
-    if (item.containsKey("inhaal")) {
-      type  = "inhaal";
+    var datum = item.get(Competitie.JSON_TAG_KALENDER_DATUM).toString();
+    var type  = Competitie.JSON_TAG_KALENDER_RONDE;
+    if (item.containsKey(Competitie.JSON_TAG_KALENDER_INHAAL)) {
+      type  = Competitie.JSON_TAG_KALENDER_INHAAL;
     }
-    if (item.containsKey("extra")) {
-      type  = "extra";
+    if (item.containsKey(Competitie.JSON_TAG_KALENDER_EXTRA)) {
+      type  = Competitie.JSON_TAG_KALENDER_EXTRA;
     }
     output.write(prefix +
         MessageFormat.format(skelet.getProperty(HTML_TABLE_ROW_BEGIN

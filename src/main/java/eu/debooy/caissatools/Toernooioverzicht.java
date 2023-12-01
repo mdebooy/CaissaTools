@@ -551,29 +551,26 @@ public final class Toernooioverzicht extends Batchjob {
       }
 
       var nietgespeeld  = "-";
-      if (metInhaaldatum && !partij.isGespeeld()) {
+      if (Boolean.TRUE.equals(metInhaaldatum) && !partij.isGespeeld()) {
         nietgespeeld    = competitie.getInhaaldatum(partij);
         if (!nietgespeeld.equals("-")) {
           nietgespeeld  = "\\tiny " + nietgespeeld;
         }
       }
-      var uitslag = partij.getUitslag().replace("1/2", Utilities.kwart(0.5))
-                          .replace("-", (partij.isForfait() ? "\\textbf{f}"
-                                                            : "-"))
-                          .replace("*", nietgespeeld);
-      var wit     = partij.getWitspeler().getVolledigenaam();
-      var zwart   = partij.getZwartspeler().getVolledigenaam();
+      var uitslag       =
+              partij.getUitslag().replace("1/2", Utilities.kwart(0.5))
+                    .replace("-", (partij.isForfait() ? "\\textbf{f}"
+                                                      : "-"))
+                    .replace("*", nietgespeeld);
+      var wit           = partij.getWitspeler().getVolledigenaam();
+      var zwart         = partij.getZwartspeler().getVolledigenaam();
       if (!partij.isRanked()
-          || (partij.isBye() && ! competitie.metBye())) {
+          || (partij.isBye() && !competitie.metBye())) {
         output.write("    " + RIJKLEURLICHTER);
       }
       output.write(String.format("    %s & - & %s & %s %s",
                                  wit, zwart, uitslag, LTX_EOL));
-      if (iter.hasNext()) {
-        partij  = iter.next();
-      } else {
-        partij  = null;
-      }
+      partij            = iter.hasNext() ? iter.next() : null;
     } while (null != partij);
 
     output.write("    " + LTX_HLINE);

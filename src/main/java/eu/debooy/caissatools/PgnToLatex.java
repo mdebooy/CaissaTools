@@ -292,6 +292,26 @@ public final class PgnToLatex extends Batchjob {
               || pntn >= 1 ? String.valueOf(pntn) : "");
   }
 
+  private static String getRegel(PGN partij, Map<String, String> texPartij) {
+    if (!partij.getZuivereZetten().isEmpty()) {
+      if (partij.hasTag(PGN.PGNTAG_FEN)) {
+        return texPartij.get("fenpartij");
+      }
+
+      if (partij.getZetten().isEmpty()) {
+        return texPartij.get("legepartij");
+      }
+
+      return texPartij.get("schaakpartij");
+    }
+
+    if (partij.isBeeindigd()) {
+      return texPartij.get("legepartij");
+    }
+
+    return "";
+  }
+
   private static TekstBestand getTemplate()
       throws BestandException {
     TekstBestand  texInvoer;
@@ -637,29 +657,14 @@ public final class PgnToLatex extends Batchjob {
             .forEach(partij -> {
       try {
         var fen   = new FEN();
-        var regel = "";
 
         if (partij.hasTag(PGN.PGNTAG_FEN)) {
           fen = new FEN(partij.getTag(PGN.PGNTAG_FEN));
         }
-        if (!partij.getZuivereZetten().isEmpty()) {
-          if (partij.hasTag(PGN.PGNTAG_FEN)) {
-            regel = texPartij.get("fenpartij");
-          } else {
-            if (partij.getZetten().isEmpty()) {
-              regel = texPartij.get("legepartij");
-            } else {
-              regel = texPartij.get("schaakpartij");
-            }
-          }
-        } else {
-          // Partij zonder zetten.
-          if (partij.isBeeindigd()) {
-            regel = texPartij.get("legepartij");
-          }
-        }
 
+        var regel = getRegel(partij, texPartij);
         var i     = regel.indexOf('@');
+
         while (i >= 0) {
           var j = regel.indexOf('@', i+1);
           if (j > i) {

@@ -234,39 +234,32 @@ public final class PgnToJson extends Batchjob {
         }
 
         if (DoosUtils.isBlankOrNull(getKey(ids, getCoordinaat(positie)))) {
-          var stuk  = String.valueOf(CaissaUtils.getStuk(bord[positie]));
-          if (verplaatst.containsKey(stuk)) {
-            if (ids.get(verplaatst.get(stuk)).equals(OUT)) {
-              ids.put(verplaatst.get(stuk), getCoordinaat(positie));
-            }
-          } else {
-            var plies     = trajecten.values().iterator().next().size();
-            var promotie  = "";
-            if (verplaatst.containsKey("P")) {
-              promotie  = verplaatst.get("P");
-            }
-            if (verplaatst.containsKey("p")) {
-              promotie  = verplaatst.get("P");
-            }
-            if (voorNico) {
-              ids.put(promotie, 100 + getCoordinaat(positie));
-            } else {
-              ids.put(promotie, PROMOTIE);
-            }
-            var           id      = stuk + promotie.substring(1);
-            List<Integer> traject = new ArrayList<>();
-            while (plies > 0) {
-              traject.add(EXTRA);
-              plies--;
-            }
-            if (voorNico) {
-              ids.put(id, 200 + getCoordinaat(positie));
-            } else {
-              ids.put(id, getCoordinaat(positie));
-            }
-            trajecten.put(id, traject);
-          }
+          verwerkPositie(positie, bord, ids, verplaatst, trajecten);
         }
+      }
+    }
+  }
+
+  private static void verwerkId(Entry<String, Integer> id, int[] bord,
+                                Map<String, Integer> ids,
+                                Map<String, String> verplaatst) {
+    if (id.getValue() >= 0
+        && id.getValue() < 100) {
+      var positie = getPositie(id.getValue()%100);
+      var stuk  = CaissaUtils.zoekStuk(id.getKey().charAt(0));
+      if (bord[positie] != stuk) {
+        if (bord[positie] == 0) {
+          verplaatst.put(id.getKey().substring(0, 1), id.getKey());
+        }
+        ids.put(id.getKey(), OUT);
+      }
+    } else {
+      if (Objects.equals(id.getValue(), PROMOTIE)
+          || (id.getValue() >= 100 && id.getValue() < 200)) {
+        ids.put(id.getKey(), OUT);
+      }
+      if (id.getValue() >= 200) {
+        ids.put(id.getKey(), id.getValue() - 200);
       }
     }
   }
@@ -274,25 +267,7 @@ public final class PgnToJson extends Batchjob {
   private static void verwerkIds(int[] bord, Map<String, Integer> ids,
                                  Map<String, String> verplaatst) {
     ids.entrySet().forEach(id -> {
-      if (id.getValue() >= 0
-          && id.getValue() < 100) {
-        var positie = getPositie(id.getValue()%100);
-        var stuk  = CaissaUtils.zoekStuk(id.getKey().charAt(0));
-        if (bord[positie] != stuk) {
-          if (bord[positie] == 0) {
-            verplaatst.put(id.getKey().substring(0, 1), id.getKey());
-          }
-          ids.put(id.getKey(), OUT);
-        }
-      } else {
-        if (Objects.equals(id.getValue(), PROMOTIE)
-            || (id.getValue() >= 100 && id.getValue() < 200)) {
-          ids.put(id.getKey(), OUT);
-        }
-        if (id.getValue() >= 200) {
-          ids.put(id.getKey(), id.getValue() - 200);
-        }
-      }
+      verwerkId(id, bord, ids, verplaatst);
     });
   }
 
@@ -364,6 +339,42 @@ public final class PgnToJson extends Batchjob {
 
     return partijnr - 1;
   }
+
+  private static void verwerkPositie(int positie, int[] bord,
+                                     Map<String, Integer> ids,
+                                     Map<String, String> verplaatst,
+                                     Map<String, List<Integer>> trajecten) {
+    var stuk  = String.valueOf(CaissaUtils.getStuk(bord[positie]));
+    if (verplaatst.containsKey(stuk)) {
+      if (ids.get(verplaatst.get(stuk)).equals(OUT)) {
+        ids.put(verplaatst.get(stuk), getCoordinaat(positie));
+      }
+    } else {
+      var plies     = trajecten.values().iterator().next().size();
+      var promotie  = "";
+      if (verplaatst.containsKey("P")) {
+        promotie    = verplaatst.get("P");
+      }
+      if (verplaatst.containsKey("p")) {
+        promotie    = verplaatst.get("P");
+      }
+      if (voorNico) {
+        ids.put(promotie, 100 + getCoordinaat(positie));
+      } else {
+        ids.put(promotie, PROMOTIE);
+      }
+      var id        = stuk + promotie.substring(1);
+      List<Integer> traject = new ArrayList<>();
+      while (plies > 0) {
+        traject.add(EXTRA);
+        plies--;
+      }
+      ids.put(id, (voorNico ? 200 : 0) + getCoordinaat(positie));
+
+      trajecten.put(id, traject);
+    }
+  }
+
   private static void verwerkZuivereZetten(Map<String, Object> partij,
                                            String zuivereZetten, FEN fen,
                                            Map<String, Integer> ids,
@@ -374,7 +385,7 @@ public final class PgnToJson extends Batchjob {
     Map<String, Object> jsonZetten  = new LinkedHashMap<>();
     for (var i = 0; i < zetten.length; i++) {
       Map<String, String> jsonZet   = new LinkedHashMap<>();
-      var                 pgnZet    = zetten[i].replaceAll("^[0-9]*\\.", "");
+      var                 pgnZet    = zetten[i].replaceAll("^\\d*\\.", "");
       jsonZet.put("notatie", pgnZet);
       if (metFen || metTrajecten) {
         var zet = CaissaUtils.vindZet(fen, vertaal(pgnZet, naarStukken,
