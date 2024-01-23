@@ -266,9 +266,7 @@ public final class PgnToJson extends Batchjob {
 
   private static void verwerkIds(int[] bord, Map<String, Integer> ids,
                                  Map<String, String> verplaatst) {
-    ids.entrySet().forEach(id -> {
-      verwerkId(id, bord, ids, verplaatst);
-    });
+    ids.entrySet().forEach(id -> verwerkId(id, bord, ids, verplaatst));
   }
 
   private static Map<String, Object> verwerkPartij(PGN pgn, int partijnr)
@@ -389,7 +387,7 @@ public final class PgnToJson extends Batchjob {
       jsonZet.put("notatie", pgnZet);
       if (metFen || metTrajecten) {
         var zet = CaissaUtils.vindZet(fen, vertaal(pgnZet, naarStukken,
-                                      DEFSTUKKEN));
+                                                   DEFSTUKKEN));
         fen.doeZet(zet);
       }
       if (metFen) {
