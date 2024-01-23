@@ -246,7 +246,8 @@ public final class Toernooioverzicht extends Batchjob {
                     .equalsIgnoreCase(CaissaConstants.BYE)) {
         output.write("    " + speler.getVolledigenaam() + " & "
                 + DoosUtils.nullToEmpty(speler.getTelefoon()) + " & "
-                + DoosUtils.nullToEmpty(speler.getEmail()) + " " + LTX_EOL);
+                + DoosUtils.nullToEmpty(speler.getEmail()).replace("_", "\\_")
+                + " " + LTX_EOL);
         output.write("    " + LTX_HLINE);
       }
     }
