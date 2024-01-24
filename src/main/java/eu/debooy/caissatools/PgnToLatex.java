@@ -91,6 +91,14 @@ public final class PgnToLatex extends Batchjob {
   protected static String datumInTitel(String startDatum, String eindDatum) {
     var   titelDatum  = new StringBuilder();
     Date  datum;
+
+    if (eindDatum.equals(CaissaConstants.DEF_STARTDATUM)) {
+      eindDatum   = competitie.getEventdate();
+    }
+    if (startDatum.equals(CaissaConstants.DEF_EINDDATUM)) {
+      startDatum  = competitie.getEventdate();
+    }
+
     try {
       datum = Datum.toDate(startDatum, PGN.PGN_DATUM_FORMAAT);
       titelDatum.append(Datum.fromDate(datum,
