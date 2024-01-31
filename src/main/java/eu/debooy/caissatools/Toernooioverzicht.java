@@ -272,6 +272,7 @@ public final class Toernooioverzicht extends Batchjob {
 
     schema.forEach(partij -> gespeeldekleur(partij, kleuren, metWit, metZwart));
 
+    schrijfCompact();
     var lijn  = new StringBuilder();
     lijn.append("   \\begin{tabular} { | l |");
     for (var i = 0; i < competitie.getRondes(); i++) {
@@ -670,6 +671,9 @@ public final class Toernooioverzicht extends Batchjob {
     switch(start) {
       case "%@Include":
         switch (regel.split(" ")[1].toLowerCase()) {
+          case "compact":
+            schrijfCompact();
+            break;
           case "deelnemers":
             if (!competitie.getDeelnemers().isEmpty()) {
               maakDeelnemerslijst();
@@ -714,6 +718,14 @@ public final class Toernooioverzicht extends Batchjob {
     }
 
     return status;
+  }
+
+  private static void schrijfCompact() throws BestandException {
+    if (paramBundle.getBoolean(CaissaTools.PAR_COMPACT)) {
+      output.write("   \\\\[5mm]");
+    } else {
+      output.write("   \\newpage");
+    }
   }
 
   private static void schrijfGespeeldeKleurenTabel(char[][] kleuren,
@@ -896,6 +908,7 @@ public final class Toernooioverzicht extends Batchjob {
                                         .toLowerCase()
                                         .replace("<b>", "\\textbf{")
                                         .replace("</b>", "}"));
+    params.put("inhaaldatum", resourceBundle.getString("label.inhaaldatum"));
     params.put(Competitie.JSON_TAG_KALENDER,
                resourceBundle.getString("label.kalender"));
     params.put("notRanked", resourceBundle.getString("message.notranked"));

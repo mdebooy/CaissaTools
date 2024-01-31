@@ -16,7 +16,6 @@
  */
 package eu.debooy.caissatools;
 
-import static eu.debooy.caissatools.PgnToHtmlTest.CLASSLOADER;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.exception.BestandException;
@@ -26,9 +25,7 @@ import java.io.IOException;
 import java.util.Locale;
 import java.util.ResourceBundle;
 import org.junit.AfterClass;
-import static org.junit.Assert.assertEquals;
-import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
+import org.junit.Assert;
 import org.junit.Before;
 import org.junit.BeforeClass;
 import org.junit.Test;
@@ -38,6 +35,9 @@ import org.junit.Test;
  * @author Marco de Booij
  */
 public class ToernooioverzichtTest extends BatchTest {
+  protected static final  ClassLoader CLASSLOADER =
+      ToernooioverzichtTest.class.getClassLoader();
+
 
   @AfterClass
   public static void afterClass() {
@@ -80,8 +80,8 @@ public class ToernooioverzichtTest extends BatchTest {
     Toernooioverzicht.execute(args);
     after();
 
-    assertEquals(1, err.size());
-    assertEquals("PAR-0001", err.get(0).split(" ")[0]);
+    Assert.assertEquals(1, err.size());
+    Assert.assertEquals("PAR-0001", err.get(0).split(" ")[0]);
   }
 
   @Test
@@ -94,22 +94,22 @@ public class ToernooioverzichtTest extends BatchTest {
     Toernooioverzicht.execute(args);
     after();
 
-    assertEquals(0, err.size());
-    assertEquals(getTemp() + File.separator
-                  + TestConstants.BST_TOERNOOI_TEX,
-                 out.get(13).split(":")[1].trim());
-    assertEquals(TestConstants.TOT_PARTIJEN2,
+    Assert.assertEquals(0, err.size());
+    Assert.assertEquals(getTemp() + File.separator
+                          + TestConstants.BST_TOERNOOI_TEX,
+                          out.get(13).split(":")[1].trim());
+    Assert.assertEquals(TestConstants.TOT_PARTIJEN2,
                  out.get(14).split(":")[1].trim());
 
     try {
-      assertTrue(
+      Assert.assertTrue(
           Bestand.equals(
               Bestand.openInvoerBestand(getTemp() + File.separator
                                         + TestConstants.BST_TOERNOOI_TEX),
               Bestand.openInvoerBestand(CLASSLOADER,
                                         TestConstants.BST_TOERNOOI2_TEX)));
     } catch (BestandException e) {
-      fail(e.getLocalizedMessage());
+      Assert.fail(e.getLocalizedMessage());
     }
   }
 
@@ -124,22 +124,22 @@ public class ToernooioverzichtTest extends BatchTest {
     Toernooioverzicht.execute(args);
     after();
 
-    assertEquals(0, err.size());
-    assertEquals(getTemp() + File.separator
-                  + TestConstants.BST_TOERNOOI_TEX,
-                 out.get(13).split(":")[1].trim());
-    assertEquals(TestConstants.TOT_PARTIJEN2,
-                 out.get(14).split(":")[1].trim());
+    Assert.assertEquals(0, err.size());
+    Assert.assertEquals(getTemp() + File.separator
+                          + TestConstants.BST_TOERNOOI_TEX,
+                          out.get(13).split(":")[1].trim());
+    Assert.assertEquals(TestConstants.TOT_PARTIJEN2,
+                          out.get(14).split(":")[1].trim());
 
     try {
-      assertTrue(
+      Assert.assertTrue(
           Bestand.equals(
               Bestand.openInvoerBestand(getTemp() + File.separator
                                         + TestConstants.BST_TOERNOOI_TEX),
               Bestand.openInvoerBestand(CLASSLOADER,
                                         TestConstants.BST_TOERNOOI2A_TEX)));
     } catch (BestandException e) {
-      fail(e.getLocalizedMessage());
+      Assert.fail(e.getLocalizedMessage());
     }
   }
 }

@@ -69,6 +69,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_BERICHT             = "bericht";
   public static final String  PAR_BESTAND             = "bestand";
   public static final String  PAR_CLUBSTATISTIEK      = "statistiek";
+  public static final String  PAR_COMPACT             = "compact";
   public static final String  PAR_DATUM               = "datum";
   public static final String  PAR_DEFAULTECO          = "defaulteco";
   public static final String  PAR_EINDDATUM           = "eindDatum";
