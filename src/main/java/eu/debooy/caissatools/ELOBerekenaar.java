@@ -374,8 +374,7 @@ public final class ELOBerekenaar extends Batchjob {
 
     try (var geschiedenis  =
             new CsvBestand.Builder().setBestand(
-                    paramBundle.getBestand(CaissaTools.PAR_GESCHIEDENISBESTAND,
-                                           BestandConstants.EXT_CSV))
+                    paramBundle.getBestand(CaissaTools.PAR_GESCHIEDENISBESTAND))
                                     .setLezen(false)
                                     .setHeader(false)
                                     .setAppend(true)
@@ -385,8 +384,7 @@ public final class ELOBerekenaar extends Batchjob {
       partijen.addAll(
           CaissaUtils
               .laadPgnBestand(
-                  paramBundle.getBestand(CaissaTools.PAR_TOERNOOIBESTAND,
-                                         BestandConstants.EXT_PGN)));
+                  paramBundle.getBestand(CaissaTools.PAR_TOERNOOIBESTAND)));
       for (var partij : partijen) {
         if (!partij.isBye()
             && partij.isRated()) {

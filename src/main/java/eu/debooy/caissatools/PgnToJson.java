@@ -27,7 +27,6 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
-import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import java.io.IOException;
@@ -136,13 +135,11 @@ public final class PgnToJson extends Batchjob {
                                            .toUpperCase())
                        .getStukcodes();
 
-    var invoer      = paramBundle.getBestand(CaissaTools.PAR_BESTAND,
-                                             BestandConstants.EXT_PGN);
+    var invoer      = paramBundle.getBestand(CaissaTools.PAR_BESTAND);
     var mapper      = new ObjectMapper();
     List<Map<String, Object>>
         lijst       = new ArrayList<>();
-    var uitvoer     = paramBundle.getBestand(CaissaTools.PAR_JSON,
-                                           BestandConstants.EXT_JSON);
+    var uitvoer     = paramBundle.getBestand(CaissaTools.PAR_JSON);
 
     Collection<PGN> partijen  = null;
     var             partijnr  = 0;

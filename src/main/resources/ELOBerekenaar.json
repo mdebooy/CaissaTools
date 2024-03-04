@@ -45,8 +45,9 @@
     {
       "parameter": "startELO",
       "lang": "startElo",
-      "help": "De start ELO punten voor ''unrated'' spelers. De standaard waarde is 1600.",
-      "standaard": 1600
+      "help": "De start ELO punten voor ''unrated'' spelers. De standaard waarde is {0}.",
+      "standaard": 1600,
+      "type": "integer"
     },
     {
       "parameter": "toernooiBestand",

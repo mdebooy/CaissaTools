@@ -44,7 +44,8 @@ public class ToernooioverzichtTest extends BatchTest {
     verwijderBestanden(getTemp() + File.separator,
                        new String[] {TestConstants.BST_COMPETITIE2A_PGN,
                                      TestConstants.BST_SCHEMA2_JSON,
-                                     TestConstants.BST_TOERNOOI_TEX
+                                     TestConstants.BST_TOERNOOI_TEX,
+                                     TestConstants.BST_TOERNOOI_VCF
                        });
   }
 

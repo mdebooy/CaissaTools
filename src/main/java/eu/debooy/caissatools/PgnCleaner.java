@@ -24,7 +24,6 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
-import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.errorhandling.exception.FileNotFoundException;
 import eu.debooy.doosutils.exception.BestandException;
@@ -58,11 +57,9 @@ public final class PgnCleaner extends Batchjob {
     }
 
     var enkelZetten = paramBundle.getBoolean(CaissaTools.PAR_ENKELZETTEN);
-    var invoer      = paramBundle.getBestand(CaissaTools.PAR_BESTAND,
-                                             BestandConstants.EXT_PGN);
+    var invoer      = paramBundle.getBestand(CaissaTools.PAR_BESTAND);
     var noPartijen  = 0;
-    var uitvoer     = paramBundle.getBestand(CaissaTools.PAR_UITVOER,
-                                             BestandConstants.EXT_PGN);
+    var uitvoer     = paramBundle.getBestand(CaissaTools.PAR_UITVOER);
 
     Collection<PGN> partijen;
     try {

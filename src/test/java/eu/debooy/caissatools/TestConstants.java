@@ -50,6 +50,7 @@ public final class TestConstants extends BatchTest {
   public static final String  BST_TEKORT_JSON       = "tekort.json";
   public static final String  BST_TELANG_JSON       = "telang.json";
   public static final String  BST_TOERNOOI_TEX      = "toernooi.tex";
+  public static final String  BST_TOERNOOI_VCF      = "toernooi.vcf";
   public static final String  BST_TOERNOOI2_TEX     = "toernooi2.tex";
   public static final String  BST_TOERNOOI2A_TEX    = "toernooi2a.tex";
   public static final String  BST_UITSLAGEN_HTML    = "uitslagen.html";

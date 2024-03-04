@@ -30,7 +30,6 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
-import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
@@ -160,8 +159,7 @@ public final class Toernooioverzicht extends Batchjob {
     try {
       partijen.addAll(
           CaissaUtils.laadPgnBestand(
-              paramBundle.getBestand(CaissaTools.PAR_BESTAND,
-                                     BestandConstants.EXT_PGN)));
+              paramBundle.getBestand(CaissaTools.PAR_BESTAND)));
     } catch (PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     }
@@ -583,7 +581,7 @@ public final class Toernooioverzicht extends Batchjob {
     try (var vcards = new TekstBestand.Builder()
                                       .setBestand(
                               paramBundle.getBestand(CaissaTools.PAR_UITVOER,
-                                                     ".vcf"))
+                                                     "vcf"))
                                       .setLezen(false).build()) {
       var spelers   = competitie.getDeelnemers();
 

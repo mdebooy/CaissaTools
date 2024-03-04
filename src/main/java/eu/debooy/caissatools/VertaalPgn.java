@@ -28,7 +28,6 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
-import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import java.text.MessageFormat;
@@ -85,11 +84,12 @@ public final class VertaalPgn extends Batchjob {
       return;
     }
 
-    var uitvoer =
-        paramBundle.getBestand(CaissaTools.PAR_BESTAND,
-                               "_"
-                               + paramBundle.getString(CaissaTools.PAR_NAARTAAL)
-                               + BestandConstants.EXT_PGN);
+    var deel    = paramBundle.getBestand(CaissaTools.PAR_BESTAND).split("\\.");
+    deel[deel.length-2] =
+            deel[deel.length-2] + "_"
+                  + paramBundle.getString(CaissaTools.PAR_NAARTAAL);
+
+    var uitvoer = String.join(".", deel);
 
     Collection<PGN> partijen;
     try {
