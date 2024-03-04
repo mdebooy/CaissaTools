@@ -10,18 +10,14 @@
       "extensie": "pgn",
       "kort": "b",
       "lang": "bestand",
-      "help": "Het bestand met de partijen in PGN formaat.",
+      "help": "Het bestand met de partijen in PGN formaat. Bij een seizoen met meerdere groepen bevat deze parameter de lijst met de bestanden met de partijen in PGN formaat van de finaleronde. De bestanden moeten gescheiden zijn door een ;. De bestanden moeten in de juiste volgorde staan, van hoogste groep tot laagste groep.",
       "type": "bestand",
       "verplicht": true
     },
     {
-      "parameter": "schema",
-      "extensie": "json",
-      "kort": "s",
-      "lang": "schema",
-      "help": "JSON bestand met informatie over de competitie (info, spelers en kalender). Standaard gelijk aan de naam van <bestand>.",
-      "standaard": "_@bestand@_",
-      "type": "bestand"
+      "parameter": "site",
+      "lang": "site",
+      "help": "De plaats waar de competitie plaats vindt. Dit is enkel nodig als er in meerdere groepen gespeeld wordt. Indien niet meegegeven dan wordt de informatie uit de eerste partij gehaald, de 'site' tag."
     },
     {
       "parameter": "statistiek",
@@ -30,6 +26,21 @@
       "help": "JSON bestand met de statistische informatie.",
       "type": "bestand",
       "verplicht": true
+    },
+    {
+      "parameter": "toernooitype",
+      "lang": "toernooitype",
+      "help": "Het toernooitype (1=enkelrondig, 2=dubbelrondig). De standaardwaarde is {0}.",
+      "standaard": 2,
+      "type": "integer"
+    },
+    {
+      "parameter": "voorronde",
+      "extensie": "pgn",
+      "kort": "v",
+      "lang": "voorronde",
+      "help": "De bestanden met de partijen van de groepen uit de voorronde in PGN formaat, gescheiden door een ;. De volgorde maakt niet uit.",
+      "type": "bestand"
     }
   ]
 }

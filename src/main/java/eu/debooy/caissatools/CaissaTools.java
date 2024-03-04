@@ -32,19 +32,20 @@ import java.util.Map;
  * @author Marco de Booij
  */
 public final class CaissaTools extends Batchjob {
-  public static final String  ERR_BEST_ONGELIJK = "error.aantal.bestanden";
-  public static final String  ERR_BESTANDENPGN  = "error.bestand.en.pgn";
-  public static final String  ERR_BIJBESTAND    = "error.verplichtbijbestand";
-  public static final String  ERR_EINDVOORSTART = "error.eind.voor.start";
-  public static final String  ERR_FOUTEDATUM    = "error.foutedatum";
-  public static final String  ERR_FOUTEDATUMIN  = "error.foutedatumin";
-  public static final String  ERR_GEENINVOER    = "error.geen.invoer";
-  public static final String  ERR_KALENDER      = "error.kalender";
-
-  public static final String  ERR_MAXVERSCHIL   = "error.maxverschil";
-  public static final String  ERR_TALENGELIJK   = "error.talen.gelijk";
-  public static final String  ERR_TEMPLATE      = "error.template";
-  public static final String  ERR_TSEMAIL       = "error.tsemail";
+  public static final String  ERR_BEST_ONGELIJK   = "error.aantal.bestanden";
+  public static final String  ERR_BESTANDENPGN    = "error.bestand.en.pgn";
+  public static final String  ERR_BIJBESTAND      = "error.verplichtbijbestand";
+  public static final String  ERR_EINDVOORSTART   = "error.eind.voor.start";
+  public static final String  ERR_FOUTEDATUM      = "error.foutedatum";
+  public static final String  ERR_FOUTEDATUMIN    = "error.foutedatumin";
+  public static final String  ERR_GEENINVOER      = "error.geen.invoer";
+  public static final String  ERR_GEENPARTIJEN    = "error.geen.partijen";
+  public static final String  ERR_INVOER_ONGELIJK = "error.aantal.invoer";
+  public static final String  ERR_KALENDER        = "error.kalender";
+  public static final String  ERR_MAXVERSCHIL     = "error.maxverschil";
+  public static final String  ERR_TALENGELIJK     = "error.talen.gelijk";
+  public static final String  ERR_TEMPLATE        = "error.template";
+  public static final String  ERR_TSEMAIL         = "error.tsemail";
 
   public static final String  HLP_BESTAND       = "help.bestand";
   public static final String  HLP_MATRIXOPSTAND = "help.matrixopstand";
@@ -114,12 +115,14 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_TEMPLATE            = "template";
   public static final String  PAR_TITEL               = "titel";
   public static final String  PAR_TOERNOOIBESTAND     = "toernooiBestand";
+  public static final String  PAR_TOERNOOITYPE        = "toernooitype";
   public static final String  PAR_TRFBESTAND          = "trfbestand";
   public static final String  PAR_TSEMAIL             = "tsemail";
   public static final String  PAR_UITVOER             = "uitvoer";
   public static final String  PAR_VANTAAL             = "vantaal";
   public static final String  PAR_VASTEKFACTOR        = "vasteKfactor";
   public static final String  PAR_VOORNICO            = "voorNico";
+  public static final String  PAR_VOORRONDE           = "voorronde";
   public static final String  PAR_ZIP                 = "zip";
 
   protected static final  String  TOOL_ANALYSETEX         = "AnalyseToLatex";
