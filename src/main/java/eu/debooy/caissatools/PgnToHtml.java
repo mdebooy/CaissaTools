@@ -279,24 +279,8 @@ public final class PgnToHtml extends Batchjob {
         vorige  = ronde;
       }
 
-      var klasse        =
-          (partij.isRanked()
-           && (!partij.isBye()
-               || competitie.metBye())) ? "" : " class=\"btncmp\"";
-      var nietgespeeld  = "-";
-      if (Boolean.TRUE.equals(metInhaaldatum) && !partij.isGespeeld()) {
-        nietgespeeld    = competitie.getInhaaldatum(partij);
-      }
-      var uitslagklasse = nietgespeeld.equals("-") ? "aligncenter" : "inhaal";
-      var uitslag       =
-              competitie.getUitslag(partij.getUitslag(), partij.isBye())
-                        .replace("1/2", "&frac12;")
-                        .replace("-", (partij.isForfait() ? "<b>F</b>" : "-"))
-                        .replace("*", nietgespeeld);
-      var wit           = partij.getWitspeler().getVolledigenaam();
-      var zwart         = partij.getZwartspeler().getVolledigenaam();
-      schrijfUitvoer(HTML_TABLE_BODY, klasse, wit, zwart, uitslag,
-                     uitslagklasse);
+      verwerkPartij(partij, metInhaaldatum);
+
       partij            = iter.hasNext() ? iter.next() : null;
     } while (null != partij);
 
@@ -843,5 +827,27 @@ public final class PgnToHtml extends Batchjob {
     }
 
     return deel[1].trim() + " " + deel[0].trim();
+  }
+
+  private static void verwerkPartij(Partij partij, Boolean metInhaaldatum)
+      throws BestandException {
+    var klasse        =
+        (partij.isRanked()
+         && (!partij.isBye()
+             || competitie.metBye())) ? "" : " class=\"btncmp\"";
+    var nietgespeeld  = "-";
+    if (Boolean.TRUE.equals(metInhaaldatum) && !partij.isGespeeld()) {
+      nietgespeeld    = competitie.getInhaaldatum(partij);
+    }
+    var uitslagklasse = nietgespeeld.equals("-") ? "aligncenter" : "inhaal";
+    var uitslag       =
+            competitie.getUitslag(partij.getUitslag(), partij.isBye())
+                      .replace("1/2", "&frac12;")
+                      .replace("-", (partij.isForfait() ? "<b>F</b>" : "-"))
+                      .replace("*", nietgespeeld);
+    var wit           = partij.getWitspeler().getVolledigenaam();
+    var zwart         = partij.getZwartspeler().getVolledigenaam();
+    schrijfUitvoer(HTML_TABLE_BODY, klasse, wit, zwart, uitslag,
+                   uitslagklasse);
   }
 }

@@ -550,26 +550,8 @@ public final class Toernooioverzicht extends Batchjob {
         vorige  = ronde;
       }
 
-      var nietgespeeld  = "-";
-      if (Boolean.TRUE.equals(metInhaaldatum) && !partij.isGespeeld()) {
-        nietgespeeld    = competitie.getInhaaldatum(partij);
-        if (!nietgespeeld.equals("-")) {
-          nietgespeeld  = "\\tiny " + nietgespeeld;
-        }
-      }
-      var uitslag       =
-              partij.getUitslag().replace("1/2", Utilities.kwart(0.5))
-                    .replace("-", (partij.isForfait() ? "\\textbf{f}"
-                                                      : "-"))
-                    .replace("*", nietgespeeld);
-      var wit           = partij.getWitspeler().getVolledigenaam();
-      var zwart         = partij.getZwartspeler().getVolledigenaam();
-      if (!partij.isRanked()
-          || (partij.isBye() && !competitie.metBye())) {
-        output.write("    " + RIJKLEURLICHTER);
-      }
-      output.write(String.format("    %s & - & %s & %s %s",
-                                 wit, zwart, uitslag, LTX_EOL));
+      verwerkPartij(partij, metInhaaldatum);
+
       partij            = iter.hasNext() ? iter.next() : null;
     } while (null != partij);
 
@@ -719,7 +701,7 @@ public final class Toernooioverzicht extends Batchjob {
   }
 
   private static void schrijfCompact() throws BestandException {
-    if (paramBundle.getBoolean(CaissaTools.PAR_COMPACT)) {
+    if (Boolean.TRUE.equals(paramBundle.getBoolean(CaissaTools.PAR_COMPACT))) {
       output.write("   \\\\[5mm]");
     } else {
       output.write("   \\newpage");
@@ -879,6 +861,30 @@ public final class Toernooioverzicht extends Batchjob {
     }
 
     return status;
+  }
+
+  private static void verwerkPartij(Partij partij, Boolean metInhaaldatum)
+      throws BestandException {
+    var nietgespeeld  = "-";
+    if (Boolean.TRUE.equals(metInhaaldatum) && !partij.isGespeeld()) {
+      nietgespeeld    = competitie.getInhaaldatum(partij);
+      if (!nietgespeeld.equals("-")) {
+        nietgespeeld  = "\\tiny " + nietgespeeld;
+      }
+    }
+    var uitslag       =
+            partij.getUitslag().replace("1/2", Utilities.kwart(0.5))
+                  .replace("-", (partij.isForfait() ? "\\textbf{f}"
+                                                    : "-"))
+                  .replace("*", nietgespeeld);
+    var wit           = partij.getWitspeler().getVolledigenaam();
+    var zwart         = partij.getZwartspeler().getVolledigenaam();
+    if (!partij.isRanked()
+        || (partij.isBye() && !competitie.metBye())) {
+      output.write("    " + RIJKLEURLICHTER);
+    }
+    output.write(String.format("    %s & - & %s & %s %s",
+                               wit, zwart, uitslag, LTX_EOL));
   }
 
   private static void vulParams(Map<String, String> params) {

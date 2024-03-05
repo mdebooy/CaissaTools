@@ -48,7 +48,6 @@ import java.util.TreeSet;
 
 
 /**
- * Versie 526 is de laatste goede.
  * @author Marco de Booij
  */
 public final class PgnToLatex extends Batchjob {
@@ -57,13 +56,16 @@ public final class PgnToLatex extends Batchjob {
                                Locale.getDefault());
 
   private static  String            auteur;
+  private static  int               beginBody;
   private static  Competitie        competitie;
+  private static  int               eindeBody;
   private static  String            eindDatum;
   private static  double[][]        matrix;
   private static  boolean           metMatrix;
   private static  TekstBestand      output;
   private static  Collection<PGN>   partijen;
   private static  String            startDatum;
+  private static  List<String>      template;
   private static  String            titel;
 
   private static final String HLINE         = "\\hline";
@@ -139,12 +141,12 @@ public final class PgnToLatex extends Batchjob {
       return;
     }
 
-    var           aantalPartijen  = 0;
-    List<String>  template        = new ArrayList<>();
+    var aantalPartijen  = 0;
 
-    eindDatum   = CaissaConstants.DEF_STARTDATUM;
-    output      = null;
-    startDatum  = CaissaConstants.DEF_EINDDATUM;
+    eindDatum     = CaissaConstants.DEF_STARTDATUM;
+    output        = null;
+    startDatum    = CaissaConstants.DEF_EINDDATUM;
+    template      = new ArrayList<>();
 
     var bestand   =
         paramBundle.getString(CaissaTools.PAR_BESTAND)
@@ -157,9 +159,9 @@ public final class PgnToLatex extends Batchjob {
     auteur        = paramBundle.getString(CaissaTools.PAR_AUTEUR);
     metMatrix     = paramBundle.getBoolean(CaissaTools.PAR_MATRIX);
     titel         = paramBundle.getString(CaissaTools.PAR_TITEL);
+    beginBody     = -1;
+    eindeBody     = -1;
 
-    var beginBody = -1;
-    var eindeBody = -1;
     try (var texInvoer = getTemplate()) {
       String  regel;
       while (texInvoer.hasNext()) {
@@ -216,45 +218,9 @@ public final class PgnToLatex extends Batchjob {
 
         // Zet de te vervangen waardes.
         Map<String, String> params  = new HashMap<>();
-        params.put("Auteur", auteur);
-        if (paramBundle.containsArgument(CaissaTools.PAR_DATUM)) {
-          params.put("Datum",
-                     Datum.fromDate(paramBundle.getDate(CaissaTools.PAR_DATUM),
-                                    PGN.PGN_DATUM_FORMAAT));
-        } else {
-          params.put("Datum", "\\today{}");
-        }
+        setParams(params, bestand);
+        verwerkTemplate(i, params, texPartij, bestand);
 
-        if (paramBundle.containsArgument(CaissaTools.PAR_KEYWORDS)) {
-          params.put(CaissaTools.PAR_KEYWORDS,
-                     paramBundle.getString(CaissaTools.PAR_KEYWORDS));
-        }
-        if (paramBundle.containsArgument(CaissaTools.PAR_LOGO)) {
-          params.put(CaissaTools.PAR_LOGO,
-                     paramBundle.getString(CaissaTools.PAR_LOGO));
-        }
-        if (bestand.length == 1) {
-          params.put("Periode", datumInTitel(startDatum, eindDatum));
-        }
-        params.put("Titel", titel);
-
-        var status  = NORMAAL;
-        if (i == 0) {
-          for (var j = 0; j < beginBody; j++) {
-            status  = schrijf(template.get(j), status, competitie, texPartij,
-                              params);
-          }
-        }
-        for (var j = beginBody; j < eindeBody; j++) {
-          status  = schrijf(template.get(j), status, competitie, texPartij,
-                              params);
-        }
-        if (i == bestand.length - 1) {
-          for (var j = eindeBody + 1; j < template.size(); j++) {
-            status  = schrijf(template.get(j), status, competitie, texPartij,
-                              params);
-          }
-        }
         aantalPartijen  += partijen.size();
       } catch (BestandException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
@@ -550,6 +516,30 @@ public final class PgnToLatex extends Batchjob {
     return lijn.toString();
   }
 
+  private static void setParams(Map<String, String> params, String[] bestand) {
+    params.put("Auteur", auteur);
+    if (paramBundle.containsArgument(CaissaTools.PAR_DATUM)) {
+      params.put("Datum",
+                 Datum.fromDate(paramBundle.getDate(CaissaTools.PAR_DATUM),
+                                PGN.PGN_DATUM_FORMAAT));
+    } else {
+      params.put("Datum", "\\today{}");
+    }
+
+    if (paramBundle.containsArgument(CaissaTools.PAR_KEYWORDS)) {
+      params.put(CaissaTools.PAR_KEYWORDS,
+                 paramBundle.getString(CaissaTools.PAR_KEYWORDS));
+    }
+    if (paramBundle.containsArgument(CaissaTools.PAR_LOGO)) {
+      params.put(CaissaTools.PAR_LOGO,
+                 paramBundle.getString(CaissaTools.PAR_LOGO));
+    }
+    if (bestand.length == 1) {
+      params.put("Periode", datumInTitel(startDatum, eindDatum));
+    }
+    params.put("Titel", titel);
+  }
+
   private static String setStatus(String keyword) {
     String  status;
     switch(keyword) {
@@ -692,5 +682,29 @@ public final class PgnToLatex extends Batchjob {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     });
+  }
+
+  private static void verwerkTemplate(int i, Map<String, String> params,
+                                      Map<String, String> texPartij,
+                                      String[] bestand)
+      throws BestandException {
+    var status  = NORMAAL;
+
+    if (i == 0) {
+      for (var j = 0; j < beginBody; j++) {
+        status  = schrijf(template.get(j), status, competitie, texPartij,
+                          params);
+      }
+    }
+    for (var j = beginBody; j < eindeBody; j++) {
+      status  = schrijf(template.get(j), status, competitie, texPartij,
+                          params);
+    }
+    if (i == bestand.length - 1) {
+      for (var j = eindeBody + 1; j < template.size(); j++) {
+        status  = schrijf(template.get(j), status, competitie, texPartij,
+                          params);
+      }
+    }
   }
 }
