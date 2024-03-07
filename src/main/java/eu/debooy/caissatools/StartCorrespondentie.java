@@ -150,10 +150,18 @@ public class StartCorrespondentie extends Batchjob {
   }
 
   private static String formatSpelerlijst(String lijst) {
-    return lijst.replaceAll(" , $", "")
-                .replaceFirst("(?s),(?!.*?,)",
-                              resourceBundle.getString("label.en"))
-                .replace(" ,", ",");
+    var resultaat = lijst.replaceAll(" , $", "");
+    var i         = resultaat.lastIndexOf(" , ");
+
+    if (i == -1) {
+      return resultaat;
+    }
+
+    return String.format("%s%s%s",
+                          resultaat.substring(0, i),
+                          resourceBundle.getString("label.en"),
+                          resultaat.substring(i+3))
+                 .replace(" ,", ",");
   }
 
   private static String formatLijn(String lijn) {
@@ -201,7 +209,7 @@ public class StartCorrespondentie extends Batchjob {
         }
         break;
       case "metzwart":
-        if (Integer.valueOf(emailparams.get(12)) > 0) {
+        if (Integer.parseInt(emailparams.get(12)) > 0) {
           return lijn.substring(10);
         }
         break;

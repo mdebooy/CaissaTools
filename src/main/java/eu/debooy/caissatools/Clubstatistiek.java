@@ -59,7 +59,7 @@ public class Clubstatistiek extends Batchjob {
                            .setArgs(args)
                            .setBanner(new MarcoBanner())
                            .setBaseName(CaissaTools.TOOL_CLUBSTATISTIEK)
-                           .setValidator(new BestandDefaultParameters())
+                           .setValidator(new ClubstatistiekParameters())
                            .build());
 
     if (!paramBundle.isValid()) {
@@ -83,7 +83,7 @@ public class Clubstatistiek extends Batchjob {
 
     try {
       var partijen  = CaissaUtils.laadPgnBestand(bestand);
-      return partijen.iterator().next().getTag(PGN.PGNTAG_EVENT);
+      return partijen.iterator().next().getTag(PGN.PGNTAG_SITE);
     } catch (PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return CaissaTools.TOOL_CLUBSTATISTIEK;
@@ -91,7 +91,7 @@ public class Clubstatistiek extends Batchjob {
   }
 
   private static void leesStatistiek() {
-    var statistiek  = paramBundle.getBestand(CaissaTools.PAR_CLUBSTATISTIEK);
+    var statistiek  = paramBundle.getBestand(CaissaTools.PAR_STATISTIEK);
 
     try (var invoer   = new JsonBestand.Builder()
                               .setBestand(statistiek)
@@ -114,7 +114,7 @@ public class Clubstatistiek extends Batchjob {
   }
 
   private static void schrijfStatistiek() {
-    var statistiek  = paramBundle.getBestand(CaissaTools.PAR_CLUBSTATISTIEK);
+    var statistiek  = paramBundle.getBestand(CaissaTools.PAR_STATISTIEK);
 
     try (var output =
           new JsonBestand.Builder()
@@ -126,32 +126,29 @@ public class Clubstatistiek extends Batchjob {
     }
   }
 
-  private static String verwerkFinaleronde() {
-    String  site  = null;
-
-    var start = 1;
+  private static void verwerkFinaleronde() {
+    var start       = 1;
+    var doorlopend  = paramBundle.getBoolean(CaissaTools.PAR_DOORLOPEND);
 
     for (var groep : paramBundle.getString(CaissaTools.PAR_BESTAND)
                                 .split(";")) {
       try {
         var partijen    = CaissaUtils.laadPgnBestand(groep);
         var competitie  = new Competitie(partijen, toernooitype);
-        if (null == site) {
-          site  = competitie.getSite();
-        }
+
         CaissaUtils.vulToernooiMatrix(partijen, competitie, false);
-        verwerkToernooi(competitie, start);
-        start          += competitie.getDeelnemers().size();
+        start   = verwerkToernooi(competitie, start);
+        if (Boolean.FALSE.equals(doorlopend)) {
+          start = 1;
+        }
 
       } catch (CompetitieException | PgnException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
-
-    return site;
   }
 
-  private static void verwerkToernooi(Competitie competitie, int start) {
+  private static int verwerkToernooi(Competitie competitie, int start) {
     competitie.sorteerOpStand();
 
     var clubspelers   = new JSONObject();
@@ -179,19 +176,23 @@ public class Clubstatistiek extends Batchjob {
       if (clubspelers.containsKey(naam)) {
         clubspeler    = (JSONObject) clubspelers.get(naam);
       }
-      var stat        = new JSONObject();
-      stat.put("plaats", plaats);
-      stat.put("punten", speler.getPunten());
-      stat.put("partijen", speler.getPartijen());
-      stat.put("SB", speler.getTieBreakScore());
-      stat.put("event", competitie.getEvent());
-      stat.put("eventdate", competitie.getEventdate());
-      clubspeler.put(competitie.getEventdate(), stat);
+      if (speler.getPartijen() > 0) {
+        var stat        = new JSONObject();
+        stat.put("plaats", plaats);
+        stat.put("punten", speler.getPunten());
+        stat.put("partijen", speler.getPartijen());
+        stat.put("SB", speler.getTieBreakScore());
+        stat.put("event", competitie.getEvent());
+        stat.put("eventdate", competitie.getEventdate());
+        clubspeler.put(competitie.getEventdate(), stat);
 
-      clubspelers.put(naam, clubspeler);
-      plaats++;
+        clubspelers.put(naam, clubspeler);
+        plaats++;
+      }
     }
     club.put(CaissaTools.PAR_SPELERS, clubspelers);
+
+    return plaats;
   }
 
   private static void verwerkVoorronde() {

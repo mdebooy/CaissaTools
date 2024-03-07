@@ -57,7 +57,6 @@ public class PgnToHtmlTest extends BatchTest {
                                      TestConstants.BST_INDEX_HTML,
                                      TestConstants.BST_MATRIX_HTML,
                                      BST_MATRIX1, BST_MATRIX2,
-                                     TestConstants.BST_COMPETITIE1_PGN,
                                      TestConstants.BST_COMPETITIE2A_PGN,
                                      TestConstants.BST_SCHEMA1_JSON,
                                      TestConstants.BST_SCHEMA2_JSON,
@@ -114,7 +113,7 @@ public class PgnToHtmlTest extends BatchTest {
     PgnToHtml.execute(args);
     after();
 
-    assertEquals(0, err.size());
+    assertTrue(err.isEmpty());
     try {
       assertTrue(
           Bestand.equals(

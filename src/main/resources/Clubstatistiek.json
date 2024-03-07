@@ -10,9 +10,16 @@
       "extensie": "pgn",
       "kort": "b",
       "lang": "bestand",
-      "help": "Het bestand met de partijen in PGN formaat. Bij een seizoen met meerdere groepen bevat deze parameter de lijst met de bestanden met de partijen in PGN formaat van de finaleronde. De bestanden moeten gescheiden zijn door een ;. De bestanden moeten in de juiste volgorde staan, van hoogste groep tot laagste groep.",
+      "help": "Het bestand met de partijen in PGN formaat. Bij een seizoen met een <voorronde> bevat deze parameter de lijst met de bestanden, per groep, met de partijen van de finaleronde. De bestanden moeten gescheiden zijn door een ;. De bestanden moeten in de juiste volgorde staan, van hoogste groep tot laagste groep.",
       "type": "bestand",
       "verplicht": true
+    },
+    {
+      "parameter": "doorlopend",
+      "lang": "doorlopend",
+      "help": "Nummering van de positie in de eindstand loopt door van hoogste groep naar laagste.",
+      "type": "boolean",
+      "standaard": false
     },
     {
       "parameter": "site",
@@ -39,7 +46,7 @@
       "extensie": "pgn",
       "kort": "v",
       "lang": "voorronde",
-      "help": "De bestanden met de partijen van de groepen uit de voorronde in PGN formaat, gescheiden door een ;. De volgorde maakt niet uit.",
+      "help": "Deze parameter wordt gebruikt bij een seizoen met meerdere groepen. Deze parameter bevat de bestanden, per groep, met de partijen van de groepen uit de voorronde in PGN formaat, gescheiden door een ;. De volgorde maakt niet uit.",
       "type": "bestand"
     }
   ]

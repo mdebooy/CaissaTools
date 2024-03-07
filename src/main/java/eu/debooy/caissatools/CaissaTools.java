@@ -43,8 +43,10 @@ public final class CaissaTools extends Batchjob {
   public static final String  ERR_INVOER_ONGELIJK = "error.aantal.invoer";
   public static final String  ERR_KALENDER        = "error.kalender";
   public static final String  ERR_MAXVERSCHIL     = "error.maxverschil";
+  public static final String  ERR_METVOORRONDE    = "error.met.voorronde";
   public static final String  ERR_TALENGELIJK     = "error.talen.gelijk";
   public static final String  ERR_TEMPLATE        = "error.template";
+  public static final String  ERR_TOERNOOITYPE    = "error.toernooitype";
   public static final String  ERR_TSEMAIL         = "error.tsemail";
 
   public static final String  HLP_BESTAND       = "help.bestand";
@@ -69,10 +71,10 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_AUTEUR              = "auteur";
   public static final String  PAR_BERICHT             = "bericht";
   public static final String  PAR_BESTAND             = "bestand";
-  public static final String  PAR_CLUBSTATISTIEK      = "statistiek";
   public static final String  PAR_COMPACT             = "compact";
   public static final String  PAR_DATUM               = "datum";
   public static final String  PAR_DEFAULTECO          = "defaulteco";
+  public static final String  PAR_DOORLOPEND          = "doorlopend";
   public static final String  PAR_EINDDATUM           = "eindDatum";
   public static final String  PAR_ENKELZETTEN         = "enkelzetten";
   public static final String  PAR_EVENT               = "event";
@@ -109,6 +111,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_SPELERS             = "spelers";
   public static final String  PAR_STARTDATUM          = "startDatum";
   public static final String  PAR_STARTELO            = "startELO";
+  public static final String  PAR_STATISTIEK          = "statistiek";
   public static final String  PAR_SUBTITEL            = "subtitel";
   public static final String  PAR_TAG                 = "tag";
   public static final String  PAR_TEKSTKLEUR          = "tekstkleur";
