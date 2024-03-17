@@ -234,6 +234,21 @@ public final class Toernooioverzicht extends Batchjob {
     kleuren[zwart][ronde-1] = metZwart;
   }
 
+  private static String getQrCodeTelefoon(String telefoons)
+      throws BestandException {
+    var qrTelefoon  = new StringBuilder();
+
+    for (var telefoon : telefoons.trim().split(" - ")) {
+      if (!telefoon.startsWith("+")) {
+        telefoon  = "+32" + telefoon.substring(1);
+      }
+      qrTelefoon.append("TEL:+").append(telefoon.replaceAll("[^\\d]", ""))
+                .append(";");
+    }
+
+    return qrTelefoon.toString();
+  }
+
   private static void maakDeelnemerslijst() throws BestandException {
     var spelers   = competitie.getSpelers();
 
@@ -514,6 +529,44 @@ public final class Toernooioverzicht extends Batchjob {
     lijn.append(" ");
   }
 
+  private static void maakQrCodes() {
+    if (Boolean.FALSE.equals(paramBundle.getBoolean(CaissaTools.PAR_QRCODE))) {
+      return;
+    }
+
+    try {
+      output.write("   \\\\[10mm]\\hspace{5mm}");
+    } catch (BestandException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+    }
+
+    var spelers   = competitie.getDeelnemers();
+
+    spelers.sort(new Spelerinfo.ByNaamComparator());
+
+    spelers.forEach(speler -> {
+      try {
+        StringBuilder vcard = new StringBuilder();
+
+        vcard.append("   \\textcolor{headingkleur}")
+             .append("{\\qrcode[height=3cm, level=M, version=1]{MECARD:N:");
+        vcard.append(speler.getAchternaam().toUpperCase()).append(",")
+             .append(speler.getVoornaam()).append(";");
+        if (DoosUtils.isNotBlankOrNull(speler.getTelefoon())) {
+          vcard.append(getQrCodeTelefoon(speler.getTelefoon()));
+        }
+        if (DoosUtils.isNotBlankOrNull(speler.getEmail())) {
+          vcard.append("EMAIL:").append(speler.getEmail()).append(";");
+        }
+        vcard.append("}}\\hspace{5mm}");
+
+        output.write(vcard.toString());
+      } catch (BestandException e) {
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+      }
+    });
+  }
+
   private static void maakRondeheading(int ronde, String datum)
       throws BestandException {
     output.write("   \\begin{tabular}[t]{ | b{31mm} C{2mm} b{31mm} |"
@@ -559,6 +612,28 @@ public final class Toernooioverzicht extends Batchjob {
     output.write("   " + LTX_END_TABULAR);
   }
 
+  private static void maakVCard(Spelerinfo speler, TekstBestand vcards) {
+    try {
+      vcards.write("BEGIN:VCARD");
+      vcards.write("VERSION:2.1");
+      vcards.write(String.format("N:%s;%s;;;",
+                                 speler.getVoornaam(),
+                                 speler.getAchternaam()));
+      vcards.write(String.format("FN:%s %s",
+                                 speler.getAchternaam().toUpperCase(),
+                                 speler.getVoornaam()));
+      if (DoosUtils.isNotBlankOrNull(speler.getTelefoon())) {
+        schrijfVcardTelefoon(speler.getTelefoon(), vcards);
+      }
+      if (DoosUtils.isNotBlankOrNull(speler.getEmail())) {
+        schrijfVcardEmail(speler.getEmail(), vcards);
+      }
+      vcards.write("END:VCARD");
+    } catch (BestandException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+    }
+  }
+
   private static void maakVCards() {
     try (var vcards = new TekstBestand.Builder()
                                       .setBestand(
@@ -566,29 +641,8 @@ public final class Toernooioverzicht extends Batchjob {
                                                      "vcf"))
                                       .setLezen(false).build()) {
       var spelers   = competitie.getDeelnemers();
-
       spelers.sort(new Spelerinfo.ByNaamComparator());
-      spelers.forEach(speler -> {
-        try {
-          vcards.write("BEGIN:VCARD");
-          vcards.write("VERSION:2.1");
-          vcards.write(String.format("N:%s;%s;;;",
-                                     speler.getVoornaam(),
-                                     speler.getAchternaam()));
-          vcards.write(String.format("FN:%s %s",
-                                     speler.getAchternaam().toUpperCase(),
-                                     speler.getVoornaam()));
-          if (DoosUtils.isNotBlankOrNull(speler.getTelefoon())) {
-            schrijfVcardTelefoon(speler.getTelefoon(), vcards);
-          }
-          if (DoosUtils.isNotBlankOrNull(speler.getEmail())) {
-            schrijfVcardEmail(speler.getEmail(), vcards);
-          }
-          vcards.write("END:VCARD");
-        } catch (BestandException e) {
-          DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-        }
-      });
+      spelers.forEach(speler -> maakVCard(speler, vcards));
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     }
@@ -676,6 +730,9 @@ public final class Toernooioverzicht extends Batchjob {
                               paramBundle
                                   .getBoolean(CaissaTools.PAR_MATRIXEERST));
             }
+            break;
+          case "qrcodes":
+            maakQrCodes();
             break;
           case "uitslagen":
             if (!schema.isEmpty()) {

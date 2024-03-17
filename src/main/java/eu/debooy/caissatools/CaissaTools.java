@@ -101,6 +101,7 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_NIEUWESPELERS       = "nieuweSpelers";
   public static final String  PAR_PERPARTIJ           = "perPartij";
   public static final String  PAR_PGN                 = "pgn";
+  public static final String  PAR_QRCODE              = "metQrCode";
   public static final String  PAR_SCHAAKNOTATIE       = "schaaknotatie.csv";
   public static final String  PAR_SCHEMA              = "schema";
   public static final String  PAR_SITE                = "site";

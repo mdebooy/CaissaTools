@@ -65,6 +65,12 @@
       "type": "boolean"
     },
     {
+      "parameter": "metQrCode",
+      "lang": "metQrCode",
+      "help": "Zet QR codes voor VCARD op deelnemerlijst.",
+      "type": "boolean"
+    },
+    {
       "parameter": "schema",
       "extensie": "json",
       "kort": "s",
