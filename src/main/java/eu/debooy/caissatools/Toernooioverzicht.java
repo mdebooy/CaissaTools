@@ -243,7 +243,7 @@ public final class Toernooioverzicht extends Batchjob {
         telefoon  = "+32" + telefoon.substring(1);
       }
       qrTelefoon.append("TEL:+").append(telefoon.replaceAll("[^\\d]", ""))
-                .append(";");
+                .append("\\?");
     }
 
     return qrTelefoon.toString();
@@ -540,7 +540,8 @@ public final class Toernooioverzicht extends Batchjob {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     }
 
-    var spelers   = competitie.getDeelnemers();
+    var eol     = "\\?";
+    var spelers = competitie.getDeelnemers();
 
     spelers.sort(new Spelerinfo.ByNaamComparator());
 
@@ -549,16 +550,20 @@ public final class Toernooioverzicht extends Batchjob {
         StringBuilder vcard = new StringBuilder();
 
         vcard.append("   \\textcolor{headingkleur}")
-             .append("{\\qrcode[height=3cm, level=M, version=1]{MECARD:N:");
-        vcard.append(speler.getAchternaam().toUpperCase()).append(",")
-             .append(speler.getVoornaam()).append(";");
+             .append("{\\qrcode[height=3cm, level=M, version=1]{");
+        vcard.append("BEGIN:VCARD").append(eol);
+        vcard.append("VERSION:4.0").append(eol);
+        vcard.append("CHARSET:UTF-8").append(eol);
+        vcard.append(String.format("N:%s;%s;;;",
+                                   speler.getAchternaam().toUpperCase(),
+                                   speler.getVoornaam())).append(eol);
         if (DoosUtils.isNotBlankOrNull(speler.getTelefoon())) {
-          vcard.append(getQrCodeTelefoon(speler.getTelefoon()));
+          vcard.append(getQrCodeTelefoon(speler.getTelefoon())).append(eol);
         }
         if (DoosUtils.isNotBlankOrNull(speler.getEmail())) {
-          vcard.append("EMAIL:").append(speler.getEmail()).append(";");
+          vcard.append("EMAIL:").append(speler.getEmail()).append(eol);
         }
-        vcard.append("}}\\hspace{5mm}");
+        vcard.append("END:VCARD").append("}}\\hspace{5mm}");
 
         output.write(vcard.toString());
       } catch (BestandException e) {
@@ -617,11 +622,11 @@ public final class Toernooioverzicht extends Batchjob {
       vcards.write("BEGIN:VCARD");
       vcards.write("VERSION:2.1");
       vcards.write(String.format("N:%s;%s;;;",
-                                 speler.getVoornaam(),
-                                 speler.getAchternaam()));
-      vcards.write(String.format("FN:%s %s",
                                  speler.getAchternaam().toUpperCase(),
                                  speler.getVoornaam()));
+      vcards.write(String.format("FN:%s %s",
+                                 speler.getVoornaam(),
+                                 speler.getAchternaam()));
       if (DoosUtils.isNotBlankOrNull(speler.getTelefoon())) {
         schrijfVcardTelefoon(speler.getTelefoon(), vcards);
       }
