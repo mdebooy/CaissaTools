@@ -44,6 +44,7 @@ import java.util.Map;
 import java.util.ResourceBundle;
 import java.util.Set;
 import java.util.TreeSet;
+import org.apache.commons.lang3.StringUtils;
 import org.json.simple.JSONObject;
 
 
@@ -555,9 +556,10 @@ public final class Toernooioverzicht extends Batchjob {
         vcard.append("BEGIN:VCARD").append(eol);
         vcard.append("VERSION:4.0").append(eol);
         vcard.append("CHARSET:UTF-8").append(eol);
-        vcard.append(String.format("N:%s;%s;;;",
-                                   speler.getAchternaam().toUpperCase(),
-                                   speler.getVoornaam())).append(eol);
+        vcard.append(StringUtils.stripAccents(
+                      String.format("N:%s;%s;;;",
+                                    speler.getAchternaam().toUpperCase(),
+                                    speler.getVoornaam()))).append(eol);
         if (DoosUtils.isNotBlankOrNull(speler.getTelefoon())) {
           vcard.append(getQrCodeTelefoon(speler.getTelefoon())).append(eol);
         }
