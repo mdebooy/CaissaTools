@@ -530,7 +530,8 @@ public final class Toernooioverzicht extends Batchjob {
   }
 
   private static void maakQrCodes() {
-    if (Boolean.FALSE.equals(paramBundle.getBoolean(CaissaTools.PAR_QRCODE))) {
+    if (Boolean.FALSE.equals(paramBundle.getBoolean(CaissaTools.PAR_QRCODE))
+        || !competitie.isRoundrobin()) {
       return;
     }
 
