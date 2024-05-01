@@ -938,10 +938,11 @@ public final class Toernooioverzicht extends Batchjob {
       }
     }
     var uitslag       =
-            partij.getUitslag().replace("1/2", Utilities.kwart(0.5))
-                  .replace("-", (partij.isForfait() ? "\\textbf{f}"
-                                                    : "-"))
-                  .replace("*", nietgespeeld);
+            competitie.getUitslag(partij.getUitslag(), partij.isBye())
+                      .replace("1/2", Utilities.kwart(0.5))
+                      .replace("-", (partij.isForfait() ? "\\\\textbf{f}"
+                                                        : "-"))
+                      .replace("*", nietgespeeld);
     var wit           = partij.getWitspeler().getVolledigenaam();
     var zwart         = partij.getZwartspeler().getVolledigenaam();
     if (!partij.isRanked()
