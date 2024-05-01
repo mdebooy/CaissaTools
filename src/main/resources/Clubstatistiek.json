@@ -22,6 +22,11 @@
       "standaard": false
     },
     {
+      "parameter": "event",
+      "lang": "event",
+      "help": "De naam van de competitie. Dit is enkel nodig als er in meerdere groepen gespeeld wordt. Indien niet meegegeven dan wordt de informatie uit de eerste partij gehaald, de 'event' tag."
+    },
+    {
       "parameter": "site",
       "lang": "site",
       "help": "De plaats waar de competitie plaats vindt. Dit is enkel nodig als er in meerdere groepen gespeeld wordt. Indien niet meegegeven dan wordt de informatie uit de eerste partij gehaald, de 'site' tag."

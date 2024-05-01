@@ -21,10 +21,12 @@ import eu.debooy.caissa.CaissaConstants;
 import eu.debooy.caissa.CaissaUtils;
 import eu.debooy.caissa.Competitie;
 import eu.debooy.caissa.PGN;
+import static eu.debooy.caissa.PGN.PGN_DATUM_FORMAAT;
 import eu.debooy.caissa.Spelerinfo;
 import eu.debooy.caissa.exceptions.CompetitieException;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Batchjob;
+import eu.debooy.doosutils.Datum;
 import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MarcoBanner;
@@ -32,6 +34,7 @@ import eu.debooy.doosutils.ParameterBundle;
 import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import java.text.MessageFormat;
+import java.text.ParseException;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -156,12 +159,18 @@ public class Clubstatistiek extends Batchjob {
       clubspelers     = (JSONObject) club.get(CaissaTools.PAR_SPELERS);
     }
 
+    var event         = competitie.getEvent();
+    if (paramBundle.containsArgument(CaissaTools.PAR_EVENT)) {
+      event           = paramBundle.getString(CaissaTools.PAR_EVENT);
+    }
+
     var plaats        = start;
     for (var speler : competitie.getSpelers()) {
       var naam        = speler.getNaam();
       if (naam.equals(CaissaConstants.BYE)) {
         continue;
       }
+
 
       var extra = voorronde.stream()
                            .filter(splr -> speler.getNaam()
@@ -171,6 +180,14 @@ public class Clubstatistiek extends Batchjob {
         speler.addPartij(extra.getPartijen());
         speler.addPunt(extra.getPunten());
         speler.addTieBreakScore(extra.getTieBreakScore());
+        speler.setEerstePartij(extra.getEerstePartij());
+      } else {
+        try {
+          speler.setEerstePartij(Datum.toDate(competitie.getEventdate(),
+                                              PGN_DATUM_FORMAAT));
+        } catch (ParseException e) {
+          DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+        }
       }
       var clubspeler  = new JSONObject();
       if (clubspelers.containsKey(naam)) {
@@ -182,8 +199,9 @@ public class Clubstatistiek extends Batchjob {
         stat.put("punten", speler.getPunten());
         stat.put("partijen", speler.getPartijen());
         stat.put("SB", speler.getTieBreakScore());
-        stat.put("event", competitie.getEvent());
-        stat.put("eventdate", competitie.getEventdate());
+        stat.put("event", event);
+        stat.put("eventdate", Datum.fromDate(speler.getEerstePartij(),
+                                             PGN_DATUM_FORMAAT));
         clubspeler.put(competitie.getEventdate(), stat);
 
         clubspelers.put(naam, clubspeler);
@@ -206,7 +224,15 @@ public class Clubstatistiek extends Batchjob {
         var partijen    = CaissaUtils.laadPgnBestand(groep);
         var competitie  = new Competitie(partijen, toernooitype);
         CaissaUtils.vulToernooiMatrix(partijen, competitie, false);
-        competitie.getDeelnemers().forEach(speler -> voorronde.add(speler));
+        competitie.getDeelnemers().forEach(speler -> {
+          try {
+            speler.setEerstePartij(Datum.toDate(competitie.getEventdate(),
+                                                PGN_DATUM_FORMAAT));
+          } catch (ParseException e) {
+            DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+          }
+          voorronde.add(speler);
+        });
 
       } catch (CompetitieException | PgnException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
