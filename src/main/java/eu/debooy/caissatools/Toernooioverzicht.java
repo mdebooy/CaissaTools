@@ -235,8 +235,7 @@ public final class Toernooioverzicht extends Batchjob {
     kleuren[zwart][ronde-1] = metZwart;
   }
 
-  private static String getQrCodeTelefoon(String telefoons)
-      throws BestandException {
+  private static String getQrCodeTelefoon(String telefoons) {
     var qrTelefoon  = new StringBuilder();
 
     for (var telefoon : telefoons.trim().split(" - ")) {

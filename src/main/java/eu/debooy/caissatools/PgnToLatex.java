@@ -162,27 +162,7 @@ public final class PgnToLatex extends Batchjob {
     beginBody     = -1;
     eindeBody     = -1;
 
-    try (var texInvoer = getTemplate()) {
-      String  regel;
-      while (texInvoer.hasNext()) {
-        regel = texInvoer.next();
-        if (regel.startsWith("%@IncludeStart Body")) {
-          beginBody = template.size();
-        }
-        if (regel.startsWith("%@IncludeEind Body")) {
-          eindeBody = template.size();
-        }
-        template.add(regel);
-      }
-
-      output  =
-          new TekstBestand.Builder()
-                          .setBestand(getUitvoerbestand(bestand[0],
-                                      BestandConstants.EXT_TEX))
-                          .setLezen(false).build();
-    } catch (BestandException e) {
-      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
-    }
+    laadTemplate(bestand[0]);
 
     for (var i = 0; i < bestand.length; i++) {
       partijen  = new TreeSet<>(new PGN.ByEventComparator());
@@ -318,6 +298,30 @@ public final class PgnToLatex extends Batchjob {
     }
 
     return bestand + extensie;
+  }
+
+  private static void laadTemplate(String bestand) {
+    try (var texInvoer = getTemplate()) {
+      String  regel;
+      while (texInvoer.hasNext()) {
+        regel = texInvoer.next();
+        if (regel.startsWith("%@IncludeStart Body")) {
+          beginBody = template.size();
+        }
+        if (regel.startsWith("%@IncludeEind Body")) {
+          eindeBody = template.size();
+        }
+        template.add(regel);
+      }
+
+      output  =
+          new TekstBestand.Builder()
+                          .setBestand(getUitvoerbestand(bestand,
+                                      BestandConstants.EXT_TEX))
+                          .setLezen(false).build();
+    } catch (BestandException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+    }
   }
 
   private static void maakMatrix(int kolommen, int noSpelers, boolean metBye)
