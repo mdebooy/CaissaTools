@@ -99,7 +99,7 @@ public class Clubstatistiek extends Batchjob {
     try (var invoer   = new JsonBestand.Builder()
                               .setBestand(statistiek)
                               .build()) {
-      club    = invoer.read();
+      club    = (JSONObject) invoer.read();
     } catch (BestandException e) {
       DoosUtils.naarScherm(
           MessageFormat.format(
