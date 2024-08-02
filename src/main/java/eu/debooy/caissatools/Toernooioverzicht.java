@@ -536,7 +536,8 @@ public final class Toernooioverzicht extends Batchjob {
     }
 
     try {
-      output.write("   \\\\[10mm]\\hspace{5mm}");
+      output.write("   \\\\[10mm]");
+      output.write("   \\textcolor{headingkleur}{");
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
     }
@@ -546,16 +547,16 @@ public final class Toernooioverzicht extends Batchjob {
 
     spelers.sort(new Spelerinfo.ByNaamComparator());
 
-    spelers.forEach(speler -> {
-      try {
-        StringBuilder vcard = new StringBuilder();
+    try {
+      var vcard = new StringBuilder();
+      vcard.append("    ");
+      for (var speler: spelers) {
 
-        vcard.append("   \\textcolor{headingkleur}")
-             .append("{\\qrcode[height=3cm, level=M, version=1]{");
-        vcard.append("BEGIN:VCARD").append(eol);
-        vcard.append("VERSION:4.0").append(eol);
-        vcard.append("CHARSET:UTF-8").append(eol);
-        vcard.append(StringUtils.stripAccents(
+        vcard.append("\\qrcode[height=3cm, level=M, version=1]{")
+             .append("BEGIN:VCARD").append(eol)
+             .append("VERSION:4.0").append(eol)
+             .append("CHARSET:UTF-8").append(eol)
+             .append(StringUtils.stripAccents(
                       String.format("N:%s;%s;;;",
                                     speler.getAchternaam().toUpperCase(),
                                     speler.getVoornaam()))).append(eol);
@@ -565,19 +566,23 @@ public final class Toernooioverzicht extends Batchjob {
         if (DoosUtils.isNotBlankOrNull(speler.getEmail())) {
           vcard.append("EMAIL:").append(speler.getEmail()).append(eol);
         }
-        vcard.append("END:VCARD").append("}}\\hspace{5mm}");
+        vcard.append("END:VCARD").append("}");
 
         output.write(vcard.toString());
-      } catch (BestandException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+        vcard = new StringBuilder();
+        vcard.append("    \\hspace{5mm}");
       }
-    });
+
+      output.write("   }");
+    } catch (BestandException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+    }
   }
 
   private static void maakRondeheading(int ronde, String datum)
       throws BestandException {
-    output.write("   \\begin{tabular}[t]{ | b{31mm} C{2mm} b{31mm} |"
-                  + " C{7mm} | }");
+    output.write("   \\begin{tabular}[t]{ | b{36mm}@{\\hspace{0pt}} C{2mm}"
+                  + " @{\\hspace{0pt}}b{36mm} | C{5mm} | }");
     output.write("    " + LTX_HLINE);
     output.write("    " + RIJKLEUR);
     output.write("    \\multicolumn{2}{l}{\\color{headingtekstkleur}"
@@ -937,7 +942,7 @@ public final class Toernooioverzicht extends Batchjob {
       }
     }
     var uitslag       =
-            competitie.getUitslag(partij.getUitslag(), partij.isBye())
+            competitie.getUitslag(partij)
                       .replace("1/2", Utilities.kwart(0.5))
                       .replace("-", (partij.isForfait() ? "\\\\textbf{f}"
                                                         : "-"))

@@ -841,7 +841,7 @@ public final class PgnToHtml extends Batchjob {
     }
     var uitslagklasse = nietgespeeld.equals("-") ? "aligncenter" : "inhaal";
     var uitslag       =
-            competitie.getUitslag(partij.getUitslag(), partij.isBye())
+            competitie.getUitslag(partij)
                       .replace("1/2", "&frac12;")
                       .replace("-", (partij.isForfait() ? "<b>F</b>" : "-"))
                       .replace("*", nietgespeeld);
