@@ -25,4 +25,4 @@ Upgrade to 1.4.0
 
 The ELOBerekenaar uses an extra column in the spelerBestand. To use a
 spelerBestand from a previous version you need to add an empty column with the
-name "groei" aftre the "elo" column. You can also generate the file again.
+name "groei" after the "elo" column. You can also generate the file again.
