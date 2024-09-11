@@ -582,7 +582,7 @@ public final class Toernooioverzicht extends Batchjob {
   private static void maakRondeheading(int ronde, String datum)
       throws BestandException {
     output.write("   \\begin{tabular}[t]{ | b{36mm}@{\\hspace{0pt}} C{2mm}"
-                  + " @{\\hspace{0pt}}b{36mm} | C{5mm} | }");
+                  + " @{\\hspace{0pt}}b{36mm} | @{\\hspace{3pt}}C{6mm} | }");
     output.write("    " + LTX_HLINE);
     output.write("    " + RIJKLEUR);
     output.write("    \\multicolumn{2}{l}{\\color{headingtekstkleur}"
