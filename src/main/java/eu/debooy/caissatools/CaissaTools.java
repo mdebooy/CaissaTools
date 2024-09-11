@@ -54,12 +54,21 @@ public final class CaissaTools extends Batchjob {
   public static final String  HLP_SCHEMA        = "help.competitieschema";
   public static final String  HLP_SUBTITEL      = "help.subtitel";
 
+  public static final String  KYW_LOGO    = "L";
+  public static final String  KYW_NORMAAL = "N";
+
+  public static final String  LBL_ADRES         = "label.adres";
   public static final String  LBL_BESTAND       = "label.bestand";
   public static final String  LBL_EMAIL         = "label.email";
+  public static final String  LBL_HEAD_EMAIL    = "label.heading.email";
   public static final String  LBL_JIJ           = "label.jij";
+  public static final String  LBL_LEDENLIJST    = "label.ledenlijst";
+  public static final String  LBL_NAAM          = "label.naam";
   public static final String  LBL_PARTIJEN      = "label.partijen";
   public static final String  LBL_PGNBESTAND    = "label.pgnbestand";
+  public static final String  LBL_PLAATS        = "label.plaats";
   public static final String  LBL_SCHEMA        = "label.competitieschema";
+  public static final String  LBL_TELEFOON      = "label.telefoon";
   public static final String  LBL_UITVOER       = "label.uitvoer";
 
   public static final String  MSG_NIEUWBESTAND  = "message.nieuwbestand";
@@ -133,6 +142,7 @@ public final class CaissaTools extends Batchjob {
   protected static final  String  TOOL_CHESSTHEATRE       = "ChessTheatre";
   protected static final  String  TOOL_CLUBSTATISTIEK     = "Clubstatistiek";
   protected static final  String  TOOL_ELOBEREKENAAR      = "ELOBerekenaar";
+  protected static final  String  TOOL_LEDENLIJST         = "Ledenlijst";
   protected static final  String  TOOL_PGNCLEANER         = "PgnCleaner";
   protected static final  String  TOOL_PGNTOHTML          = "PgnToHtml";
   protected static final  String  TOOL_PGNTOJSON          = "PgnToJson";
@@ -148,10 +158,10 @@ public final class CaissaTools extends Batchjob {
 
   protected static final  List<String>  tools =
       Arrays.asList(TOOL_ANALYSETEX, TOOL_CHESSTHEATRE, TOOL_CLUBSTATISTIEK,
-                    TOOL_ELOBEREKENAAR, TOOL_PGNCLEANER, TOOL_PGNTOHTML,
-                    TOOL_PGNTOJSON, TOOL_PGNTOLATEX, TOOL_SPELERSTATISTIEK,
-                    TOOL_STARTCORRESP, TOOL_STARTPGN, TOOL_TOERNOOIOVERZICHT,
-                    TOOL_TRF, TOOL_VERTAALPGN);
+                    TOOL_ELOBEREKENAAR, TOOL_LEDENLIJST, TOOL_PGNCLEANER,
+                    TOOL_PGNTOHTML, TOOL_PGNTOJSON, TOOL_PGNTOLATEX,
+                    TOOL_SPELERSTATISTIEK, TOOL_STARTCORRESP, TOOL_STARTPGN,
+                    TOOL_TOERNOOIOVERZICHT, TOOL_TRF, TOOL_VERTAALPGN);
 
   public static final String  TXT_BANNER  = "Caissa Tools";
 
@@ -183,6 +193,9 @@ public final class CaissaTools extends Batchjob {
         break;
       case "eloberekenaar":
         ELOBerekenaar.execute(commandoArgs);
+        break;
+      case "ledenlijst":
+        Ledenlijst.execute(commandoArgs);
         break;
       case "pgncleaner":
         PgnCleaner.execute(commandoArgs);
@@ -225,25 +238,21 @@ public final class CaissaTools extends Batchjob {
   }
 
   protected static TekstBestand getTemplate(ParameterBundle params,
-                                            String classtemplate)
+                                            String classtemplate,
+                                            ClassLoader classloader)
       throws BestandException {
-    TekstBestand  texInvoer;
-      if (params.containsArgument(CaissaTools.PAR_TEMPLATE)) {
-        texInvoer =
-            new TekstBestand.Builder()
-                            .setBestand(
+    if (params.containsArgument(CaissaTools.PAR_TEMPLATE)) {
+      return new TekstBestand.Builder()
+                             .setBestand(
                                 params.getBestand(
                                     CaissaTools.PAR_TEMPLATE))
-                            .build();
-      } else {
-        texInvoer =
-            new TekstBestand.Builder()
-                            .setBestand(classtemplate)
-                            .setClassLoader(PgnToLatex.class.getClassLoader())
-                            .build();
-      }
+                             .build();
+    }
 
-      return texInvoer;
+    return new TekstBestand.Builder()
+                           .setBestand(classtemplate)
+                           .setClassLoader(classloader)
+                           .build();
   }
 
   public static void help() {

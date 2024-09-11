@@ -1,0 +1,56 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 18,
+  "applicatie": "Ledenlijst",
+  "help": "Maakt de ledenlijst, in TEX formaat, uit een JSON bestand met alle leden.",
+  "banner": "Ledenlijst",
+  "parameters": [
+    {
+      "parameter": "bestand",
+      "extensie": "json",
+      "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de leden in JSON formaat.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "kleur",
+      "lang": "kleur",
+      "help": "De kleur voor de heading in RGB. De standaardkleur is {0}.",
+      "standaard": "004488"
+    },
+    {
+      "parameter": "logo",
+      "kort": "l",
+      "lang": "logo",
+      "help": "Logo als watermark op de pagina''s."
+    },
+    {
+      "parameter": "tekstkleur",
+      "lang": "tekstkleur",
+      "help": "De kleur voor de tekst in de heading in RGB. De standaardkleur is {0}.",
+      "standaard": "FFFFFF"
+    },
+    {
+      "parameter": "template",
+      "extensie": "tex",
+      "lang": "template",
+      "help": "Een template voor het uitvoer TEX bestand.",
+      "type": "bestand"
+    },
+    {
+      "parameter": "titel",
+      "lang": "titel",
+      "help": "Naam van de organisatie als die niet in <bestand> staat."
+    },
+    {
+      "parameter": "uitvoer",
+      "extensie": "tex",
+      "lang": "uitvoer",
+      "help": "Het uitvoer bestand.",
+      "standaard": "_@bestand@_",
+      "type": "bestand"
+    }
+  ]
+}

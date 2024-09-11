@@ -1,0 +1,77 @@
+\documentclass[a4paper]{scrreprt}
+
+\usepackage[T1]{fontenc}
+\usepackage[dutch]{babel}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{lscape}
+\usepackage{qrcode}
+%@IncludeStart Logo
+\usepackage{background}
+%@IncludeEind Logo
+
+\definecolor{headingkleur}{HTML}{@kleur@}
+\definecolor{headingtekstkleur}{HTML}{@tekstkleur@}
+
+\arrayrulecolor{headingkleur}
+\newcolumntype{C}[1]{>{\centering\arraybackslash\hspace{0pt}}p{#1}}
+
+\geometry{
+  paperwidth=210mm,
+  paperheight=296mm,
+  twoside,
+  left=10mm,
+  top=10mm,
+  marginpar=23mm,
+  headsep=1pc,
+  marginparsep=1em,
+  footskip=9ex
+}
+\geometry{
+  textwidth = 190mm,
+  textheight = 270mm
+}
+
+% Penalties
+\pretolerance=60
+\tolerance=2000
+\widowpenalty=9999
+\interdisplaylinepenalty=100
+\interfootnotelinepenalty=1000
+\predisplaypenalty=50
+
+\renewcommand{\familydefault}{\sfdefault}
+
+%@IncludeStart Logo
+\backgroundsetup{
+scale=1,
+color=black,
+opacity=0.1,
+angle=90,
+contents={%
+  \includegraphics[width=\textwidth]{@logo@}
+  }%
+}
+%@IncludeEind Logo
+
+\addtokomafont{section}{\centering}
+\addtokomafont{subsection}{\centering}
+
+\pagenumbering{gobble}
+
+\begin{document}
+ \begin{landscape}
+  \section*{\color{headingkleur}@titel@}
+  \subsection*{\color{headingkleur}@ledenlijst@ \today{}}
+  \begin{center}
+   \begin{tabular}{ l l l l l }
+    \rowcolor{headingkleur}
+    \color{headingtekstkleur}@naam@ & \color{headingtekstkleur}@adres@ & \color{headingtekstkleur}@plaats@ & \color{headingtekstkleur}@telefoon@ & \color{headingtekstkleur}@email@ \\
+%@Include Leden
+   \end{tabular}
+  \end{center}
+ \end{landscape}
+\end{document}

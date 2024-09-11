@@ -32,6 +32,7 @@ import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
+import eu.debooy.doosutils.latex.LatexConstants;
 import eu.debooy.doosutils.latex.Utilities;
 import java.text.MessageFormat;
 import java.util.ArrayList;
@@ -52,8 +53,6 @@ import org.json.simple.JSONObject;
  * @author Marco de Booij
  */
 public final class Toernooioverzicht extends Batchjob {
-  private static final  ClassLoader     classloader     =
-      Toernooioverzicht.class.getClassLoader();
   private static final  ResourceBundle  resourceBundle  =
       ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                Locale.getDefault());
@@ -65,22 +64,15 @@ public final class Toernooioverzicht extends Batchjob {
 
   private static final  String  DEF_TEMPLATE  = "Overzicht.tex";
 
-  private static final  String  LTX_HLINE       = "\\hline";
-  private static final  String  LTX_END_TABULAR = "\\end{tabular}";
-  private static final  String  LTX_EOL         = "\\\\";
-
   private static final  String  KYW_DEELNEMERS  = "D";
   private static final  String  KYW_INHALEN     = "I";
   private static final  String  KYW_KALENDER    = "K";
   private static final  String  KYW_KLEUREN     = "C";
-  private static final  String  KYW_LOGO        = "L";
   private static final  String  KYW_MATRIX      = "M";
   private static final  String  KYW_SKIP        = "X";
   private static final  String  KYW_SUBTITEL    = "S";
   private static final  String  KYW_TITEL       = "T";
   private static final  String  KYW_UITSLAGEN   = "U";
-
-  private static final  String  NORMAAL         = "N";
 
   private static final  String  KLEUR           = "\\columncolor{headingkleur}";
   private static final  String  KLEURLICHT      =
@@ -91,22 +83,6 @@ public final class Toernooioverzicht extends Batchjob {
   private static final  String  TEKSTKLEUR      = "\\color{headingtekstkleur}";
 
   protected Toernooioverzicht() {}
-
-  private static TekstBestand bepaalTexInvoer() throws BestandException {
-    if (paramBundle.containsParameter(CaissaTools.PAR_TEMPLATE)) {
-      return
-          new TekstBestand.Builder()
-                          .setBestand(
-                              paramBundle.getBestand(CaissaTools.PAR_TEMPLATE))
-                          .build();
-    } else {
-      return
-          new TekstBestand.Builder()
-                          .setBestand(DEF_TEMPLATE)
-                          .setClassLoader(classloader)
-                          .build();
-    }
-  }
 
   public static void execute(String[] args) {
     setParameterBundle(
@@ -123,17 +99,11 @@ public final class Toernooioverzicht extends Batchjob {
 
     output  = null;
 
-    try {
-      bepaalTexInvoer();
-    } catch (BestandException e) {
-      DoosUtils.foutNaarScherm(MessageFormat.format(
-          resourceBundle.getString(CaissaTools.ERR_TEMPLATE),
-              paramBundle.getBestand(CaissaTools.PAR_TEMPLATE)));
-      return;
-    }
-
     List<String>  template  = new ArrayList<>();
-    try (var texInvoer = bepaalTexInvoer()) {
+    try (var texInvoer =
+            CaissaTools.getTemplate(paramBundle, DEF_TEMPLATE,
+                                    Toernooioverzicht.class
+                                                     .getClassLoader())) {
       while (texInvoer.hasNext()) {
         template.add(texInvoer.next());
       }
@@ -189,7 +159,7 @@ public final class Toernooioverzicht extends Batchjob {
     Map<String, String> params  = new HashMap<>();
     vulParams(params);
 
-    var status  = NORMAAL;
+    var status  = CaissaTools.KYW_NORMAAL;
     try {
       for (var j = 0; j < template.size(); j++) {
         status  = schrijf(template.get(j), status, kolommen, noSpelers, params);
@@ -260,8 +230,8 @@ public final class Toernooioverzicht extends Batchjob {
         output.write("    " + speler.getVolledigenaam() + " & "
                 + DoosUtils.nullToEmpty(speler.getTelefoon()) + " & "
                 + DoosUtils.nullToEmpty(speler.getEmail()).replace("_", "\\_")
-                + " " + LTX_EOL);
-        output.write("    " + LTX_HLINE);
+                + " " + LatexConstants.LTX_EOL);
+        output.write("    " + LatexConstants.LTX_HLINE);
       }
     }
   }
@@ -298,7 +268,7 @@ public final class Toernooioverzicht extends Batchjob {
     lijn.append("    \\multicolumn{").append(2+rondes)
         .append("}{c}{\\large\\color{headingtekstkleur}")
         .append(resourceBundle.getString("label.kleuren.gespeeld"))
-        .append("} ").append(LTX_EOL);
+        .append("} ").append(LatexConstants.LTX_EOL);
     output.write(lijn.toString());
     output.write("    " + RIJKLEUR);
     lijn  = new StringBuilder();
@@ -306,7 +276,7 @@ public final class Toernooioverzicht extends Batchjob {
     for (var i = 0; i < competitie.getRondes(); i++) {
       lijn.append(" \\color{headingtekstkleur}").append(i+1).append(" &");
     }
-    lijn.append(" ").append(LTX_EOL);
+    lijn.append(" ").append(LatexConstants.LTX_EOL);
     output.write(lijn.toString());
 
     schrijfGespeeldeKleurenTabel(kleuren, metWit, metZwart);
@@ -337,7 +307,7 @@ public final class Toernooioverzicht extends Batchjob {
                                         item.get("datum"),
                                         wit.getVolledigenaam(),
                                         zwart.getVolledigenaam(),
-                                        LTX_EOL));
+                                        LatexConstants.LTX_EOL));
     }
   }
 
@@ -357,7 +327,7 @@ public final class Toernooioverzicht extends Batchjob {
             .append(" & ")
             .append(item.get(Competitie.JSON_TAG_KALENDER_EXTRA)
                         .toString())
-            .append(" ").append(LTX_EOL);
+            .append(" ").append(LatexConstants.LTX_EOL);
       }
       if (item.containsKey(Competitie.JSON_TAG_KALENDER_INHAAL)) {
         output.write(RIJKLEURLICHTER);
@@ -368,7 +338,7 @@ public final class Toernooioverzicht extends Batchjob {
                         resourceBundle.getString("label.latex.inhaal"),
                         item.get(Competitie.JSON_TAG_KALENDER_INHAAL)
                             .toString()))
-            .append(" ").append(LTX_EOL);
+            .append(" ").append(LatexConstants.LTX_EOL);
       }
       if (item.containsKey(Competitie.JSON_TAG_KALENDER_RONDE)) {
         output.write(RIJKLEURLICHT);
@@ -379,10 +349,10 @@ public final class Toernooioverzicht extends Batchjob {
                         resourceBundle.getString("label.latex.ronde"),
                         item.get(Competitie.JSON_TAG_KALENDER_RONDE)
                             .toString()))
-            .append(" ").append(LTX_EOL);
+            .append(" ").append(LatexConstants.LTX_EOL);
       }
       output.write("    " + lijn.toString());
-      output.write("    " + LTX_HLINE);
+      output.write("    " + LatexConstants.LTX_HLINE);
     }
   }
 
@@ -423,11 +393,11 @@ public final class Toernooioverzicht extends Batchjob {
         maakLatexMatrixBodyMat(lijn, i, kolommen);
       }
 
-      lijn.append(" ").append(LTX_EOL);
+      lijn.append(" ").append(LatexConstants.LTX_EOL);
       output.write(lijn.toString());
-      output.write("    " + LTX_HLINE);
+      output.write("    " + LatexConstants.LTX_HLINE);
     }
-    output.write("   " + LTX_END_TABULAR + "}");
+    output.write("   " + LatexConstants.LTX_END_TABULAR + "}");
   }
 
   private static void maakLatexMatrixBodyMat(StringBuilder lijn, int rij,
@@ -583,14 +553,14 @@ public final class Toernooioverzicht extends Batchjob {
       throws BestandException {
     output.write("   \\begin{tabular}[t]{ | b{36mm}@{\\hspace{0pt}} C{2mm}"
                   + " @{\\hspace{0pt}}b{36mm} | @{\\hspace{3pt}}C{6mm} | }");
-    output.write("    " + LTX_HLINE);
+    output.write("    " + LatexConstants.LTX_HLINE);
     output.write("    " + RIJKLEUR);
     output.write("    \\multicolumn{2}{l}{\\color{headingtekstkleur}"
                   + MessageFormat.format(
                         resourceBundle.getString("tabel.ronde"), ronde)
                   + "} & \\multicolumn{2}{r}{\\color{headingtekstkleur}"
                   + datum + "} \\\\");
-    output.write("    " + LTX_HLINE);
+    output.write("    " + LatexConstants.LTX_HLINE);
   }
 
   private static void maakUitslagentabel() throws BestandException {
@@ -608,8 +578,8 @@ public final class Toernooioverzicht extends Batchjob {
       var ronde = Integer.parseInt(partij.getRonde().getRound()
                                          .split("\\.")[0]);
       if (ronde != vorige) {
-        output.write("    " + LTX_HLINE);
-        output.write("   " + LTX_END_TABULAR);
+        output.write("    " + LatexConstants.LTX_HLINE);
+        output.write("   " + LatexConstants.LTX_END_TABULAR);
         maakRondeheading(ronde,
             DoosUtils.nullToEmpty(Datum.fromDate(kalender.get(ronde-1))));
         vorige  = ronde;
@@ -620,8 +590,8 @@ public final class Toernooioverzicht extends Batchjob {
       partij            = iter.hasNext() ? iter.next() : null;
     } while (null != partij);
 
-    output.write("    " + LTX_HLINE);
-    output.write("   " + LTX_END_TABULAR);
+    output.write("    " + LatexConstants.LTX_HLINE);
+    output.write("   " + LatexConstants.LTX_END_TABULAR);
   }
 
   private static void maakVCard(Spelerinfo speler, TekstBestand vcards) {
@@ -665,13 +635,13 @@ public final class Toernooioverzicht extends Batchjob {
     maakLatexMatrixHead1Mat(lijn, kolommen);
     lijn.append("r | r | r | ");
     output.write(lijn.append("}").toString());
-    output.write("    " + LTX_HLINE);
+    output.write("    " + LatexConstants.LTX_HLINE);
     output.write("    " + RIJKLEUR);
     lijn  = new StringBuilder();
     lijn.append("    \\multicolumn{2}{|c|}{} ");
     maakLatexMatrixHead2Mat(lijn, kolommen, noSpelers);
     maakLatexMatrixHead2Pnt(lijn);
-    lijn.append(LTX_EOL);
+    lijn.append(LatexConstants.LTX_EOL);
     if (!competitie.isMatch() && competitie.isDubbel()) {
       output.write(lijn.toString());
       output.write("    \\cline{3-" + (2 + kolommen) + "}");
@@ -679,10 +649,10 @@ public final class Toernooioverzicht extends Batchjob {
       lijn  = new StringBuilder();
       lijn.append("    \\multicolumn{2}{|c|}{} ");
       maakLatexMatrixHead3Mat(lijn, noSpelers);
-      lijn.append("& & & ").append(LTX_EOL);
+      lijn.append("& & & ").append(LatexConstants.LTX_EOL);
     }
     output.write(lijn.toString());
-    output.write("    " + LTX_HLINE);
+    output.write("    " + LatexConstants.LTX_HLINE);
   }
 
   private static void matrixLaatst(StringBuilder lijn, int kolommen,
@@ -690,13 +660,13 @@ public final class Toernooioverzicht extends Batchjob {
     lijn.append("r | r | r | ");
     maakLatexMatrixHead1Mat(lijn, kolommen);
     output.write(lijn.append("}").toString());
-    output.write("    " + LTX_HLINE);
+    output.write("    " + LatexConstants.LTX_HLINE);
     output.write("    " + RIJKLEUR);
     lijn  = new StringBuilder();
     lijn.append("    \\multicolumn{2}{|c|}{}");
     maakLatexMatrixHead2Pnt(lijn);
     maakLatexMatrixHead2Mat(lijn, kolommen, noSpelers);
-    lijn.append(LTX_EOL);
+    lijn.append(LatexConstants.LTX_EOL);
     if (!competitie.isMatch() && competitie.isDubbel()) {
       output.write(lijn.toString());
       output.write("    \\cline{6-" + (5 + kolommen) + "}");
@@ -704,10 +674,10 @@ public final class Toernooioverzicht extends Batchjob {
       lijn  = new StringBuilder();
       lijn.append("    \\multicolumn{2}{|c|}{} & & & ");
       maakLatexMatrixHead3Mat(lijn, noSpelers);
-      lijn.append(LTX_EOL);
+      lijn.append(LatexConstants.LTX_EOL);
     }
     output.write(lijn.toString());
-    output.write("    " + LTX_HLINE);
+    output.write("    " + LatexConstants.LTX_HLINE);
   }
 
   private static String schrijf(String regel, String status, int kolommen,
@@ -759,7 +729,7 @@ public final class Toernooioverzicht extends Batchjob {
         status  = setStatus(regel.split(" ")[1].toLowerCase());
         break;
       case "%@IncludeEind":
-        status  = NORMAAL;
+        status  = CaissaTools.KYW_NORMAAL;
         break;
       default:
         schrijfUitTemplate(regel, parameters, status);
@@ -804,9 +774,9 @@ public final class Toernooioverzicht extends Batchjob {
       if (evenwicht > 0) {
         lijn.append(metZwart);
       }
-      lijn.append("} ").append(LTX_EOL);
+      lijn.append("} ").append(LatexConstants.LTX_EOL);
       output.write(lijn.toString());
-      output.write("    " + LTX_HLINE);
+      output.write("    " + LatexConstants.LTX_HLINE);
       lijn      = new StringBuilder();
     }
   }
@@ -822,7 +792,7 @@ public final class Toernooioverzicht extends Batchjob {
       case KYW_KLEUREN:
         output.write(CaissaTools.replaceParameters(regel, params));
         break;
-      case KYW_LOGO:
+      case CaissaTools.KYW_LOGO:
         if (paramBundle.containsParameter(CaissaTools.PAR_LOGO)) {
           output.write(CaissaTools.replaceParameters(regel, params));
         }
@@ -910,7 +880,7 @@ public final class Toernooioverzicht extends Batchjob {
         }
         break;
       case "logo":
-        status  = KYW_LOGO;
+        status  = CaissaTools.KYW_LOGO;
         break;
       case "matrix":
         status  = KYW_MATRIX;
@@ -954,7 +924,7 @@ public final class Toernooioverzicht extends Batchjob {
       output.write("    " + RIJKLEURLICHTER);
     }
     output.write(String.format("    %s & - & %s & %s %s",
-                               wit, zwart, uitslag, LTX_EOL));
+                               wit, zwart, uitslag, LatexConstants.LTX_EOL));
   }
 
   private static void vulParams(Map<String, String> params) {

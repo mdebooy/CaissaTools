@@ -153,8 +153,9 @@ public final class SpelerStatistiek extends Batchjob {
     List<String>  template  = new ArrayList<>();
     var           beginBody = -1;
     var           eindeBody = -1;
-    try (var texInvoer = CaissaTools.getTemplate(paramBundle,
-                                                 "SpelerStatistiek.tex")) {
+    try (var texInvoer =
+            CaissaTools.getTemplate(paramBundle, "SpelerStatistiek.tex",
+                                    SpelerStatistiek.class.getClassLoader())) {
       String  regel;
       while (texInvoer.hasNext()) {
         regel = texInvoer.next();
@@ -443,8 +444,7 @@ public final class SpelerStatistiek extends Batchjob {
     params  = new HashMap<>();
     params.put("Speler",
                swapNaam(paramBundle.getString(CaissaTools.PAR_SPELER)));
-    params.put("Kleur",
-               swapNaam(paramBundle.getString(CaissaTools.PAR_KLEUR)));
+    params.put("Kleur",paramBundle.getString(CaissaTools.PAR_KLEUR));
     if (paramBundle.containsArgument(CaissaTools.PAR_LOGO)) {
       params.put(CaissaTools.PAR_LOGO,
                  paramBundle.getString(CaissaTools.PAR_LOGO));
@@ -452,8 +452,7 @@ public final class SpelerStatistiek extends Batchjob {
     if (!CaissaConstants.DEF_STARTDATUM.equals(startdatum)) {
       params.put("Periode", datumInTitel(startdatum, einddatum));
     }
-    params.put("Tekstkleur",
-               swapNaam(paramBundle.getString(CaissaTools.PAR_TEKSTKLEUR)));
+    params.put("Tekstkleur", paramBundle.getString(CaissaTools.PAR_TEKSTKLEUR));
     params.put("Titel", resourceBundle.getString("label.statistiekenvan"));
   }
 }
