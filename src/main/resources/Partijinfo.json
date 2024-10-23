@@ -1,0 +1,18 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 10,
+  "applicatie": "Partijinfo",
+  "help": "Geeft informatie over de partijen (zetten, posities, etc.).",
+  "banner": "Partijinfo",
+  "parameters": [
+    {
+      "parameter": "bestand",
+      "extensie": "pgn",
+      "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de partijen in PGN formaat.",
+      "type": "bestand",
+      "verplicht": true
+    }
+  ]
+}

@@ -143,6 +143,7 @@ public final class CaissaTools extends Batchjob {
   protected static final  String  TOOL_CLUBSTATISTIEK     = "Clubstatistiek";
   protected static final  String  TOOL_ELOBEREKENAAR      = "ELOBerekenaar";
   protected static final  String  TOOL_LEDENLIJST         = "Ledenlijst";
+  protected static final  String  TOOL_PARTIJINFO         = "Partijinfo";
   protected static final  String  TOOL_PGNCLEANER         = "PgnCleaner";
   protected static final  String  TOOL_PGNTOHTML          = "PgnToHtml";
   protected static final  String  TOOL_PGNTOJSON          = "PgnToJson";
@@ -158,10 +159,11 @@ public final class CaissaTools extends Batchjob {
 
   protected static final  List<String>  tools =
       Arrays.asList(TOOL_ANALYSETEX, TOOL_CHESSTHEATRE, TOOL_CLUBSTATISTIEK,
-                    TOOL_ELOBEREKENAAR, TOOL_LEDENLIJST, TOOL_PGNCLEANER,
-                    TOOL_PGNTOHTML, TOOL_PGNTOJSON, TOOL_PGNTOLATEX,
-                    TOOL_SPELERSTATISTIEK, TOOL_STARTCORRESP, TOOL_STARTPGN,
-                    TOOL_TOERNOOIOVERZICHT, TOOL_TRF, TOOL_VERTAALPGN);
+                    TOOL_ELOBEREKENAAR, TOOL_LEDENLIJST, TOOL_PARTIJINFO,
+                    TOOL_PGNCLEANER, TOOL_PGNTOHTML, TOOL_PGNTOJSON,
+                    TOOL_PGNTOLATEX, TOOL_SPELERSTATISTIEK, TOOL_STARTCORRESP,
+                    TOOL_STARTPGN, TOOL_TOERNOOIOVERZICHT, TOOL_TRF,
+                    TOOL_VERTAALPGN);
 
   public static final String  TXT_BANNER  = "Caissa Tools";
 
@@ -199,6 +201,9 @@ public final class CaissaTools extends Batchjob {
         break;
       case "pgncleaner":
         PgnCleaner.execute(commandoArgs);
+        break;
+      case "partijinfo":
+        Partijinfo.execute(commandoArgs);
         break;
       case "pgntohtml":
         PgnToHtml.execute(commandoArgs);
