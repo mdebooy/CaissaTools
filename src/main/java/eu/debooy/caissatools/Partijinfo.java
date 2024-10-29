@@ -70,7 +70,7 @@ public class Partijinfo extends Batchjob {
     }
 
     partijen.stream()
-            .filter(partij -> partij.isBeeindigd())
+            .filter(PGN::isBeeindigd)
             .sorted()
             .forEach(partij -> {
       try {
