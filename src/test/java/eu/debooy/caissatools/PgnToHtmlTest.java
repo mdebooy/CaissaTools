@@ -77,7 +77,9 @@ public class PgnToHtmlTest extends BatchTest {
 
   @BeforeClass
   public static void beforeClass() throws BestandException {
-    Locale.setDefault(new Locale(TestConstants.TST_TAAL));
+    Locale.setDefault(new Locale.Builder()
+                                .setLanguage(TestConstants.TST_TAAL)
+                                .build());
     resourceBundle  = ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                                Locale.getDefault());
 
@@ -106,8 +108,8 @@ public class PgnToHtmlTest extends BatchTest {
 
   @Test
   public void testEnkelrondig() {
-    String[]  args  = new String[] {PAR_BESTANDE,
-                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+    var args  = new String[] {PAR_BESTANDE,
+                              TestConstants.PAR_UITVOERDIR + getTemp()};
 
     before();
     PgnToHtml.execute(args);
@@ -132,7 +134,7 @@ public class PgnToHtmlTest extends BatchTest {
 
   @Test
   public void testLeeg() {
-    String[]  args  = new String[] {};
+    var args  = new String[] {};
 
     before();
     PgnToHtml.execute(args);
@@ -143,10 +145,10 @@ public class PgnToHtmlTest extends BatchTest {
 
   @Test
   public void testOpStand() {
-    String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
-                                    TestConstants.PAR_MATRIX_OP_STAND,
-                                    TestConstants.PAR_SCHEMA1,
-                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+    var args  = new String[] {TestConstants.PAR_BESTAND1,
+                              TestConstants.PAR_MATRIX_OP_STAND,
+                              TestConstants.PAR_SCHEMA1,
+                              TestConstants.PAR_UITVOERDIR + getTemp()};
 
     before();
     PgnToHtml.execute(args);
@@ -195,9 +197,9 @@ public class PgnToHtmlTest extends BatchTest {
 
   @Test
   public void testPgnToHtml1() {
-    String[]  args  = new String[] {TestConstants.PAR_BESTAND1,
-                                    TestConstants.PAR_SCHEMA1,
-                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+    var args  = new String[] {TestConstants.PAR_BESTAND1,
+                              TestConstants.PAR_SCHEMA1,
+                              TestConstants.PAR_UITVOERDIR + getTemp()};
 
     before();
     PgnToHtml.execute(args);
@@ -246,9 +248,9 @@ public class PgnToHtmlTest extends BatchTest {
 
   @Test
   public void testPgnToHtml2() {
-    String[]  args  = new String[] {TestConstants.PAR_BESTAND2A,
-                                    TestConstants.PAR_SCHEMA2,
-                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+    var args  = new String[] {TestConstants.PAR_BESTAND2A,
+                              TestConstants.PAR_SCHEMA2,
+                              TestConstants.PAR_UITVOERDIR + getTemp()};
 
     before();
     PgnToHtml.execute(args);
@@ -300,10 +302,10 @@ public class PgnToHtmlTest extends BatchTest {
 
   @Test
   public void testPgnToHtml3() {
-    String[]  args  = new String[] {TestConstants.PAR_BESTAND2A,
-                                    TestConstants.PAR_SCHEMA2,
-                                    "--metInhaaldatum",
-                                    TestConstants.PAR_UITVOERDIR + getTemp()};
+    var args  = new String[] {TestConstants.PAR_BESTAND2A,
+                              TestConstants.PAR_SCHEMA2,
+                              "--metInhaaldatum",
+                              TestConstants.PAR_UITVOERDIR + getTemp()};
 
     before();
     PgnToHtml.execute(args);

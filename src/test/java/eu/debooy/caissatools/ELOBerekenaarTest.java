@@ -47,9 +47,7 @@ public class ELOBerekenaarTest extends BatchTest {
       "competitieH.1997.12.31.csv";
   private static final  String  BST_COMPD_CSV     = "competitie.dubbel.csv";
   private static final  String  BST_COMPHD_CSV    = "competitieH.dubbel.csv";
-  private static final  String  DATUM1            = "1997.12.20";
-  private static final  String  DATUM2            = "1997.12.31";
-  private static final  String  DATUM3            = "1998.06.13";
+  private static final  String  DATUM            = "1997.12.31";
 
   private static final  String  PAR_EINDDATUM = "--eindDatum=1997.12.31";
   private static final  String  PAR_EXTRAINFO = "--extraInfo";
@@ -78,12 +76,14 @@ public class ELOBerekenaarTest extends BatchTest {
 
   @BeforeClass
   public static void beforeClass() throws BestandException {
-    Locale.setDefault(new Locale(TestConstants.TST_TAAL));
+    Locale.setDefault(new Locale.Builder()
+                                .setLanguage(TestConstants.TST_TAAL)
+                                .build());
     resourceBundle  = ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                                Locale.getDefault());
 
-    for (String bestand : new String[] {TestConstants.BST_COMPETITIE1_PGN,
-                                        TestConstants.BST_COMPETITIE2_PGN}) {
+    for (var  bestand : new String[] {TestConstants.BST_COMPETITIE1_PGN,
+                                      TestConstants.BST_COMPETITIE2_PGN}) {
       try {
         kopieerBestand(CLASSLOADER, bestand, getTemp()
                         + File.separator + bestand);
@@ -95,9 +95,9 @@ public class ELOBerekenaarTest extends BatchTest {
 
   @Test
   public void testEnkelMaxVerschil() {
-    String[]  args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
-                                    TestConstants.PAR_SPELERBESTAND,
-                                    "--" + CaissaTools.PAR_MAXVERSCHIL, "600"};
+    var args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
+                              TestConstants.PAR_SPELERBESTAND,
+                              "--" + CaissaTools.PAR_MAXVERSCHIL, "600"};
 
     before();
     ELOBerekenaar.execute(args);
@@ -110,12 +110,12 @@ public class ELOBerekenaarTest extends BatchTest {
 
   @Test
   public void testFouteDatums() {
-    String[]  args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
-                                    TestConstants.PAR_SPELERBESTAND,
-                                    "--" + CaissaTools.PAR_EINDDATUM,
-                                    "0000.00.00",
-                                    "--" + CaissaTools.PAR_STARTDATUM,
-                                    "9999.99.99"};
+    var args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
+                              TestConstants.PAR_SPELERBESTAND,
+                              "--" + CaissaTools.PAR_EINDDATUM,
+                              "0000.00.00",
+                              "--" + CaissaTools.PAR_STARTDATUM,
+                              "9999.99.99"};
 
     before();
     ELOBerekenaar.execute(args);
@@ -130,7 +130,7 @@ public class ELOBerekenaarTest extends BatchTest {
 
   @Test
   public void testLeeg() {
-    String[]  args  = new String[] {};
+    var args  = new String[] {};
 
     before();
     ELOBerekenaar.execute(args);
@@ -142,10 +142,10 @@ public class ELOBerekenaarTest extends BatchTest {
 
   @Test
   public void testMaxVerschil() {
-    String[]  args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
-                                    TestConstants.PAR_SPELERBESTAND,
-                                    "--" + CaissaTools.PAR_MAXVERSCHIL, "600",
-                                    "--" + CaissaTools.PAR_VASTEKFACTOR, "3"};
+    var args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
+                              TestConstants.PAR_SPELERBESTAND,
+                              "--" + CaissaTools.PAR_MAXVERSCHIL, "600",
+                              "--" + CaissaTools.PAR_VASTEKFACTOR, "3"};
 
     before();
     ELOBerekenaar.execute(args);
@@ -156,9 +156,9 @@ public class ELOBerekenaarTest extends BatchTest {
 
   @Test
   public void testMetEindDatum() throws BestandException {
-    String[]  args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
-                                    TestConstants.PAR_SPELERBESTAND,
-                                    PAR_EINDDATUM};
+    var args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
+                              TestConstants.PAR_SPELERBESTAND,
+                              PAR_EINDDATUM};
 
     before();
     ELOBerekenaar.execute(args);
@@ -167,7 +167,7 @@ public class ELOBerekenaarTest extends BatchTest {
     assertEquals(0, err.size());
     assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(14).split(":")[1].trim());
-    assertEquals(DATUM2, out.get(15).split(":")[1].trim());
+    assertEquals(DATUM, out.get(15).split(":")[1].trim());
     assertEquals(TestConstants.TOT_PARTIJEN, out.get(16).split(":")[1].trim());
     assertEquals("52", out.get(17).split(":")[1].trim());
     assertTrue(
@@ -188,7 +188,7 @@ public class ELOBerekenaarTest extends BatchTest {
     assertEquals(0, err.size());
     assertEquals(getTemp() + File.separator + TestConstants.BST_COMPETITIE_CSV,
                  out.get(13).split(":")[1].trim());
-    assertEquals(DATUM2, out.get(14).split(":")[1].trim());
+    assertEquals(DATUM, out.get(14).split(":")[1].trim());
     assertEquals(TestConstants.TOT_PARTIJEN, out.get(15).split(":")[1].trim());
     assertTrue(
         Bestand.equals(
@@ -227,8 +227,8 @@ public class ELOBerekenaarTest extends BatchTest {
 
   @Test
   public void testVolledigBestand() throws BestandException {
-    String[]  args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
-                                    TestConstants.PAR_SPELERBESTAND};
+    var args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
+                              TestConstants.PAR_SPELERBESTAND};
 
     before();
     ELOBerekenaar.execute(args);
@@ -274,9 +274,9 @@ public class ELOBerekenaarTest extends BatchTest {
 
   @Test
   public void testVolledigBestandExtra() throws BestandException {
-    String[]  args  = new String[] {PAR_EXTRAINFO,
-                                    TestConstants.PAR_TOERNOOIBESTAND1,
-                                    TestConstants.PAR_SPELERBESTAND};
+    var args  = new String[] {PAR_EXTRAINFO,
+                              TestConstants.PAR_TOERNOOIBESTAND1,
+                              TestConstants.PAR_SPELERBESTAND};
 
     before();
     ELOBerekenaar.execute(args);
@@ -306,9 +306,9 @@ public class ELOBerekenaarTest extends BatchTest {
 
   @Test
   public void testMetGeschiedenisbestand() throws BestandException {
-    String[]  args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
-                                    TestConstants.PAR_GESCHIEDENIS,
-                                    TestConstants.PAR_SPELERBESTAND};
+    var args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
+                              TestConstants.PAR_GESCHIEDENIS,
+                              TestConstants.PAR_SPELERBESTAND};
 
     before();
     ELOBerekenaar.execute(args);
@@ -339,8 +339,8 @@ public class ELOBerekenaarTest extends BatchTest {
 
   @Test
   public void testTweeBestanden() throws BestandException {
-    String[]  args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
-                                    TestConstants.PAR_SPELERBESTAND};
+    var args  = new String[] {TestConstants.PAR_TOERNOOIBESTAND1,
+                              TestConstants.PAR_SPELERBESTAND};
 
     before();
     ELOBerekenaar.execute(args);

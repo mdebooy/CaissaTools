@@ -1,0 +1,10 @@
+Speler, 02                     - Speler, 05                     : 1-0 |      | 1999.10.01 |     1 |   0 |   0 |
+Speler, 03                     - Speler, 04                     : ½-½ |      | 1999.10.01 |     1 |   0 |   0 |
+Speler, 05                     - Speler, 03                     : 0-1 |      | 1999.10.08 |     2 |   0 |   0 |
+Speler, 03                     - Speler, 01                     : 1-0 |      | 1999.10.15 |     3 |   6 |   9 |
+    3x r1bqkbnr/ppp1pppp/2n5/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq -!!!
+    2x rnbqkbnr/ppp1pppp/8/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R b KQkq -
+Speler, 04                     - Speler, 05                     : ½-½ |      | 1999.10.15 |     3 |   6 |   9 |
+    3x r1bqkbnr/ppp1pppp/2n5/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R w KQkq -
+    2x rnbqkbnr/ppp1pppp/8/3p4/3P4/5N2/PPP1PPPP/RNBQKB1R b KQkq -
+Speler, 01                     - Speler, 04                     : 0-1 |      | 1999.10.29 |     4 |  29 |  57 |
