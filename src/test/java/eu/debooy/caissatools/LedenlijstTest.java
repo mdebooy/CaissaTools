@@ -28,24 +28,24 @@ import java.util.ResourceBundle;
 import org.junit.AfterClass;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
-import static org.junit.Assert.fail;
 import org.junit.BeforeClass;
 import org.junit.Test;
 
 /**
  * @author Marco de Booij
  */
-public class PartijinfoTest extends BatchTest {
+public class LedenlijstTest extends BatchTest {
   protected static final  ClassLoader CLASSLOADER =
-      PartijinfoTest.class.getClassLoader();
+      LedenlijstTest.class.getClassLoader();
 
-  private static final  String  BST_PARTIJINFO_PGN  = "partijinfo.pgn";
-  private static final  String  BST_PARTIJINFO_TXT  = "partijinfo.txt";
+  private static final  String  BST_LEDENLIJST_JSON  = "leden.json";
+  private static final  String  BST_LEDENLIJST_TEX   = "leden.tex";
 
   @AfterClass
   public static void afterClass() {
     verwijderBestanden(getTemp() + File.separator,
-                       new String[] {BST_PARTIJINFO_PGN});
+                       new String[] {BST_LEDENLIJST_JSON,
+                                     BST_LEDENLIJST_TEX});
   }
 
   @BeforeClass
@@ -56,7 +56,7 @@ public class PartijinfoTest extends BatchTest {
     resourceBundle  = ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                                Locale.getDefault());
 
-    for (var  bestand : new String[] {BST_PARTIJINFO_PGN}) {
+    for (var  bestand : new String[] {BST_LEDENLIJST_JSON}) {
       try {
         kopieerBestand(CLASSLOADER, bestand, getTemp()
                         + File.separator + bestand);
@@ -71,7 +71,7 @@ public class PartijinfoTest extends BatchTest {
     String[]  args  = new String[] {};
 
     before();
-    Partijinfo.execute(args);
+    Ledenlijst.execute(args);
     after();
 
     assertEquals(1, err.size());
@@ -79,26 +79,19 @@ public class PartijinfoTest extends BatchTest {
   }
 
   @Test
-  public void testPartijinfoPgn() {
+  public void testLedenlijst() throws BestandException {
     var args  = new String[] {"--" + CaissaTools.PAR_BESTAND,
-                              getTemp() + File.separator + BST_PARTIJINFO_PGN};
+                              getTemp() + File.separator + BST_LEDENLIJST_JSON};
 
     before();
-    Partijinfo.execute(args);
+    Ledenlijst.execute(args);
     after();
 
     assertTrue(err.isEmpty());
-    try {
-      var invoer  = Bestand.openInvoerBestand(CLASSLOADER, BST_PARTIJINFO_TXT);
-      var i       = 13;
-
-      while (i < out.size()) {
-        assertEquals(invoer.readLine().stripTrailing(),
-                     out.get(i).stripTrailing());
-        i++;
-      }
-    } catch (BestandException | IOException e) {
-      fail(e.getLocalizedMessage());
-    }
+    assertTrue(
+        Bestand.equals(
+            Bestand.openInvoerBestand(CLASSLOADER, BST_LEDENLIJST_TEX),
+            Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + BST_LEDENLIJST_TEX)));
   }
 }

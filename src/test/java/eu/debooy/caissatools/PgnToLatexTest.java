@@ -287,7 +287,7 @@ public class PgnToLatexTest extends BatchTest {
   }
 
   @Test
-  public void testPgnToLatex3() throws BestandException {
+  public void testPgnToLatex3() {
     String[]  args      = new String[] {
         PAR_BESTAND2, TestConstants.PAR_INVOERDIR + getTemp(), PAR_SCHEMA2,
         PAR_TITEL, TestConstants.PAR_UITVOERDIR + getTemp(), PAR_MATRIX};
@@ -303,7 +303,7 @@ public class PgnToLatexTest extends BatchTest {
   }
 
   @Test
-  public void testPgnToLatex4() throws BestandException {
+  public void testPgnToLatex4() {
     String[]  args      = new String[] {
         PAR_AUTEUR, PAR_BESTAND2, TestConstants.PAR_INVOERDIR + getTemp(),
         PAR_SCHEMA2, TestConstants.PAR_UITVOERDIR + getTemp(), PAR_MATRIX};

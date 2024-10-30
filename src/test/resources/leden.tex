@@ -1,0 +1,66 @@
+\documentclass[a4paper]{scrreprt}
+
+\usepackage[T1]{fontenc}
+\usepackage[dutch]{babel}
+\usepackage{geometry}
+\usepackage{xcolor}
+\usepackage{colortbl}
+\usepackage{array}
+\usepackage{graphicx}
+\usepackage{lscape}
+\usepackage{qrcode}
+
+\definecolor{headingkleur}{HTML}{004488}
+\definecolor{headingtekstkleur}{HTML}{FFFFFF}
+
+\arrayrulecolor{headingkleur}
+\newcolumntype{C}[1]{>{\centering\arraybackslash\hspace{0pt}}p{#1}}
+
+\geometry{
+  paperwidth=210mm,
+  paperheight=296mm,
+  twoside,
+  left=10mm,
+  top=10mm,
+  marginpar=23mm,
+  headsep=1pc,
+  marginparsep=1em,
+  footskip=9ex
+}
+\geometry{
+  textwidth = 190mm,
+  textheight = 270mm
+}
+
+% Penalties
+\pretolerance=60
+\tolerance=2000
+\widowpenalty=9999
+\interdisplaylinepenalty=100
+\interfootnotelinepenalty=1000
+\predisplaypenalty=50
+
+\renewcommand{\familydefault}{\sfdefault}
+
+
+\addtokomafont{section}{\centering}
+\addtokomafont{subsection}{\centering}
+
+\pagenumbering{gobble}
+
+\begin{document}
+ \begin{landscape}
+  \section*{\color{headingkleur}Caissa Tools}
+  \subsection*{\color{headingkleur}Ledenlijst \today{}}
+  \begin{center}
+   \begin{tabular}{ l l l l l }
+    \rowcolor{headingkleur}
+    \color{headingtekstkleur}Naam & \color{headingtekstkleur}Straat & \color{headingtekstkleur}Plaats & \color{headingtekstkleur}Telefoon & \color{headingtekstkleur}E-Mail \\
+   Alice Speler & Caissastraat 10 & 4567 Schaakstad & 0123/45.67.89 & alice@caissa.eu \\
+   Bob Speler & Caissastraat 23 & 4567 Schaakstad & 0123/45.67.90 & bob@caissa.eu \\
+   Dave Speler & Caissastraat 36 & 4567 Schaakstad & 0123/45.69.01 & dave@caissa.eu \\
+   Eve Speler & Caissastraat 49 & 4567 Schaakstad & 0123/45.90.12 & eve@caissa.eu \\
+   \end{tabular}
+  \end{center}
+ \end{landscape}
+\end{document}

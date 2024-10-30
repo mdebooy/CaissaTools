@@ -52,7 +52,7 @@ public class Partijinfo extends Batchjob {
                            .setArgs(args)
                            .setBanner(new MarcoBanner())
                            .setBaseName(CaissaTools.TOOL_PARTIJINFO)
-                           .setClassloader(PgnCleaner.class.getClassLoader())
+                           .setClassloader(Partijinfo.class.getClassLoader())
                            .build());
 
     if (!paramBundle.isValid()) {
@@ -76,7 +76,8 @@ public class Partijinfo extends Batchjob {
       try {
         verwerkPartij(partij);
       } catch (FenException | PgnException e) {
-        DoosUtils.foutNaarScherm(e.getLocalizedMessage() + "|" + partij.getZuivereZetten() + "|");
+        DoosUtils.foutNaarScherm(e.getLocalizedMessage() + "|"
+                                  + partij.getZuivereZetten() + "|");
       }
     });
   }

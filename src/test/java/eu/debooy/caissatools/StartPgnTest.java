@@ -67,7 +67,7 @@ public class StartPgnTest extends BatchTest {
       "--schema=" + getTemp() + File.separator + "telang";
 
   @AfterClass
-  public static void afterClass() throws BestandException {
+  public static void afterClass() {
     verwijderBestanden(getTemp() + File.separator,
                        new String[] {TestConstants.BST_COMPETITIE_JSON,
                                      TestConstants.BST_COMPETITIE51_JSON,
@@ -274,7 +274,7 @@ public class StartPgnTest extends BatchTest {
   }
 
   @Test
-  public void testTekort() throws BestandException {
+  public void testTekort() {
     var args  = new String[] {PAR_BESTAND, PAR_TEKORT};
 
     before();
@@ -287,7 +287,7 @@ public class StartPgnTest extends BatchTest {
   }
 
   @Test
-  public void testTelang() throws BestandException {
+  public void testTelang() {
     var args  = new String[] {PAR_BESTAND, PAR_TELANG};
 
     before();

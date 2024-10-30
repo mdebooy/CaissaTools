@@ -76,7 +76,7 @@ public class VertaalPgnTest extends BatchTest {
   }
 
   @Test
-  public void testLeeg() throws PgnException, IOException {
+  public void testLeeg() {
     var args      = new String[] {};
     var naarTaal  = Locale.getDefault().getLanguage();
     var vanTaal   = Locale.getDefault().getLanguage();
@@ -84,8 +84,7 @@ public class VertaalPgnTest extends BatchTest {
         resourceBundle.getString(CaissaTools.ERR_GEENINVOER),
         MessageFormat.format(
           resourceBundle.getString(CaissaTools.ERR_TALENGELIJK),
-                             vanTaal, naarTaal)
-};
+                             vanTaal, naarTaal)};
 
     before();
     VertaalPgn.execute(args);
@@ -116,7 +115,7 @@ public class VertaalPgnTest extends BatchTest {
   }
 
   @Test
-  public void testPgn() throws PgnException {
+  public void testPgn() {
     var args  = new String[] {
         "--" + CaissaTools.PAR_PGN, pgnZetten,
         "--" + CaissaTools.PAR_VANTAAL, VANTAAL,

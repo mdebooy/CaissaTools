@@ -1,0 +1,42 @@
+{
+  "naam": "Caissa Tools",
+  "leden": [
+    { "type": "speler",
+      "voornaam": "Alice",
+      "achternaam": "Speler",
+      "adres": "Caissastraat 10",
+      "plaats": "4567 Schaakstad",
+      "telefoon": "0123/45.67.89",
+      "email": "alice@caissa.eu"
+    },
+    { "type": "speler",
+      "voornaam": "Bob",
+      "achternaam": "Speler",
+      "adres":"Caissastraat 23",
+      "plaats": "4567 Schaakstad",
+      "telefoon": "0123/45.67.90",
+      "email": "bob@caissa.eu"
+    },
+    { "type": "oud-lid",
+      "voornaam": "Carol",
+      "achternaam": "Speler",
+      "email":"carol@caissa.eu"
+    },
+    { "type": "lid",
+      "voornaam": "Dave",
+      "achternaam": "Speler",
+      "adres": "Caissastraat 36",
+      "plaats": "4567 Schaakstad",
+      "telefoon": "0123/45.69.01",
+      "email": "dave@caissa.eu"
+    },
+    { "type": "speler",
+      "voornaam": "Eve",
+      "achternaam": "Speler",
+      "adres": "Caissastraat 49",
+      "plaats": "4567 Schaakstad",
+      "telefoon": "0123/45.90.12",
+      "email": "eve@caissa.eu"
+    }
+  ]
+}

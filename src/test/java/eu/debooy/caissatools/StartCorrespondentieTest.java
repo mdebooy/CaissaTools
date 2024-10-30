@@ -42,7 +42,7 @@ public class StartCorrespondentieTest extends BatchTest {
       "correspondentieNieuw.pgn";
 
   @AfterClass
-  public static void afterClass() throws BestandException {
+  public static void afterClass() {
     verwijderBestanden(getTemp() + File.separator,
                        new String[] {CORRESPONDENTIE_JSON,
                                      CORRESPONDENTIE_PGN,
