@@ -82,6 +82,11 @@ public class Partijinfo extends Batchjob {
     });
   }
 
+  private static String getOpmerking(int aantal, String uitslag) {
+    return aantal >= 3
+            && !uitslag.equals(CaissaConstants.PARTIJ_REMISE) ? "!!!" : "";
+  }
+
   private static void verwerkPartij(PGN partij)
       throws FenException, PgnException {
     var fen         = new FEN();
@@ -108,10 +113,12 @@ public class Partijinfo extends Batchjob {
               .filter(stelling -> stelling.getValue() > 1)
               .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
               .forEach(stelling ->
-        DoosUtils.naarScherm(String.format("%5dx %-59s%s",
-                                           stelling.getValue(),
-                                           stelling.getKey(),
-                                           stelling.getValue() >= 3 && !partij.getTag(PGN.PGNTAG_RESULT).equals(CaissaConstants.PARTIJ_REMISE) ? "!!!" : "")));
+        DoosUtils.naarScherm(
+            String.format("%5dx %-59s%s",
+                          stelling.getValue(),
+                          stelling.getKey(),
+                          getOpmerking(stelling.getValue(),
+                                       partij.getTag(PGN.PGNTAG_RESULT)))));
   }
 
   private static void verwerkZetten(String zetten,
