@@ -143,4 +143,34 @@ public class ToernooioverzichtTest extends BatchTest {
       Assert.fail(e.getLocalizedMessage());
     }
   }
+
+  @Test
+  public void testToernooioverzicht3() {
+    String[]  args  = new String[] {TestConstants.PAR_BESTAND2A,
+                                    TestConstants.PAR_SCHEMA2,
+                                    "--metQrCode",
+                                    TestConstants.PAR_UITVOER};
+
+    before();
+    Toernooioverzicht.execute(args);
+    after();
+
+    Assert.assertEquals(0, err.size());
+    Assert.assertEquals(getTemp() + File.separator
+                          + TestConstants.BST_TOERNOOI_TEX,
+                          out.get(13).split(":")[1].trim());
+    Assert.assertEquals(TestConstants.TOT_PARTIJEN2,
+                          out.get(14).split(":")[1].trim());
+
+    try {
+      Assert.assertTrue(
+          Bestand.equals(
+              Bestand.openInvoerBestand(getTemp() + File.separator
+                                        + TestConstants.BST_TOERNOOI_TEX),
+              Bestand.openInvoerBestand(CLASSLOADER,
+                                        TestConstants.BST_TOERNOOI2Q_TEX)));
+    } catch (BestandException e) {
+      Assert.fail(e.getLocalizedMessage());
+    }
+  }
 }

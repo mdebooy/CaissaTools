@@ -53,6 +53,7 @@ public final class TestConstants extends BatchTest {
   public static final String  BST_TOERNOOI_VCF      = "toernooi.vcf";
   public static final String  BST_TOERNOOI2_TEX     = "toernooi2.tex";
   public static final String  BST_TOERNOOI2A_TEX    = "toernooi2a.tex";
+  public static final String  BST_TOERNOOI2Q_TEX    = "toernooi2q.tex";
   public static final String  BST_UITSLAGEN_HTML    = "uitslagen.html";
   public static final String  BST_UITSLAGEN2_HTML   = "uitslagen2.html";
   public static final String  BST_UITSLAGEN2A_HTML  = "uitslagen2a.html";
