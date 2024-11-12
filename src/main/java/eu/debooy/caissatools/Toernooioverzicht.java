@@ -519,7 +519,7 @@ public final class Toernooioverzicht extends Batchjob {
 
     try {
       var vcard = new StringBuilder();
-      vcard.append("    ");
+      vcard.append("    \\vspace{5mm}");
       for (var speler: spelers) {
 
         vcard.append("\\qrcode[height=3cm, level=M, version=1]{")
