@@ -152,6 +152,7 @@ public final class CaissaTools extends Batchjob {
   protected static final  String  TOOL_STARTCORRESP       =
       "StartCorrespondentie";
   protected static final  String  TOOL_STARTPGN           = "StartPgn";
+  protected static final  String  TOOL_STELLINGEN         = "Stellingen";
   protected static final  String  TOOL_TOERNOOIOVERZICHT  = "Toernooioverzicht";
   protected static final  String  TOOL_TRF                =
       "TournamentReportFile";
@@ -162,8 +163,8 @@ public final class CaissaTools extends Batchjob {
                     TOOL_ELOBEREKENAAR, TOOL_LEDENLIJST, TOOL_PARTIJINFO,
                     TOOL_PGNCLEANER, TOOL_PGNTOHTML, TOOL_PGNTOJSON,
                     TOOL_PGNTOLATEX, TOOL_SPELERSTATISTIEK, TOOL_STARTCORRESP,
-                    TOOL_STARTPGN, TOOL_TOERNOOIOVERZICHT, TOOL_TRF,
-                    TOOL_VERTAALPGN);
+                    TOOL_STARTPGN, TOOL_STELLINGEN, TOOL_TOERNOOIOVERZICHT,
+                    TOOL_TRF, TOOL_VERTAALPGN);
 
   public static final String  TXT_BANNER  = "Caissa Tools";
 
@@ -222,6 +223,9 @@ public final class CaissaTools extends Batchjob {
         break;
       case "startpgn":
         StartPgn.execute(commandoArgs);
+        break;
+      case "stellingen":
+        Stellingen.execute(commandoArgs);
         break;
       case "toernooioverzicht":
         Toernooioverzicht.execute(commandoArgs);

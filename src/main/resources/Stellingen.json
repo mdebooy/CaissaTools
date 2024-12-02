@@ -1,0 +1,25 @@
+{
+  "_jar": "CaissaTools.jar",
+  "_prefixlengte": 10,
+  "applicatie": "Stellingen",
+  "help": "Geeft hoeveel stellingen er in het bestand voorkomen.",
+  "banner": "Stellingen",
+  "parameters": [
+    {
+      "parameter": "bestand",
+      "extensie": "pgn",
+      "kort": "b",
+      "lang": "bestand",
+      "help": "Het bestand met de partijen in PGN formaat.",
+      "type": "bestand",
+      "verplicht": true
+    },
+    {
+      "parameter": "top",
+      "kort": "t",
+      "lang": "top",
+      "help": "De top X van de stellingen. Bij afwezigheid alle stellingen.",
+      "type": "long"
+    }
+  ]
+}
