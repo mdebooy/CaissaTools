@@ -914,7 +914,7 @@ public final class Toernooioverzicht extends Batchjob {
     var uitslag       =
             competitie.getUitslag(partij)
                       .replace("1/2", Utilities.kwart(0.5))
-                      .replace("-", (partij.isForfait() ? "\\\\textbf{f}"
+                      .replace("-", (partij.isForfait() ? "\\textbf{f}"
                                                         : "-"))
                       .replace("*", nietgespeeld);
     var wit           = partij.getWitspeler().getVolledigenaam();
