@@ -16,7 +16,12 @@
  */
 package eu.debooy.caissatools;
 
+import eu.debooy.caissa.CaissaUtils;
+import eu.debooy.caissa.FEN;
+import eu.debooy.caissa.PGN;
+import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Batchjob;
+import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
@@ -25,13 +30,19 @@ import eu.debooy.doosutils.exception.BestandException;
 import java.text.MessageFormat;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
+import java.util.ResourceBundle;
 
 
 /**
  * @author Marco de Booij
  */
 public final class CaissaTools extends Batchjob {
+  private static final  ResourceBundle  resourceBundle  =
+      ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
+                               Locale.getDefault());
+
   public static final String  ERR_BEST_ONGELIJK   = "error.aantal.bestanden";
   public static final String  ERR_BESTANDENPGN    = "error.bestand.en.pgn";
   public static final String  ERR_BIJBESTAND      = "error.verplichtbijbestand";
@@ -295,6 +306,36 @@ public final class CaissaTools extends Batchjob {
       throws BestandException {
     if (parameters.containsKey(param)) {
       output.write(replaceParameters(regel, parameters));
+    }
+  }
+
+  protected static void verwerkZetten(String zetten,
+                                      FEN fen, Map<String, Integer> stellingen)
+      throws PgnException {
+    if (zetten.isEmpty()) {
+      return;
+    }
+    var halveZetten   = zetten.split(" ");
+    var pgnZet        = "";
+
+    for (var halveZet : halveZetten) {
+      if (halveZet.indexOf('.') >= 0) {
+        if (halveZet.indexOf('.') == (halveZet.length() - 1)) {
+          throw new PgnException(MessageFormat.format(
+              resourceBundle.getString(PGN.ERR_HALVEZET),
+              halveZet, zetten));
+        }
+        pgnZet  = halveZet.substring(halveZet.lastIndexOf('.') + 1);
+      } else {
+        pgnZet  = halveZet;
+      }
+      fen.doeZet(CaissaUtils.vindZet(fen, pgnZet));
+      if (stellingen.containsKey(fen.getKorteFen())) {
+        stellingen.put(fen.getKorteFen(),
+                       stellingen.get(fen.getKorteFen()) + 1);
+      } else {
+        stellingen.put(fen.getKorteFen(), 1);
+      }
     }
   }
 }

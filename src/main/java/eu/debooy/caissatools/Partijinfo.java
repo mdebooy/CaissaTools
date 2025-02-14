@@ -24,27 +24,19 @@ import eu.debooy.caissa.PGN;
 import eu.debooy.caissa.exceptions.FenException;
 import eu.debooy.caissa.exceptions.PgnException;
 import eu.debooy.doosutils.Batchjob;
-import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
-import java.text.MessageFormat;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
-import java.util.Locale;
 import java.util.Map;
-import java.util.ResourceBundle;
 
 /**
  * @author Marco de Booij
  */
 public class Partijinfo extends Batchjob {
-  private static final  ResourceBundle  resourceBundle  =
-      ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
-                               Locale.getDefault());
-
-  protected Partijinfo() {}
+//  protected Partijinfo() {}
 
   public static void execute(String[] args) {
     setParameterBundle(
@@ -96,7 +88,7 @@ public class Partijinfo extends Batchjob {
       fen.setFen(partij.getTag(PGN.PGNTAG_FEN));
     }
 
-    verwerkZetten(partij.getZuivereZetten(), fen, stellingen);
+    CaissaTools.verwerkZetten(partij.getZuivereZetten(), fen, stellingen);
 
     DoosUtils.naarScherm(
         String.format("%-30s - %-30s : %3s | %-4s | %10s | %5s | %3d | %3d |",
@@ -119,35 +111,5 @@ public class Partijinfo extends Batchjob {
                           stelling.getKey(),
                           getOpmerking(stelling.getValue(),
                                        partij.getTag(PGN.PGNTAG_RESULT)))));
-  }
-
-  private static void verwerkZetten(String zetten,
-                                    FEN fen, Map<String, Integer> stellingen)
-      throws PgnException {
-    if (zetten.isEmpty()) {
-      return;
-    }
-    var halveZetten   = zetten.split(" ");
-    var pgnZet        = "";
-
-    for (var halveZet : halveZetten) {
-      if (halveZet.indexOf('.') >= 0) {
-        if (halveZet.indexOf('.') == (halveZet.length() - 1)) {
-          throw new PgnException(MessageFormat.format(
-              resourceBundle.getString(PGN.ERR_HALVEZET),
-              halveZet, zetten));
-        }
-        pgnZet  = halveZet.substring(halveZet.lastIndexOf('.') + 1);
-      } else {
-        pgnZet  = halveZet;
-      }
-      fen.doeZet(CaissaUtils.vindZet(fen, pgnZet));
-      if (stellingen.containsKey(fen.getKorteFen())) {
-        stellingen.put(fen.getKorteFen(),
-                       stellingen.get(fen.getKorteFen()) + 1);
-      } else {
-        stellingen.put(fen.getKorteFen(), 1);
-      }
-    }
   }
 }
