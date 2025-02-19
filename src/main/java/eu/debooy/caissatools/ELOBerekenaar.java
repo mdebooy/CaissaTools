@@ -192,12 +192,13 @@ public final class ELOBerekenaar extends Batchjob {
   private static boolean partijAfwijzen(String datum, Date eloDatum,
                                         int uitslag, Date laatsteWit,
                                         Date laatsteZwart) {
-    if (startDatum.compareTo(datum) > 0
-        || eindDatum.compareTo(datum) < 0) {
+    if (datum.contains("?")
+        || uitslag > 2) {
       return true;
     }
 
-    if (uitslag > 2) {
+    if (startDatum.compareTo(datum) > 0
+        || eindDatum.compareTo(datum) < 0) {
       return true;
     }
 
@@ -308,7 +309,15 @@ public final class ELOBerekenaar extends Batchjob {
 
   private static int verwerkPartij(PGN partij, CsvBestand geschiedenis)
       throws BestandException {
-    var   datum     = partij.getTag(PGN.PGNTAG_DATE);
+    var datum     = partij.getTag(PGN.PGNTAG_DATE);
+    var resultaat = partij.getTag(PGN.PGNTAG_RESULT);
+    var uitslag   = UITSLAGEN.indexOf(resultaat);
+
+    if (datum.contains("?")
+        || uitslag > 2) {
+      return 0;
+    }
+
     Date  eloDatum;
     try {
       eloDatum  =
@@ -327,8 +336,6 @@ public final class ELOBerekenaar extends Batchjob {
     voegSpelerToe(wit, eloDatum);
     voegSpelerToe(zwart, eloDatum);
 
-    var resultaat   = partij.getTag(PGN.PGNTAG_RESULT);
-    var uitslag     = UITSLAGEN.indexOf(resultaat);
     var witId       = spelers.get(wit);
     var zwartId     = spelers.get(zwart);
 
