@@ -36,7 +36,7 @@ import java.util.Map;
  * @author Marco de Booij
  */
 public class Partijinfo extends Batchjob {
-//  protected Partijinfo() {}
+  protected Partijinfo() {}
 
   public static void execute(String[] args) {
     setParameterBundle(
