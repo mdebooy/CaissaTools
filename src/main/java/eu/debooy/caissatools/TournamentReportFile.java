@@ -74,12 +74,12 @@ public class TournamentReportFile extends Batchjob {
       partijen.addAll(
           CaissaUtils.laadPgnBestand(
               paramBundle.getBestand(CaissaTools.PAR_BESTAND)));
-    } catch (PgnException e) {
+
+      CaissaUtils.vulToernooiMatrix(partijen, competitie, false);
+    } catch (PgnException | CompetitieException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
-
-    CaissaUtils.vulToernooiMatrix(partijen, competitie, false);
 
     spelers.sort(new Spelerinfo.BySpelerSeqComparator());
 

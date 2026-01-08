@@ -133,6 +133,7 @@ public final class Toernooioverzicht extends Batchjob {
               paramBundle.getBestand(CaissaTools.PAR_BESTAND)));
     } catch (PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+      return;
     }
 
     var noSpelers = competitie.getDeelnemers().size();
@@ -148,8 +149,14 @@ public final class Toernooioverzicht extends Batchjob {
 
     // Bepaal de score en weerstandspunten.
     var opStand = paramBundle.getBoolean(CaissaTools.PAR_MATRIXOPSTAND);
-    matrix      =  CaissaUtils.vulToernooiMatrix(partijen, competitie,
-                                                 opStand);
+    try {
+      matrix      =  CaissaUtils.vulToernooiMatrix(partijen, competitie,
+              opStand);
+    } catch (CompetitieException e) {
+      DoosUtils.foutNaarScherm(e.getLocalizedMessage());
+      return;
+    }
+
     if (Boolean.TRUE.equals(paramBundle.getBoolean(CaissaTools.PAR_AKTIEF))) {
       matrix    = CaissaUtils.verwijderNietActief(matrix, competitie);
     }

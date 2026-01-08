@@ -171,18 +171,18 @@ public final class PgnToHtml extends Batchjob {
           new Competitie(paramBundle.getBestand(CaissaTools.PAR_SCHEMA));
       partijen    =
           CaissaUtils.laadPgnBestand(invoer);
+
+
+      // Maak de Matrix.
+      competitie.sorteerOpNaam();
+
+      // Bepaal de score en SB score.
+      matrix        = CaissaUtils.vulToernooiMatrix(partijen, competitie,
+                                                    matrixOpStand);
     } catch (CompetitieException | PgnException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       return;
     }
-
-
-    // Maak de Matrix.
-    competitie.sorteerOpNaam();
-
-    // Bepaal de score en SB score.
-    matrix        = CaissaUtils.vulToernooiMatrix(partijen, competitie,
-                                                  matrixOpStand);
 
     if (Boolean.TRUE.equals(paramBundle.getBoolean(CaissaTools.PAR_AKTIEF))) {
       matrix  = CaissaUtils.verwijderNietActief(matrix, competitie);

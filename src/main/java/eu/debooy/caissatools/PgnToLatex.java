@@ -202,7 +202,7 @@ public final class PgnToLatex extends Batchjob {
         verwerkTemplate(i, params, texPartij, bestand);
 
         aantalPartijen  += partijen.size();
-      } catch (BestandException e) {
+      } catch (BestandException |CompetitieException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
       }
     }
