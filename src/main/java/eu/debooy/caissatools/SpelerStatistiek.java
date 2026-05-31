@@ -26,7 +26,6 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
-import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
@@ -178,7 +177,7 @@ public final class SpelerStatistiek extends Batchjob {
         MessageFormat.format(resourceBundle.getString("label.bestand"),
                              paramBundle
                                 .getBestand(CaissaTools.PAR_BESTAND,
-                                            BestandConstants.EXT_TEX)));
+                                            DoosConstants.EXT_TEX)));
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString("label.partijen"),
                              partijen.size()));
@@ -280,7 +279,7 @@ public final class SpelerStatistiek extends Batchjob {
           new TekstBestand.Builder()
                           .setBestand(paramBundle
                                           .getBestand(CaissaTools.PAR_BESTAND,
-                                                      BestandConstants.EXT_TEX))
+                                                      DoosConstants.EXT_TEX))
                           .setLezen(false).build();
 
       var status  = NORMAAL;

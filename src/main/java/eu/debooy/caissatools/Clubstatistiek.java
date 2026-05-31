@@ -31,6 +31,7 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
+import eu.debooy.doosutils.access.Bestand;
 import eu.debooy.doosutils.access.JsonBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import java.text.MessageFormat;
@@ -136,8 +137,15 @@ public class Clubstatistiek extends Batchjob {
     for (var groep : paramBundle.getString(CaissaTools.PAR_BESTAND)
                                 .split(";")) {
       try {
-        var partijen    = CaissaUtils.laadPgnBestand(groep);
-        var competitie  = new Competitie(partijen, toernooitype);
+        Competitie  competitie;
+        var         partijen    = CaissaUtils.laadPgnBestand(groep);
+        if (Bestand.bestaat(String.format("%s%s",
+                                          groep, DoosConstants.EXT_JSON))) {
+          competitie  = new Competitie(String.format("%s%s",
+                                          groep, DoosConstants.EXT_JSON));
+        } else {
+          competitie  = new Competitie(partijen, toernooitype);
+        }
 
         CaissaUtils.vulToernooiMatrix(partijen, competitie, false);
         start   = verwerkToernooi(competitie, start);
@@ -170,7 +178,6 @@ public class Clubstatistiek extends Batchjob {
       if (naam.equals(CaissaConstants.BYE)) {
         continue;
       }
-
 
       var extra = voorronde.stream()
                            .filter(splr -> speler.getNaam()
@@ -221,8 +228,16 @@ public class Clubstatistiek extends Batchjob {
     for (var groep : paramBundle.getString(CaissaTools.PAR_VOORRONDE)
                                 .split(";")) {
       try {
-        var partijen    = CaissaUtils.laadPgnBestand(groep);
-        var competitie  = new Competitie(partijen, toernooitype);
+        Competitie  competitie;
+        var         partijen    = CaissaUtils.laadPgnBestand(groep);
+        if (Bestand.bestaat(String.format("%s%s",
+                                          groep, DoosConstants.EXT_JSON))) {
+          competitie  = new Competitie(String.format("%s%s",
+                                          groep, DoosConstants.EXT_JSON));
+        } else {
+          competitie  = new Competitie(partijen, toernooitype);
+        }
+
         CaissaUtils.vulToernooiMatrix(partijen, competitie, false);
         competitie.getDeelnemers().forEach(speler -> {
           try {

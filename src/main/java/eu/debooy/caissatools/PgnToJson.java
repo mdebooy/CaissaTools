@@ -301,10 +301,6 @@ public final class PgnToJson extends Batchjob {
                                                        tag.getValue()));
     partij.put("_moves", pgn.getZetten());
     var zuivereZetten = pgn.getZuivereZetten();
-    if (metPgnviewer) {
-      partij.put("_pgnviewer",
-                 CaissaUtils.pgnZettenToChessTheatre(zuivereZetten));
-    }
 
     if (DoosUtils.isNotBlankOrNull(zuivereZetten)) {
       verwerkZuivereZetten(partij, zuivereZetten, fen, ids, trajecten);

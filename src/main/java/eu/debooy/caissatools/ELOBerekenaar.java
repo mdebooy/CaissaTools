@@ -28,7 +28,6 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
-import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.CsvBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import java.text.MessageFormat;
@@ -293,7 +292,7 @@ public final class ELOBerekenaar extends Batchjob {
                           .setBestand(
                               paramBundle
                                   .getBestand(CaissaTools.PAR_SPELERBESTAND,
-                                              BestandConstants.EXT_CSV))
+                                              DoosConstants.EXT_CSV))
                           .setLezen(false)
                           .setKolomNamen(KOLOMMEN)
                           .build()) {

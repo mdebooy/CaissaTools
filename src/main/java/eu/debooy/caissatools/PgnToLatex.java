@@ -30,7 +30,6 @@ import eu.debooy.doosutils.DoosConstants;
 import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
-import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import eu.debooy.doosutils.latex.Utilities;
@@ -150,11 +149,11 @@ public final class PgnToLatex extends Batchjob {
 
     var bestand   =
         paramBundle.getString(CaissaTools.PAR_BESTAND)
-                   .replace(BestandConstants.EXT_PGN, "").split(";");
+                   .replace(DoosConstants.EXT_PGN, "").split(";");
     var schema    =
         paramBundle.getString(CaissaTools.PAR_SCHEMA)
-                   .replace(BestandConstants.EXT_PGN, "")
-                   .replace(BestandConstants.EXT_JSON, "").split(";");
+                   .replace(DoosConstants.EXT_PGN, "")
+                   .replace(DoosConstants.EXT_JSON, "").split(";");
 
     auteur        = paramBundle.getString(CaissaTools.PAR_AUTEUR);
     metMatrix     = paramBundle.getBoolean(CaissaTools.PAR_MATRIX);
@@ -170,10 +169,10 @@ public final class PgnToLatex extends Batchjob {
 
       try {
         competitie    = new Competitie(getInvoerbestand(schema[i],
-                                       BestandConstants.EXT_JSON));
+                                       DoosConstants.EXT_JSON));
         partijen.addAll(
             CaissaUtils.laadPgnBestand(getInvoerbestand(bestand[i],
-                                       BestandConstants.EXT_PGN)));
+                                       DoosConstants.EXT_PGN)));
       } catch (CompetitieException | PgnException e) {
         DoosUtils.foutNaarScherm(e.getLocalizedMessage());
         return;
@@ -218,7 +217,7 @@ public final class PgnToLatex extends Batchjob {
     for (var tex : bestand) {
       DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
-                             getUitvoerbestand(tex, BestandConstants.EXT_TEX)));
+                             getUitvoerbestand(tex, DoosConstants.EXT_TEX)));
     }
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_PARTIJEN),
@@ -317,7 +316,7 @@ public final class PgnToLatex extends Batchjob {
       output  =
           new TekstBestand.Builder()
                           .setBestand(getUitvoerbestand(bestand,
-                                      BestandConstants.EXT_TEX))
+                                      DoosConstants.EXT_TEX))
                           .setLezen(false).build();
     } catch (BestandException e) {
       DoosUtils.foutNaarScherm(e.getLocalizedMessage());

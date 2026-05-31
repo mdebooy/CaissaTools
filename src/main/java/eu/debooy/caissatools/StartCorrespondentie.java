@@ -28,7 +28,6 @@ import eu.debooy.doosutils.DoosUtils;
 import eu.debooy.doosutils.MailData;
 import eu.debooy.doosutils.MarcoBanner;
 import eu.debooy.doosutils.ParameterBundle;
-import eu.debooy.doosutils.access.BestandConstants;
 import eu.debooy.doosutils.access.TekstBestand;
 import eu.debooy.doosutils.exception.BestandException;
 import java.text.MessageFormat;
@@ -131,7 +130,7 @@ public class StartCorrespondentie extends Batchjob {
     DoosUtils.naarScherm(
         MessageFormat.format(resourceBundle.getString(CaissaTools.LBL_BESTAND),
                              paramBundle.getBestand(CaissaTools.PAR_BESTAND,
-                                                    BestandConstants.EXT_PGN)));
+                                                    DoosConstants.EXT_PGN)));
     DoosUtils.naarScherm();
     DoosUtils.naarScherm(getMelding(MSG_KLAAR));
     DoosUtils.naarScherm();
@@ -203,23 +202,24 @@ public class StartCorrespondentie extends Batchjob {
 
     var parameter = lijn.substring(1).split("#")[0];
     switch (parameter) {
-      case "geennieuwespelers":
+      case "geennieuwespelers" -> {
         if (!paramBundle.containsParameter(CaissaTools.PAR_NIEUWESPELERS)) {
           return lijn.substring(19);
         }
-        break;
-      case "metzwart":
+      }
+      case "metzwart" -> {
         if (Integer.parseInt(emailparams.get(12)) > 0) {
           return lijn.substring(10);
         }
-        break;
-      case "nieuwespelers":
+      }
+      case "nieuwespelers" -> {
         if (paramBundle.containsParameter(CaissaTools.PAR_NIEUWESPELERS)) {
           return lijn.substring(15);
         }
-        break;
-      default:
-        break;
+      }
+      default -> {
+        // Niets te doen.
+      }
     }
 
     return "";
@@ -316,8 +316,8 @@ public class StartCorrespondentie extends Batchjob {
       var partijen  = ronde.split(" ");
       for (String partij : partijen) {
         String[] speler = partij.split("-");
-        var wit   = Integer.valueOf(speler[0])-1;
-        var zwart = Integer.valueOf(speler[1])-1;
+        var wit   = Integer.parseInt(speler[0])-1;
+        var zwart = Integer.parseInt(speler[1])-1;
         if (wit < noSpelers
             && zwart < noSpelers) {
           var witspeler   = spelers.get(wit);
@@ -342,8 +342,8 @@ public class StartCorrespondentie extends Batchjob {
       var partijen  = ronde.split(" ");
       for (String partij : partijen) {
         var speler  = partij.split("-");
-        var wit     = Integer.valueOf(speler[0])-1;
-        var zwart   = Integer.valueOf(speler[1])-1;
+        var wit     = Integer.parseInt(speler[0])-1;
+        var zwart   = Integer.parseInt(speler[1])-1;
         if (wit < noSpelers
             && zwart < noSpelers) {
           var witspeler   = spelers.get(wit);
@@ -368,8 +368,8 @@ public class StartCorrespondentie extends Batchjob {
       var partijen  = ronde.split(" ");
       for (var partij : partijen) {
         var speler = partij.split("-");
-        var wit     = Integer.valueOf(speler[0])-1;
-        var zwart   = Integer.valueOf(speler[1])-1;
+        var wit     = Integer.parseInt(speler[0])-1;
+        var zwart   = Integer.parseInt(speler[1])-1;
         if (wit < noSpelers
             && zwart < noSpelers) {
           var witspeler   = spelers.get(wit);
@@ -416,13 +416,13 @@ public class StartCorrespondentie extends Batchjob {
           new TekstBestand.Builder()
                           .setBestand(
                               paramBundle.getBestand(CaissaTools.PAR_BESTAND,
-                                                     BestandConstants.EXT_PGN))
+                                                     DoosConstants.EXT_PGN))
                                 .setLezen(false).build()) {
       for (var ronde : rondes) {
         for (var partij : ronde.split(" ")) {
           var paring  = partij.split("-");
-          var wit     = Integer.valueOf(paring[0]) - 1;
-          var zwart   = Integer.valueOf(paring[1]) - 1;
+          var wit     = Integer.parseInt(paring[0]) - 1;
+          var zwart   = Integer.parseInt(paring[1]) - 1;
           if (wit != noSpelers
               && zwart != noSpelers) {
             var witspeler   = spelers.get(wit).getNaam();
@@ -518,8 +518,8 @@ public class StartCorrespondentie extends Batchjob {
       var partijen  = ronde.split(" ");
       for (var partij : partijen) {
         var speler = partij.split("-");
-        var wit     = Integer.valueOf(speler[0])-1;
-        var zwart   = Integer.valueOf(speler[1])-1;
+        var wit     = Integer.parseInt(speler[0])-1;
+        var zwart   = Integer.parseInt(speler[1])-1;
         if (wit < noSpelers
             && zwart < noSpelers) {
           var witspeler   = spelers.get(wit);
@@ -588,7 +588,7 @@ public class StartCorrespondentie extends Batchjob {
       var partijen  = ronde.split(" ");
       for (var partij : partijen) {
         if (partij.endsWith(zwartspelerId)) {
-          var witspelerId = Integer.valueOf(partij.split("-")[0]) - 1;
+          var witspelerId = Integer.parseInt(partij.split("-")[0]) - 1;
           if (witspelerId < noSpelers
               && isUitdaging(spelers.get(witspelerId).getNaam(),
                              zwartspeler.getNaam())) {
@@ -606,20 +606,13 @@ public class StartCorrespondentie extends Batchjob {
     if (sublijn.contains("_")) {
       var delen = sublijn.split("_");
       switch (delen[0].toLowerCase()) {
-        case "metwit":
-          resultaat = maakMessageMetwit(speler, delen[1]);
-          break;
-        case "metzwart":
-          resultaat = maakMessageMetzwart(speler, delen[1]);
-          break;
-        case "partijen":
-          resultaat = maakMessagePartijen(delen[1]);
-          break;
-        case "spelers":
-          resultaat = maakMessageSpelers(delen[1]);
-          break;
-        default:
-          break;
+        case "metwit" -> resultaat = maakMessageMetwit(speler, delen[1]);
+        case "metzwart" -> resultaat = maakMessageMetzwart(speler, delen[1]);
+        case "partijen" -> resultaat = maakMessagePartijen(delen[1]);
+        case "spelers" -> resultaat = maakMessageSpelers(delen[1]);
+        default -> {
+          // Niets te doen.
+        }
       }
     } else {
       resultaat = formatLijn(sublijn);

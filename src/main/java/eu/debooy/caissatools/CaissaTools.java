@@ -150,7 +150,6 @@ public final class CaissaTools extends Batchjob {
   public static final String  PAR_ZIP                 = "zip";
 
   protected static final  String  TOOL_ANALYSETEX         = "AnalyseToLatex";
-  protected static final  String  TOOL_CHESSTHEATRE       = "ChessTheatre";
   protected static final  String  TOOL_CLUBSTATISTIEK     = "Clubstatistiek";
   protected static final  String  TOOL_ELOBEREKENAAR      = "ELOBerekenaar";
   protected static final  String  TOOL_LEDENLIJST         = "Ledenlijst";
@@ -170,7 +169,7 @@ public final class CaissaTools extends Batchjob {
   protected static final  String  TOOL_VERTAALPGN         = "VertaalPgn";
 
   protected static final  List<String>  tools =
-      Arrays.asList(TOOL_ANALYSETEX, TOOL_CHESSTHEATRE, TOOL_CLUBSTATISTIEK,
+      Arrays.asList(TOOL_ANALYSETEX, TOOL_CLUBSTATISTIEK,
                     TOOL_ELOBEREKENAAR, TOOL_LEDENLIJST, TOOL_PARTIJINFO,
                     TOOL_PGNCLEANER, TOOL_PGNTOHTML, TOOL_PGNTOJSON,
                     TOOL_PGNTOLATEX, TOOL_SPELERSTATISTIEK, TOOL_STARTCORRESP,
@@ -196,64 +195,29 @@ public final class CaissaTools extends Batchjob {
     System.arraycopy(args, 1, commandoArgs, 0, args.length-1);
 
     switch (commando.toLowerCase()) {
-      case "analysetolatex":
-        AnalyseToLatex.execute(commandoArgs);
-        break;
-      case "chesstheatre":
-        ChessTheatre.execute(commandoArgs);
-        break;
-      case "clubstatistiek":
-        Clubstatistiek.execute(commandoArgs);
-        break;
-      case "eloberekenaar":
-        ELOBerekenaar.execute(commandoArgs);
-        break;
-      case "ledenlijst":
-        Ledenlijst.execute(commandoArgs);
-        break;
-      case "pgncleaner":
-        PgnCleaner.execute(commandoArgs);
-        break;
-      case "partijinfo":
-        Partijinfo.execute(commandoArgs);
-        break;
-      case "pgntohtml":
-        PgnToHtml.execute(commandoArgs);
-        break;
-      case "pgntojson":
-        PgnToJson.execute(commandoArgs);
-        break;
-      case "pgntolatex":
-        PgnToLatex.execute(commandoArgs);
-        break;
-      case "spelerstatistiek":
-        SpelerStatistiek.execute(commandoArgs);
-        break;
-      case "startcorrespondentie":
-        StartCorrespondentie.execute(commandoArgs);
-        break;
-      case "startpgn":
-        StartPgn.execute(commandoArgs);
-        break;
-      case "stellingen":
-        Stellingen.execute(commandoArgs);
-        break;
-      case "toernooioverzicht":
-        Toernooioverzicht.execute(commandoArgs);
-        break;
-      case "tournamentreportfile":
-        TournamentReportFile.execute(commandoArgs);
-        break;
-      case "vertaalpgn":
-        VertaalPgn.execute(commandoArgs);
-        break;
-      default:
+      case "analysetolatex" -> AnalyseToLatex.execute(commandoArgs);
+      case "clubstatistiek" -> Clubstatistiek.execute(commandoArgs);
+      case "eloberekenaar" -> ELOBerekenaar.execute(commandoArgs);
+      case "ledenlijst" -> Ledenlijst.execute(commandoArgs);
+      case "pgncleaner" -> PgnCleaner.execute(commandoArgs);
+      case "partijinfo" -> Partijinfo.execute(commandoArgs);
+      case "pgntohtml" -> PgnToHtml.execute(commandoArgs);
+      case "pgntojson" -> PgnToJson.execute(commandoArgs);
+      case "pgntolatex" -> PgnToLatex.execute(commandoArgs);
+      case "spelerstatistiek" -> SpelerStatistiek.execute(commandoArgs);
+      case "startcorrespondentie" -> StartCorrespondentie.execute(commandoArgs);
+      case "startpgn" -> StartPgn.execute(commandoArgs);
+      case "stellingen" -> Stellingen.execute(commandoArgs);
+      case "toernooioverzicht" -> Toernooioverzicht.execute(commandoArgs);
+      case "tournamentreportfile" -> TournamentReportFile.execute(commandoArgs);
+      case "vertaalpgn" -> VertaalPgn.execute(commandoArgs);
+      default -> {
         new MarcoBanner().print(TXT_BANNER);
         help();
         DoosUtils.foutNaarScherm(
-            MessageFormat.format(getMelding(ERR_TOOLONBEKEND), commando));
+                MessageFormat.format(getMelding(ERR_TOOLONBEKEND), commando));
         DoosUtils.naarScherm();
-        break;
+      }
     }
   }
 
