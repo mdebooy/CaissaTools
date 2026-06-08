@@ -70,7 +70,8 @@ public class PgnToLatexTest extends BatchTest {
 
   @BeforeClass
   public static void beforeClass() throws BestandException {
-    Locale.setDefault(new Locale(TestConstants.TST_TAAL));
+    Locale.setDefault(new Locale.Builder().setLanguage(TestConstants.TST_TAAL)
+                                .build());
     resourceBundle  = ResourceBundle.getBundle(DoosConstants.RESOURCEBUNDLE,
                                                Locale.getDefault());
 
@@ -99,6 +100,7 @@ public class PgnToLatexTest extends BatchTest {
     try {
       Bestand.delete(getTemp() + File.separator + BST_COMPETITIE_TEX);
     } catch (BestandException e) {
+      // Bestand bestaat niet, is normaal.
     }
 
     before();
@@ -157,6 +159,7 @@ public class PgnToLatexTest extends BatchTest {
     try {
       Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
     } catch (BestandException e) {
+      // Bestand bestaat niet, is normaal.
     }
 
     before();
@@ -203,6 +206,7 @@ public class PgnToLatexTest extends BatchTest {
     try {
       Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
     } catch (BestandException e) {
+      // Bestand bestaat niet, is normaal.
     }
 
     before();
@@ -233,6 +237,7 @@ public class PgnToLatexTest extends BatchTest {
     try {
       Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
     } catch (BestandException e) {
+      // Bestand bestaat niet, is normaal.
     }
 
     before();
@@ -263,6 +268,7 @@ public class PgnToLatexTest extends BatchTest {
     try {
       Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
     } catch (BestandException e) {
+      // Bestand bestaat niet, is normaal.
     }
 
     before();
@@ -328,6 +334,7 @@ public class PgnToLatexTest extends BatchTest {
     try {
       Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
     } catch (BestandException e) {
+      // Bestand bestaat niet, is normaal.
     }
 
     before();
@@ -357,6 +364,7 @@ public class PgnToLatexTest extends BatchTest {
     try {
       Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_TEX);
     } catch (BestandException e) {
+      // Bestand bestaat niet, is normaal.
     }
 
     before();

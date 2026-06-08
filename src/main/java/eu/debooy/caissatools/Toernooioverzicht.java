@@ -413,13 +413,13 @@ public final class Toernooioverzicht extends Batchjob {
       lijn.append("& ");
       if (!competitie.isMatch()) {
         if (rij == j / competitie.getHeenTerug()) {
-          lijn.append("\\multicolumn{1}"
-                      + "{>{").append(KLEUR).append("}c|}{} ");
+          lijn.append("\\multicolumn{1}")
+              .append("{>{").append(KLEUR).append("}c|}{} ");
           continue;
         }
         if ((j / competitie.getHeenTerug()) * competitie.getHeenTerug() != j ) {
-          lijn.append("\\multicolumn{1}"
-                      + "{>{").append(KLEURLICHT).append("}c|}{");
+          lijn.append("\\multicolumn{1}")
+              .append("{>{").append(KLEURLICHT).append("}c|}{");
         }
       }
       lijn.append(score(matrix[rij][j]));

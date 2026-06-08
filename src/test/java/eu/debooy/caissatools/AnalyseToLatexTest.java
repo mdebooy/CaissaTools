@@ -43,7 +43,8 @@ public class AnalyseToLatexTest extends BatchTest {
 
   @BeforeClass
   public static void beforeClass() throws BestandException {
-    Locale.setDefault(new Locale(TestConstants.TST_TAAL));
+    Locale.setDefault(new Locale.Builder().setLanguage(TestConstants.TST_TAAL)
+                                .build());
     resourceBundle  = ResourceBundle.getBundle("ApplicatieResources",
                                                Locale.getDefault());
 

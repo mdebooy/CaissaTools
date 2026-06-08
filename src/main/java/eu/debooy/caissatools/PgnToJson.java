@@ -64,7 +64,6 @@ public final class PgnToJson extends Batchjob {
   private static  String  defaultEco;
   private static  boolean metFen        = false;
   private static  boolean metTrajecten  = false;
-  private static  boolean metPgnviewer  = false;
   private static  String  naarStukken;
   private static  String  vanStukken;
   private static  boolean voorNico      = false;
@@ -120,7 +119,7 @@ public final class PgnToJson extends Batchjob {
     defaultEco    = paramBundle.getString(CaissaTools.PAR_DEFAULTECO);
     metFen        = paramBundle.getBoolean(CaissaTools.PAR_METFEN);
     metTrajecten  = paramBundle.getBoolean(CaissaTools.PAR_METTRAJECTEN);
-    metPgnviewer  = paramBundle.getBoolean(CaissaTools.PAR_METPGNVIEWER);
+    paramBundle.getBoolean(CaissaTools.PAR_METPGNVIEWER);
     voorNico      = paramBundle.getBoolean(CaissaTools.PAR_VOORNICO);
 
     // Haal de stukcodes op

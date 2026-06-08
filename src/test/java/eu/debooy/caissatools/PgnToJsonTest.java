@@ -66,7 +66,8 @@ public class PgnToJsonTest extends BatchTest {
 
   @BeforeClass
   public static void beforeClass() throws BestandException {
-    Locale.setDefault(new Locale(TestConstants.TST_TAAL));
+    Locale.setDefault(new Locale.Builder().setLanguage(TestConstants.TST_TAAL)
+                                .build());
     resourceBundle  = ResourceBundle.getBundle("ApplicatieResources",
                                                Locale.getDefault());
 
@@ -91,6 +92,7 @@ public class PgnToJsonTest extends BatchTest {
     try {
       Bestand.delete(getTemp() + File.separator + BST_COMPETITIE1_JSON);
     } catch (BestandException e) {
+      // Bestand bestaat niet, is normaal.
     }
 
     before();
@@ -134,6 +136,7 @@ public class PgnToJsonTest extends BatchTest {
     try {
       Bestand.delete(getTemp() + File.separator + BST_JSON_JSON);
     } catch (BestandException e) {
+      // Bestand bestaat niet, is normaal.
     }
 
     before();
@@ -159,6 +162,7 @@ public class PgnToJsonTest extends BatchTest {
     try {
       Bestand.delete(getTemp() + File.separator + BST_PARTIJ_JSON);
     } catch (BestandException e) {
+      // Bestand bestaat niet, is normaal.
     }
 
     before();
@@ -183,6 +187,7 @@ public class PgnToJsonTest extends BatchTest {
     try {
       Bestand.delete(getTemp() + File.separator + BST_JSON_JSON);
     } catch (BestandException e) {
+      // Bestand bestaat niet, is normaal.
     }
 
     before();
